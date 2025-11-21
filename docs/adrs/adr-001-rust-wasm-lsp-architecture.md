@@ -7,7 +7,9 @@
 
 ## Context and Problem Statement
 
-We need to implement a Language Server Protocol (LSP) server for CRBasic that provides advanced language features (diagnostics, IntelliSense, navigation) within a VSCode extension. The LSP server must:
+We need to implement a Language Server Protocol (LSP) server for CRBasic that provides advanced language features (diagnostics, IntelliSense, navigation) within a VSCode extension.
+
+The LSP server must:
 
 1. Parse CRBasic source code with complex domain-specific semantics
 2. Provide real-time diagnostics with model-dependent validation rules
@@ -30,12 +32,14 @@ The key decision is: **What technology stack should we use for the LSP server im
 ### Option 1: TypeScript LSP Server (Pure Node.js)
 
 **Pros**:
+
 - Native VSCode integration (no additional runtime needed)
 - Large ecosystem of LSP libraries (`vscode-languageserver`)
 - Easy debugging in VSCode environment
 - Faster initial development (no compilation step)
 
 **Cons**:
+
 - Runtime performance overhead compared to native/WASM
 - Lacks strong type safety for complex parsing logic
 - Memory management issues with large ASTs
@@ -44,6 +48,7 @@ The key decision is: **What technology stack should we use for the LSP server im
 ### Option 2: Rust LSP Server (Native Binary)
 
 **Pros**:
+
 - Excellent performance (native speed)
 - Strong type safety with Rust's type system
 - Memory safety without garbage collection overhead
@@ -51,6 +56,7 @@ The key decision is: **What technology stack should we use for the LSP server im
 - Excellent LSP support via `tower-lsp`
 
 **Cons**:
+
 - Requires separate binary distribution for each platform (Windows, macOS, Linux)
 - Complex build/packaging process for VSCode extension
 - Additional runtime dependency management
@@ -58,6 +64,7 @@ The key decision is: **What technology stack should we use for the LSP server im
 ### Option 3: Rust + WASM LSP Server (Selected)
 
 **Pros**:
+
 - Near-native performance with WASM
 - Strong type safety and memory safety from Rust
 - **Platform-independent**: Single WASM binary works everywhere
@@ -68,6 +75,7 @@ The key decision is: **What technology stack should we use for the LSP server im
 - No external binary dependencies (everything bundled in extension)
 
 **Cons**:
+
 - Slight performance overhead vs. native (typically <10%)
 - Additional WASM build step in development workflow
 - WASM binary size consideration (mitigated by optimization)
@@ -80,7 +88,10 @@ The key decision is: **What technology stack should we use for the LSP server im
 
 1. **Platform Independence**: WASM eliminates the need for platform-specific binaries, simplifying distribution and ensuring consistent behavior across all platforms.
 
-2. **Type Safety for Complex Semantics**: CRBasic's domain-specific rules (e.g., CR200X 12-character variable truncation, Public variable global scope regardless of declaration location) require precise semantic analysis. Rust's type system allows us to model these rules safely:
+2. **Type Safety for Complex Semantics**: CRBasic's domain-specific rules require precise semantic analysis.
+   - e.g., CR200X 12-character variable truncation, Public variable global scope regardless of declaration location
+   - Rust's type system allows us to model these rules safely:
+
    ```rust
    enum DataloggerModel {
        CR200X { max_var_len: usize, truncate_len: usize },
@@ -90,7 +101,7 @@ The key decision is: **What technology stack should we use for the LSP server im
 
 3. **Memory Safety**: Parsing arbitrary/malformed CRBasic code requires robust error handling. Rust's ownership system prevents memory leaks and crashes without garbage collection overhead.
 
-4. **Performance**: Real-time diagnostics demand efficient parsing. WASM provides near-native performance (typically 90-95% of native speed), which is sufficient for CRBasic programs (typically <1000 lines).
+4. **Performance**: Real-time diagnostics demand efficient parsing. WASM provides near-native performance, which is sufficient for CRBasic programs (typically <1000 lines).
 
 5. **Future-Proofing**: WASM enables potential reuse in web-based development environments (e.g., browser-based CRBasic editor for quick prototyping).
 

@@ -2,7 +2,9 @@
 
 ## Overview
 
-`crbasic-lsp-rs` is a Visual Studio Code extension that provides comprehensive language support for CRBasic, a programming language designed for Campbell Scientific data loggers. The project implements syntax highlighting via TextMate Grammar and advanced language features through a Language Server Protocol (LSP) implementation.
+`crbasic-lsp-rs` is a Visual Studio Code extension that provides comprehensive language support for CRBasic, a programming language designed for Campbell Scientific data loggers.
+
+The project implements syntax highlighting via TextMate Grammar and advanced language features through a Language Server Protocol (LSP) implementation.
 
 ## Technology Stack
 
@@ -193,7 +195,7 @@ VSCode UI (IntelliSense, Diagnostics, etc.)
 Based on project characteristics (new development, medium importance, medium risk):
 
 | Metric | Target |
-|--------|--------|
+| :--- | :--- |
 | Line Coverage | ≥ 80% |
 | Branch Coverage | ≥ 75% |
 | Function Coverage | ≥ 90% |

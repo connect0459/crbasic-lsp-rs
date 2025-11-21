@@ -4,15 +4,23 @@
 
 ### **1.1 CRBasicのドメイン固有性と言語分類**
 
-CRBasicは、Campbell Scientific社製のデータロガー（計測・データ収集デバイス）に特化して設計されたプログラミング言語であり、その核となる機能は組み込みシステムとリアルタイム計測ドメインの要求によって定義されています 1。この言語は、構造化BASIC言語との構文的類似性を持ちますが、その主要な目的は、リアルタイムなセンサー測定、制御ロジックの実行、および測定結果のデータ出力テーブルへの処理に特化しています 1。
+CRBasicは、Campbell Scientific社製のデータロガー（計測・データ収集デバイス）に特化して設計されたプログラミング言語であり、その核となる機能は組み込みシステムとリアルタイム計測ドメインの要求によって定義されています
 
-構造化BASICとの類似点として、CRBasicは変数の宣言、代数的な数学的操作の記述 1、および標準的な制御フロー構造を備えています。しかし、CRBasicの真の複雑さは、組み込みの「Measurement and Output Processing Instructions」の広範なカタログに存在します 1。例えば、風速計の計測に特化したPulseCount()命令 2 や、シリアル通信を管理するSerialOpen()、SerialInRecord()、SplitStr()といったI/O関数群が存在します 3。
+1。この言語は、構造化BASIC言語との構文的類似性を持ちますが、その主要な目的は、リアルタイムなセンサー測定、制御ロジックの実行、および測定結果のデータ出力テーブルへの処理に特化しています 1。
+
+構造化BASICとの類似点として、CRBasicは変数の宣言、代数的な数学的操作の記述 1、および標準的な制御フロー構造を備えています。しかし、CRBasicの真の複雑さは、組み込みの「Measurement and Output Processing Instructions」の広範なカタログに存在します 1。
+
+例えば、風速計の計測に特化したPulseCount()命令 2 や、シリアル通信を管理するSerialOpen()、SerialInRecord()、SplitStr()といったI/O関数群が存在します 3。
 
 これらのドメイン固有命令が言語の実行において最も重要な要素を構成するため、VSCode拡張機能の開発においては、一般的なBASICキーワードの強調表示よりも、これらの組み込み命令群に対して、より高い精度でのスコープ割り当て（例: support.function.measurement.crbasic）と、命令の利用を支援する詳細なシグネチャヘルプを提供することが、拡張機能の有用性を決定する上で極めて重要になります。このアプローチは、データロガープログラミングの現場における開発効率を直接的に向上させるための、技術的な優先順位付けを示しています。
 
 ### **1.2 既存開発環境の分析とVSCode統合の技術的動機**
 
-Campbell Scientific社が提供する公式な開発ツールであるCRBasic Editorは、データロガープログラマ向けに設計されており、基本的なIDE機能を提供しています 4。これらの機能には、構文強調表示（Comments、Instruction Names、その他の要素が異なるスタイルで表示される）5、プログラムエントリウィンドウ、およびCRBasic言語の命令を一覧表示するInstruction Panelが含まれます 4。また、変数操作のためのキーボードショートカット（F9/F10）や、コメントの挿入、インデントの再構築といった機能もサポートされています 5。
+Campbell Scientific社が提供する公式な開発ツールであるCRBasic Editorは、データロガープログラマ向けに設計されており、基本的なIDE機能を提供しています 4。
+
+これらの機能には、構文強調表示（Comments、Instruction Names、その他の要素が異なるスタイルで表示される）5、プログラムエントリウィンドウ、およびCRBasic言語の命令を一覧表示するInstruction Panelが含まれます 4。
+
+また、変数操作のためのキーボードショートカット（F9/F10）や、コメントの挿入、インデントの再構築といった機能もサポートされています 5。
 
 Instruction Panelが存在し、利用可能な命令のリストが提供されているという事実は、IntelliSenseの中核となる静的なキーワードおよび関数リストの抽出が技術的に可能であることを示唆しています 4。実際、既にコミュニティによって開発されたVSCode拡張機能が存在し、TextMate Grammarに基づく構文ハイライトと基本的なコードスニペットを提供しています 7。
 
@@ -49,7 +57,9 @@ TextMate Grammarの実装においては、この単一引用符によるコメ�
 
 CRBasicは、長い命令や宣言を複数の物理的な行に分割して可読性を高めるために、独自の行継続メカニズムを提供しています 6。行継続は、**単一のホワイトスペース文字**が直前にあり、その後に\*\*単一のアンダースコア (\_)\*\*が続く形式で、その物理的な行の最後の非空白文字として機能します 6。例として、Public宣言で長い変数リストを定義する際に使用されます 6。
 
-TextMate Grammarは、この特定のパターンを正確に識別するように設計される必要があります。一般的なBASIC言語が使用する可能性がある他の行継続記号（例：バックスラッシュ \\）との混同を避けるため、正規表現は厳密に\\s\_$（行末にホワイトスペースとアンダースコア）にマッチするように設定する必要があります。この正確なトークン化は、特にコードの整形や構造的な認識において、TextMate Grammarのコンテキスト（begin/endパターン）が次の行を前の行の論理的な継続として扱うために不可欠です。
+TextMate Grammarは、この特定のパターンを正確に識別するように設計される必要があります。一般的なBASIC言語が使用する可能性がある他の行継続記号（例：バックスラッシュ \\）との混同を避けるため、正規表現は厳密に\\s\_$（行末にホワイトスペースとアンダースコア）にマッチするように設定する必要があります。
+
+この正確なトークン化は、特にコードの整形や構造的な認識において、TextMate Grammarのコンテキスト（begin/endパターン）が次の行を前の行の論理的な継続として扱うために不可欠です。
 
 ### **2.4 識別子、リテラル、および大文字・小文字の区別**
 
@@ -57,8 +67,8 @@ CRBasicの命令や制御構造は、一般的なBASIC言語の特性に従い�
 
 識別子、リテラル、およびデータ型に関しては、以下の要素が認識されます。
 
-* **リテラル:** 数値エントリー（整数、浮動小数点数）や、引用符で囲まれた文字列がサポートされます 1。  
-* **データ型:** 関数定義において戻り値の型を指定するためにAs DataType構文が使用されることから、組み込みのデータ型が存在することが確認されています 9。これらのデータ型キーワード（例：Long, Float, Stringなど）は、storage.typeスコープに分類されるべきです。  
+* **リテラル:** 数値エントリー（整数、浮動小数点数）や、引用符で囲まれた文字列がサポートされます 1。
+* **データ型:** 関数定義において戻り値の型を指定するためにAs DataType構文が使用されることから、組み込みのデータ型が存在することが確認されています 9。これらのデータ型キーワード（例：Long, Float, Stringなど）は、storage.typeスコープに分類されるべきです。
 * **識別子:** 変数名は、ターゲットとするデータロガーモデルに依存する厳密な文字数制限に従う必要があります（第4章で詳細に分析）。
 
 ## **第3章：CRBasicの構造的フレームワークと実行シーケンス**
@@ -69,9 +79,9 @@ CRBasicプログラムは構造化されており、特定の実行シーケン�
 
 CRBasicプログラムの典型的なレイアウトは、以下の主要なセクションで構成されます 10。
 
-1. **Program Declarations:** プログラムの初期設定と定義が行われる領域です。ここでは、Const（固定値に変数名を割り当てる）10、PublicまたはDim（変数を宣言する）10、およびAlias（定義済みの変数に別名を割り当てる）10 が使用されます。  
-2. **Data Tables:** データの保存方法とトリガー条件（固定間隔または条件付き）を定義します 10。  
-3. **Subroutines / Functions:** 繰り返し実行されるプロセスや計算をカプセル化するために、ユーザー定義のサブルーチンや関数が定義されます 9。  
+1. **Program Declarations:** プログラムの初期設定と定義が行われる領域です。ここでは、Const（固定値に変数名を割り当てる）10、PublicまたはDim（変数を宣言する）10、およびAlias（定義済みの変数に別名を割り当てる）10 が使用されます。
+2. **Data Tables:** データの保存方法とトリガー条件（固定間隔または条件付き）を定義します 10。
+3. **Subroutines / Functions:** 繰り返し実行されるプロセスや計算をカプセル化するために、ユーザー定義のサブルーチンや関数が定義されます 9。
 4. **Program Execution Block:** メインの実行ロジックを含む部分であり、BeginProgで始まりEndProgで終了します 10。
 
 この階層的な構造は、LSPがVSCodeのDocument Symbol機能（アウトラインビュー）を実装するための理想的な基盤を提供します。LSPは、DataTable、Sub, Function, BeginProgといった主要な境界定義キーワードを解析し、プログラムの構造をシンボルツリーとして抽出することで、ユーザーが大規模なプログラム内を効率的にナビゲートできるように支援する必要があります。
@@ -80,9 +90,11 @@ CRBasicプログラムの典型的なレイアウトは、以下の主要なセ�
 
 CRBasicにおける変数のスコープ規則は、一般的な高級言語とは異なる特異な側面を持っており、LSPがシンボル解決を行う際にはこの点を慎重に扱う必要があります 10。
 
-* **Public変数:** Public命令を使用して宣言された変数はグローバルスコープを持ちます 10。これらの変数は、データロガーのディスプレイやLoggerNetなどの監視ソフトウェアから値が監視可能であるという、組み込みシステム特有の役割を果たします 10。特筆すべき点として、**Publicを使用して宣言された変数は、サブルーチンまたは関数内で宣言された場合であっても、グローバルスコープを持ちます** 10。  
-* **Dim変数:** Dim命令で宣言された変数は、外部から監視されることを意図しない「スクラッチ」変数やローカル変数として使用されます 10。  
-* **フラグの特殊な扱いの解析:** CRBasicデータロガーには、レガシーモデルのような事前に定義されたユーザーフラグはありません 10。CRBasicでは、フラグは単に宣言された変数です。しかし、Public変数が特定の命名規則、すなわちFlag()という名前で配列として宣言された場合、LoggerNetなどのサポートソフトウェアはこれを特別に認識し、Ports/Flagsウィンドウに表示します 10。
+* **Public変数:** Public命令を使用して宣言された変数はグローバルスコープを持ちます 10。これらの変数は、データロガーのディスプレイやLoggerNetなどの監視ソフトウェアから値が監視可能であるという、組み込みシステム特有の役割を果たします 10。
+  * 特筆すべき点として、**Publicを使用して宣言された変数は、サブルーチンまたは関数内で宣言された場合であっても、グローバルスコープを持ちます** 10。
+* **Dim変数:** Dim命令で宣言された変数は、外部から監視されることを意図しない「スクラッチ」変数やローカル変数として使用されます 10。
+* **フラグの特殊な扱いの解析:** CRBasicデータロガーには、レガシーモデルのような事前に定義されたユーザーフラグはありません 10。CRBasicでは、フラグは単に宣言された変数です。
+  * しかし、Public変数が特定の命名規則、すなわちFlag()という名前で配列として宣言された場合、LoggerNetなどのサポートソフトウェアはこれを特別に認識し、Ports/Flagsウィンドウに表示します 10。
 
 Public変数がサブルーチン内での宣言にかかわらずグローバルになるという振る舞いは、一般的なプログラミング言語のスコープ規則から逸脱しています。このルールは、LSPがシンボルリファレンスと定義を解析する際に、定義元がどこであっても変数へのアクセスがグローバルに有効であることを確認するための特別なロジックを実装しなければならないことを意味します。これにより、プログラム全体を通じて、意図しない変数名の衝突や、グローバル変数の不適切な再定義を予測的に診断することが可能になります。
 
@@ -90,7 +102,8 @@ Public変数がサブルーチン内での宣言にかかわらずグローバ�
 
 CRBasicは、Sub/EndSubとFunction/EndFunctionの二種類の再利用可能なコードブロックをサポートしていますが、その引数処理のセマンティクスに重要な差異があります 9。
 
-* **関数 (Function/EndFunction):** ユーザー定義関数を作成するために使用されます 9。関数が呼び出される際、パラメータは関数のローカルパラメータリストにコピーされます（値渡し）。サブルーチンとは異なり、**関数は終了時にローカルパラメータ値を外部に渡された変数にコピーバックしません**。代わりに、関数は式によって使用される単一の戻り値を返します 9。また、関数の実行は一度に一つのインスタンスのみ可能です 9。関数を呼び出す際には、パラメータが無くても括弧（パラメーターリスト）を使用する必要があります。  
+* **関数 (Function/EndFunction):** ユーザー定義関数を作成するために使用されます 9。関数が呼び出される際、パラメータは関数のローカルパラメータリストにコピーされます（値渡し）。サブルーチンとは異なり、**関数は終了時にローカルパラメータ値を外部に渡された変数にコピーバックしません**。代わりに、関数は式によって使用される単一の戻り値を返します 9。
+  * また、関数の実行は一度に一つのインスタンスのみ可能です 9。関数を呼び出す際には、パラメータが無くても括弧（パラメーターリスト）を使用する必要があります。
 * **サブルーチン (Sub/EndSub):** サブルーチンも同様に、呼び出し時にパラメータをローカルパラメータリストにコピーします。しかし、サブルーチンが終了する際には、**ローカルパラメータ値が、渡された任意の変数にコピーバックされます** 9。この動作は、実質的に引数を変更可能な参照渡しのように振る舞うことを意味します。
 
 このコピーバック動作の差異は、CRBasicにおけるパラメータ渡しのセマンティクスを理解する上で極めて重要です。プログラマが外部変数を変更したい場合、Subroutineを使用する必要があります。もし誤ってFunctionに依存した場合、期待された外部への状態変更は発生しません。したがって、LSPのIntelliSenseシグネチャヘルプは、関数とサブルーチンのドキュメントにおいて、この厳密なコピーバックの違いを明確に記述し、ユーザーにそのセマンティクスを理解させる必要があります。
@@ -126,9 +139,9 @@ Table 2: データロガーモデルによる変数名制約の詳細な仕様
 
 CRBasicは、代数的な表現をサポートしており 1、また関数定義の構文において戻り値の型としてDataTypeが使用されることから 9、複数の組み込みデータ型が存在することが確認されます。計測ドメインの特性上、少なくとも以下の基本データ型が存在すると推測されます。
 
-* **数値型:** 浮動小数点数（計測データ用）、長整数、整数（カウンタや時間処理用）。  
-* **文字列型:** シリアル通信やファイル操作で使用される。  
-* **ブーリアン型:** 論理表現の評価結果に使用される 1。  
+* **数値型:** 浮動小数点数（計測データ用）、長整数、整数（カウンタや時間処理用）。
+* **文字列型:** シリアル通信やファイル操作で使用される。
+* **ブーリアン型:** 論理表現の評価結果に使用される 1。
 * **日付/時刻型:** リアルタイムクロックを持つデータロガーの操作に不可欠。
 
 これらのデータ型キーワードは、LSPが変数宣言や関数シグネチャの検証を行う上で、予約語として認識される必要があります。
@@ -141,16 +154,16 @@ CRBasicは構造化BASICに類似した特性を持つため、プログラム�
 
 主要な条件分岐メカニズムは、典型的なBASIC構文に従います。
 
-* **構文要素:** If, Then, Else, ElseIf, EndIf。  
+* **構文要素:** If, Then, Else, ElseIf, EndIf。
 * **セマンティクス:** これらの構造は、ブーリアン型の論理表現の評価結果に基づいて実行パスを決定します 1。CRBasicは、制御プログラミングのための論理演算子と論理式評価をサポートしており 14、これにより複雑なセンサーベースの決定ロジックを実装することが可能です。
 
 ### **5.2 ループ構造の網羅的定義**
 
 繰り返しタスクを効率的に実行するために、CRBasicは複数の種類のループ構造をサポートしています 14。LSPは、これらのブロック構造の開始と終了が正しく対応しているかを確認する構造チェックを提供する必要があります。
 
-* For/Next: カウンタベースの繰り返しを実行します。TextMate Grammarでは、この開始と終了のペアを一つのパターンで捕捉できます。  
-* Do/While: 指定された条件が真である限り、ループブロックを実行します 14。  
-* Do/Until: 指定された条件が真になるまで、ループブロックを実行します 14。  
+* For/Next: カウンタベースの繰り返しを実行します。TextMate Grammarでは、この開始と終了のペアを一つのパターンで捕捉できます。
+* Do/While: 指定された条件が真である限り、ループブロックを実行します 14。
+* Do/Until: 指定された条件が真になるまで、ループブロックを実行します 14。
 * Loop: Do構造の終端をマークします。
 
 Do/WhileとDo/Untilは異なる開始条件を持つため、TextMate Grammarを構築する際は、それぞれ独立したbegin/endパターンを定義し、適切なネスト構造を正確に識別できるようにすることが求められます。
@@ -163,9 +176,9 @@ VSCode拡張機能のIntelliSense機能は、CRBasicが持つ膨大な組み込�
 
 データロガープログラミングは、I/O操作とデータ処理が中心であるため、組み込み命令は以下の機能カテゴリに分類されます。LSPは、各命令に対して包括的なドキュメントとシグネチャ情報を提供する必要があります。
 
-1. **計測命令 (Measurement Instructions):** データロガーのハードウェアポートを介してセンサーから物理量を測定する命令。例として、パルスカウント測定を行うPulseCount()命令が確認されています 2。  
-2. **通信命令 (Communication Instructions):** 外部デバイスやネットワークとのシリアル通信、プロトコル（SDI-12など）を管理する命令。例として、ポートを開くSerialOpen()、データを読み取り解析するSerialInRecord()、およびコマンドを送信するSerialOut()があります 3。  
-3. **データ処理関数 (Data Processing Functions):** 取得したデータの操作や検証に使用されるユーティリティ関数。例として、文字列を区切るSplitStr()や、期待されるチェックサムを計算するCheckSum()があります 3。  
+1. **計測命令 (Measurement Instructions):** データロガーのハードウェアポートを介してセンサーから物理量を測定する命令。例として、パルスカウント測定を行うPulseCount()命令が確認されています 2。
+2. **通信命令 (Communication Instructions):** 外部デバイスやネットワークとのシリアル通信、プロトコル（SDI-12など）を管理する命令。例として、ポートを開くSerialOpen()、データを読み取り解析するSerialInRecord()、およびコマンドを送信するSerialOut()があります 3。
+3. **データ処理関数 (Data Processing Functions):** 取得したデータの操作や検証に使用されるユーティリティ関数。例として、文字列を区切るSplitStr()や、期待されるチェックサムを計算するCheckSum()があります 3。
 4. **構造定義命令 (Structural Instructions):** プログラムやサブルーチン、関数の境界を定義するために使用されます（例: Function/EndFunction 9, BeginProg/EndProg）。
 
 これらの命令は、TextMate Grammarにおいてはsupport.functionスコープに、LSPにおいてはシグネチャとドキュメントを持つシンボルとして扱われるべきです。
@@ -174,8 +187,8 @@ VSCode拡張機能のIntelliSense機能は、CRBasicが持つ膨大な組み込�
 
 網羅的で正確なIntelliSense機能を実現するために、拡張機能は以下の3種類のキーワードリストを静的データベースとして統合する必要があります。
 
-1. **制御キーワード:** If, Then, For, Next, Do, Loop, Sub, Functionなど、プログラムの実行フローを決定する命令。  
-2. **宣言キーワード:** Public, Dim, Const, Alias, Asなど、変数や定数の定義、型指定に使用される命令。  
+1. **制御キーワード:** If, Then, For, Next, Do, Loop, Sub, Functionなど、プログラムの実行フローを決定する命令。
+2. **宣言キーワード:** Public, Dim, Const, Alias, Asなど、変数や定数の定義、型指定に使用される命令。
 3. **組み込み命令/関数:** Campbell Scientificの提供するヘルプシステムやInstruction Panelから抽出された、モデル固有および汎用の全命令の網羅的なセット 4。
 
 TextMate Grammarによる構文強調表示の仕様を確立するために、主要なCRBasic命令のカテゴリと推奨されるスコープを以下に例示します。
@@ -198,7 +211,7 @@ CRBasic VSCode拡張機能の成功は、既存のコミュニティ拡張機能
 
 TextMate Grammarの実装は、第2章で定義されたレキシカル仕様に厳密に従う必要があります。
 
-* **定義の優先順位:** 誤ったトークン化を防ぐため、定義は特定の順序で行われる必要があります。まず、コメント（'）および複雑な行継続パターン（\\s\_$）を最上位で定義し、これらが他のトークンを誤って上書きしないようにします。次に、制御キーワード、宣言キーワード、最後に組み込み命令群の順に、適切なスコープ（例：keyword.control、storage.type）を割り当てていきます。  
+* **定義の優先順位:** 誤ったトークン化を防ぐため、定義は特定の順序で行われる必要があります。まず、コメント（'）および複雑な行継続パターン（\\s\_$）を最上位で定義し、これらが他のトークンを誤って上書きしないようにします。次に、制御キーワード、宣言キーワード、最後に組み込み命令群の順に、適切なスコープ（例：keyword.control、storage.type）を割り当てていきます。
 * **スコープの標準化:** 標準的なTextMateスコープ命名規則（例：entity.name.function）に従うことで、VSCodeの異なるカラーテーマ間での互換性を確保します。
 
 ### **7.2 Language Server Protocol (LSP) の詳細な仕様**
@@ -209,9 +222,9 @@ Language Server Protocolは、静的解析を通じて、コンパイル前に�
 
 LSPの最も重要な役割は、第4章で詳述された**モデル依存の変数名チェック**を提供することです。
 
-* **モデル識別:** プログラムファイルの内容（ターゲットモデル指定）またはファイル拡張子（例：.cr6, .cr2 8）に基づいて、データロガーのモデルグループ（AまたはB）を識別します。  
-* **CR200XグループAの衝突予測:** モデルAがターゲットの場合、LSPはPublic宣言されたすべての変数を検査し、最初の12文字が重複している変数が存在するかを診断します。これにより、「重複フィールド名」コンパイルエラーをコーディング段階で予測的に報告し、ユーザーのデバッグ時間を大幅に削減します 10。  
-* **長さ制限の適用:** ターゲットモデルに応じて、16文字（グループA）または39文字（グループB）を超える変数名をエラーとして報告します 10。  
+* **モデル識別:** プログラムファイルの内容（ターゲットモデル指定）またはファイル拡張子（例：.cr6, .cr2 8）に基づいて、データロガーのモデルグループ（AまたはB）を識別します。
+* **CR200XグループAの衝突予測:** モデルAがターゲットの場合、LSPはPublic宣言されたすべての変数を検査し、最初の12文字が重複している変数が存在するかを診断します。これにより、「重複フィールド名」コンパイルエラーをコーディング段階で予測的に報告し、ユーザーのデバッグ時間を大幅に削減します 10。
+* **長さ制限の適用:** ターゲットモデルに応じて、16文字（グループA）または39文字（グループB）を超える変数名をエラーとして報告します 10。
 * **構造チェック:** BeginProg / EndProg、Function / EndFunctionなどのプログラム構造境界が欠落していないか、または不適切にネストされていないかを検証します。
 
 #### **2\. シグネチャヘルプとドキュメント提供**
@@ -228,8 +241,8 @@ LSPは、PublicおよびDimで宣言された変数、定数、およびユー�
 
 IntelliSenseの補完機能には、繰り返し使用される定型的なコードブロックを迅速に挿入するためのスニペット機能を含める必要があります。
 
-* **構造スニペット:** 完全なプログラム構造テンプレート（宣言、データテーブル、プログラム実行ブロックを含む）、DataTable定義テンプレート、および制御フロー構造（ifthenelse, fornext, dowhile/until）のスニペット 8。  
-* **計測マジックネーム:** Public Flag()配列宣言のスニペットを提供し、サポートソフトウェアとの連携を容易にする「マジックネーム」の利用を促します 10。  
+* **構造スニペット:** 完全なプログラム構造テンプレート（宣言、データテーブル、プログラム実行ブロックを含む）、DataTable定義テンプレート、および制御フロー構造（ifthenelse, fornext, dowhile/until）のスニペット 8。
+* **計測マジックネーム:** Public Flag()配列宣言のスニペットを提供し、サポートソフトウェアとの連携を容易にする「マジックネーム」の利用を促します 10。
 * **命令スニペット:** 主要な計測命令（例：ThermocoupleScan, PulseCount）のシグネチャと、それに関連する変数宣言のテンプレートを提供し、計測プログラムの迅速な構築を支援します。
 
 ## **結論**
@@ -244,17 +257,17 @@ VSCode拡張機能の目標であるSyntax HighlightingとIntelliSenseの提供�
 
 ### 引用文献
 
-1. CRBasic Programming \- Campbell Scientific, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/loggernet-manual/ln\_manual/crbasic\_editor/crbasic\_programming.htm?TocPath=Creating%20and%20Editing%20Datalogger%20Programs%7CCRBasic%20Editor%7CCRBasic%20Programming%7C\_\_\_\_\_0](https://help.campbellsci.com/loggernet-manual/ln_manual/crbasic_editor/crbasic_programming.htm?TocPath=Creating+and+Editing+Datalogger+Programs%7CCRBasic+Editor%7CCRBasic+Programming%7C_____0)  
-2. manual \- Campbell Scientific, 11月 21, 2025にアクセス、 [https://s.campbellsci.com/documents/sp/manuals/03002.pdf](https://s.campbellsci.com/documents/sp/manuals/03002.pdf)  
-3. CRBasic programming \- Campbell Scientific, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/cs120a-cs125/cs120a-cs125/crbasic-programming.htm?TocPath=Installation%7CProgramming%7C\_\_\_\_\_1](https://help.campbellsci.com/cs120a-cs125/cs120a-cs125/crbasic-programming.htm?TocPath=Installation%7CProgramming%7C_____1)  
-4. CRBasic Editor \- Campbell Scientific, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/crbasic/cr300/Content/Info/crbasiceditor.htm](https://help.campbellsci.com/crbasic/cr300/Content/Info/crbasiceditor.htm)  
-5. Key features of the CRBasic programming... \- Campbell Scientific, 11月 21, 2025にアクセス、 [https://www.campbellsci.com/videos/crbasic-features](https://www.campbellsci.com/videos/crbasic-features)  
-6. Programming Tips, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/crbasic/landing/Content/Info/programmingtips.htm?TocPath=CRBasic%20Programming%7C\_\_\_\_\_4](https://help.campbellsci.com/crbasic/landing/Content/Info/programmingtips.htm?TocPath=CRBasic+Programming%7C_____4)  
-7. CRBasic VSCode Support \- Campbell Scientific, Inc. \- Visual Studio Marketplace, 11月 21, 2025にアクセス、 [https://marketplace.visualstudio.com/items?itemName=daiwalkr.cr-basic-ms-vscode](https://marketplace.visualstudio.com/items?itemName=daiwalkr.cr-basic-ms-vscode)  
-8. CRBasic VSCode Support \- Visual Studio Marketplace, 11月 21, 2025にアクセス、 [https://marketplace.visualstudio.com/items?itemName=DaviBarbosa.crbasic-vscode-support](https://marketplace.visualstudio.com/items?itemName=DaviBarbosa.crbasic-vscode-support)  
-9. Function/EndFunction (Create a Function), 11月 21, 2025にアクセス、 [https://help.campbellsci.com/crbasic/landing/Content/Instructions/functionendfunction.htm](https://help.campbellsci.com/crbasic/landing/Content/Instructions/functionendfunction.htm)  
-10. CRBasic Program Structure, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/crbasic/cr6/Content/Info/crbasicprogramstructure.htm](https://help.campbellsci.com/crbasic/cr6/Content/Info/crbasicprogramstructure.htm)  
-11. Syntax Highlight Guide | Visual Studio Code Extension API, 11月 21, 2025にアクセス、 [https://code.visualstudio.com/api/language-extensions/syntax-highlight-guide](https://code.visualstudio.com/api/language-extensions/syntax-highlight-guide)  
-12. Commenting Code in CRBasic, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/crbasic/landing/Content/Info/comments.htm?TocPath=CRBasic%20Programming%7C\_\_\_\_\_2](https://help.campbellsci.com/crbasic/landing/Content/Info/comments.htm?TocPath=CRBasic+Programming%7C_____2)  
-13. Inserting Comments into Program \- Campbell Scientific, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/loggernet-manual/ln\_manual/crbasic\_editor/inserting\_comments\_into\_program.htm?TocPath=Creating%20and%20Editing%20Datalogger%20Programs%7CCRBasic%20Editor%7CCRBasic%20Programming%7C\_\_\_\_\_6](https://help.campbellsci.com/loggernet-manual/ln_manual/crbasic_editor/inserting_comments_into_program.htm?TocPath=Creating+and+Editing+Datalogger+Programs%7CCRBasic+Editor%7CCRBasic+Programming%7C_____6)  
+1. CRBasic Programming \- Campbell Scientific, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/loggernet-manual/ln\_manual/crbasic\_editor/crbasic\_programming.htm?TocPath=Creating%20and%20Editing%20Datalogger%20Programs%7CCRBasic%20Editor%7CCRBasic%20Programming%7C\_\_\_\_\_0](https://help.campbellsci.com/loggernet-manual/ln_manual/crbasic_editor/crbasic_programming.htm?TocPath=Creating+and+Editing+Datalogger+Programs%7CCRBasic+Editor%7CCRBasic+Programming%7C_____0)
+2. manual \- Campbell Scientific, 11月 21, 2025にアクセス、 [https://s.campbellsci.com/documents/sp/manuals/03002.pdf](https://s.campbellsci.com/documents/sp/manuals/03002.pdf)
+3. CRBasic programming \- Campbell Scientific, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/cs120a-cs125/cs120a-cs125/crbasic-programming.htm?TocPath=Installation%7CProgramming%7C\_\_\_\_\_1](https://help.campbellsci.com/cs120a-cs125/cs120a-cs125/crbasic-programming.htm?TocPath=Installation%7CProgramming%7C_____1)
+4. CRBasic Editor \- Campbell Scientific, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/crbasic/cr300/Content/Info/crbasiceditor.htm](https://help.campbellsci.com/crbasic/cr300/Content/Info/crbasiceditor.htm)
+5. Key features of the CRBasic programming... \- Campbell Scientific, 11月 21, 2025にアクセス、 [https://www.campbellsci.com/videos/crbasic-features](https://www.campbellsci.com/videos/crbasic-features)
+6. Programming Tips, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/crbasic/landing/Content/Info/programmingtips.htm?TocPath=CRBasic%20Programming%7C\_\_\_\_\_4](https://help.campbellsci.com/crbasic/landing/Content/Info/programmingtips.htm?TocPath=CRBasic+Programming%7C_____4)
+7. CRBasic VSCode Support \- Campbell Scientific, Inc. \- Visual Studio Marketplace, 11月 21, 2025にアクセス、 [https://marketplace.visualstudio.com/items?itemName=daiwalkr.cr-basic-ms-vscode](https://marketplace.visualstudio.com/items?itemName=daiwalkr.cr-basic-ms-vscode)
+8. CRBasic VSCode Support \- Visual Studio Marketplace, 11月 21, 2025にアクセス、 [https://marketplace.visualstudio.com/items?itemName=DaviBarbosa.crbasic-vscode-support](https://marketplace.visualstudio.com/items?itemName=DaviBarbosa.crbasic-vscode-support)
+9. Function/EndFunction (Create a Function), 11月 21, 2025にアクセス、 [https://help.campbellsci.com/crbasic/landing/Content/Instructions/functionendfunction.htm](https://help.campbellsci.com/crbasic/landing/Content/Instructions/functionendfunction.htm)
+10. CRBasic Program Structure, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/crbasic/cr6/Content/Info/crbasicprogramstructure.htm](https://help.campbellsci.com/crbasic/cr6/Content/Info/crbasicprogramstructure.htm)
+11. Syntax Highlight Guide | Visual Studio Code Extension API, 11月 21, 2025にアクセス、 [https://code.visualstudio.com/api/language-extensions/syntax-highlight-guide](https://code.visualstudio.com/api/language-extensions/syntax-highlight-guide)
+12. Commenting Code in CRBasic, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/crbasic/landing/Content/Info/comments.htm?TocPath=CRBasic%20Programming%7C\_\_\_\_\_2](https://help.campbellsci.com/crbasic/landing/Content/Info/comments.htm?TocPath=CRBasic+Programming%7C_____2)
+13. Inserting Comments into Program \- Campbell Scientific, 11月 21, 2025にアクセス、 [https://help.campbellsci.com/loggernet-manual/ln\_manual/crbasic\_editor/inserting\_comments\_into\_program.htm?TocPath=Creating%20and%20Editing%20Datalogger%20Programs%7CCRBasic%20Editor%7CCRBasic%20Programming%7C\_\_\_\_\_6](https://help.campbellsci.com/loggernet-manual/ln_manual/crbasic_editor/inserting_comments_into_program.htm?TocPath=Creating+and+Editing+Datalogger+Programs%7CCRBasic+Editor%7CCRBasic+Programming%7C_____6)
 14. Fundamentals of CRBasic Programming Part 6: Loops : Using For/Next... \- Campbell Scientific, 11月 21, 2025にアクセス、 [https://www.campbellsci.com/videos/crbasic-6](https://www.campbellsci.com/videos/crbasic-6)

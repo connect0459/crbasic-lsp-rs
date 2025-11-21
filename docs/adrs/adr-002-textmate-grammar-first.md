@@ -27,11 +27,13 @@ The question is: **Should we rely solely on semantic tokens from our LSP server,
 ### Option 1: LSP Semantic Tokens Only
 
 **Pros**:
+
 - Single source of truth for tokenization logic
 - Semantic awareness (e.g., distinguish variable references from declarations)
 - No duplication of keyword lists
 
 **Cons**:
+
 - Delayed highlighting until LSP server initializes (noticeable lag on startup)
 - No fallback if LSP fails or crashes
 - Worse performance for large files (requires full parsing)
@@ -40,11 +42,13 @@ The question is: **Should we rely solely on semantic tokens from our LSP server,
 ### Option 2: TextMate Grammar Only
 
 **Pros**:
+
 - Instant highlighting (VSCode built-in tokenizer)
 - Extremely fast (regex-based, no parsing required)
 - Always available (no LSP dependency)
 
 **Cons**:
+
 - Limited semantic awareness (cannot distinguish context-dependent tokens)
 - Duplication of keyword definitions
 - Less precise for complex language features
@@ -52,6 +56,7 @@ The question is: **Should we rely solely on semantic tokens from our LSP server,
 ### Option 3: TextMate Grammar + LSP Semantic Tokens (Selected)
 
 **Pros**:
+
 - **Instant baseline highlighting** via TextMate Grammar
 - **Enhanced semantic highlighting** via LSP when available
 - **Graceful degradation**: Works even if LSP fails
@@ -59,6 +64,7 @@ The question is: **Should we rely solely on semantic tokens from our LSP server,
 - **Standard practice**: Follows VSCode extension conventions
 
 **Cons**:
+
 - Duplication of keyword lists (mitigated by shared source)
 - Slightly more implementation effort
 
@@ -68,9 +74,9 @@ The question is: **Should we rely solely on semantic tokens from our LSP server,
 
 ### Rationale
 
-1. **Instant User Feedback**: TextMate Grammar provides immediate syntax highlighting when a CRBasic file is opened, before the LSP server even starts. This is critical for user experience.
+1. **Instant User Feedback**: TextMate Grammar provides immediate syntax highlighting when a CRBasic file is opened, before the LSP server even starts.
 
-2. **Graceful Degradation**: If the LSP server fails to initialize (e.g., WASM loading error, parser crash), users still get basic syntax highlighting. The extension remains functional.
+2. **Graceful Degradation**: If the LSP server fails to initialize (e.g., WASM loading error, parser crash), users still get basic syntax highlighting.
 
 3. **Performance at Scale**: For very large CRBasic programs (e.g., 1000+ lines), TextMate Grammar provides fast initial highlighting while LSP performs semantic analysis in the background.
 
@@ -84,6 +90,7 @@ The question is: **Should we rely solely on semantic tokens from our LSP server,
 ### Implementation Strategy
 
 **TextMate Grammar Scope Coverage**:
+
 - `comment.line.single-quote.crbasic`: Single-quote comments
 - `keyword.control.crbasic`: Control flow keywords (If, For, Do, While, etc.)
 - `storage.type.crbasic`: Declaration keywords (Public, Dim, Const, Alias)
@@ -94,12 +101,14 @@ The question is: **Should we rely solely on semantic tokens from our LSP server,
 - `punctuation.separator.continuation.crbasic`: Line continuation (`_`)
 
 **LSP Semantic Token Enhancement** (future):
+
 - Distinguish variable declarations vs. references
 - Highlight Public variables differently from Dim variables
 - Mark user-defined functions/subroutines
 - Highlight model-specific validation warnings (e.g., variable names >12 chars on CR200X)
 
 **Avoiding Duplication**:
+
 - Maintain a single source of truth for CRBasic keywords (e.g., `keywords.json`)
 - Generate TextMate Grammar from this source during build
 - Use same list for LSP completion/validation

@@ -51,7 +51,7 @@ repos:
         name: eslint
         entry: bash -c 'cd client && npm run lint'
         language: system
-        types: [typescript]
+        files: \.ts$
         pass_filenames: false
 
   # Markdown linting
@@ -61,6 +61,3 @@ repos:
       - id: markdownlint
         args: ['--fix']
         exclude: ^(node_modules|target)/
-
-# Run hooks on all files by default
-default_stages: [commit]
