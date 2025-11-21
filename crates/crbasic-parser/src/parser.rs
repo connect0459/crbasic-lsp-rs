@@ -342,50 +342,88 @@ impl Parser {
                         let ident_name = name.clone();
                         let ident_span = token.span;
 
-                        // Check if this is a function call (identifier followed by '(')
-                        if matches!(self.peek().kind, TokenKind::LeftParen) {
-                            self.advance(); // consume '('
+                        // Start with base identifier expression
+                        let mut expr = Expression::identifier(ident_name.clone(), ident_span);
 
-                            // Parse argument list
-                            let mut arguments = Vec::new();
+                        // Check for postfix operations (function call or array access)
+                        loop {
+                            match self.peek().kind {
+                                TokenKind::LeftParen => {
+                                    // Function call
+                                    self.advance(); // consume '('
 
-                            // Check for empty argument list
-                            if !matches!(self.peek().kind, TokenKind::RightParen) {
-                                loop {
-                                    // Parse argument expression
-                                    arguments.push(self.parse_expression()?);
+                                    // Parse argument list
+                                    let mut arguments = Vec::new();
 
-                                    // Check for comma (more arguments) or closing paren
-                                    if matches!(self.peek().kind, TokenKind::Comma) {
-                                        self.advance(); // consume ','
-                                    } else {
-                                        break;
+                                    // Check for empty argument list
+                                    if !matches!(self.peek().kind, TokenKind::RightParen) {
+                                        loop {
+                                            // Parse argument expression
+                                            arguments.push(self.parse_expression()?);
+
+                                            // Check for comma (more arguments) or closing paren
+                                            if matches!(self.peek().kind, TokenKind::Comma) {
+                                                self.advance(); // consume ','
+                                            } else {
+                                                break;
+                                            }
+                                        }
                                     }
+
+                                    // Expect closing ')'
+                                    if !matches!(self.peek().kind, TokenKind::RightParen) {
+                                        return Err(ParseError {
+                                            message: "Expected ')' after function arguments"
+                                                .to_string(),
+                                            span: self.peek().span,
+                                        });
+                                    }
+                                    let end_paren_span = self.advance().span;
+
+                                    let span = crate::lexer::token::Span::new(
+                                        expr.span().start,
+                                        end_paren_span.end,
+                                    );
+                                    expr = Expression::FunctionCall {
+                                        name: ident_name.clone(),
+                                        arguments,
+                                        span,
+                                    };
+                                }
+                                TokenKind::LeftBracket => {
+                                    // Array access
+                                    self.advance(); // consume '['
+
+                                    // Parse index expression
+                                    let index = self.parse_expression()?;
+
+                                    // Expect closing ']'
+                                    if !matches!(self.peek().kind, TokenKind::RightBracket) {
+                                        return Err(ParseError {
+                                            message: "Expected ']' after array index".to_string(),
+                                            span: self.peek().span,
+                                        });
+                                    }
+                                    let end_bracket_span = self.advance().span;
+
+                                    let span = crate::lexer::token::Span::new(
+                                        expr.span().start,
+                                        end_bracket_span.end,
+                                    );
+                                    expr = Expression::ArrayAccess {
+                                        array: Box::new(expr),
+                                        index: Box::new(index),
+                                        span,
+                                    };
+                                }
+                                _ => {
+                                    // No more postfix operations
+                                    break;
                                 }
                             }
-
-                            // Expect closing ')'
-                            if !matches!(self.peek().kind, TokenKind::RightParen) {
-                                return Err(ParseError {
-                                    message: "Expected ')' after function arguments".to_string(),
-                                    span: self.peek().span,
-                                });
-                            }
-                            let end_paren_span = self.advance().span;
-
-                            let span = crate::lexer::token::Span::new(
-                                ident_span.start,
-                                end_paren_span.end,
-                            );
-                            Ok(Expression::FunctionCall {
-                                name: ident_name,
-                                arguments,
-                                span,
-                            })
-                        } else {
-                            // Just an identifier, not a function call
-                            Ok(Expression::identifier(ident_name, ident_span))
                         }
+
+                        Ok(expr)
                     }
                     _ => unreachable!(),
                 }
@@ -1379,6 +1417,140 @@ mod tests {
                         assert!(matches!(arguments[1], Expression::IntegerLiteral { .. }));
                     }
                     _ => panic!("Expected function call expression"),
+                }
+            }
+        }
+    }
+
+    mod array_access_expressions {
+        use super::*;
+
+        #[test]
+        fn parses_simple_array_access() {
+            let mut scanner = Scanner::new("Data[0]".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                match &arguments[0] {
+                    Expression::ArrayAccess { array, index, .. } => {
+                        // Array should be identifier "Data"
+                        if let Expression::Identifier { name, .. } = &**array {
+                            assert_eq!(name, "Data");
+                        } else {
+                            panic!("Expected identifier for array");
+                        }
+
+                        // Index should be integer 0
+                        if let Expression::IntegerLiteral { value, .. } = &**index {
+                            assert_eq!(*value, 0);
+                        } else {
+                            panic!("Expected integer literal for index");
+                        }
+                    }
+                    _ => panic!("Expected array access expression"),
+                }
+            }
+        }
+
+        #[test]
+        fn parses_array_access_with_variable_index() {
+            let mut scanner = Scanner::new("Temp_C[i]".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                match &arguments[0] {
+                    Expression::ArrayAccess { array, index, .. } => {
+                        // Array should be identifier "Temp_C"
+                        if let Expression::Identifier { name, .. } = &**array {
+                            assert_eq!(name, "Temp_C");
+                        } else {
+                            panic!("Expected identifier for array");
+                        }
+
+                        // Index should be identifier "i"
+                        if let Expression::Identifier { name, .. } = &**index {
+                            assert_eq!(name, "i");
+                        } else {
+                            panic!("Expected identifier for index");
+                        }
+                    }
+                    _ => panic!("Expected array access expression"),
+                }
+            }
+        }
+
+        #[test]
+        fn parses_array_access_with_expression_index() {
+            // Data[i + 1] - expression as index
+            let mut scanner = Scanner::new("Data[i + 1]".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                match &arguments[0] {
+                    Expression::ArrayAccess { array, index, .. } => {
+                        // Array should be identifier "Data"
+                        assert!(matches!(**array, Expression::Identifier { .. }));
+
+                        // Index should be binary operation (i + 1)
+                        assert!(matches!(**index, Expression::BinaryOp { .. }));
+                    }
+                    _ => panic!("Expected array access expression"),
+                }
+            }
+        }
+
+        #[test]
+        fn parses_multi_dimensional_array_access() {
+            // Matrix[1][2] - multi-dimensional array
+            let mut scanner = Scanner::new("Matrix[1][2]".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                match &arguments[0] {
+                    Expression::ArrayAccess { array, index, .. } => {
+                        // Array should be another ArrayAccess (Matrix[1])
+                        if let Expression::ArrayAccess { array, index, .. } = &**array {
+                            // Inner array should be identifier "Matrix"
+                            if let Expression::Identifier { name, .. } = &**array {
+                                assert_eq!(name, "Matrix");
+                            } else {
+                                panic!("Expected identifier for inner array");
+                            }
+
+                            // First index should be integer 1
+                            if let Expression::IntegerLiteral { value, .. } = &**index {
+                                assert_eq!(*value, 1);
+                            } else {
+                                panic!("Expected integer literal for first index");
+                            }
+                        } else {
+                            panic!("Expected nested array access");
+                        }
+
+                        // Second index should be integer 2
+                        if let Expression::IntegerLiteral { value, .. } = &**index {
+                            assert_eq!(*value, 2);
+                        } else {
+                            panic!("Expected integer literal for second index");
+                        }
+                    }
+                    _ => panic!("Expected array access expression"),
                 }
             }
         }

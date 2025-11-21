@@ -70,7 +70,11 @@
   - [x] Multiple arguments: `Scan(1, Temp_C, 0)`
   - [x] Expression arguments: `Max(1 + 2, 5)`
   - [x] Nested function calls: `Avg(Max(1, 2), 3)`
-- [ ] Array access
+- [x] Array access
+  - [x] Simple array access: `Data[0]`
+  - [x] Variable index: `Temp_C[i]`
+  - [x] Expression index: `Data[i + 1]`
+  - [x] Multi-dimensional: `Matrix[1][2]`
 
 ### Statement Parsing
 
@@ -158,13 +162,14 @@
   - [x] Line continuation
   - [x] Whitespace and newline handling
   - [x] Integration tests (multi-line programs)
-- [x] Parser tests (35 tests passing)
+- [x] Parser tests (39 tests passing)
   - [x] Primary expressions (literals, identifiers, parentheses)
   - [x] Binary operations (arithmetic, comparison, logical)
   - [x] Unary operations (negation, NOT)
   - [x] Operator precedence validation
   - [x] Parenthesized expressions
   - [x] Function call expressions (no args, single arg, multiple args, expression args, nested)
+  - [x] Array access expressions (simple, variable index, expression index, multi-dimensional)
 - [ ] LSP handler tests
 
 ### Integration Tests
