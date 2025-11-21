@@ -338,7 +338,54 @@ impl Parser {
                     }
                     TokenKind::String(value) => Ok(Expression::string(value.clone(), token.span)),
                     TokenKind::Identifier(name) => {
-                        Ok(Expression::identifier(name.clone(), token.span))
+                        // Clone necessary data to avoid borrow issues
+                        let ident_name = name.clone();
+                        let ident_span = token.span;
+
+                        // Check if this is a function call (identifier followed by '(')
+                        if matches!(self.peek().kind, TokenKind::LeftParen) {
+                            self.advance(); // consume '('
+
+                            // Parse argument list
+                            let mut arguments = Vec::new();
+
+                            // Check for empty argument list
+                            if !matches!(self.peek().kind, TokenKind::RightParen) {
+                                loop {
+                                    // Parse argument expression
+                                    arguments.push(self.parse_expression()?);
+
+                                    // Check for comma (more arguments) or closing paren
+                                    if matches!(self.peek().kind, TokenKind::Comma) {
+                                        self.advance(); // consume ','
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            }
+
+                            // Expect closing ')'
+                            if !matches!(self.peek().kind, TokenKind::RightParen) {
+                                return Err(ParseError {
+                                    message: "Expected ')' after function arguments".to_string(),
+                                    span: self.peek().span,
+                                });
+                            }
+                            let end_paren_span = self.advance().span;
+
+                            let span = crate::lexer::token::Span::new(
+                                ident_span.start,
+                                end_paren_span.end,
+                            );
+                            Ok(Expression::FunctionCall {
+                                name: ident_name,
+                                arguments,
+                                span,
+                            })
+                        } else {
+                            // Just an identifier, not a function call
+                            Ok(Expression::identifier(ident_name, ident_span))
+                        }
                     }
                     _ => unreachable!(),
                 }
@@ -1185,6 +1232,153 @@ mod tests {
                         }
                     }
                     _ => panic!("Expected unary operation"),
+                }
+            }
+        }
+    }
+
+    mod function_call_expressions {
+        use super::*;
+
+        #[test]
+        fn parses_function_call_with_no_arguments() {
+            let mut scanner = Scanner::new("TimeIntoInterval()".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                match &arguments[0] {
+                    Expression::FunctionCall {
+                        name, arguments, ..
+                    } => {
+                        assert_eq!(name, "TimeIntoInterval");
+                        assert_eq!(arguments.len(), 0);
+                    }
+                    _ => panic!("Expected function call expression"),
+                }
+            }
+        }
+
+        #[test]
+        fn parses_function_call_with_single_argument() {
+            let mut scanner = Scanner::new("Sqrt(16)".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                match &arguments[0] {
+                    Expression::FunctionCall {
+                        name, arguments, ..
+                    } => {
+                        assert_eq!(name, "Sqrt");
+                        assert_eq!(arguments.len(), 1);
+
+                        // Check first argument is integer 16
+                        if let Expression::IntegerLiteral { value, .. } = &arguments[0] {
+                            assert_eq!(*value, 16);
+                        } else {
+                            panic!("Expected integer literal as argument");
+                        }
+                    }
+                    _ => panic!("Expected function call expression"),
+                }
+            }
+        }
+
+        #[test]
+        fn parses_function_call_with_multiple_arguments() {
+            let mut scanner = Scanner::new("Scan(1, Temp_C, 0)".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                match &arguments[0] {
+                    Expression::FunctionCall {
+                        name, arguments, ..
+                    } => {
+                        assert_eq!(name, "Scan");
+                        assert_eq!(arguments.len(), 3);
+
+                        // Verify argument types
+                        assert!(matches!(arguments[0], Expression::IntegerLiteral { .. }));
+                        assert!(matches!(arguments[1], Expression::Identifier { .. }));
+                        assert!(matches!(arguments[2], Expression::IntegerLiteral { .. }));
+                    }
+                    _ => panic!("Expected function call expression"),
+                }
+            }
+        }
+
+        #[test]
+        fn parses_function_call_with_expression_arguments() {
+            // Max(1 + 2, 5) - function with binary operation as argument
+            let mut scanner = Scanner::new("Max(1 + 2, 5)".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                match &arguments[0] {
+                    Expression::FunctionCall {
+                        name, arguments, ..
+                    } => {
+                        assert_eq!(name, "Max");
+                        assert_eq!(arguments.len(), 2);
+
+                        // First argument should be binary operation (1 + 2)
+                        assert!(matches!(arguments[0], Expression::BinaryOp { .. }));
+                        // Second argument should be integer literal 5
+                        assert!(matches!(arguments[1], Expression::IntegerLiteral { .. }));
+                    }
+                    _ => panic!("Expected function call expression"),
+                }
+            }
+        }
+
+        #[test]
+        fn parses_nested_function_calls() {
+            // Avg(Max(1, 2), 3) - nested function calls
+            let mut scanner = Scanner::new("Avg(Max(1, 2), 3)".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                match &arguments[0] {
+                    Expression::FunctionCall {
+                        name, arguments, ..
+                    } => {
+                        assert_eq!(name, "Avg");
+                        assert_eq!(arguments.len(), 2);
+
+                        // First argument should be a function call to Max
+                        if let Expression::FunctionCall {
+                            name, arguments, ..
+                        } = &arguments[0]
+                        {
+                            assert_eq!(name, "Max");
+                            assert_eq!(arguments.len(), 2);
+                        } else {
+                            panic!("Expected nested function call");
+                        }
+
+                        // Second argument should be integer 3
+                        assert!(matches!(arguments[1], Expression::IntegerLiteral { .. }));
+                    }
+                    _ => panic!("Expected function call expression"),
                 }
             }
         }

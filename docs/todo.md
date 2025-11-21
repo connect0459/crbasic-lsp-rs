@@ -64,7 +64,12 @@
   - [x] Logical operators (`AND`, `OR`, `XOR`)
   - [x] Operator precedence (power > unary > mult/div > add/sub > comparison > logical AND > logical XOR > logical OR)
 - [x] Unary operations (`-`, `NOT`)
-- [ ] Function calls (as expressions)
+- [x] Function calls (as expressions)
+  - [x] No arguments: `TimeIntoInterval()`
+  - [x] Single argument: `Sqrt(16)`
+  - [x] Multiple arguments: `Scan(1, Temp_C, 0)`
+  - [x] Expression arguments: `Max(1 + 2, 5)`
+  - [x] Nested function calls: `Avg(Max(1, 2), 3)`
 - [ ] Array access
 
 ### Statement Parsing
@@ -153,12 +158,13 @@
   - [x] Line continuation
   - [x] Whitespace and newline handling
   - [x] Integration tests (multi-line programs)
-- [x] Parser tests (30 tests passing)
+- [x] Parser tests (35 tests passing)
   - [x] Primary expressions (literals, identifiers, parentheses)
   - [x] Binary operations (arithmetic, comparison, logical)
   - [x] Unary operations (negation, NOT)
   - [x] Operator precedence validation
   - [x] Parenthesized expressions
+  - [x] Function call expressions (no args, single arg, multiple args, expression args, nested)
 - [ ] LSP handler tests
 
 ### Integration Tests
