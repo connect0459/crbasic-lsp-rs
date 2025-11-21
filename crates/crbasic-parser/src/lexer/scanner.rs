@@ -482,6 +482,54 @@ mod tests {
 
             assert_eq!(tokens[1].kind, TokenKind::Eof);
         }
+
+        #[test]
+        fn recognizes_comment_after_code() {
+            let mut scanner = Scanner::new("Temp = 42 ' This is a mid-line comment".to_string());
+            let tokens = scanner.scan_tokens();
+
+            // Should have: Identifier, Equal, Integer, Comment, EOF
+            assert_eq!(tokens.len(), 5);
+
+            match &tokens[0].kind {
+                TokenKind::Identifier(name) => assert_eq!(name, "Temp"),
+                _ => panic!("Expected Identifier token"),
+            }
+
+            assert_eq!(tokens[1].kind, TokenKind::Equal);
+
+            match &tokens[2].kind {
+                TokenKind::Integer(value) => assert_eq!(value, "42"),
+                _ => panic!("Expected Integer token"),
+            }
+
+            match &tokens[3].kind {
+                TokenKind::Comment(text) => {
+                    assert_eq!(text, " This is a mid-line comment");
+                }
+                _ => panic!("Expected Comment token"),
+            }
+
+            assert_eq!(tokens[4].kind, TokenKind::Eof);
+        }
+
+        #[test]
+        fn recognizes_empty_comment() {
+            let mut scanner = Scanner::new("'".to_string());
+            let tokens = scanner.scan_tokens();
+
+            // Should have: Comment (empty), EOF
+            assert_eq!(tokens.len(), 2);
+
+            match &tokens[0].kind {
+                TokenKind::Comment(text) => {
+                    assert_eq!(text, "", "Empty comment should have empty text");
+                }
+                _ => panic!("Expected Comment token"),
+            }
+
+            assert_eq!(tokens[1].kind, TokenKind::Eof);
+        }
     }
 
     mod numeric_literals {
@@ -939,6 +987,254 @@ mod tests {
             }
 
             assert_eq!(tokens[1].kind, TokenKind::Eof);
+        }
+    }
+
+    mod integration_tests {
+        use super::*;
+
+        #[test]
+        fn tokenizes_simple_program() {
+            let source = r#"BeginProg
+  Public Temp_C
+  Temp_C = 25.5 ' Temperature in Celsius
+EndProg"#;
+
+            let mut scanner = Scanner::new(source.to_string());
+            let tokens = scanner.scan_tokens();
+
+            // Verify key tokens are present
+            let token_kinds: Vec<_> = tokens.iter().map(|t| &t.kind).collect();
+
+            // Should contain: BeginProg keyword
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Keyword(kw) if kw == "BeginProg")),
+                "Should contain BeginProg keyword"
+            );
+
+            // Should contain: Public keyword
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Keyword(kw) if kw == "Public")),
+                "Should contain Public keyword"
+            );
+
+            // Should contain: Temp_C identifier
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Temp_C")),
+                "Should contain Temp_C identifier"
+            );
+
+            // Should contain: = operator
+            assert!(
+                token_kinds.iter().any(|k| matches!(k, TokenKind::Equal)),
+                "Should contain = operator"
+            );
+
+            // Should contain: 25.5 float literal
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Float(val) if val == "25.5")),
+                "Should contain 25.5 float literal"
+            );
+
+            // Should contain: comment
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Comment(text) if text.contains("Temperature"))),
+                "Should contain temperature comment"
+            );
+
+            // Should contain: EndProg keyword
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Keyword(kw) if kw == "EndProg")),
+                "Should contain EndProg keyword"
+            );
+
+            // Should contain: newlines
+            assert!(
+                token_kinds.iter().any(|k| matches!(k, TokenKind::Newline)),
+                "Should contain newlines"
+            );
+
+            // Should end with EOF
+            assert_eq!(tokens.last().unwrap().kind, TokenKind::Eof);
+        }
+
+        #[test]
+        fn tokenizes_control_flow_program() {
+            let source = r#"If Temp > 30 Then
+  ' Hot day
+  Status = 1
+EndIf"#;
+
+            let mut scanner = Scanner::new(source.to_string());
+            let tokens = scanner.scan_tokens();
+
+            let token_kinds: Vec<_> = tokens.iter().map(|t| &t.kind).collect();
+
+            // Should contain: If, Then, EndIf keywords
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Keyword(kw) if kw == "If")),
+                "Should contain If keyword"
+            );
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Keyword(kw) if kw == "Then")),
+                "Should contain Then keyword"
+            );
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Keyword(kw) if kw == "EndIf")),
+                "Should contain EndIf keyword"
+            );
+
+            // Should contain: > operator
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::GreaterThan)),
+                "Should contain > operator"
+            );
+
+            // Should contain: identifiers
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Temp")),
+                "Should contain Temp identifier"
+            );
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Status")),
+                "Should contain Status identifier"
+            );
+        }
+
+        #[test]
+        fn tokenizes_function_with_parameters() {
+            let source = r#"Result = Calculate(X, Y + 2.5)"#;
+
+            let mut scanner = Scanner::new(source.to_string());
+            let tokens = scanner.scan_tokens();
+
+            let token_kinds: Vec<_> = tokens.iter().map(|t| &t.kind).collect();
+
+            // Should contain: identifiers
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Result")),
+                "Should contain Result identifier"
+            );
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Calculate")),
+                "Should contain Calculate identifier"
+            );
+
+            // Should contain: delimiters
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::LeftParen)),
+                "Should contain ("
+            );
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::RightParen)),
+                "Should contain )"
+            );
+            assert!(
+                token_kinds.iter().any(|k| matches!(k, TokenKind::Comma)),
+                "Should contain ,"
+            );
+
+            // Should contain: operators
+            assert!(
+                token_kinds.iter().any(|k| matches!(k, TokenKind::Equal)),
+                "Should contain ="
+            );
+            assert!(
+                token_kinds.iter().any(|k| matches!(k, TokenKind::Plus)),
+                "Should contain +"
+            );
+
+            // Should contain: numeric literal
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Float(val) if val == "2.5")),
+                "Should contain 2.5 literal"
+            );
+        }
+
+        #[test]
+        fn tokenizes_array_access() {
+            let source = r#"Data[Index] = Values(1, 2)"#;
+
+            let mut scanner = Scanner::new(source.to_string());
+            let tokens = scanner.scan_tokens();
+
+            let token_kinds: Vec<_> = tokens.iter().map(|t| &t.kind).collect();
+
+            // Should contain: brackets
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::LeftBracket)),
+                "Should contain ["
+            );
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::RightBracket)),
+                "Should contain ]"
+            );
+
+            // Should contain: parentheses
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::LeftParen)),
+                "Should contain ("
+            );
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::RightParen)),
+                "Should contain )"
+            );
+
+            // Should contain: identifiers
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Data")),
+                "Should contain Data identifier"
+            );
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Index")),
+                "Should contain Index identifier"
+            );
         }
     }
 }

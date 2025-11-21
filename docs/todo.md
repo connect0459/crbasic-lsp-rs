@@ -37,10 +37,11 @@
 
 ### Edge Cases
 
-- [ ] Comments mid-line (after code)
-- [ ] Multi-line programs with mixed tokens
-- [ ] Case-insensitive keyword matching
-- [ ] Invalid UTF-8 handling
+- [x] Comments mid-line (after code)
+- [x] Empty comments
+- [x] Multi-line programs with mixed tokens
+- [x] Case-insensitive keyword matching (covered in keywords tests)
+- [ ] Invalid UTF-8 handling (future: error handling)
 
 ## Phase 3: Parser Implementation (TDD) 📋
 
