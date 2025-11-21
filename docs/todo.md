@@ -8,7 +8,7 @@
 - [x] Pre-commit hooks configuration
 - [x] TextMate Grammar implementation (syntax highlighting)
 
-## Phase 2: Lexer Implementation (TDD) 🚧
+## Phase 2: Lexer Implementation (TDD) ✅
 
 ### Core Token Types
 
@@ -43,22 +43,48 @@
 - [x] Case-insensitive keyword matching (covered in keywords tests)
 - [ ] Invalid UTF-8 handling (future: error handling)
 
-## Phase 3: Parser Implementation (TDD) 📋
+## Phase 3: Parser Implementation (TDD) 🚧
 
 ### AST Design
 
-- [ ] AST node type definitions
-- [ ] Program structure representation
+- [x] AST node type definitions
+- [x] Program structure representation
 
-### Core Parsing
+### Expression Parsing
 
-- [ ] Program structure parsing (`BeginProg`/`EndProg`)
-- [ ] Declaration parsing (`Public`, `Dim`, `Const`)
-- [ ] DataTable parsing
+- [x] Primary expressions
+  - [x] Integer literals
+  - [x] Float literals
+  - [x] String literals
+  - [x] Identifiers
+  - [x] Parenthesized expressions
+- [x] Binary operations
+  - [x] Arithmetic operators (`+`, `-`, `*`, `/`, `^`)
+  - [x] Comparison operators (`=`, `<>`, `<`, `>`, `<=`, `>=`)
+  - [x] Logical operators (`AND`, `OR`, `XOR`)
+  - [x] Operator precedence (power > unary > mult/div > add/sub > comparison > logical AND > logical XOR > logical OR)
+- [x] Unary operations (`-`, `NOT`)
+- [ ] Function calls (as expressions)
+- [ ] Array access
+
+### Statement Parsing
+
+- [ ] Expression statements (placeholder implementation exists)
+- [ ] Variable declarations (`Public`, `Dim`, `Const`)
+- [ ] Assignment statements
+- [ ] Function call statements
+
+### Control Flow Structures
+
+- [ ] `If`/`Then`/`Else`/`EndIf`
+- [ ] `For`/`Next` loops
+- [ ] `Do`/`Loop` structures
+
+### Program Structure
+
+- [ ] `BeginProg`/`EndProg` parsing
+- [ ] `DataTable`/`EndTable` parsing
 - [ ] Function/Subroutine definitions
-- [ ] Control flow structures (`If`, `For`, `Do`)
-- [ ] Expression parsing
-- [ ] Statement parsing
 
 ### Semantic Rules
 
@@ -115,13 +141,29 @@
 
 ### Unit Tests
 
-- [ ] Lexer tests (coverage: 80% line, 75% branch)
-- [ ] Parser tests
+- [x] Lexer tests (32 tests passing - coverage target: 80% line, 75% branch)
+  - [x] Empty source and EOF
+  - [x] Comments (single-quote, mid-line, empty)
+  - [x] Numeric literals (integer, float, scientific notation)
+  - [x] String literals (simple, escape sequences, escaped quotes)
+  - [x] Identifiers (simple, with numbers, starting with underscore)
+  - [x] Keywords (case-insensitive matching, canonical form)
+  - [x] Operators (arithmetic, comparison)
+  - [x] Delimiters (parentheses, brackets, comma)
+  - [x] Line continuation
+  - [x] Whitespace and newline handling
+  - [x] Integration tests (multi-line programs)
+- [x] Parser tests (30 tests passing)
+  - [x] Primary expressions (literals, identifiers, parentheses)
+  - [x] Binary operations (arithmetic, comparison, logical)
+  - [x] Unary operations (negation, NOT)
+  - [x] Operator precedence validation
+  - [x] Parenthesized expressions
 - [ ] LSP handler tests
 
 ### Integration Tests
 
-- [ ] End-to-end tokenization tests
+- [x] End-to-end tokenization tests (4 integration tests)
 - [ ] Full parsing tests with sample.cr1
 - [ ] LSP feature integration tests
 
