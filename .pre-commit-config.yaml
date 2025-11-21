@@ -1,0 +1,66 @@
+# Pre-commit hooks configuration
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # Rust formatting
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt --all --
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+  # Rust linting
+  - repo: local
+    hooks:
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy --all-targets --all-features -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+  # TypeScript/JavaScript formatting
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        entry: bash -c 'cd client && npm run format'
+        language: system
+        files: \.(ts|js|json|md)$
+        exclude: ^(node_modules|dist|target|pkg)/
+        pass_filenames: false
+
+  # TypeScript linting
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint
+        entry: bash -c 'cd client && npm run lint'
+        language: system
+        types: [typescript]
+        pass_filenames: false
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.46.0
+    hooks:
+      - id: markdownlint
+        args: ['--fix']
+        exclude: ^(node_modules|target)/
+
+# Run hooks on all files by default
+default_stages: [commit]

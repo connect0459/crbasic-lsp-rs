@@ -1,0 +1,20 @@
+[package]
+name = "crbasic-wasm"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+crbasic-parser = { path = "../crbasic-parser" }
+crbasic-lsp = { path = "../crbasic-lsp" }
+wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

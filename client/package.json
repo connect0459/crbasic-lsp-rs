@@ -1,0 +1,89 @@
+{
+  "name": "crbasic-lsp",
+  "displayName": "CRBasic Language Support",
+  "description": "Language support for CRBasic (Campbell Scientific data logger programming language)",
+  "version": "0.1.0",
+  "publisher": "connect0459",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/connect0459/crbasic-lsp-rs"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "crbasic",
+    "campbell scientific",
+    "datalogger",
+    "lsp"
+  ],
+  "activationEvents": [
+    "onLanguage:crbasic"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "crbasic",
+        "aliases": [
+          "CRBasic",
+          "crbasic"
+        ],
+        "extensions": [
+          ".cr1",
+          ".cr1x",
+          ".cr2",
+          ".cr3",
+          ".cr5",
+          ".cr6",
+          ".cr8",
+          ".cr9x",
+          ".cr300",
+          ".crb",
+          ".dld"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "crbasic",
+        "scopeName": "source.crbasic",
+        "path": "./syntaxes/crbasic.tmLanguage.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext ts",
+    "lint:fix": "eslint src --ext ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@vitest/coverage-v8": "^1.1.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.0",
+    "prettier": "^3.1.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.10",
+    "vitest": "^1.1.0"
+  }
+}

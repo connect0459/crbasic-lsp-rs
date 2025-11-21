@@ -1,0 +1,25 @@
+{
+  "comments": {
+    "lineComment": "'"
+  },
+  "brackets": [
+    ["(", ")"],
+    ["[", "]"]
+  ],
+  "autoClosingPairs": [
+    { "open": "(", "close": ")" },
+    { "open": "[", "close": "]" },
+    { "open": "\"", "close": "\"", "notIn": ["string"] }
+  ],
+  "surroundingPairs": [
+    ["(", ")"],
+    ["[", "]"],
+    ["\"", "\""]
+  ],
+  "folding": {
+    "markers": {
+      "start": "^\\s*(BeginProg|DataTable|Sub|Function|If|For|Do)",
+      "end": "^\\s*(EndProg|EndTable|EndSub|EndFunction|EndIf|Next|Loop)"
+    }
+  }
+}

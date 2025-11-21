@@ -1,0 +1,36 @@
+' 1. Program Declarations 
+' Define variables and constants. Variables declared using Public are available 
+' for external monitoring (e.g., via LoggerNet software).
+
+Public Temp_C         ' Public variable to store temperature measurement results
+Public Battery_Volt   ' Public variable to store datalogger battery voltage
+Const Scan_Rate = 1   ' Measurement scan interval in seconds
+
+' 2. Data Table Definition Block 
+' Defines tables and output processing methods for storing final data in the datalogger.
+
+DataTable (CR_Data, True, -1)
+  ' DataInterval sets the output processing period for storage (e.g., every 60 minutes)
+  DataInterval (0, 60, Min, 10)
+  
+  ' Sample instruction: Store the measurement result (Reps=1, Source=Temp_C, DataType=FP2)
+  Sample (1, Temp_C, FP2)
+  ' Store Battery_Volt using IEEE 4-byte floating-point format (IEEE4)
+  Sample (1, Battery_Volt, IEEE4)
+EndTable
+
+' 3. Main Program Execution Block 
+' The main logic of the program runs between BeginProg and EndProg.
+
+BeginProg
+  ' Scan instruction: Initiates the measurement scan, executed at the defined Scan_Rate.
+  Scan (Scan_Rate, Sec, 3, 0)
+  
+    ' Execute sensor measurement instructions here (e.g., reading a thermocouple)
+    ' Instructions like Thermocouple() or VoltSE() would be placed here.
+    
+    ' Measure battery voltage (a common built-in diagnostic function)
+    Battery (Battery_Volt)
+    
+  NextScan
+EndProg

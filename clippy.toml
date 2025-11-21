@@ -1,0 +1,10 @@
+# Clippy linting configuration
+# Warn on missing documentation for public items
+missing-docs-in-crate-items = true
+
+# Set cognitive complexity threshold
+cognitive-complexity-threshold = 15
+
+# Other lint configurations
+too-many-arguments-threshold = 7
+type-complexity-threshold = 250
