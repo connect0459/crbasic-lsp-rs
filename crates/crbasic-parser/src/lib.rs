@@ -1,14 +1,8 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+//! CRBasic Parser Library
+//!
+//! This library provides lexical analysis and parsing for the CRBasic programming language,
+//! which is used in Campbell Scientific data loggers.
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub mod lexer;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use lexer::{Token, TokenKind};
