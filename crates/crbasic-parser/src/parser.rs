@@ -83,6 +83,12 @@ impl Parser {
             return self.parse_for_loop();
         }
 
+        if let TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "Do"
+        {
+            return self.parse_do_loop();
+        }
+
         // Check for program structure keywords (BeginProg, EndProg, etc.)
         if let TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "BeginProg" || kw == "EndProg" || kw == "DataTable" || kw == "EndTable")
@@ -448,6 +454,80 @@ impl Parser {
             start,
             end,
             step,
+            body,
+            span,
+        })
+    }
+
+    /// Parses a Do-Loop statement
+    /// Syntax:
+    ///   Do While condition ... Loop (condition at start)
+    ///   Do ... Loop While condition (condition at end)
+    ///   Do ... Loop (no condition - infinite loop)
+    fn parse_do_loop(&mut self) -> Result<Statement, ParseError> {
+        // Consume 'Do' keyword
+        let do_token = self.advance();
+        let start_span = do_token.span;
+
+        // Check for optional 'While' keyword after 'Do'
+        let mut condition_at_start = false;
+        let mut condition = None;
+
+        if matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "While") {
+            self.advance(); // consume 'While'
+            condition_at_start = true;
+            condition = Some(self.parse_expression()?);
+        }
+
+        // Consume optional newline after Do header
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        // Parse body statements until 'Loop'
+        let mut body = Vec::new();
+        while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Loop")
+            && !self.is_at_end()
+        {
+            body.push(self.parse_statement()?);
+        }
+
+        // Expect 'Loop' keyword
+        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Loop") {
+            return Err(ParseError {
+                message: "Expected 'Loop' to close Do statement".to_string(),
+                span: self.peek().span,
+            });
+        }
+        self.advance(); // consume 'Loop'
+
+        // Check for optional 'While' keyword after 'Loop'
+        if matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "While") {
+            // Cannot have condition both at start and end
+            if condition_at_start {
+                return Err(ParseError {
+                    message: "Cannot have While condition both at start and end of Do-Loop"
+                        .to_string(),
+                    span: self.peek().span,
+                });
+            }
+
+            self.advance(); // consume 'While'
+            condition = Some(self.parse_expression()?);
+        }
+
+        let end_span = self.peek().span;
+
+        // Consume optional newline after Loop
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        let span = crate::lexer::token::Span::new(start_span.start, end_span.start);
+
+        Ok(Statement::DoLoop {
+            condition,
+            condition_at_start,
             body,
             span,
         })
@@ -2461,6 +2541,139 @@ mod tests {
                 }
             } else {
                 panic!("Expected for loop statement");
+            }
+        }
+    }
+
+    mod control_flow_do_loop {
+        use super::*;
+
+        #[test]
+        fn parses_do_while_loop_with_condition_at_start() {
+            // Do While x < 10
+            //   x = x + 1
+            // Loop
+            let source = "Do While x < 10\n  x = x + 1\nLoop".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::DoLoop {
+                condition,
+                condition_at_start,
+                body,
+                ..
+            } = &program.statements[0]
+            {
+                // Condition should be present
+                assert!(condition.is_some());
+
+                // Condition should be a comparison (x < 10)
+                if let Some(Expression::BinaryOp { .. }) = condition {
+                    // Correct
+                } else {
+                    panic!("Expected condition to be a comparison");
+                }
+
+                // Condition at start should be true
+                assert!(
+                    *condition_at_start,
+                    "Condition should be at start for Do While"
+                );
+
+                // Body should contain one assignment statement
+                assert_eq!(body.len(), 1);
+                assert!(matches!(body[0], Statement::Assignment { .. }));
+            } else {
+                panic!("Expected do loop statement");
+            }
+        }
+
+        #[test]
+        fn parses_do_loop_with_condition_at_end() {
+            // Do
+            //   x = x + 1
+            // Loop While x < 10
+            let source = "Do\n  x = x + 1\nLoop While x < 10".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::DoLoop {
+                condition,
+                condition_at_start,
+                body,
+                ..
+            } = &program.statements[0]
+            {
+                // Condition should be present
+                assert!(condition.is_some());
+
+                // Condition should be a comparison (x < 10)
+                if let Some(Expression::BinaryOp { .. }) = condition {
+                    // Correct
+                } else {
+                    panic!("Expected condition to be a comparison");
+                }
+
+                // Condition at start should be false
+                assert!(
+                    !*condition_at_start,
+                    "Condition should be at end for Loop While"
+                );
+
+                // Body should contain one assignment statement
+                assert_eq!(body.len(), 1);
+                assert!(matches!(body[0], Statement::Assignment { .. }));
+            } else {
+                panic!("Expected do loop statement");
+            }
+        }
+
+        #[test]
+        fn parses_do_loop_without_condition() {
+            // Do
+            //   Scan(1, Temp_C, 0)
+            // Loop
+            let source = "Do\n  Scan(1, Temp_C, 0)\nLoop".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::DoLoop {
+                condition,
+                condition_at_start,
+                body,
+                ..
+            } = &program.statements[0]
+            {
+                // Condition should be None (infinite loop)
+                assert!(
+                    condition.is_none(),
+                    "Infinite loop should have no condition"
+                );
+
+                // condition_at_start is irrelevant when there's no condition,
+                // but we'll check it's false (default)
+                assert!(
+                    !*condition_at_start,
+                    "Condition at start should be false for infinite loop"
+                );
+
+                // Body should contain one function call statement
+                assert_eq!(body.len(), 1);
+                assert!(matches!(body[0], Statement::FunctionCall { .. }));
+            } else {
+                panic!("Expected do loop statement");
             }
         }
     }
