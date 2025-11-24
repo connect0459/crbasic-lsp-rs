@@ -77,6 +77,12 @@ impl Parser {
             return self.parse_if_statement();
         }
 
+        if let TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "For"
+        {
+            return self.parse_for_loop();
+        }
+
         // Check for program structure keywords (BeginProg, EndProg, etc.)
         if let TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "BeginProg" || kw == "EndProg" || kw == "DataTable" || kw == "EndTable")
@@ -349,6 +355,100 @@ impl Parser {
             condition,
             then_branch,
             else_branch,
+            span,
+        })
+    }
+
+    /// Parses a For loop statement
+    /// Syntax: For variable = start To end [Step step] ... Next
+    fn parse_for_loop(&mut self) -> Result<Statement, ParseError> {
+        // Consume 'For' keyword
+        let for_token = self.advance();
+        let start_span = for_token.span;
+
+        // Parse variable name (must be an identifier)
+        let variable = if let TokenKind::Identifier(name) = &self.peek().kind {
+            let var_name = name.clone();
+            self.advance();
+            var_name
+        } else {
+            return Err(ParseError {
+                message: format!(
+                    "Expected variable name after 'For', got {:?}",
+                    self.peek().kind
+                ),
+                span: self.peek().span,
+            });
+        };
+
+        // Expect '=' token
+        if !matches!(self.peek().kind, TokenKind::Equal) {
+            return Err(ParseError {
+                message: "Expected '=' after For variable".to_string(),
+                span: self.peek().span,
+            });
+        }
+        self.advance(); // consume '='
+
+        // Parse start expression
+        let start = self.parse_expression()?;
+
+        // Expect 'To' keyword
+        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "To") {
+            return Err(ParseError {
+                message: "Expected 'To' keyword in For loop".to_string(),
+                span: self.peek().span,
+            });
+        }
+        self.advance(); // consume 'To'
+
+        // Parse end expression
+        let end = self.parse_expression()?;
+
+        // Check for optional 'Step' keyword
+        let step = if matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Step") {
+            self.advance(); // consume 'Step'
+            Some(self.parse_expression()?)
+        } else {
+            None
+        };
+
+        // Consume optional newline after For header
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        // Parse body statements until 'Next'
+        let mut body = Vec::new();
+        while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Next")
+            && !self.is_at_end()
+        {
+            body.push(self.parse_statement()?);
+        }
+
+        // Expect 'Next' keyword
+        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Next") {
+            return Err(ParseError {
+                message: "Expected 'Next' to close For loop".to_string(),
+                span: self.peek().span,
+            });
+        }
+        let next_token = self.advance(); // consume 'Next'
+        let end_span = next_token.span;
+
+        // Consume optional newline after Next
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        let span = crate::lexer::token::Span::new(start_span.start, end_span.end);
+
+        Ok(Statement::ForLoop {
+            variable,
+            start,
+            end,
+            step,
+            body,
             span,
         })
     }
@@ -2213,6 +2313,154 @@ mod tests {
                 }
             } else {
                 panic!("Expected if statement");
+            }
+        }
+    }
+
+    mod control_flow_for_next {
+        use super::*;
+
+        #[test]
+        fn parses_simple_for_loop_without_step() {
+            // For i = 1 To 10
+            //   x = x + 1
+            // Next
+            let source = "For i = 1 To 10\n  x = x + 1\nNext".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ForLoop {
+                variable,
+                start,
+                end,
+                step,
+                body,
+                ..
+            } = &program.statements[0]
+            {
+                // Variable should be "i"
+                assert_eq!(variable, "i");
+
+                // Start should be integer 1
+                assert!(matches!(start, Expression::IntegerLiteral { value: 1, .. }));
+
+                // End should be integer 10
+                assert!(matches!(end, Expression::IntegerLiteral { value: 10, .. }));
+
+                // Step should be None
+                assert!(step.is_none());
+
+                // Body should contain one assignment statement
+                assert_eq!(body.len(), 1);
+                assert!(matches!(body[0], Statement::Assignment { .. }));
+            } else {
+                panic!("Expected for loop statement");
+            }
+        }
+
+        #[test]
+        fn parses_for_loop_with_step() {
+            // For i = 0 To 100 Step 10
+            //   Scan(i, Temp_C, 0)
+            // Next
+            let source = "For i = 0 To 100 Step 10\n  Scan(i, Temp_C, 0)\nNext".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ForLoop {
+                variable,
+                start,
+                end,
+                step,
+                body,
+                ..
+            } = &program.statements[0]
+            {
+                // Variable should be "i"
+                assert_eq!(variable, "i");
+
+                // Start should be integer 0
+                assert!(matches!(start, Expression::IntegerLiteral { value: 0, .. }));
+
+                // End should be integer 100
+                assert!(matches!(end, Expression::IntegerLiteral { value: 100, .. }));
+
+                // Step should be Some(10)
+                assert!(step.is_some());
+                if let Some(Expression::IntegerLiteral { value: 10, .. }) = step {
+                    // Correct
+                } else {
+                    panic!("Expected step to be 10");
+                }
+
+                // Body should contain one function call statement
+                assert_eq!(body.len(), 1);
+                assert!(matches!(body[0], Statement::FunctionCall { .. }));
+            } else {
+                panic!("Expected for loop statement");
+            }
+        }
+
+        #[test]
+        fn parses_for_loop_with_expressions() {
+            // For i = start_val To end_val Step step_val
+            //   x = i * 2
+            // Next
+            let source =
+                "For i = start_val To end_val Step step_val\n  x = i * 2\nNext".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ForLoop {
+                variable,
+                start,
+                end,
+                step,
+                ..
+            } = &program.statements[0]
+            {
+                // Variable should be "i"
+                assert_eq!(variable, "i");
+
+                // Start should be identifier "start_val"
+                assert!(matches!(
+                    start,
+                    Expression::Identifier {
+                        name,
+                        ..
+                    } if name == "start_val"
+                ));
+
+                // End should be identifier "end_val"
+                assert!(matches!(
+                    end,
+                    Expression::Identifier {
+                        name,
+                        ..
+                    } if name == "end_val"
+                ));
+
+                // Step should be identifier "step_val"
+                assert!(step.is_some());
+                if let Some(Expression::Identifier { name, .. }) = step {
+                    assert_eq!(name, "step_val");
+                } else {
+                    panic!("Expected step to be identifier step_val");
+                }
+            } else {
+                panic!("Expected for loop statement");
             }
         }
     }
