@@ -78,10 +78,22 @@
 
 ### Statement Parsing
 
-- [ ] Expression statements (placeholder implementation exists)
-- [ ] Variable declarations (`Public`, `Dim`, `Const`)
-- [ ] Assignment statements
-- [ ] Function call statements
+- [x] Expression statements
+  - [x] Function calls converted to FunctionCall statements
+  - [x] Other expressions wrapped in Expression statements (for testing flexibility)
+- [x] Variable declarations (`Public`, `Dim`, `Const`)
+  - [x] Public declaration without type (`Public Temp_C`)
+  - [x] Public declaration with type annotation (`Public Temp_C As Float`)
+  - [x] Dim declaration (`Dim i`)
+  - [x] Const declaration with initializer (`Const PI = 3.14`)
+  - [ ] Array declarations (`Public Data(100)`) - future enhancement
+- [x] Assignment statements
+  - [x] Simple assignment (`x = 5`)
+  - [x] Assignment with expressions (`x = 1 + 2`)
+  - [ ] Assignment to array elements (`Data[0] = 5`) - future enhancement
+- [x] Function call statements
+  - [x] Function calls with no arguments (`TimeIntoInterval()`)
+  - [x] Function calls with arguments (`Scan(1, Temp_C, 0)`)
 
 ### Control Flow Structures
 
@@ -162,7 +174,7 @@
   - [x] Line continuation
   - [x] Whitespace and newline handling
   - [x] Integration tests (multi-line programs)
-- [x] Parser tests (39 tests passing)
+- [x] Parser tests (79 tests passing)
   - [x] Primary expressions (literals, identifiers, parentheses)
   - [x] Binary operations (arithmetic, comparison, logical)
   - [x] Unary operations (negation, NOT)
@@ -170,6 +182,9 @@
   - [x] Parenthesized expressions
   - [x] Function call expressions (no args, single arg, multiple args, expression args, nested)
   - [x] Array access expressions (simple, variable index, expression index, multi-dimensional)
+  - [x] Assignment statements (simple assignment, assignment with expressions)
+  - [x] Variable declarations (Public, Dim, Const with type annotations and initializers)
+  - [x] Function call statements (as statements, not just expressions)
 - [ ] LSP handler tests
 
 ### Integration Tests
