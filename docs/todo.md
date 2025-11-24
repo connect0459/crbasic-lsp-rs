@@ -138,9 +138,18 @@
 
 ### Basic LSP Features
 
-- [ ] LSP server structure (using `tower-lsp`)
-- [ ] Document synchronization
-- [ ] Basic diagnostics
+- [x] LSP server structure (using `tower-lsp`)
+  - [x] Backend implementation with LanguageServer trait
+  - [x] Document manager for state tracking
+  - [x] Full text document synchronization
+- [x] Document synchronization
+  - [x] did_open notification handling
+  - [x] did_change notification handling (full sync)
+  - [x] did_close notification handling
+- [x] Basic diagnostics
+  - [x] Integration with semantic analyzer
+  - [x] Real-time error/warning publishing
+  - [x] Position mapping (1-indexed parser → 0-indexed LSP)
 
 ### Advanced LSP Features
 
@@ -158,11 +167,11 @@
 
 ### Model-Dependent Validation
 
-- [ ] File extension → model detection (`.cr1` → CR200X, `.cr6` → CR6)
-- [ ] Variable name length validation
-  - [ ] CR200X: 16 chars max, 12-char truncation warning
-  - [ ] CR6/GRANITE: 39 chars max, 35-char recommendation
-- [ ] Duplicate field name detection (12-char truncation collision)
+- [x] File extension → model detection (`.cr1` → CR200X, `.cr6` → CR6)
+- [x] Variable name length validation
+  - [x] CR200X: 16 chars max, 12-char truncation warning
+  - [x] CR6/GRANITE: 39 chars max, 35-char recommendation
+- [x] Duplicate field name detection (12-char truncation collision)
 
 ## Phase 5: WASM Integration 🌐
 
@@ -215,7 +224,12 @@
   - [x] Variable name length validation (CR200X: 16 max, CR6: 39 max)
   - [x] Recommended length warnings (CR200X: 12, CR6: 35)
   - [x] Truncation collision detection (CR200X 12-char truncation)
-- [ ] LSP handler tests
+- [x] LSP handler tests (14 tests passing)
+  - [x] Document manager (open, update, close operations)
+  - [x] Document analysis and caching
+  - [x] Model detection from file URI
+  - [x] Diagnostic conversion (semantic errors → LSP diagnostics)
+  - [x] Position mapping (parser → LSP coordinates)
 
 ### Integration Tests
 

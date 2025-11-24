@@ -1,14 +1,10 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+//! LSP Server for CRBasic
+//!
+//! This crate provides a Language Server Protocol implementation for CRBasic,
+//! enabling IDE features like diagnostics, completion, and go-to-definition.
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub mod backend;
+pub mod document;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use backend::CRBasicLanguageServer;
+pub use document::DocumentManager;
