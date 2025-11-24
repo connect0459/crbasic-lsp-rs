@@ -75,6 +75,22 @@ pub enum Statement {
         arguments: Option<Vec<Expression>>, // Arguments for DataTable (e.g., table_name, autoallocate, size)
         span: Span,
     },
+
+    /// Function definition
+    FunctionDefinition {
+        name: String,
+        parameters: Vec<String>,
+        body: Vec<Statement>,
+        span: Span,
+    },
+
+    /// Subroutine definition
+    SubroutineDefinition {
+        name: String,
+        parameters: Vec<String>,
+        body: Vec<Statement>,
+        span: Span,
+    },
 }
 
 /// An expression in CRBasic

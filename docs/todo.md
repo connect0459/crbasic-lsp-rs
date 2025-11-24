@@ -119,7 +119,11 @@
   - [x] DataTable with arguments
   - [x] EndTable statement
   - [x] Complete DataTable/EndTable structure
-- [ ] Function/Subroutine definitions
+- [x] Function/Subroutine definitions
+  - [x] Function without parameters
+  - [x] Function with parameters
+  - [x] Subroutine without parameters
+  - [x] Subroutine with parameters
 
 ### Semantic Rules
 
@@ -188,7 +192,7 @@
   - [x] Line continuation
   - [x] Whitespace and newline handling
   - [x] Integration tests (multi-line programs)
-- [x] Parser tests (93 tests passing)
+- [x] Parser tests (97 tests passing)
   - [x] Primary expressions (literals, identifiers, parentheses)
   - [x] Binary operations (arithmetic, comparison, logical)
   - [x] Unary operations (negation, NOT)
@@ -201,6 +205,7 @@
   - [x] Function call statements (as statements, not just expressions)
   - [x] Program structure (BeginProg, EndProg, DataTable with arguments, EndTable)
   - [x] Control flow structures (If-Then-Else-EndIf, For-Next loops, Do-Loop structures)
+  - [x] Function/Subroutine definitions (Function, Sub with parameters)
 - [ ] LSP handler tests
 
 ### Integration Tests

@@ -89,6 +89,19 @@ impl Parser {
             return self.parse_do_loop();
         }
 
+        // Check for function/subroutine definition keywords
+        if let TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "Function"
+        {
+            return self.parse_function_definition();
+        }
+
+        if let TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "Sub"
+        {
+            return self.parse_subroutine_definition();
+        }
+
         // Check for program structure keywords (BeginProg, EndProg, etc.)
         if let TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "BeginProg" || kw == "EndProg" || kw == "DataTable" || kw == "EndTable")
@@ -567,6 +580,202 @@ impl Parser {
         })
     }
 
+    /// Parses a Function definition
+    /// Syntax: Function name[(param1, param2, ...)] ... EndFunction
+    fn parse_function_definition(&mut self) -> Result<Statement, ParseError> {
+        // Consume 'Function' keyword
+        let function_token = self.advance();
+        let start_span = function_token.span;
+
+        // Parse function name (must be an identifier)
+        let name = if let TokenKind::Identifier(name) = &self.peek().kind {
+            let func_name = name.clone();
+            self.advance();
+            func_name
+        } else {
+            return Err(ParseError {
+                message: format!(
+                    "Expected function name after 'Function', got {:?}",
+                    self.peek().kind
+                ),
+                span: self.peek().span,
+            });
+        };
+
+        // Check for optional parameters
+        let parameters = if matches!(self.peek().kind, TokenKind::LeftParen) {
+            self.advance(); // consume '('
+
+            let mut params = Vec::new();
+
+            // Parse comma-separated parameters
+            while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
+                if let TokenKind::Identifier(param_name) = &self.peek().kind {
+                    params.push(param_name.clone());
+                    self.advance();
+
+                    // Check for comma
+                    if matches!(self.peek().kind, TokenKind::Comma) {
+                        self.advance();
+                    }
+                } else {
+                    return Err(ParseError {
+                        message: format!("Expected parameter name, got {:?}", self.peek().kind),
+                        span: self.peek().span,
+                    });
+                }
+            }
+
+            // Expect closing ')'
+            if !matches!(self.peek().kind, TokenKind::RightParen) {
+                return Err(ParseError {
+                    message: "Expected ')' after function parameters".to_string(),
+                    span: self.peek().span,
+                });
+            }
+            self.advance(); // consume ')'
+
+            params
+        } else {
+            Vec::new()
+        };
+
+        // Consume optional newline after function header
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        // Parse body statements until 'EndFunction'
+        let mut body = Vec::new();
+        while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndFunction")
+            && !self.is_at_end()
+        {
+            body.push(self.parse_statement()?);
+        }
+
+        // Expect 'EndFunction' keyword
+        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndFunction") {
+            return Err(ParseError {
+                message: "Expected 'EndFunction' to close Function definition".to_string(),
+                span: self.peek().span,
+            });
+        }
+        let end_function_token = self.advance(); // consume 'EndFunction'
+        let end_span = end_function_token.span;
+
+        // Consume optional newline after EndFunction
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        let span = crate::lexer::token::Span::new(start_span.start, end_span.end);
+
+        Ok(Statement::FunctionDefinition {
+            name,
+            parameters,
+            body,
+            span,
+        })
+    }
+
+    /// Parses a Subroutine definition
+    /// Syntax: Sub name[(param1, param2, ...)] ... EndSub
+    fn parse_subroutine_definition(&mut self) -> Result<Statement, ParseError> {
+        // Consume 'Sub' keyword
+        let sub_token = self.advance();
+        let start_span = sub_token.span;
+
+        // Parse subroutine name (must be an identifier)
+        let name = if let TokenKind::Identifier(name) = &self.peek().kind {
+            let sub_name = name.clone();
+            self.advance();
+            sub_name
+        } else {
+            return Err(ParseError {
+                message: format!(
+                    "Expected subroutine name after 'Sub', got {:?}",
+                    self.peek().kind
+                ),
+                span: self.peek().span,
+            });
+        };
+
+        // Check for optional parameters
+        let parameters = if matches!(self.peek().kind, TokenKind::LeftParen) {
+            self.advance(); // consume '('
+
+            let mut params = Vec::new();
+
+            // Parse comma-separated parameters
+            while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
+                if let TokenKind::Identifier(param_name) = &self.peek().kind {
+                    params.push(param_name.clone());
+                    self.advance();
+
+                    // Check for comma
+                    if matches!(self.peek().kind, TokenKind::Comma) {
+                        self.advance();
+                    }
+                } else {
+                    return Err(ParseError {
+                        message: format!("Expected parameter name, got {:?}", self.peek().kind),
+                        span: self.peek().span,
+                    });
+                }
+            }
+
+            // Expect closing ')'
+            if !matches!(self.peek().kind, TokenKind::RightParen) {
+                return Err(ParseError {
+                    message: "Expected ')' after subroutine parameters".to_string(),
+                    span: self.peek().span,
+                });
+            }
+            self.advance(); // consume ')'
+
+            params
+        } else {
+            Vec::new()
+        };
+
+        // Consume optional newline after subroutine header
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        // Parse body statements until 'EndSub'
+        let mut body = Vec::new();
+        while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndSub")
+            && !self.is_at_end()
+        {
+            body.push(self.parse_statement()?);
+        }
+
+        // Expect 'EndSub' keyword
+        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndSub") {
+            return Err(ParseError {
+                message: "Expected 'EndSub' to close Sub definition".to_string(),
+                span: self.peek().span,
+            });
+        }
+        let end_sub_token = self.advance(); // consume 'EndSub'
+        let end_span = end_sub_token.span;
+
+        // Consume optional newline after EndSub
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        let span = crate::lexer::token::Span::new(start_span.start, end_span.end);
+
+        Ok(Statement::SubroutineDefinition {
+            name,
+            parameters,
+            body,
+            span,
+        })
+    }
+
     /// Parses an expression
     fn parse_expression(&mut self) -> Result<Expression, ParseError> {
         self.parse_logical_or()
@@ -967,6 +1176,8 @@ impl Statement {
             Statement::FunctionCall { span, .. } => *span,
             Statement::Expression { span, .. } => *span,
             Statement::ProgramStructure { span, .. } => *span,
+            Statement::FunctionDefinition { span, .. } => *span,
+            Statement::SubroutineDefinition { span, .. } => *span,
         }
     }
 }
@@ -2821,6 +3032,134 @@ mod tests {
                 assert!(matches!(body[0], Statement::FunctionCall { .. }));
             } else {
                 panic!("Expected do loop statement");
+            }
+        }
+    }
+
+    mod function_subroutine_definitions {
+        use super::*;
+
+        #[test]
+        fn parses_function_without_parameters() {
+            // Function GetValue
+            //   GetValue = 42
+            // EndFunction
+            let source = "Function GetValue\n  GetValue = 42\nEndFunction".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionDefinition {
+                name,
+                parameters,
+                body,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "GetValue");
+                assert_eq!(parameters.len(), 0);
+                assert_eq!(body.len(), 1);
+                assert!(matches!(body[0], Statement::Assignment { .. }));
+            } else {
+                panic!("Expected function definition");
+            }
+        }
+
+        #[test]
+        fn parses_function_with_parameters() {
+            // Function Add(a, b)
+            //   Add = a + b
+            // EndFunction
+            let source = "Function Add(a, b)\n  Add = a + b\nEndFunction".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionDefinition {
+                name,
+                parameters,
+                body,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "Add");
+                assert_eq!(parameters.len(), 2);
+                assert_eq!(parameters[0], "a");
+                assert_eq!(parameters[1], "b");
+                assert_eq!(body.len(), 1);
+                assert!(matches!(body[0], Statement::Assignment { .. }));
+            } else {
+                panic!("Expected function definition");
+            }
+        }
+
+        #[test]
+        fn parses_subroutine_without_parameters() {
+            // Sub Initialize
+            //   x = 0
+            // EndSub
+            let source = "Sub Initialize\n  x = 0\nEndSub".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::SubroutineDefinition {
+                name,
+                parameters,
+                body,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "Initialize");
+                assert_eq!(parameters.len(), 0);
+                assert_eq!(body.len(), 1);
+                assert!(matches!(body[0], Statement::Assignment { .. }));
+            } else {
+                panic!("Expected subroutine definition");
+            }
+        }
+
+        #[test]
+        fn parses_subroutine_with_parameters() {
+            // Sub UpdateValues(val1, val2, val3)
+            //   x = val1
+            //   y = val2
+            // EndSub
+            let source =
+                "Sub UpdateValues(val1, val2, val3)\n  x = val1\n  y = val2\nEndSub".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::SubroutineDefinition {
+                name,
+                parameters,
+                body,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "UpdateValues");
+                assert_eq!(parameters.len(), 3);
+                assert_eq!(parameters[0], "val1");
+                assert_eq!(parameters[1], "val2");
+                assert_eq!(parameters[2], "val3");
+                assert_eq!(body.len(), 2);
+                assert!(matches!(body[0], Statement::Assignment { .. }));
+                assert!(matches!(body[1], Statement::Assignment { .. }));
+            } else {
+                panic!("Expected subroutine definition");
             }
         }
     }
