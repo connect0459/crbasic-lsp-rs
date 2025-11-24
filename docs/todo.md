@@ -127,9 +127,12 @@
 
 ### Semantic Rules
 
-- [ ] Variable scope tracking (Public vs Dim)
-- [ ] Function vs Subroutine distinction (copy-back semantics)
-- [ ] Model-dependent variable name validation
+- [x] Variable scope tracking (Public vs Dim)
+- [x] Function vs Subroutine distinction (copy-back semantics)
+- [x] Model-dependent variable name validation
+  - [x] CR200X: 16 char max, 12-char truncation collision detection
+  - [x] CR6/GRANITE: 39 char max, 35 char recommended
+  - [x] File extension-based model detection
 
 ## Phase 4: LSP Server Implementation 📡
 
@@ -206,6 +209,12 @@
   - [x] Program structure (BeginProg, EndProg, DataTable with arguments, EndTable)
   - [x] Control flow structures (If-Then-Else-EndIf, For-Next loops, Do-Loop structures)
   - [x] Function/Subroutine definitions (Function, Sub with parameters)
+- [x] Semantic analyzer tests (20 tests passing)
+  - [x] Datalogger model detection (file extension → model mapping)
+  - [x] Variable scope tracking (Public = Global, Dim = Local)
+  - [x] Variable name length validation (CR200X: 16 max, CR6: 39 max)
+  - [x] Recommended length warnings (CR200X: 12, CR6: 35)
+  - [x] Truncation collision detection (CR200X 12-char truncation)
 - [ ] LSP handler tests
 
 ### Integration Tests
