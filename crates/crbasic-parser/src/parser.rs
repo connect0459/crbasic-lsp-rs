@@ -112,7 +112,7 @@ impl Parser {
             }
         }
 
-        // Parse as expression statement (placeholder)
+        // Parse as expression statement
         let expr = self.parse_expression()?;
 
         // Consume optional newline after statement
@@ -120,13 +120,27 @@ impl Parser {
             self.advance();
         }
 
-        // Convert expression to a statement (temporary)
-        // In a real implementation, we'd have more statement types
-        Ok(Statement::FunctionCall {
-            name: "placeholder".to_string(),
-            arguments: vec![expr],
-            span: self.tokens[self.current - 1].span,
-        })
+        // Convert expression to a statement
+        // Function calls are converted to FunctionCall statements for better semantic representation
+        // Other expressions are wrapped in Expression statements
+        match expr {
+            Expression::FunctionCall {
+                name,
+                arguments,
+                span,
+            } => Ok(Statement::FunctionCall {
+                name,
+                arguments,
+                span,
+            }),
+            other => {
+                let span = other.span();
+                Ok(Statement::Expression {
+                    expression: other,
+                    span,
+                })
+            }
+        }
     }
 
     /// Parses a variable declaration statement
@@ -617,6 +631,7 @@ impl Statement {
             Statement::ForLoop { span, .. } => *span,
             Statement::DoLoop { span, .. } => *span,
             Statement::FunctionCall { span, .. } => *span,
+            Statement::Expression { span, .. } => *span,
             Statement::ProgramStructure { span, .. } => *span,
         }
     }
@@ -640,16 +655,16 @@ mod tests {
 
             assert_eq!(program.statements.len(), 1);
 
-            // Extract the expression from the placeholder statement
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            // Extract the expression from the expression statement
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::IntegerLiteral { value, .. } => {
                         assert_eq!(*value, 42);
                     }
                     _ => panic!("Expected integer literal"),
                 }
             } else {
-                panic!("Expected function call statement");
+                panic!("Expected expression statement");
             }
         }
 
@@ -1430,16 +1445,14 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
-                    Expression::FunctionCall {
-                        name, arguments, ..
-                    } => {
-                        assert_eq!(name, "TimeIntoInterval");
-                        assert_eq!(arguments.len(), 0);
-                    }
-                    _ => panic!("Expected function call expression"),
-                }
+            if let Statement::FunctionCall {
+                name, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "TimeIntoInterval");
+                assert_eq!(arguments.len(), 0);
+            } else {
+                panic!("Expected function call statement");
             }
         }
 
@@ -1452,23 +1465,21 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
-                    Expression::FunctionCall {
-                        name, arguments, ..
-                    } => {
-                        assert_eq!(name, "Sqrt");
-                        assert_eq!(arguments.len(), 1);
+            if let Statement::FunctionCall {
+                name, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "Sqrt");
+                assert_eq!(arguments.len(), 1);
 
-                        // Check first argument is integer 16
-                        if let Expression::IntegerLiteral { value, .. } = &arguments[0] {
-                            assert_eq!(*value, 16);
-                        } else {
-                            panic!("Expected integer literal as argument");
-                        }
-                    }
-                    _ => panic!("Expected function call expression"),
+                // Check first argument is integer 16
+                if let Expression::IntegerLiteral { value, .. } = &arguments[0] {
+                    assert_eq!(*value, 16);
+                } else {
+                    panic!("Expected integer literal as argument");
                 }
+            } else {
+                panic!("Expected function call statement");
             }
         }
 
@@ -1481,21 +1492,19 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
-                    Expression::FunctionCall {
-                        name, arguments, ..
-                    } => {
-                        assert_eq!(name, "Scan");
-                        assert_eq!(arguments.len(), 3);
+            if let Statement::FunctionCall {
+                name, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "Scan");
+                assert_eq!(arguments.len(), 3);
 
-                        // Verify argument types
-                        assert!(matches!(arguments[0], Expression::IntegerLiteral { .. }));
-                        assert!(matches!(arguments[1], Expression::Identifier { .. }));
-                        assert!(matches!(arguments[2], Expression::IntegerLiteral { .. }));
-                    }
-                    _ => panic!("Expected function call expression"),
-                }
+                // Verify argument types
+                assert!(matches!(arguments[0], Expression::IntegerLiteral { .. }));
+                assert!(matches!(arguments[1], Expression::Identifier { .. }));
+                assert!(matches!(arguments[2], Expression::IntegerLiteral { .. }));
+            } else {
+                panic!("Expected function call statement");
             }
         }
 
@@ -1509,21 +1518,19 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
-                    Expression::FunctionCall {
-                        name, arguments, ..
-                    } => {
-                        assert_eq!(name, "Max");
-                        assert_eq!(arguments.len(), 2);
+            if let Statement::FunctionCall {
+                name, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "Max");
+                assert_eq!(arguments.len(), 2);
 
-                        // First argument should be binary operation (1 + 2)
-                        assert!(matches!(arguments[0], Expression::BinaryOp { .. }));
-                        // Second argument should be integer literal 5
-                        assert!(matches!(arguments[1], Expression::IntegerLiteral { .. }));
-                    }
-                    _ => panic!("Expected function call expression"),
-                }
+                // First argument should be binary operation (1 + 2)
+                assert!(matches!(arguments[0], Expression::BinaryOp { .. }));
+                // Second argument should be integer literal 5
+                assert!(matches!(arguments[1], Expression::IntegerLiteral { .. }));
+            } else {
+                panic!("Expected function call statement");
             }
         }
 
@@ -1537,30 +1544,28 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
-                    Expression::FunctionCall {
-                        name, arguments, ..
-                    } => {
-                        assert_eq!(name, "Avg");
-                        assert_eq!(arguments.len(), 2);
+            if let Statement::FunctionCall {
+                name, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "Avg");
+                assert_eq!(arguments.len(), 2);
 
-                        // First argument should be a function call to Max
-                        if let Expression::FunctionCall {
-                            name, arguments, ..
-                        } = &arguments[0]
-                        {
-                            assert_eq!(name, "Max");
-                            assert_eq!(arguments.len(), 2);
-                        } else {
-                            panic!("Expected nested function call");
-                        }
-
-                        // Second argument should be integer 3
-                        assert!(matches!(arguments[1], Expression::IntegerLiteral { .. }));
-                    }
-                    _ => panic!("Expected function call expression"),
+                // First argument should be a function call to Max
+                if let Expression::FunctionCall {
+                    name, arguments, ..
+                } = &arguments[0]
+                {
+                    assert_eq!(name, "Max");
+                    assert_eq!(arguments.len(), 2);
+                } else {
+                    panic!("Expected nested function call");
                 }
+
+                // Second argument should be integer 3
+                assert!(matches!(arguments[1], Expression::IntegerLiteral { .. }));
+            } else {
+                panic!("Expected function call statement");
             }
         }
     }
@@ -1881,6 +1886,63 @@ mod tests {
             } else {
                 panic!(
                     "Expected variable declaration, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+    }
+
+    mod function_call_statements {
+        use super::*;
+
+        #[test]
+        fn parses_function_call_as_statement() {
+            // Scan(1, Temp_C, 0)
+            let mut scanner = Scanner::new("Scan(1, Temp_C, 0)".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall {
+                name, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "Scan");
+                assert_eq!(arguments.len(), 3);
+
+                // Verify argument types
+                assert!(matches!(arguments[0], Expression::IntegerLiteral { .. }));
+                assert!(matches!(arguments[1], Expression::Identifier { .. }));
+                assert!(matches!(arguments[2], Expression::IntegerLiteral { .. }));
+            } else {
+                panic!(
+                    "Expected function call statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_function_call_with_no_arguments_as_statement() {
+            // TimeIntoInterval()
+            let mut scanner = Scanner::new("TimeIntoInterval()".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall {
+                name, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "TimeIntoInterval");
+                assert_eq!(arguments.len(), 0);
+            } else {
+                panic!(
+                    "Expected function call statement, got {:?}",
                     program.statements[0]
                 );
             }

@@ -64,6 +64,11 @@ pub enum Statement {
         span: Span,
     },
 
+    /// Expression statement (for testing and future extensions)
+    /// In CRBasic, most expressions are not valid as statements,
+    /// but this allows for more flexible parsing during development
+    Expression { expression: Expression, span: Span },
+
     /// Program structure: BeginProg/EndProg, DataTable/EndTable, etc.
     ProgramStructure {
         keyword: String, // "BeginProg", "EndProg", "DataTable", "EndTable", etc.
