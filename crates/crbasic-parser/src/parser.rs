@@ -70,6 +70,13 @@ impl Parser {
 
     /// Parses a single statement
     fn parse_statement(&mut self) -> Result<Statement, ParseError> {
+        // Check for program structure keywords (BeginProg, EndProg, etc.)
+        if let TokenKind::Keyword(kw) = &self.peek().kind
+            && (kw == "BeginProg" || kw == "EndProg" || kw == "DataTable" || kw == "EndTable")
+        {
+            return self.parse_program_structure();
+        }
+
         // Check for variable declaration keywords (Public, Dim, Const)
         if let TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "Public" || kw == "Dim" || kw == "Const")
@@ -231,6 +238,30 @@ impl Parser {
             initializer,
             span,
         })
+    }
+
+    /// Parses a program structure statement
+    /// Syntax: BeginProg, EndProg, DataTable, EndTable, etc.
+    fn parse_program_structure(&mut self) -> Result<Statement, ParseError> {
+        // Get the keyword (BeginProg, EndProg, etc.)
+        let keyword_token = self.advance();
+        let keyword = if let TokenKind::Keyword(kw) = &keyword_token.kind {
+            kw.clone()
+        } else {
+            return Err(ParseError {
+                message: "Expected program structure keyword".to_string(),
+                span: keyword_token.span,
+            });
+        };
+
+        let span = keyword_token.span;
+
+        // Consume optional newline after statement
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        Ok(Statement::ProgramStructure { keyword, span })
     }
 
     /// Parses an expression
@@ -1945,6 +1976,77 @@ mod tests {
                     "Expected function call statement, got {:?}",
                     program.statements[0]
                 );
+            }
+        }
+    }
+
+    mod program_structure {
+        use super::*;
+
+        #[test]
+        fn parses_begin_prog_statement() {
+            // BeginProg
+            let mut scanner = Scanner::new("BeginProg".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ProgramStructure { keyword, .. } = &program.statements[0] {
+                assert_eq!(keyword, "BeginProg");
+            } else {
+                panic!(
+                    "Expected program structure statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_end_prog_statement() {
+            // EndProg
+            let mut scanner = Scanner::new("EndProg".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ProgramStructure { keyword, .. } = &program.statements[0] {
+                assert_eq!(keyword, "EndProg");
+            } else {
+                panic!(
+                    "Expected program structure statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_complete_begin_prog_end_prog() {
+            // BeginProg
+            // EndProg
+            let source = "BeginProg\nEndProg".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 2);
+
+            // First statement should be BeginProg
+            if let Statement::ProgramStructure { keyword, .. } = &program.statements[0] {
+                assert_eq!(keyword, "BeginProg");
+            } else {
+                panic!("Expected BeginProg statement");
+            }
+
+            // Second statement should be EndProg
+            if let Statement::ProgramStructure { keyword, .. } = &program.statements[1] {
+                assert_eq!(keyword, "EndProg");
+            } else {
+                panic!("Expected EndProg statement");
             }
         }
     }
