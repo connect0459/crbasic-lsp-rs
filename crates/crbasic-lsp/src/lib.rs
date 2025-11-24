@@ -5,6 +5,7 @@
 
 pub mod backend;
 pub mod document;
+pub mod symbols;
 
 pub use backend::CRBasicLanguageServer;
 pub use document::DocumentManager;

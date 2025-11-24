@@ -3,6 +3,7 @@
 //! This module implements the Language Server Protocol backend using tower-lsp.
 
 use crate::document::DocumentManager;
+use crate::symbols;
 use crbasic_parser::SemanticError;
 use crbasic_parser::lexer::token::Position;
 use std::sync::Arc;
@@ -121,6 +122,7 @@ impl LanguageServer for CRBasicLanguageServer {
                 text_document_sync: Some(TextDocumentSyncCapability::Kind(
                     TextDocumentSyncKind::FULL,
                 )),
+                document_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 ..Default::default()
             },
             server_info: Some(ServerInfo {
@@ -174,6 +176,23 @@ impl LanguageServer for CRBasicLanguageServer {
         let uri = params.text_document.uri;
         let mut manager = self.document_manager.write().await;
         manager.close(&uri);
+    }
+
+    async fn document_symbol(
+        &self,
+        params: DocumentSymbolParams,
+    ) -> Result<Option<DocumentSymbolResponse>> {
+        let uri = params.text_document.uri;
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri)
+            && let Some(ast) = &doc.ast
+        {
+            let symbols = symbols::extract_document_symbols(ast);
+            return Ok(Some(DocumentSymbolResponse::Nested(symbols)));
+        }
+
+        Ok(None)
     }
 }
 

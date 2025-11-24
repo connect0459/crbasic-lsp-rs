@@ -163,7 +163,13 @@
 - [ ] Hover information
 - [ ] Go to definition
 - [ ] Find all references
-- [ ] Document symbols (outline view)
+- [x] Document symbols (outline view)
+  - [x] Program structure (BeginProg, EndProg, DataTable, EndTable)
+  - [x] Function definitions with parameters
+  - [x] Subroutine definitions with parameters
+  - [x] Variable declarations (Public, Dim, Const)
+  - [x] Nested symbols in functions/subroutines
+  - [x] Symbol kind classification (Function, Method, Variable, Constant, Namespace)
 
 ### Model-Dependent Validation
 
@@ -224,12 +230,18 @@
   - [x] Variable name length validation (CR200X: 16 max, CR6: 39 max)
   - [x] Recommended length warnings (CR200X: 12, CR6: 35)
   - [x] Truncation collision detection (CR200X 12-char truncation)
-- [x] LSP handler tests (14 tests passing)
+- [x] LSP handler tests (23 tests passing)
   - [x] Document manager (open, update, close operations)
   - [x] Document analysis and caching
   - [x] Model detection from file URI
   - [x] Diagnostic conversion (semantic errors → LSP diagnostics)
   - [x] Position mapping (parser → LSP coordinates)
+  - [x] Document symbols extraction (9 tests)
+    - [x] Program structure symbols (BeginProg, DataTable, etc.)
+    - [x] Function and Subroutine symbols
+    - [x] Variable declaration symbols
+    - [x] Nested symbols in function bodies
+    - [x] Symbol kind classification
 
 ### Integration Tests
 
