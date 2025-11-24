@@ -46,11 +46,22 @@ impl Parser {
 
         let span = if statements.is_empty() {
             // Empty program: use EOF token span
-            self.tokens.last().unwrap().span
+            self.tokens
+                .last()
+                .expect("Token list should always contain at least EOF token")
+                .span
         } else {
             // Span from first statement to last statement
-            let start = statements.first().unwrap().span().start;
-            let end = statements.last().unwrap().span().end;
+            let start = statements
+                .first()
+                .expect("Statements list should not be empty when checked")
+                .span()
+                .start;
+            let end = statements
+                .last()
+                .expect("Statements list should not be empty when checked")
+                .span()
+                .end;
             crate::lexer::token::Span::new(start, end)
         };
 

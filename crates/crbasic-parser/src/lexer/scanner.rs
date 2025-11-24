@@ -306,29 +306,47 @@ impl Scanner {
 
         // Scan integer part
         while self.peek().is_ascii_digit() {
-            number.push(self.advance().unwrap());
+            number.push(
+                self.advance()
+                    .expect("Character should exist after peek check"),
+            );
         }
 
         // Check for decimal point
         if self.peek() == '.' && self.peek_next().is_some_and(|c| c.is_ascii_digit()) {
-            number.push(self.advance().unwrap()); // consume '.'
+            number.push(
+                self.advance()
+                    .expect("Decimal point should exist after peek check"),
+            ); // consume '.'
             while self.peek().is_ascii_digit() {
-                number.push(self.advance().unwrap());
+                number.push(
+                    self.advance()
+                        .expect("Character should exist after peek check"),
+                );
             }
         }
 
         // Check for scientific notation (e or E)
         if matches!(self.peek(), 'e' | 'E') {
-            number.push(self.advance().unwrap()); // consume 'e' or 'E'
+            number.push(
+                self.advance()
+                    .expect("Exponent character should exist after peek check"),
+            ); // consume 'e' or 'E'
 
             // Optional sign
             if matches!(self.peek(), '+' | '-') {
-                number.push(self.advance().unwrap());
+                number.push(
+                    self.advance()
+                        .expect("Sign character should exist after peek check"),
+                );
             }
 
             // Exponent digits
             while self.peek().is_ascii_digit() {
-                number.push(self.advance().unwrap());
+                number.push(
+                    self.advance()
+                        .expect("Character should exist after peek check"),
+                );
             }
         }
 
