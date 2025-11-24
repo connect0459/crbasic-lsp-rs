@@ -72,6 +72,7 @@ pub enum Statement {
     /// Program structure: BeginProg/EndProg, DataTable/EndTable, etc.
     ProgramStructure {
         keyword: String, // "BeginProg", "EndProg", "DataTable", "EndTable", etc.
+        arguments: Option<Vec<Expression>>, // Arguments for DataTable (e.g., table_name, autoallocate, size)
         span: Span,
     },
 }

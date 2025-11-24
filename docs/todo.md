@@ -115,7 +115,10 @@
   - [x] BeginProg statement
   - [x] EndProg statement
   - [x] Complete BeginProg/EndProg program
-- [ ] `DataTable`/`EndTable` parsing (basic keyword support added, arguments not yet implemented)
+- [x] `DataTable`/`EndTable` parsing
+  - [x] DataTable with arguments
+  - [x] EndTable statement
+  - [x] Complete DataTable/EndTable structure
 - [ ] Function/Subroutine definitions
 
 ### Semantic Rules
@@ -185,7 +188,7 @@
   - [x] Line continuation
   - [x] Whitespace and newline handling
   - [x] Integration tests (multi-line programs)
-- [x] Parser tests (90 tests passing)
+- [x] Parser tests (93 tests passing)
   - [x] Primary expressions (literals, identifiers, parentheses)
   - [x] Binary operations (arithmetic, comparison, logical)
   - [x] Unary operations (negation, NOT)
@@ -196,7 +199,7 @@
   - [x] Assignment statements (simple assignment, assignment with expressions)
   - [x] Variable declarations (Public, Dim, Const with type annotations and initializers)
   - [x] Function call statements (as statements, not just expressions)
-  - [x] Program structure (BeginProg, EndProg, and basic DataTable/EndTable keyword support)
+  - [x] Program structure (BeginProg, EndProg, DataTable with arguments, EndTable)
   - [x] Control flow structures (If-Then-Else-EndIf, For-Next loops, Do-Loop structures)
 - [ ] LSP handler tests
 

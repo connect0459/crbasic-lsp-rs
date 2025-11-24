@@ -260,27 +260,61 @@ impl Parser {
     }
 
     /// Parses a program structure statement
-    /// Syntax: BeginProg, EndProg, DataTable, EndTable, etc.
+    /// Syntax: BeginProg, EndProg, DataTable(...), EndTable, etc.
     fn parse_program_structure(&mut self) -> Result<Statement, ParseError> {
         // Get the keyword (BeginProg, EndProg, etc.)
         let keyword_token = self.advance();
+        let span = keyword_token.span;
         let keyword = if let TokenKind::Keyword(kw) = &keyword_token.kind {
             kw.clone()
         } else {
             return Err(ParseError {
                 message: "Expected program structure keyword".to_string(),
-                span: keyword_token.span,
+                span,
             });
         };
 
-        let span = keyword_token.span;
+        // Check for arguments (only for DataTable)
+        let arguments =
+            if keyword == "DataTable" && matches!(self.peek().kind, TokenKind::LeftParen) {
+                self.advance(); // consume '('
+
+                let mut args = Vec::new();
+
+                // Parse comma-separated arguments
+                while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
+                    args.push(self.parse_expression()?);
+
+                    // Check for comma
+                    if matches!(self.peek().kind, TokenKind::Comma) {
+                        self.advance();
+                    }
+                }
+
+                // Expect closing ')'
+                if !matches!(self.peek().kind, TokenKind::RightParen) {
+                    return Err(ParseError {
+                        message: "Expected ')' after DataTable arguments".to_string(),
+                        span: self.peek().span,
+                    });
+                }
+                self.advance(); // consume ')'
+
+                Some(args)
+            } else {
+                None
+            };
 
         // Consume optional newline after statement
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
 
-        Ok(Statement::ProgramStructure { keyword, span })
+        Ok(Statement::ProgramStructure {
+            keyword,
+            arguments,
+            span,
+        })
     }
 
     /// Parses an If statement
@@ -2316,6 +2350,119 @@ mod tests {
                 assert_eq!(keyword, "EndProg");
             } else {
                 panic!("Expected EndProg statement");
+            }
+        }
+
+        #[test]
+        fn parses_data_table_with_arguments() {
+            // DataTable("MinMax", 1, -1)
+            let source = "DataTable(\"MinMax\", 1, -1)".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ProgramStructure {
+                keyword, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "DataTable");
+
+                // Arguments should be present
+                assert!(arguments.is_some(), "DataTable should have arguments");
+
+                if let Some(args) = arguments {
+                    assert_eq!(args.len(), 3);
+
+                    // First argument: "MinMax" (string)
+                    assert!(matches!(
+                        args[0],
+                        Expression::StringLiteral {
+                            value: ref s,
+                            ..
+                        } if s == "MinMax"
+                    ));
+
+                    // Second argument: 1 (integer)
+                    assert!(matches!(
+                        args[1],
+                        Expression::IntegerLiteral { value: 1, .. }
+                    ));
+
+                    // Third argument: -1 (unary negation of integer)
+                    assert!(matches!(args[2], Expression::UnaryOp { .. }));
+                }
+            } else {
+                panic!("Expected DataTable statement");
+            }
+        }
+
+        #[test]
+        fn parses_end_table_statement() {
+            // EndTable
+            let mut scanner = Scanner::new("EndTable".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ProgramStructure {
+                keyword, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "EndTable");
+                // EndTable should have no arguments
+                assert!(arguments.is_none(), "EndTable should have no arguments");
+            } else {
+                panic!("Expected EndTable statement");
+            }
+        }
+
+        #[test]
+        fn parses_complete_data_table_structure() {
+            // DataTable("MinMax", 1, -1)
+            //   x = 10
+            // EndTable
+            let source = "DataTable(\"MinMax\", 1, -1)\n  x = 10\nEndTable".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3); // DataTable, x = 10, EndTable
+
+            // First statement: DataTable with arguments
+            if let Statement::ProgramStructure {
+                keyword, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "DataTable");
+                assert!(arguments.is_some());
+                if let Some(args) = arguments {
+                    assert_eq!(args.len(), 3);
+                }
+            } else {
+                panic!("Expected DataTable statement");
+            }
+
+            // Second statement: assignment
+            assert!(matches!(
+                program.statements[1],
+                Statement::Assignment { .. }
+            ));
+
+            // Third statement: EndTable
+            if let Statement::ProgramStructure {
+                keyword, arguments, ..
+            } = &program.statements[2]
+            {
+                assert_eq!(keyword, "EndTable");
+                assert!(arguments.is_none());
+            } else {
+                panic!("Expected EndTable statement");
             }
         }
     }
