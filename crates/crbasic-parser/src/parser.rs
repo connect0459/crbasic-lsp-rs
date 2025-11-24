@@ -70,6 +70,13 @@ impl Parser {
 
     /// Parses a single statement
     fn parse_statement(&mut self) -> Result<Statement, ParseError> {
+        // Check for control flow keywords (If, For, Do, etc.)
+        if let TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "If"
+        {
+            return self.parse_if_statement();
+        }
+
         // Check for program structure keywords (BeginProg, EndProg, etc.)
         if let TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "BeginProg" || kw == "EndProg" || kw == "DataTable" || kw == "EndTable")
@@ -262,6 +269,88 @@ impl Parser {
         }
 
         Ok(Statement::ProgramStructure { keyword, span })
+    }
+
+    /// Parses an If statement
+    /// Syntax: If condition Then statements [Else statements] EndIf
+    fn parse_if_statement(&mut self) -> Result<Statement, ParseError> {
+        // Consume 'If' keyword
+        let if_token = self.advance();
+        let start_span = if_token.span;
+
+        // Parse condition expression
+        let condition = self.parse_expression()?;
+
+        // Expect 'Then' keyword
+        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Then") {
+            return Err(ParseError {
+                message: "Expected 'Then' after If condition".to_string(),
+                span: self.peek().span,
+            });
+        }
+        self.advance(); // consume 'Then'
+
+        // Consume optional newline after Then
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        // Parse then branch statements until Else or EndIf
+        let mut then_branch = Vec::new();
+        while !matches!(
+            self.peek().kind,
+            TokenKind::Keyword(ref kw) if kw == "Else" || kw == "EndIf"
+        ) && !self.is_at_end()
+        {
+            then_branch.push(self.parse_statement()?);
+        }
+
+        // Check for optional Else branch
+        let else_branch = if matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Else")
+        {
+            self.advance(); // consume 'Else'
+
+            // Consume optional newline after Else
+            if matches!(self.peek().kind, TokenKind::Newline) {
+                self.advance();
+            }
+
+            // Parse else branch statements until EndIf
+            let mut else_stmts = Vec::new();
+            while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndIf")
+                && !self.is_at_end()
+            {
+                else_stmts.push(self.parse_statement()?);
+            }
+
+            Some(else_stmts)
+        } else {
+            None
+        };
+
+        // Expect 'EndIf' keyword
+        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndIf") {
+            return Err(ParseError {
+                message: "Expected 'EndIf' to close If statement".to_string(),
+                span: self.peek().span,
+            });
+        }
+        let endif_token = self.advance(); // consume 'EndIf'
+        let end_span = endif_token.span;
+
+        // Consume optional newline after EndIf
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        let span = crate::lexer::token::Span::new(start_span.start, end_span.end);
+
+        Ok(Statement::IfStatement {
+            condition,
+            then_branch,
+            else_branch,
+            span,
+        })
     }
 
     /// Parses an expression
@@ -2047,6 +2136,83 @@ mod tests {
                 assert_eq!(keyword, "EndProg");
             } else {
                 panic!("Expected EndProg statement");
+            }
+        }
+    }
+
+    mod control_flow_if {
+        use super::*;
+
+        #[test]
+        fn parses_simple_if_then_endif() {
+            // If x > 5 Then
+            //   y = 10
+            // EndIf
+            let source = "If x > 5 Then\n  y = 10\nEndIf".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::IfStatement {
+                condition,
+                then_branch,
+                else_branch,
+                ..
+            } = &program.statements[0]
+            {
+                // Condition should be a comparison (x > 5)
+                assert!(matches!(condition, Expression::BinaryOp { .. }));
+
+                // Then branch should have one statement (y = 10)
+                assert_eq!(then_branch.len(), 1);
+                assert!(matches!(then_branch[0], Statement::Assignment { .. }));
+
+                // No else branch
+                assert!(else_branch.is_none());
+            } else {
+                panic!("Expected if statement, got {:?}", program.statements[0]);
+            }
+        }
+
+        #[test]
+        fn parses_if_then_else_endif() {
+            // If x > 5 Then
+            //   y = 10
+            // Else
+            //   y = 0
+            // EndIf
+            let source = "If x > 5 Then\n  y = 10\nElse\n  y = 0\nEndIf".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::IfStatement {
+                condition,
+                then_branch,
+                else_branch,
+                ..
+            } = &program.statements[0]
+            {
+                // Condition should be a comparison
+                assert!(matches!(condition, Expression::BinaryOp { .. }));
+
+                // Then branch should have one statement
+                assert_eq!(then_branch.len(), 1);
+
+                // Else branch should exist and have one statement
+                assert!(else_branch.is_some());
+                if let Some(else_stmts) = else_branch {
+                    assert_eq!(else_stmts.len(), 1);
+                    assert!(matches!(else_stmts[0], Statement::Assignment { .. }));
+                }
+            } else {
+                panic!("Expected if statement");
             }
         }
     }

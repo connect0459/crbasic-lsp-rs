@@ -97,7 +97,9 @@
 
 ### Control Flow Structures
 
-- [ ] `If`/`Then`/`Else`/`EndIf`
+- [x] `If`/`Then`/`Else`/`EndIf`
+  - [x] Simple If-Then-EndIf
+  - [x] If-Then-Else-EndIf
 - [ ] `For`/`Next` loops
 - [ ] `Do`/`Loop` structures
 
@@ -177,7 +179,7 @@
   - [x] Line continuation
   - [x] Whitespace and newline handling
   - [x] Integration tests (multi-line programs)
-- [x] Parser tests (82 tests passing)
+- [x] Parser tests (84 tests passing)
   - [x] Primary expressions (literals, identifiers, parentheses)
   - [x] Binary operations (arithmetic, comparison, logical)
   - [x] Unary operations (negation, NOT)
@@ -189,6 +191,7 @@
   - [x] Variable declarations (Public, Dim, Const with type annotations and initializers)
   - [x] Function call statements (as statements, not just expressions)
   - [x] Program structure (BeginProg, EndProg, and basic DataTable/EndTable keyword support)
+  - [x] Control flow structures (If-Then-Else-EndIf)
 - [ ] LSP handler tests
 
 ### Integration Tests
