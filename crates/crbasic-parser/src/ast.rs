@@ -15,11 +15,12 @@ pub struct Program {
 /// A statement in CRBasic
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Statement {
-    /// Variable declaration: Public/Dim/Const identifier [As type]
+    /// Variable declaration: Public/Dim/Const identifier [As type] [= initializer]
     VarDeclaration {
         keyword: String, // "Public", "Dim", "Const"
         name: String,
         type_annotation: Option<String>,
+        initializer: Option<Expression>, // Required for Const, optional for Public/Dim
         span: Span,
     },
 

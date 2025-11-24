@@ -59,7 +59,49 @@ impl Parser {
 
     /// Parses a single statement
     fn parse_statement(&mut self) -> Result<Statement, ParseError> {
-        // For now, just parse an expression statement
+        // Check for variable declaration keywords (Public, Dim, Const)
+        if let TokenKind::Keyword(kw) = &self.peek().kind
+            && (kw == "Public" || kw == "Dim" || kw == "Const")
+        {
+            return self.parse_var_declaration();
+        }
+
+        // Look ahead to check if this is an assignment statement
+        // Assignment: identifier = expression
+        if matches!(self.peek().kind, TokenKind::Identifier(_)) {
+            let saved_pos = self.current;
+
+            // Try to parse as assignment
+            if let TokenKind::Identifier(name) = &self.peek().kind {
+                let ident_name = name.clone();
+                let ident_span = self.advance().span;
+
+                // Check if next token is '=' (assignment operator)
+                if matches!(self.peek().kind, TokenKind::Equal) {
+                    self.advance(); // consume '='
+
+                    // Parse right-hand side expression
+                    let value = self.parse_expression()?;
+
+                    // Consume optional newline after statement
+                    if matches!(self.peek().kind, TokenKind::Newline) {
+                        self.advance();
+                    }
+
+                    let span = crate::lexer::token::Span::new(ident_span.start, value.span().end);
+                    return Ok(Statement::Assignment {
+                        target: ident_name,
+                        value,
+                        span,
+                    });
+                }
+
+                // Not an assignment, restore position and parse as expression
+                self.current = saved_pos;
+            }
+        }
+
+        // Parse as expression statement (placeholder)
         let expr = self.parse_expression()?;
 
         // Consume optional newline after statement
@@ -73,6 +115,96 @@ impl Parser {
             name: "placeholder".to_string(),
             arguments: vec![expr],
             span: self.tokens[self.current - 1].span,
+        })
+    }
+
+    /// Parses a variable declaration statement
+    /// Syntax: Public/Dim/Const identifier [As type]
+    fn parse_var_declaration(&mut self) -> Result<Statement, ParseError> {
+        // Get the keyword (Public, Dim, or Const)
+        let keyword_token = self.advance();
+        let keyword = if let TokenKind::Keyword(kw) = &keyword_token.kind {
+            kw.clone()
+        } else {
+            return Err(ParseError {
+                message: "Expected variable declaration keyword".to_string(),
+                span: keyword_token.span,
+            });
+        };
+
+        let start_span = keyword_token.span;
+
+        // Expect identifier (variable name)
+        if !matches!(self.peek().kind, TokenKind::Identifier(_)) {
+            return Err(ParseError {
+                message: "Expected identifier after variable declaration keyword".to_string(),
+                span: self.peek().span,
+            });
+        }
+
+        let name_token = self.advance();
+        let name = if let TokenKind::Identifier(n) = &name_token.kind {
+            n.clone()
+        } else {
+            unreachable!()
+        };
+
+        let mut end_span = name_token.span;
+
+        // Check for optional type annotation (As type)
+        let type_annotation = if let TokenKind::Keyword(kw) = &self.peek().kind {
+            if kw == "As" {
+                self.advance(); // consume 'As'
+
+                // Expect type identifier
+                if !matches!(self.peek().kind, TokenKind::Identifier(_)) {
+                    return Err(ParseError {
+                        message: "Expected type name after 'As'".to_string(),
+                        span: self.peek().span,
+                    });
+                }
+
+                let type_token = self.advance();
+                end_span = type_token.span;
+
+                if let TokenKind::Identifier(type_name) = &type_token.kind {
+                    Some(type_name.clone())
+                } else {
+                    unreachable!()
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        // Check for optional initializer (= expression)
+        let initializer = if matches!(self.peek().kind, TokenKind::Equal) {
+            self.advance(); // consume '='
+
+            // Parse initializer expression
+            let init_expr = self.parse_expression()?;
+            end_span = init_expr.span();
+
+            Some(init_expr)
+        } else {
+            None
+        };
+
+        // Consume optional newline after statement
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        let span = crate::lexer::token::Span::new(start_span.start, end_span.end);
+
+        Ok(Statement::VarDeclaration {
+            keyword,
+            name,
+            type_annotation,
+            initializer,
+            span,
         })
     }
 
@@ -1552,6 +1684,194 @@ mod tests {
                     }
                     _ => panic!("Expected array access expression"),
                 }
+            }
+        }
+    }
+
+    mod assignment_statements {
+        use super::*;
+
+        #[test]
+        fn parses_simple_assignment_to_variable() {
+            // x = 5
+            let mut scanner = Scanner::new("x = 5".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            // Should be an Assignment statement, not a placeholder FunctionCall
+            if let Statement::Assignment { target, value, .. } = &program.statements[0] {
+                assert_eq!(target, "x");
+
+                // Value should be integer 5
+                if let Expression::IntegerLiteral { value, .. } = value {
+                    assert_eq!(*value, 5);
+                } else {
+                    panic!("Expected integer literal as value");
+                }
+            } else {
+                panic!(
+                    "Expected assignment statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_assignment_with_expression_as_value() {
+            // x = 1 + 2
+            let mut scanner = Scanner::new("x = 1 + 2".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Assignment { target, value, .. } = &program.statements[0] {
+                assert_eq!(target, "x");
+
+                // Value should be a binary operation (1 + 2)
+                if let Expression::BinaryOp { operator, .. } = value {
+                    use crate::ast::BinaryOperator;
+                    assert_eq!(*operator, BinaryOperator::Add);
+                } else {
+                    panic!("Expected binary operation as value");
+                }
+            } else {
+                panic!("Expected assignment statement");
+            }
+        }
+    }
+
+    mod variable_declarations {
+        use super::*;
+
+        #[test]
+        fn parses_public_declaration_without_type() {
+            // Public Temp_C
+            let mut scanner = Scanner::new("Public Temp_C".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::VarDeclaration {
+                keyword,
+                name,
+                type_annotation,
+                initializer,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "Public");
+                assert_eq!(name, "Temp_C");
+                assert_eq!(*type_annotation, None);
+                assert_eq!(*initializer, None);
+            } else {
+                panic!(
+                    "Expected variable declaration, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_public_declaration_with_type_annotation() {
+            // Public Temp_C As Float
+            let mut scanner = Scanner::new("Public Temp_C As Float".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::VarDeclaration {
+                keyword,
+                name,
+                type_annotation,
+                initializer,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "Public");
+                assert_eq!(name, "Temp_C");
+                assert_eq!(type_annotation.as_deref(), Some("Float"));
+                assert_eq!(*initializer, None);
+            } else {
+                panic!(
+                    "Expected variable declaration, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_dim_declaration() {
+            // Dim i
+            let mut scanner = Scanner::new("Dim i".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::VarDeclaration {
+                keyword,
+                name,
+                type_annotation,
+                initializer,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "Dim");
+                assert_eq!(name, "i");
+                assert_eq!(*type_annotation, None);
+                assert_eq!(*initializer, None);
+            } else {
+                panic!(
+                    "Expected variable declaration, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        #[allow(clippy::approx_constant)]
+        fn parses_const_declaration_with_initializer() {
+            // Const PI = 3.14
+            let mut scanner = Scanner::new("Const PI = 3.14".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::VarDeclaration {
+                keyword,
+                name,
+                type_annotation,
+                initializer,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "Const");
+                assert_eq!(name, "PI");
+                assert_eq!(*type_annotation, None);
+
+                // Initializer should be a float literal 3.14
+                if let Some(Expression::FloatLiteral { value, .. }) = initializer {
+                    assert!((value - 3.14).abs() < 0.001);
+                } else {
+                    panic!("Expected float literal as initializer");
+                }
+            } else {
+                panic!(
+                    "Expected variable declaration, got {:?}",
+                    program.statements[0]
+                );
             }
         }
     }
