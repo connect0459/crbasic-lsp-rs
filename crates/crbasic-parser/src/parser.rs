@@ -35,8 +35,8 @@ impl Parser {
         let mut statements = Vec::new();
 
         while !self.is_at_end() {
-            // Skip newlines at the top level
-            if matches!(self.peek().kind, TokenKind::Newline) {
+            // Skip newlines and comments at the top level
+            if matches!(self.peek().kind, TokenKind::Newline | TokenKind::Comment(_)) {
                 self.advance();
                 continue;
             }
@@ -432,12 +432,14 @@ impl Parser {
 
         // Parse then branch statements until Else or EndIf
         let mut then_branch = Vec::new();
+        self.skip_whitespace_and_comments();
         while !matches!(
             self.peek().kind,
             TokenKind::Keyword(ref kw) if kw == "Else" || kw == "EndIf"
         ) && !self.is_at_end()
         {
             then_branch.push(self.parse_statement()?);
+            self.skip_whitespace_and_comments();
         }
 
         // Check for optional Else branch
@@ -452,10 +454,12 @@ impl Parser {
 
             // Parse else branch statements until EndIf
             let mut else_stmts = Vec::new();
+            self.skip_whitespace_and_comments();
             while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndIf")
                 && !self.is_at_end()
             {
                 else_stmts.push(self.parse_statement()?);
+                self.skip_whitespace_and_comments();
             }
 
             Some(else_stmts)
@@ -549,10 +553,12 @@ impl Parser {
 
         // Parse body statements until 'Next'
         let mut body = Vec::new();
+        self.skip_whitespace_and_comments();
         while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Next")
             && !self.is_at_end()
         {
             body.push(self.parse_statement()?);
+            self.skip_whitespace_and_comments();
         }
 
         // Expect 'Next' keyword
@@ -609,10 +615,12 @@ impl Parser {
 
         // Parse body statements until 'Loop'
         let mut body = Vec::new();
+        self.skip_whitespace_and_comments();
         while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Loop")
             && !self.is_at_end()
         {
             body.push(self.parse_statement()?);
+            self.skip_whitespace_and_comments();
         }
 
         // Expect 'Loop' keyword
@@ -723,10 +731,12 @@ impl Parser {
 
         // Parse body statements until 'EndFunction'
         let mut body = Vec::new();
+        self.skip_whitespace_and_comments();
         while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndFunction")
             && !self.is_at_end()
         {
             body.push(self.parse_statement()?);
+            self.skip_whitespace_and_comments();
         }
 
         // Expect 'EndFunction' keyword
@@ -821,10 +831,12 @@ impl Parser {
 
         // Parse body statements until 'EndSub'
         let mut body = Vec::new();
+        self.skip_whitespace_and_comments();
         while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndSub")
             && !self.is_at_end()
         {
             body.push(self.parse_statement()?);
+            self.skip_whitespace_and_comments();
         }
 
         // Expect 'EndSub' keyword
@@ -1230,6 +1242,15 @@ impl Parser {
     /// Checks if we've reached the end of the token stream
     fn is_at_end(&self) -> bool {
         matches!(self.peek().kind, TokenKind::Eof)
+    }
+
+    /// Skips any newlines and comments
+    fn skip_whitespace_and_comments(&mut self) {
+        while matches!(self.peek().kind, TokenKind::Newline | TokenKind::Comment(_))
+            && !self.is_at_end()
+        {
+            self.advance();
+        }
     }
 }
 
