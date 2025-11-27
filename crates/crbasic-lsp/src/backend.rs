@@ -36,6 +36,28 @@ impl CRBasicLanguageServer {
         }
     }
 
+    /// Creates a new LSP service for testing
+    ///
+    /// This method is primarily intended for integration tests.
+    /// It returns a service and client socket pair that can be used
+    /// to test LSP protocol communication.
+    ///
+    /// # Returns
+    /// A tuple of (LspService, ClientSocket) for testing
+    ///
+    /// # Example
+    /// ```no_run
+    /// use crbasic_lsp::CRBasicLanguageServer;
+    ///
+    /// # async fn example() {
+    /// let (service, _socket) = CRBasicLanguageServer::new_service();
+    /// // Use service for testing...
+    /// # }
+    /// ```
+    pub fn new_service() -> (tower_lsp::LspService<Self>, tower_lsp::ClientSocket) {
+        tower_lsp::LspService::build(Self::new).finish()
+    }
+
     /// Converts semantic errors to LSP diagnostics
     fn semantic_errors_to_diagnostics(errors: &[SemanticError]) -> Vec<Diagnostic> {
         errors

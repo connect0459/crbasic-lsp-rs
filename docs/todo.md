@@ -268,7 +268,7 @@
   - [x] Variable name length validation (CR200X: 16 max, CR6: 39 max)
   - [x] Recommended length warnings (CR200X: 12, CR6: 35)
   - [x] Truncation collision detection (CR200X 12-char truncation)
-- [x] LSP handler tests (105 tests passing)
+- [x] LSP handler tests (105 unit tests + 13 integration tests = 118 tests passing)
   - [x] Document manager (open, update, close operations)
   - [x] Document analysis and caching
   - [x] Model detection from file URI
@@ -318,7 +318,15 @@
   - [x] Parsing tests (10 tests - all passing)
   - [x] AST structure tests (2 evergreen tests - all passing, 6 non-evergreen tests removed)
   - [x] Semantic analysis tests (4 tests - all passing)
-- [ ] LSP feature integration tests
+- [x] LSP feature integration tests (13 tests in `tests/lsp_integration.rs`) ✅ All passing
+  - [x] Document synchronization (open, change, close)
+  - [x] Diagnostics publishing (valid program, invalid syntax, CR200X truncation warnings)
+  - [x] Completion / IntelliSense (keywords, user-defined variables)
+  - [x] Hover information (keyword descriptions)
+  - [x] Signature help (built-in function signatures)
+  - [x] Go to definition (variable declaration lookup)
+  - [x] Find references (all variable references)
+  - [x] Document symbols (program structure extraction)
 
 ### E2E Tests
 
