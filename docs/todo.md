@@ -340,7 +340,7 @@
 - [x] Multiple variable declarations on single line (`Public PTemp, Batt_volt`) ✅ Resolved
 - [x] Boolean literals as function arguments (`False`, `True`) ✅ Resolved
 - [x] NextScan keyword not recognized (lexer) ✅ Resolved
-- [ ] NextScan as a statement (parser support needed)
+- [x] NextScan as a statement (parser support) ✅ Resolved
 - [ ] Tab-indented statements handling
 
 ### Build Warnings

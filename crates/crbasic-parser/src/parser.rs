@@ -122,7 +122,11 @@ impl Parser {
 
         // Check for program structure keywords (BeginProg, EndProg, etc.)
         if let TokenKind::Keyword(kw) = &self.peek().kind
-            && (kw == "BeginProg" || kw == "EndProg" || kw == "DataTable" || kw == "EndTable")
+            && (kw == "BeginProg"
+                || kw == "EndProg"
+                || kw == "DataTable"
+                || kw == "EndTable"
+                || kw == "NextScan")
         {
             return self.parse_program_structure();
         }
@@ -3352,6 +3356,31 @@ mod tests {
                 assert!(arguments.is_none());
             } else {
                 panic!("Expected EndTable statement");
+            }
+        }
+
+        #[test]
+        fn parses_nextscan_statement() {
+            // NextScan
+            let mut scanner = Scanner::new("NextScan".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ProgramStructure {
+                keyword, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "NextScan");
+                // NextScan should have no arguments
+                assert!(arguments.is_none(), "NextScan should have no arguments");
+            } else {
+                panic!(
+                    "Expected NextScan program structure statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
     }
