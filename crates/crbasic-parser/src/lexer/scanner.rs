@@ -54,6 +54,7 @@ impl Scanner {
         keywords.insert("to".to_string(), "To".to_string());
         keywords.insert("step".to_string(), "Step".to_string());
         keywords.insert("next".to_string(), "Next".to_string());
+        keywords.insert("nextscan".to_string(), "NextScan".to_string());
         keywords.insert("do".to_string(), "Do".to_string());
         keywords.insert("loop".to_string(), "Loop".to_string());
         keywords.insert("while".to_string(), "While".to_string());
@@ -845,6 +846,41 @@ mod tests {
                     );
                 }
                 _ => panic!("Expected Keyword token, got {:?}", tokens[0].kind),
+            }
+        }
+
+        #[test]
+        fn recognizes_nextscan_keyword() {
+            let test_cases = vec![
+                ("NextScan", "NextScan"),
+                ("nextscan", "NextScan"),
+                ("NEXTSCAN", "NextScan"),
+            ];
+
+            for (input, expected) in test_cases {
+                let mut scanner = Scanner::new(input.to_string());
+                let tokens = scanner.scan_tokens();
+
+                assert_eq!(
+                    tokens.len(),
+                    2,
+                    "Input '{}' should produce keyword token and EOF",
+                    input
+                );
+
+                match &tokens[0].kind {
+                    TokenKind::Keyword(keyword) => {
+                        assert_eq!(
+                            keyword, expected,
+                            "Input '{}' should normalize to '{}'",
+                            input, expected
+                        );
+                    }
+                    _ => panic!(
+                        "Expected Keyword token for '{}', got {:?}",
+                        input, tokens[0].kind
+                    ),
+                }
             }
         }
 
