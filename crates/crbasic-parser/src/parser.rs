@@ -3870,4 +3870,130 @@ mod tests {
             }
         }
     }
+
+    mod tab_indented_statements {
+        use super::*;
+
+        #[test]
+        fn parses_tab_indented_statements_in_data_table() {
+            // DataTable(Test, 1, -1)
+            // \tSample(1, PTemp, FP2)
+            // EndTable
+            let source = "DataTable(Test, 1, -1)\n\tSample(1, PTemp, FP2)\nEndTable".to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser
+                .parse()
+                .expect("Should parse tab-indented statements successfully");
+
+            // Should have 3 statements: DataTable, Sample (function call), EndTable
+            assert_eq!(program.statements.len(), 3);
+
+            // First: DataTable
+            assert!(matches!(
+                program.statements[0],
+                Statement::ProgramStructure { .. }
+            ));
+
+            // Second: Sample function call (tab-indented)
+            assert!(matches!(
+                program.statements[1],
+                Statement::FunctionCall { .. }
+            ));
+
+            // Third: EndTable
+            assert!(matches!(
+                program.statements[2],
+                Statement::ProgramStructure { .. }
+            ));
+        }
+
+        #[test]
+        fn parses_double_tab_indented_statements() {
+            // Scan(1, Sec, 0, 0)
+            // \t\tPanelTemp(PTemp, 60)
+            // \t\tBattery(Batt_volt)
+            // NextScan
+            let source =
+                "Scan(1, Sec, 0, 0)\n\t\tPanelTemp(PTemp, 60)\n\t\tBattery(Batt_volt)\nNextScan"
+                    .to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser
+                .parse()
+                .expect("Should parse double-tab-indented statements successfully");
+
+            // Should have 4 statements: Scan, PanelTemp, Battery, NextScan
+            assert_eq!(program.statements.len(), 4);
+
+            // All function calls except last NextScan
+            assert!(matches!(
+                program.statements[0],
+                Statement::FunctionCall { .. }
+            ));
+            assert!(matches!(
+                program.statements[1],
+                Statement::FunctionCall { .. }
+            ));
+            assert!(matches!(
+                program.statements[2],
+                Statement::FunctionCall { .. }
+            ));
+
+            // Last: NextScan (program structure)
+            if let Statement::ProgramStructure { keyword, .. } = &program.statements[3] {
+                assert_eq!(keyword, "NextScan");
+            } else {
+                panic!("Expected NextScan statement");
+            }
+        }
+
+        #[test]
+        fn parses_mixed_indentation_levels() {
+            // BeginProg
+            // \tScan(1, Sec, 0, 0)
+            // \t\tPanelTemp(PTemp, 60)
+            // \tNextScan
+            // EndProg
+            let source =
+                "BeginProg\n\tScan(1, Sec, 0, 0)\n\t\tPanelTemp(PTemp, 60)\n\tNextScan\nEndProg"
+                    .to_string();
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser
+                .parse()
+                .expect("Should parse mixed indentation levels successfully");
+
+            // Should have 5 statements
+            assert_eq!(program.statements.len(), 5);
+
+            // Verify structure
+            assert!(matches!(
+                program.statements[0],
+                Statement::ProgramStructure { .. }
+            )); // BeginProg
+            assert!(matches!(
+                program.statements[1],
+                Statement::FunctionCall { .. }
+            )); // Scan
+            assert!(matches!(
+                program.statements[2],
+                Statement::FunctionCall { .. }
+            )); // PanelTemp
+            assert!(matches!(
+                program.statements[3],
+                Statement::ProgramStructure { .. }
+            )); // NextScan
+            assert!(matches!(
+                program.statements[4],
+                Statement::ProgramStructure { .. }
+            )); // EndProg
+        }
+    }
 }

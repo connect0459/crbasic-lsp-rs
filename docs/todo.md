@@ -341,7 +341,7 @@
 - [x] Boolean literals as function arguments (`False`, `True`) ✅ Resolved
 - [x] NextScan keyword not recognized (lexer) ✅ Resolved
 - [x] NextScan as a statement (parser support) ✅ Resolved
-- [ ] Tab-indented statements handling
+- [x] Tab-indented statements handling ✅ Resolved (lexer already skips tabs correctly)
 
 ### Build Warnings
 
