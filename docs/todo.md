@@ -313,11 +313,12 @@
 ### Integration Tests
 
 - [x] End-to-end tokenization tests (4 integration tests)
-- [x] Sample file integration tests (26 tests in `tests/sample_files.rs`) ✅ All passing
+- [x] Sample file integration tests (27 tests in `tests/sample_files.rs`) ✅ All passing
   - [x] Tokenization tests (10 tests - all passing)
   - [x] Parsing tests (10 tests - all passing)
   - [x] AST structure tests (2 evergreen tests - all passing, 6 non-evergreen tests removed)
   - [x] Semantic analysis tests (4 tests - all passing)
+  - [x] Real-world validation test (1 comprehensive test - all passing)
 - [x] LSP feature integration tests (13 tests in `tests/lsp_integration.rs`) ✅ All passing
   - [x] Document synchronization (open, change, close)
   - [x] Diagnostics publishing (valid program, invalid syntax, CR200X truncation warnings)
@@ -335,7 +336,10 @@
   - [x] Server path resolution logic (Windows/Unix platforms)
   - [x] Extension configuration (file extensions)
   - [x] Module loadability
-- [ ] Real-world CRBasic program validation
+- [x] Real-world CRBasic program validation (1 comprehensive test in `tests/sample_files.rs`) ✅ All passing
+  - [x] Complete validation pipeline (tokenize → parse → analyze) for all 10 sample files
+  - [x] Model-specific semantic analysis (CR200X, CR6, GRANITE)
+  - [x] Zero semantic errors verification for real-world programs
 
 ## Phase 8: Documentation & Polish 📚
 

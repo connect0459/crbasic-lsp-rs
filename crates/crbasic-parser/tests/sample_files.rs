@@ -381,3 +381,65 @@ mod semantic_analysis {
         assert_eq!(DataloggerModel::from_extension("c9x"), DataloggerModel::CR6);
     }
 }
+
+mod real_world_validation {
+    use super::*;
+
+    /// Verify that all sample files can be tokenized, parsed, and analyzed without errors
+    #[test]
+    fn all_sample_files_pass_complete_validation() {
+        let sample_files = [
+            ("sample-cr1000.CR1", crbasic_parser::DataloggerModel::CR200X),
+            (
+                "sample-cr1000x-series.CR1X",
+                crbasic_parser::DataloggerModel::CR200X,
+            ),
+            (
+                "sample-cr200-series.CR2",
+                crbasic_parser::DataloggerModel::CR200X,
+            ),
+            (
+                "sample-cr300-series.CR300",
+                crbasic_parser::DataloggerModel::CR6,
+            ),
+            ("sample-cr3000.CR3", crbasic_parser::DataloggerModel::CR6),
+            ("sample-cr5000.CR5", crbasic_parser::DataloggerModel::CR6),
+            (
+                "sample-cr6-series.CR6",
+                crbasic_parser::DataloggerModel::CR6,
+            ),
+            (
+                "sample-cr800-series.CR8",
+                crbasic_parser::DataloggerModel::CR6,
+            ),
+            ("sample-cr9000.CR9", crbasic_parser::DataloggerModel::CR6),
+            ("sample-cr9000x.C9X", crbasic_parser::DataloggerModel::CR6),
+        ];
+
+        for (filename, model) in sample_files {
+            let source = read_sample_file(filename);
+
+            // Step 1: Tokenization
+            let tokens = tokenize(&source);
+            assert!(!tokens.is_empty(), "{}: Should produce tokens", filename);
+
+            // Step 2: Parsing
+            let program = parse(&source)
+                .unwrap_or_else(|_| panic!("{}: Should parse successfully", filename));
+
+            // Step 3: Semantic Analysis
+            let mut analyzer = crbasic_parser::SemanticAnalyzer::new(model);
+            let errors = analyzer.analyze(&program);
+            let error_count = errors
+                .iter()
+                .filter(|e| e.severity == crbasic_parser::semantic::ErrorSeverity::Error)
+                .count();
+
+            assert_eq!(
+                error_count, 0,
+                "{}: Should have no semantic errors (found {} errors: {:?})",
+                filename, error_count, errors
+            );
+        }
+    }
+}

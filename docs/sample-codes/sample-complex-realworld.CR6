@@ -1,0 +1,152 @@
+'Complex Real-World CRBasic Program Example
+'This program demonstrates advanced features used in actual datalogger applications
+'Author: Test Program
+'Date: 2024-11-27
+'Datalogger: CR6
+
+'Declare Constants
+Const SCAN_INTERVAL = 60
+Const MAX_SAMPLES = 100
+Const TEMP_OFFSET = 273.15
+
+'Declare Public Variables
+Public Temp_C(4)
+Public RH
+Public WindSpeed
+Public WindDir
+Public Rain_mm
+Public Batt_volt
+Public PTemp
+
+'Declare Dim Variables (scratch variables)
+Dim i
+Dim TempAvg
+Dim DataCount
+
+'User-Defined Function: Convert Celsius to Fahrenheit
+Function CtoF(tempC)
+  CtoF = tempC * 9 / 5 + 32
+EndFunction
+
+'User-Defined Function: Calculate Heat Index
+Function HeatIndex(temp, rh)
+  Dim c1
+  Dim c2
+  Dim c3
+  Dim c4
+  Dim c5
+  Dim c6
+  Dim c7
+  Dim c8
+  Dim c9
+  c1 = -42.379
+  c2 = 2.04901523
+  c3 = 10.14333127
+  c4 = -0.22475541
+  c5 = -6.83783e-3
+  c6 = -5.481717e-2
+  c7 = 1.22874e-3
+  c8 = 8.5282e-4
+  c9 = -1.99e-6
+
+  HeatIndex = c1 + c2 * temp + c3 * rh + c4 * temp * rh + c5 * temp ^ 2 + c6 * rh ^ 2 + c7 * temp ^ 2 * rh + c8 * temp * rh ^ 2 + c9 * temp ^ 2 * rh ^ 2
+EndFunction
+
+'User-Defined Subroutine: Process Temperature Array
+Sub ProcessTemperatures
+  TempAvg = 0
+  DataCount = 0
+
+  For i = 1 To 4
+    If Temp_C(i) <> NAN Then
+      TempAvg = TempAvg + Temp_C(i)
+      DataCount = DataCount + 1
+    EndIf
+  Next i
+
+  If DataCount > 0 Then
+    TempAvg = TempAvg / DataCount
+  Else
+    TempAvg = NAN
+  EndIf
+EndSub
+
+'Define Data Tables
+DataTable(Minutely, 1, -1)
+  DataInterval(0, 1, Min, 10)
+  Average(4, Temp_C(), FP2, False)
+  Sample(1, RH, FP2)
+  WindVector(1, WindSpeed, WindDir, FP2, False, 0, 0, 0)
+  Totalize(1, Rain_mm, FP2, False)
+  Minimum(1, Batt_volt, FP2, False, False)
+EndTable
+
+DataTable(Hourly, 1, -1)
+  DataInterval(0, 60, Min, 10)
+  Average(4, Temp_C(), FP2, False)
+  Average(1, RH, FP2, False)
+  WindVector(1, WindSpeed, WindDir, FP2, False, 0, 0, 0)
+  FieldNames("WS_Avg, WD_Avg")
+  Totalize(1, Rain_mm, FP2, False)
+  Minimum(1, Batt_volt, FP2, False, False)
+  Maximum(1, PTemp, FP2, False, False)
+EndTable
+
+DataTable(Daily, 1, -1)
+  DataInterval(0, 1440, Min, 10)
+  Minimum(4, Temp_C(), FP2, False, False)
+  Maximum(4, Temp_C(), FP2, False, False)
+  Average(1, RH, FP2, False)
+  WindVector(1, WindSpeed, WindDir, FP2, False, 0, 0, 0)
+  Totalize(1, Rain_mm, FP2, False)
+  Minimum(1, Batt_volt, FP2, False, False)
+EndTable
+
+'Main Program
+BeginProg
+  Scan(SCAN_INTERVAL, Sec, 0, 0)
+    'Measure panel temperature
+    PanelTemp(PTemp, 15000)
+
+    'Measure battery voltage
+    Battery(Batt_volt)
+
+    'Measure temperature sensors
+    For i = 1 To 4
+      Resistance(Temp_C(i), 1, mV2500, 1, Vx1, 1, 2420, True, True, 0, 60, 1.0, 0.0)
+    Next i
+
+    'Process temperature array
+    Call ProcessTemperatures
+
+    'Measure relative humidity
+    VoltSe(RH, 1, mV2500, 1, 0, 0, 250, 0.1, 0)
+    If RH > 100 Then RH = 100
+    If RH < 0 Then RH = 0
+
+    'Measure wind speed and direction
+    PulseCount(WindSpeed, 1, 1, 1, 1, 0.098, 0)
+    BrHalf(WindDir, 1, mV2500, 1, 1, 1, 2500, True, 0, 250, 355, 0)
+    If WindDir >= 360 Then WindDir = WindDir - 360
+    If WindDir < 0 Then WindDir = WindDir + 360
+
+    'Measure rainfall
+    PulseCount(Rain_mm, 1, 2, 2, 0, 0.254, 0)
+
+    'Calculate derived values
+    Dim TempF
+    TempF = CtoF(TempAvg)
+
+    Dim HI
+    If TempF > 80 AND RH > 40 Then
+      HI = HeatIndex(TempF, RH)
+    Else
+      HI = TempF
+    EndIf
+
+    'Call output tables
+    CallTable(Minutely)
+    CallTable(Hourly)
+    CallTable(Daily)
+  NextScan
+EndProg
