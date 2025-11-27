@@ -191,12 +191,25 @@
   - [x] CR6/GRANITE: 39 chars max, 35-char recommendation
 - [x] Duplicate field name detection (12-char truncation collision)
 
-## Phase 5: WASM Integration 🌐
+## Phase 5: WASM Integration ✅
 
-- [ ] WASM bindings (`wasm-bindgen`)
-- [ ] JavaScript API exports
-- [ ] WASM build configuration (`wasm-pack`)
-- [ ] Memory-efficient data transfer
+- [x] WASM bindings (`wasm-bindgen`)
+  - [x] Tokenize API: `tokenize(source)` → JSON tokens
+  - [x] Parse API: `parse(source)` → JSON AST with error handling
+  - [x] Analyze API: `analyze(source, file_path)` → JSON diagnostics
+  - [x] Version API: `version()` → package version
+- [x] JavaScript API exports
+  - [x] TypeScript definitions auto-generated
+  - [x] Web target build support
+- [x] WASM build configuration (`wasm-pack`)
+  - [x] wasm32-unknown-unknown target
+  - [x] Release optimizations (opt-level "s", LTO)
+- [x] WASM tests (18 tests passing)
+  - [x] Tokenize API tests
+  - [x] Parse API tests
+  - [x] Analyze API tests
+  - [x] Model detection tests
+  - [x] Version API tests
 
 ## Phase 6: VSCode Extension Client 🔌
 
@@ -222,7 +235,7 @@
   - [x] Line continuation
   - [x] Whitespace and newline handling
   - [x] Integration tests (multi-line programs)
-- [x] Parser tests (73 tests passing)
+- [x] Parser tests (125 tests passing)
   - [x] Primary expressions (literals, identifiers, parentheses)
   - [x] Binary operations (arithmetic, comparison, logical)
   - [x] Unary operations (negation, NOT)
@@ -277,6 +290,12 @@
     - [x] Single and multiple reference finding
     - [x] Identifier filtering
     - [x] Location generation with correct URIs and ranges
+- [x] WASM binding tests (18 tests passing)
+  - [x] Tokenize API (returns JSON array)
+  - [x] Parse API (success/error handling)
+  - [x] Analyze API (model-specific diagnostics)
+  - [x] Model detection from file path
+  - [x] Version API
 
 ### Integration Tests
 

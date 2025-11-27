@@ -12,9 +12,9 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 crbasic-parser = { path = "../crbasic-parser" }
-crbasic-lsp = { path = "../crbasic-lsp" }
 wasm-bindgen = { workspace = true }
-js-sys = { workspace = true }
-wasm-bindgen-futures = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+# Note: crbasic-lsp is not included as it depends on tokio/mio
+# which are not compatible with WASM target
