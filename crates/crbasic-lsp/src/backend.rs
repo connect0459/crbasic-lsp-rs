@@ -3,6 +3,7 @@
 //! This module implements the Language Server Protocol backend using tower-lsp.
 
 use crate::completion::CompletionProvider;
+use crate::definition::DefinitionProvider;
 use crate::document::DocumentManager;
 use crate::hover::HoverProvider;
 use crate::signature::SignatureProvider;
@@ -137,6 +138,7 @@ impl LanguageServer for CRBasicLanguageServer {
                     ..Default::default()
                 }),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
+                definition_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 document_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 ..Default::default()
             },
@@ -268,6 +270,36 @@ impl LanguageServer for CRBasicLanguageServer {
                     &func_name,
                     active_param,
                 ));
+            }
+        }
+
+        Ok(None)
+    }
+
+    async fn goto_definition(
+        &self,
+        params: GotoDefinitionParams,
+    ) -> Result<Option<GotoDefinitionResponse>> {
+        let uri = params.text_document_position_params.text_document.uri;
+        let position = params.text_document_position_params.position;
+
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri) {
+            // Tokenize the document
+            let mut scanner = Scanner::new(doc.text.clone());
+            let tokens = scanner.scan_tokens();
+
+            // Extract definitions from AST
+            if let Some(ast) = &doc.ast {
+                let definitions = DefinitionProvider::extract_definitions(ast);
+
+                // Get definition location
+                if let Some(location) =
+                    DefinitionProvider::get_definition(&tokens, position, &definitions, uri)
+                {
+                    return Ok(Some(GotoDefinitionResponse::Scalar(location)));
+                }
             }
         }
 

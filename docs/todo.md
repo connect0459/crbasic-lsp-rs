@@ -166,7 +166,11 @@
   - [x] Keyword descriptions with syntax examples
   - [x] Position-based token lookup
   - [x] LSP hover handler integration
-- [ ] Go to definition
+- [x] Go to definition
+  - [x] Symbol definition extraction from AST (variables, functions, subroutines)
+  - [x] Position-based identifier lookup
+  - [x] Definition location resolution
+  - [x] LSP goto_definition handler integration
 - [ ] Find all references
 - [x] Document symbols (outline view)
   - [x] Program structure (BeginProg, EndProg, DataTable, EndTable)
@@ -235,7 +239,7 @@
   - [x] Variable name length validation (CR200X: 16 max, CR6: 39 max)
   - [x] Recommended length warnings (CR200X: 12, CR6: 35)
   - [x] Truncation collision detection (CR200X 12-char truncation)
-- [x] LSP handler tests (85 tests passing)
+- [x] LSP handler tests (97 tests passing)
   - [x] Document manager (open, update, close operations)
   - [x] Document analysis and caching
   - [x] Model detection from file URI
@@ -261,6 +265,11 @@
     - [x] Parameter documentation
     - [x] Active parameter counting
     - [x] Function name extraction
+  - [x] Go to Definition (12 tests)
+    - [x] Symbol definition extraction (variables, functions, subroutines)
+    - [x] Identifier position lookup
+    - [x] Definition location resolution
+    - [x] Span to Range conversion
 
 ### Integration Tests
 

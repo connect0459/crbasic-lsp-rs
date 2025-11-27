@@ -5,6 +5,7 @@
 
 pub mod backend;
 pub mod completion;
+pub mod definition;
 pub mod document;
 pub mod hover;
 pub mod signature;
