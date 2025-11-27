@@ -6,6 +6,7 @@ use crate::completion::CompletionProvider;
 use crate::definition::DefinitionProvider;
 use crate::document::DocumentManager;
 use crate::hover::HoverProvider;
+use crate::references::ReferencesProvider;
 use crate::signature::SignatureProvider;
 use crate::symbols;
 use crbasic_parser::SemanticError;
@@ -139,6 +140,7 @@ impl LanguageServer for CRBasicLanguageServer {
                 }),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
                 definition_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
+                references_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 document_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 ..Default::default()
             },
@@ -301,6 +303,30 @@ impl LanguageServer for CRBasicLanguageServer {
                     return Ok(Some(GotoDefinitionResponse::Scalar(location)));
                 }
             }
+        }
+
+        Ok(None)
+    }
+
+    async fn references(&self, params: ReferenceParams) -> Result<Option<Vec<Location>>> {
+        let uri = params.text_document_position.text_document.uri;
+        let position = params.text_document_position.position;
+        let include_declaration = params.context.include_declaration;
+
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri) {
+            // Tokenize the document
+            let mut scanner = Scanner::new(doc.text.clone());
+            let tokens = scanner.scan_tokens();
+
+            // Find all references
+            return Ok(ReferencesProvider::get_references(
+                &tokens,
+                position,
+                uri,
+                include_declaration,
+            ));
         }
 
         Ok(None)

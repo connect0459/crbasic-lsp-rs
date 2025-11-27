@@ -171,7 +171,10 @@
   - [x] Position-based identifier lookup
   - [x] Definition location resolution
   - [x] LSP goto_definition handler integration
-- [ ] Find all references
+- [x] Find all references
+  - [x] Symbol occurrence search in token stream
+  - [x] Multiple reference location collection
+  - [x] LSP references handler integration
 - [x] Document symbols (outline view)
   - [x] Program structure (BeginProg, EndProg, DataTable, EndTable)
   - [x] Function definitions with parameters
@@ -239,7 +242,7 @@
   - [x] Variable name length validation (CR200X: 16 max, CR6: 39 max)
   - [x] Recommended length warnings (CR200X: 12, CR6: 35)
   - [x] Truncation collision detection (CR200X 12-char truncation)
-- [x] LSP handler tests (97 tests passing)
+- [x] LSP handler tests (105 tests passing)
   - [x] Document manager (open, update, close operations)
   - [x] Document analysis and caching
   - [x] Model detection from file URI
@@ -270,6 +273,10 @@
     - [x] Identifier position lookup
     - [x] Definition location resolution
     - [x] Span to Range conversion
+  - [x] Find All References (8 tests)
+    - [x] Single and multiple reference finding
+    - [x] Identifier filtering
+    - [x] Location generation with correct URIs and ranges
 
 ### Integration Tests
 

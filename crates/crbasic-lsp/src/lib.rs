@@ -8,6 +8,7 @@ pub mod completion;
 pub mod definition;
 pub mod document;
 pub mod hover;
+pub mod references;
 pub mod signature;
 pub mod symbols;
 
