@@ -330,7 +330,11 @@
 
 ### E2E Tests
 
-- [ ] VSCode extension smoke tests
+- [x] VSCode extension smoke tests (5 tests in `client/src/extension.test.ts`) ✅ All passing
+  - [x] Extension module structure (activate/deactivate functions)
+  - [x] Server path resolution logic (Windows/Unix platforms)
+  - [x] Extension configuration (file extensions)
+  - [x] Module loadability
 - [ ] Real-world CRBasic program validation
 
 ## Phase 8: Documentation & Polish 📚
