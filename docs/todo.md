@@ -160,7 +160,10 @@
 - [ ] Signature help
   - [ ] Built-in function signatures
   - [ ] Parameter documentation
-- [ ] Hover information
+- [x] Hover information
+  - [x] Keyword descriptions with syntax examples
+  - [x] Position-based token lookup
+  - [x] LSP hover handler integration
 - [ ] Go to definition
 - [ ] Find all references
 - [x] Document symbols (outline view)
@@ -230,7 +233,7 @@
   - [x] Variable name length validation (CR200X: 16 max, CR6: 39 max)
   - [x] Recommended length warnings (CR200X: 12, CR6: 35)
   - [x] Truncation collision detection (CR200X 12-char truncation)
-- [x] LSP handler tests (23 tests passing)
+- [x] LSP handler tests (38 tests passing)
   - [x] Document manager (open, update, close operations)
   - [x] Document analysis and caching
   - [x] Model detection from file URI
@@ -242,6 +245,10 @@
     - [x] Variable declaration symbols
     - [x] Nested symbols in function bodies
     - [x] Symbol kind classification
+  - [x] Hover information (15 tests)
+    - [x] Keyword hover descriptions
+    - [x] Position-based token lookup
+    - [x] Half-open interval span handling
 
 ### Integration Tests
 

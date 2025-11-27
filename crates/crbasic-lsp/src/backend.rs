@@ -3,8 +3,10 @@
 //! This module implements the Language Server Protocol backend using tower-lsp.
 
 use crate::document::DocumentManager;
+use crate::hover::HoverProvider;
 use crate::symbols;
 use crbasic_parser::SemanticError;
+use crbasic_parser::lexer::Scanner;
 use crbasic_parser::lexer::token::Position;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -122,6 +124,7 @@ impl LanguageServer for CRBasicLanguageServer {
                 text_document_sync: Some(TextDocumentSyncCapability::Kind(
                     TextDocumentSyncKind::FULL,
                 )),
+                hover_provider: Some(HoverProviderCapability::Simple(true)),
                 document_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 ..Default::default()
             },
@@ -190,6 +193,24 @@ impl LanguageServer for CRBasicLanguageServer {
         {
             let symbols = symbols::extract_document_symbols(ast);
             return Ok(Some(DocumentSymbolResponse::Nested(symbols)));
+        }
+
+        Ok(None)
+    }
+
+    async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
+        let uri = params.text_document_position_params.text_document.uri;
+        let position = params.text_document_position_params.position;
+
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri) {
+            // Tokenize the document
+            let mut scanner = Scanner::new(doc.text.clone());
+            let tokens = scanner.scan_tokens();
+
+            // Get hover information at position
+            return Ok(HoverProvider::get_hover_at_position(&tokens, position));
         }
 
         Ok(None)
