@@ -313,11 +313,11 @@
 ### Integration Tests
 
 - [x] End-to-end tokenization tests (4 integration tests)
-- [x] Sample file integration tests (32 tests in `tests/sample_files.rs`)
-  - [x] Tokenization tests (10 tests - all passing for each datalogger model)
-  - [x] Parsing tests (10 tests - all ignored due to parser limitations)
-  - [x] AST structure tests (8 tests - all ignored due to parser limitations)
-  - [x] Semantic analysis tests (4 tests - 1 passing, 3 ignored due to parser limitations)
+- [x] Sample file integration tests (26 tests in `tests/sample_files.rs`) ✅ All passing
+  - [x] Tokenization tests (10 tests - all passing)
+  - [x] Parsing tests (10 tests - all passing)
+  - [x] AST structure tests (2 evergreen tests - all passing, 6 non-evergreen tests removed)
+  - [x] Semantic analysis tests (4 tests - all passing)
 - [ ] LSP feature integration tests
 
 ### E2E Tests

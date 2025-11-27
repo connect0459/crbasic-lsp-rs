@@ -122,14 +122,7 @@ mod tokenization {
 mod parsing {
     use super::*;
 
-    // NOTE: These tests are currently ignored because the parser doesn't yet support:
-    // - Multiple variable declarations on single line (Public PTemp, Batt_volt)
-    // - Boolean literals as function arguments (False, True)
-    // - NextScan keyword
-    // Run with `cargo test --ignored` to execute these tests
-
     #[test]
-    #[ignore = "Parser doesn't support NextScan as a statement"]
     fn parses_cr1000_sample_without_errors() {
         let source = read_sample_file("sample-cr1000.CR1");
         let result = parse(&source);
@@ -137,7 +130,6 @@ mod parsing {
     }
 
     #[test]
-    #[ignore = "Parser doesn't support comma-separated variable declarations"]
     fn parses_cr1000x_sample_without_errors() {
         let source = read_sample_file("sample-cr1000x-series.CR1X");
         let result = parse(&source);
@@ -145,7 +137,6 @@ mod parsing {
     }
 
     #[test]
-    #[ignore = "Parser doesn't support Boolean literals"]
     fn parses_cr200_sample_without_errors() {
         let source = read_sample_file("sample-cr200-series.CR2");
         let result = parse(&source);
@@ -153,7 +144,6 @@ mod parsing {
     }
 
     #[test]
-    #[ignore = "Parser doesn't support comma-separated variable declarations"]
     fn parses_cr300_sample_without_errors() {
         let source = read_sample_file("sample-cr300-series.CR300");
         let result = parse(&source);
@@ -161,7 +151,6 @@ mod parsing {
     }
 
     #[test]
-    #[ignore = "Parser doesn't support comma-separated variable declarations"]
     fn parses_cr3000_sample_without_errors() {
         let source = read_sample_file("sample-cr3000.CR3");
         let result = parse(&source);
@@ -169,7 +158,6 @@ mod parsing {
     }
 
     #[test]
-    #[ignore = "Parser doesn't support comma-separated variable declarations"]
     fn parses_cr5000_sample_without_errors() {
         let source = read_sample_file("sample-cr5000.CR5");
         let result = parse(&source);
@@ -177,7 +165,6 @@ mod parsing {
     }
 
     #[test]
-    #[ignore = "Parser doesn't support comma-separated variable declarations"]
     fn parses_cr6_sample_without_errors() {
         let source = read_sample_file("sample-cr6-series.CR6");
         let result = parse(&source);
@@ -185,7 +172,6 @@ mod parsing {
     }
 
     #[test]
-    #[ignore = "Parser doesn't support comma-separated variable declarations"]
     fn parses_cr800_sample_without_errors() {
         let source = read_sample_file("sample-cr800-series.CR8");
         let result = parse(&source);
@@ -193,7 +179,6 @@ mod parsing {
     }
 
     #[test]
-    #[ignore = "Parser doesn't support comma-separated variable declarations"]
     fn parses_cr9000_sample_without_errors() {
         let source = read_sample_file("sample-cr9000.CR9");
         let result = parse(&source);
@@ -201,7 +186,6 @@ mod parsing {
     }
 
     #[test]
-    #[ignore = "Parser doesn't support comma-separated variable declarations"]
     fn parses_cr9000x_sample_without_errors() {
         let source = read_sample_file("sample-cr9000x.C9X");
         let result = parse(&source);
@@ -211,10 +195,6 @@ mod parsing {
 
 mod ast_structure {
     use super::*;
-
-    // NOTE: These tests are currently ignored because they depend on parsing,
-    // which doesn't yet support comma-separated variable declarations or Boolean literals.
-    // Run with `cargo test --ignored` to execute these tests
 
     /// Helper to check if a program contains BeginProg
     fn has_begin_prog(program: &crbasic_parser::ast::Program) -> bool {
@@ -256,97 +236,7 @@ mod ast_structure {
         })
     }
 
-    /// Helper to check if a program contains Public variable declaration
-    fn has_public_declaration(program: &crbasic_parser::ast::Program) -> bool {
-        program.statements.iter().any(|s| {
-            matches!(
-                s,
-                Statement::VarDeclaration { keyword, .. } if keyword == "Public"
-            )
-        })
-    }
-
-    /// Helper to count function calls in a program
-    fn count_function_calls(program: &crbasic_parser::ast::Program) -> usize {
-        program
-            .statements
-            .iter()
-            .filter(|s| matches!(s, Statement::FunctionCall { .. }))
-            .count()
-    }
-
     #[test]
-    #[ignore = "Depends on parser supporting comma-separated declarations"]
-    fn cr6_sample_contains_begin_prog_and_end_prog() {
-        let source = read_sample_file("sample-cr6-series.CR6");
-        let program = parse(&source).expect("Should parse successfully");
-
-        assert!(has_begin_prog(&program), "Should contain BeginProg");
-        assert!(has_end_prog(&program), "Should contain EndProg");
-    }
-
-    #[test]
-    #[ignore = "Depends on parser supporting comma-separated declarations"]
-    fn cr6_sample_contains_data_table_structure() {
-        let source = read_sample_file("sample-cr6-series.CR6");
-        let program = parse(&source).expect("Should parse successfully");
-
-        assert!(has_data_table(&program), "Should contain DataTable");
-        assert!(has_end_table(&program), "Should contain EndTable");
-    }
-
-    #[test]
-    #[ignore = "Depends on parser supporting comma-separated declarations"]
-    fn cr6_sample_contains_public_declaration() {
-        let source = read_sample_file("sample-cr6-series.CR6");
-        let program = parse(&source).expect("Should parse successfully");
-
-        assert!(
-            has_public_declaration(&program),
-            "Should contain Public declaration"
-        );
-    }
-
-    #[test]
-    #[ignore = "Depends on parser supporting comma-separated declarations"]
-    fn cr6_sample_contains_function_calls() {
-        let source = read_sample_file("sample-cr6-series.CR6");
-        let program = parse(&source).expect("Should parse successfully");
-
-        let call_count = count_function_calls(&program);
-        assert!(call_count > 0, "Should contain at least one function call");
-    }
-
-    #[test]
-    #[ignore = "Depends on parser supporting comma-separated declarations"]
-    fn cr1000_sample_has_complete_program_structure() {
-        let source = read_sample_file("sample-cr1000.CR1");
-        let program = parse(&source).expect("Should parse successfully");
-
-        assert!(has_begin_prog(&program), "Should contain BeginProg");
-        assert!(has_end_prog(&program), "Should contain EndProg");
-        assert!(has_data_table(&program), "Should contain DataTable");
-        assert!(has_end_table(&program), "Should contain EndTable");
-        assert!(
-            has_public_declaration(&program),
-            "Should contain Public declaration"
-        );
-    }
-
-    #[test]
-    #[ignore = "Depends on parser supporting Boolean literals"]
-    fn cr200_sample_has_complete_program_structure() {
-        let source = read_sample_file("sample-cr200-series.CR2");
-        let program = parse(&source).expect("Should parse successfully");
-
-        assert!(has_begin_prog(&program), "Should contain BeginProg");
-        assert!(has_end_prog(&program), "Should contain EndProg");
-        assert!(has_data_table(&program), "Should contain DataTable");
-        assert!(has_end_table(&program), "Should contain EndTable");
-    }
-
-    #[test]
-    #[ignore = "Depends on parser supporting comma-separated declarations"]
     fn all_samples_have_begin_prog_and_end_prog() {
         let sample_files = [
             "sample-cr1000.CR1",
@@ -381,7 +271,6 @@ mod ast_structure {
     }
 
     #[test]
-    #[ignore = "Depends on parser supporting comma-separated declarations"]
     fn all_samples_have_data_table_structure() {
         let sample_files = [
             "sample-cr1000.CR1",
@@ -421,8 +310,6 @@ mod semantic_analysis {
     use crbasic_parser::semantic::{ErrorSeverity, SemanticError};
     use crbasic_parser::{DataloggerModel, SemanticAnalyzer};
 
-    // NOTE: Tests that depend on parsing are ignored until parser is enhanced
-
     /// Helper to run semantic analysis on a sample file
     fn analyze_sample(filename: &str, model: DataloggerModel) -> Vec<SemanticError> {
         let source = read_sample_file(filename);
@@ -432,7 +319,6 @@ mod semantic_analysis {
     }
 
     #[test]
-    #[ignore = "Depends on parser supporting comma-separated declarations"]
     fn cr6_sample_has_no_semantic_errors() {
         let errors = analyze_sample("sample-cr6-series.CR6", DataloggerModel::CR6);
         // Sample files may have warnings but should not have critical errors
@@ -448,7 +334,6 @@ mod semantic_analysis {
     }
 
     #[test]
-    #[ignore = "Depends on parser supporting comma-separated declarations"]
     fn cr1000_sample_analyzed_with_cr200x_model() {
         let errors = analyze_sample("sample-cr1000.CR1", DataloggerModel::CR200X);
         // CR1000 sample should be compatible with CR200X model
@@ -464,7 +349,6 @@ mod semantic_analysis {
     }
 
     #[test]
-    #[ignore = "Depends on parser supporting Boolean literals"]
     fn cr200_sample_analyzed_with_cr200x_model() {
         let errors = analyze_sample("sample-cr200-series.CR2", DataloggerModel::CR200X);
         let error_count = errors
