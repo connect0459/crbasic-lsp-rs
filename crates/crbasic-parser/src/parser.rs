@@ -117,7 +117,7 @@ impl Parser {
         }
 
         // Look ahead to check if this is an assignment statement
-        // Assignment: identifier = expression
+        // Assignment: identifier = expression or identifier[index] = expression
         if matches!(self.peek().kind, TokenKind::Identifier(_)) {
             let saved_pos = self.current;
 
@@ -126,8 +126,49 @@ impl Parser {
                 let ident_name = name.clone();
                 let ident_span = self.advance().span;
 
-                // Check if next token is '=' (assignment operator)
-                if matches!(self.peek().kind, TokenKind::Equal) {
+                // Check for array element access: identifier[index]
+                let target = if matches!(self.peek().kind, TokenKind::LeftBracket) {
+                    // Parse array indices
+                    let mut indices = Vec::new();
+                    let mut last_bracket_span = ident_span;
+
+                    while matches!(self.peek().kind, TokenKind::LeftBracket) {
+                        self.advance(); // consume '['
+                        let index_expr = self.parse_expression()?;
+                        indices.push(index_expr);
+
+                        // Expect closing bracket
+                        if !matches!(self.peek().kind, TokenKind::RightBracket) {
+                            // Not a valid array assignment, restore and parse as expression
+                            self.current = saved_pos;
+                            break;
+                        }
+                        last_bracket_span = self.advance().span; // consume ']'
+                    }
+
+                    // If we broke out early, this will be handled by the expression parser below
+                    if self.current == saved_pos {
+                        None
+                    } else {
+                        let target_span =
+                            crate::lexer::token::Span::new(ident_span.start, last_bracket_span.end);
+                        Some(crate::ast::AssignmentTarget::ArrayElement {
+                            array: ident_name,
+                            indices,
+                            span: target_span,
+                        })
+                    }
+                } else {
+                    Some(crate::ast::AssignmentTarget::Identifier {
+                        name: ident_name,
+                        span: ident_span,
+                    })
+                };
+
+                // Check if we have a valid target and next token is '=' (assignment operator)
+                if let Some(target) = target
+                    && matches!(self.peek().kind, TokenKind::Equal)
+                {
                     self.advance(); // consume '='
 
                     // Parse right-hand side expression
@@ -138,9 +179,10 @@ impl Parser {
                         self.advance();
                     }
 
-                    let span = crate::lexer::token::Span::new(ident_span.start, value.span().end);
+                    let span =
+                        crate::lexer::token::Span::new(target.span().start, value.span().end);
                     return Ok(Statement::Assignment {
-                        target: ident_name,
+                        target,
                         value,
                         span,
                     });
@@ -215,6 +257,39 @@ impl Parser {
 
         let mut end_span = name_token.span;
 
+        // Check for optional array dimensions: identifier(size) or identifier(rows, cols)
+        let array_dimensions = if matches!(self.peek().kind, TokenKind::LeftParen) {
+            self.advance(); // consume '('
+
+            let mut dimensions = Vec::new();
+
+            // Parse first dimension (required if parentheses are present)
+            if !matches!(self.peek().kind, TokenKind::RightParen) {
+                dimensions.push(self.parse_expression()?);
+
+                // Parse additional dimensions separated by commas
+                while matches!(self.peek().kind, TokenKind::Comma) {
+                    self.advance(); // consume ','
+                    dimensions.push(self.parse_expression()?);
+                }
+            }
+
+            // Expect closing parenthesis
+            if !matches!(self.peek().kind, TokenKind::RightParen) {
+                return Err(ParseError {
+                    message: "Expected ')' after array dimensions".to_string(),
+                    span: self.peek().span,
+                });
+            }
+
+            let close_paren = self.advance(); // consume ')'
+            end_span = close_paren.span;
+
+            Some(dimensions)
+        } else {
+            None
+        };
+
         // Check for optional type annotation (As type)
         let type_annotation = if let TokenKind::Keyword(kw) = &self.peek().kind {
             if kw == "As" {
@@ -266,6 +341,7 @@ impl Parser {
         Ok(Statement::VarDeclaration {
             keyword,
             name,
+            array_dimensions,
             type_annotation,
             initializer,
             span,
@@ -2264,7 +2340,12 @@ mod tests {
 
             // Should be an Assignment statement, not a placeholder FunctionCall
             if let Statement::Assignment { target, value, .. } = &program.statements[0] {
-                assert_eq!(target, "x");
+                // Target should be identifier "x"
+                if let crate::ast::AssignmentTarget::Identifier { name, .. } = target {
+                    assert_eq!(name, "x");
+                } else {
+                    panic!("Expected identifier as target");
+                }
 
                 // Value should be integer 5
                 if let Expression::IntegerLiteral { value, .. } = value {
@@ -2291,9 +2372,153 @@ mod tests {
             assert_eq!(program.statements.len(), 1);
 
             if let Statement::Assignment { target, value, .. } = &program.statements[0] {
-                assert_eq!(target, "x");
+                // Target should be identifier "x"
+                if let crate::ast::AssignmentTarget::Identifier { name, .. } = target {
+                    assert_eq!(name, "x");
+                } else {
+                    panic!("Expected identifier as target");
+                }
 
                 // Value should be a binary operation (1 + 2)
+                if let Expression::BinaryOp { operator, .. } = value {
+                    use crate::ast::BinaryOperator;
+                    assert_eq!(*operator, BinaryOperator::Add);
+                } else {
+                    panic!("Expected binary operation as value");
+                }
+            } else {
+                panic!("Expected assignment statement");
+            }
+        }
+
+        #[test]
+        fn parses_array_element_assignment() {
+            // Data[0] = 5
+            let mut scanner = Scanner::new("Data[0] = 5".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Assignment { target, value, .. } = &program.statements[0] {
+                // Target should be array element
+                if let crate::ast::AssignmentTarget::ArrayElement { array, indices, .. } = target {
+                    assert_eq!(array, "Data");
+                    assert_eq!(indices.len(), 1);
+
+                    if let Expression::IntegerLiteral { value, .. } = &indices[0] {
+                        assert_eq!(*value, 0);
+                    } else {
+                        panic!("Expected integer literal as index");
+                    }
+                } else {
+                    panic!("Expected array element as target");
+                }
+
+                // Value should be integer 5
+                if let Expression::IntegerLiteral { value, .. } = value {
+                    assert_eq!(*value, 5);
+                } else {
+                    panic!("Expected integer literal as value");
+                }
+            } else {
+                panic!("Expected assignment statement");
+            }
+        }
+
+        #[test]
+        fn parses_array_element_assignment_with_variable_index() {
+            // Data[i] = 10
+            let mut scanner = Scanner::new("Data[i] = 10".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Assignment { target, value, .. } = &program.statements[0] {
+                if let crate::ast::AssignmentTarget::ArrayElement { array, indices, .. } = target {
+                    assert_eq!(array, "Data");
+                    assert_eq!(indices.len(), 1);
+
+                    if let Expression::Identifier { name, .. } = &indices[0] {
+                        assert_eq!(name, "i");
+                    } else {
+                        panic!("Expected identifier as index");
+                    }
+                } else {
+                    panic!("Expected array element as target");
+                }
+
+                if let Expression::IntegerLiteral { value, .. } = value {
+                    assert_eq!(*value, 10);
+                } else {
+                    panic!("Expected integer literal as value");
+                }
+            } else {
+                panic!("Expected assignment statement");
+            }
+        }
+
+        #[test]
+        fn parses_multi_dimensional_array_assignment() {
+            // Matrix[1][2] = 100
+            let mut scanner = Scanner::new("Matrix[1][2] = 100".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Assignment { target, value, .. } = &program.statements[0] {
+                if let crate::ast::AssignmentTarget::ArrayElement { array, indices, .. } = target {
+                    assert_eq!(array, "Matrix");
+                    assert_eq!(indices.len(), 2);
+
+                    if let Expression::IntegerLiteral { value, .. } = &indices[0] {
+                        assert_eq!(*value, 1);
+                    } else {
+                        panic!("Expected integer literal as first index");
+                    }
+
+                    if let Expression::IntegerLiteral { value, .. } = &indices[1] {
+                        assert_eq!(*value, 2);
+                    } else {
+                        panic!("Expected integer literal as second index");
+                    }
+                } else {
+                    panic!("Expected array element as target");
+                }
+
+                if let Expression::IntegerLiteral { value, .. } = value {
+                    assert_eq!(*value, 100);
+                } else {
+                    panic!("Expected integer literal as value");
+                }
+            } else {
+                panic!("Expected assignment statement");
+            }
+        }
+
+        #[test]
+        fn parses_array_element_assignment_with_expression_value() {
+            // Data[0] = x + 1
+            let mut scanner = Scanner::new("Data[0] = x + 1".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Assignment { target, value, .. } = &program.statements[0] {
+                if let crate::ast::AssignmentTarget::ArrayElement { array, indices, .. } = target {
+                    assert_eq!(array, "Data");
+                    assert_eq!(indices.len(), 1);
+                } else {
+                    panic!("Expected array element as target");
+                }
+
                 if let Expression::BinaryOp { operator, .. } = value {
                     use crate::ast::BinaryOperator;
                     assert_eq!(*operator, BinaryOperator::Add);
@@ -2427,6 +2652,141 @@ mod tests {
                     assert!((value - 3.14).abs() < 0.001);
                 } else {
                     panic!("Expected float literal as initializer");
+                }
+            } else {
+                panic!(
+                    "Expected variable declaration, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_array_declaration_with_single_dimension() {
+            // Public Data(100)
+            let mut scanner = Scanner::new("Public Data(100)".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::VarDeclaration {
+                keyword,
+                name,
+                array_dimensions,
+                type_annotation,
+                initializer,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "Public");
+                assert_eq!(name, "Data");
+                assert!(array_dimensions.is_some());
+                let dims = array_dimensions.as_ref().expect("Should have dimensions");
+                assert_eq!(dims.len(), 1);
+                if let Expression::IntegerLiteral { value, .. } = &dims[0] {
+                    assert_eq!(*value, 100);
+                } else {
+                    panic!("Expected integer literal for array dimension");
+                }
+                assert_eq!(*type_annotation, None);
+                assert_eq!(*initializer, None);
+            } else {
+                panic!(
+                    "Expected variable declaration, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_array_declaration_with_multiple_dimensions() {
+            // Dim Matrix(10, 20)
+            let mut scanner = Scanner::new("Dim Matrix(10, 20)".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::VarDeclaration {
+                keyword,
+                name,
+                array_dimensions,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "Dim");
+                assert_eq!(name, "Matrix");
+                assert!(array_dimensions.is_some());
+                let dims = array_dimensions.as_ref().expect("Should have dimensions");
+                assert_eq!(dims.len(), 2);
+                if let Expression::IntegerLiteral { value, .. } = &dims[0] {
+                    assert_eq!(*value, 10);
+                }
+                if let Expression::IntegerLiteral { value, .. } = &dims[1] {
+                    assert_eq!(*value, 20);
+                }
+            } else {
+                panic!(
+                    "Expected variable declaration, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_array_declaration_with_type_annotation() {
+            // Public Temps(5) As Float
+            let mut scanner = Scanner::new("Public Temps(5) As Float".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::VarDeclaration {
+                keyword,
+                name,
+                array_dimensions,
+                type_annotation,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "Public");
+                assert_eq!(name, "Temps");
+                assert!(array_dimensions.is_some());
+                assert_eq!(type_annotation.as_deref(), Some("Float"));
+            } else {
+                panic!(
+                    "Expected variable declaration, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_array_declaration_with_expression_dimension() {
+            // Public Buffer(MAX_SIZE)
+            let mut scanner = Scanner::new("Public Buffer(MAX_SIZE)".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::VarDeclaration {
+                array_dimensions, ..
+            } = &program.statements[0]
+            {
+                assert!(array_dimensions.is_some());
+                let dims = array_dimensions.as_ref().expect("Should have dimensions");
+                assert_eq!(dims.len(), 1);
+                if let Expression::Identifier { name, .. } = &dims[0] {
+                    assert_eq!(name, "MAX_SIZE");
+                } else {
+                    panic!("Expected identifier for array dimension");
                 }
             } else {
                 panic!(

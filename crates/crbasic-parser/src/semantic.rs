@@ -387,6 +387,7 @@ mod tests {
                 vec![Statement::VarDeclaration {
                     keyword: "Public".to_string(),
                     name: "Temp_C".to_string(),
+                    array_dimensions: None,
                     type_annotation: None,
                     initializer: None,
                     span: create_test_span(),
@@ -407,6 +408,7 @@ mod tests {
                 vec![Statement::VarDeclaration {
                     keyword: "Dim".to_string(),
                     name: "i".to_string(),
+                    array_dimensions: None,
                     type_annotation: None,
                     initializer: None,
                     span: create_test_span(),
@@ -437,6 +439,7 @@ mod tests {
                 vec![Statement::VarDeclaration {
                     keyword: "Public".to_string(),
                     name: long_name.to_string(),
+                    array_dimensions: None,
                     type_annotation: None,
                     initializer: None,
                     span: create_test_span(),
@@ -459,6 +462,7 @@ mod tests {
                 vec![Statement::VarDeclaration {
                     keyword: "Public".to_string(),
                     name: medium_name.to_string(),
+                    array_dimensions: None,
                     type_annotation: None,
                     initializer: None,
                     span: create_test_span(),
@@ -485,6 +489,7 @@ mod tests {
                 vec![Statement::VarDeclaration {
                     keyword: "Public".to_string(),
                     name: long_name.to_string(),
+                    array_dimensions: None,
                     type_annotation: None,
                     initializer: None,
                     span: create_test_span(),
@@ -507,6 +512,7 @@ mod tests {
                 vec![Statement::VarDeclaration {
                     keyword: "Public".to_string(),
                     name: medium_name.to_string(),
+                    array_dimensions: None,
                     type_annotation: None,
                     initializer: None,
                     span: create_test_span(),
@@ -542,6 +548,7 @@ mod tests {
                     Statement::VarDeclaration {
                         keyword: "Public".to_string(),
                         name: "Temperature_S1".to_string(), // First 12: "Temperature_"
+                        array_dimensions: None,
                         type_annotation: None,
                         initializer: None,
                         span: create_test_span(),
@@ -549,6 +556,7 @@ mod tests {
                     Statement::VarDeclaration {
                         keyword: "Public".to_string(),
                         name: "Temperature_S2".to_string(), // First 12: "Temperature_"
+                        array_dimensions: None,
                         type_annotation: None,
                         initializer: None,
                         span: create_test_span(),
@@ -576,6 +584,7 @@ mod tests {
                     Statement::VarDeclaration {
                         keyword: "Dim".to_string(),
                         name: "Temperature_S1".to_string(),
+                        array_dimensions: None,
                         type_annotation: None,
                         initializer: None,
                         span: create_test_span(),
@@ -583,6 +592,7 @@ mod tests {
                     Statement::VarDeclaration {
                         keyword: "Dim".to_string(),
                         name: "Temperature_S2".to_string(),
+                        array_dimensions: None,
                         type_annotation: None,
                         initializer: None,
                         span: create_test_span(),
@@ -609,6 +619,7 @@ mod tests {
                     Statement::VarDeclaration {
                         keyword: "Public".to_string(),
                         name: "Temperature_S1".to_string(),
+                        array_dimensions: None,
                         type_annotation: None,
                         initializer: None,
                         span: create_test_span(),
@@ -616,6 +627,7 @@ mod tests {
                     Statement::VarDeclaration {
                         keyword: "Public".to_string(),
                         name: "Temperature_S2".to_string(),
+                        array_dimensions: None,
                         type_annotation: None,
                         initializer: None,
                         span: create_test_span(),

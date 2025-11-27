@@ -12,21 +12,36 @@ pub struct Program {
     pub span: Span,
 }
 
+/// Target for assignment statements
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum AssignmentTarget {
+    /// Simple identifier: x = 5
+    Identifier { name: String, span: Span },
+
+    /// Array element access: Data[0] = 5 or Matrix[1][2] = 10
+    ArrayElement {
+        array: String,
+        indices: Vec<Expression>,
+        span: Span,
+    },
+}
+
 /// A statement in CRBasic
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Statement {
-    /// Variable declaration: Public/Dim/Const identifier [As type] [= initializer]
+    /// Variable declaration: Public/Dim/Const identifier[(dimensions)] [As type] [= initializer]
     VarDeclaration {
         keyword: String, // "Public", "Dim", "Const"
         name: String,
+        array_dimensions: Option<Vec<Expression>>, // Array size(s): Data(100) or Matrix(10, 20)
         type_annotation: Option<String>,
         initializer: Option<Expression>, // Required for Const, optional for Public/Dim
         span: Span,
     },
 
-    /// Assignment: identifier = expression
+    /// Assignment: identifier = expression or array[index] = expression
     Assignment {
-        target: String,
+        target: AssignmentTarget,
         value: Expression,
         span: Span,
     },
@@ -174,6 +189,16 @@ impl Program {
     /// Creates a new Program node
     pub fn new(statements: Vec<Statement>, span: Span) -> Self {
         Self { statements, span }
+    }
+}
+
+impl AssignmentTarget {
+    /// Gets the span of this assignment target
+    pub fn span(&self) -> Span {
+        match self {
+            AssignmentTarget::Identifier { span, .. } => *span,
+            AssignmentTarget::ArrayElement { span, .. } => *span,
+        }
     }
 }
 

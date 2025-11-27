@@ -213,6 +213,7 @@ mod tests {
                 vec![Statement::VarDeclaration {
                     keyword: "Public".to_string(),
                     name: "Temp_C".to_string(),
+                    array_dimensions: None,
                     type_annotation: None,
                     initializer: None,
                     span: create_span(1, 1, 1, 14),
@@ -277,6 +278,7 @@ mod tests {
                     body: vec![Statement::VarDeclaration {
                         keyword: "Dim".to_string(),
                         name: "local_var".to_string(),
+                        array_dimensions: None,
                         type_annotation: None,
                         initializer: None,
                         span: create_span(2, 3, 2, 15),

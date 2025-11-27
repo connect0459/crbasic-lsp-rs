@@ -692,6 +692,7 @@ mod tests {
                     Statement::VarDeclaration {
                         keyword: "Public".to_string(),
                         name: "Temperature".to_string(),
+                        array_dimensions: None,
                         type_annotation: Some("Float".to_string()),
                         initializer: None,
                         span: dummy_span(),
@@ -699,6 +700,7 @@ mod tests {
                     Statement::VarDeclaration {
                         keyword: "Const".to_string(),
                         name: "PI".to_string(),
+                        array_dimensions: None,
                         type_annotation: None,
                         initializer: None,
                         span: dummy_span(),
@@ -814,6 +816,7 @@ mod tests {
                 statements: vec![Statement::VarDeclaration {
                     keyword: "Public".to_string(),
                     name: "MyVar".to_string(),
+                    array_dimensions: None,
                     type_annotation: None,
                     initializer: None,
                     span: dummy_span(),

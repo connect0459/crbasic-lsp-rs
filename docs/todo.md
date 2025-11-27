@@ -86,11 +86,11 @@
   - [x] Public declaration with type annotation (`Public Temp_C As Float`)
   - [x] Dim declaration (`Dim i`)
   - [x] Const declaration with initializer (`Const PI = 3.14`)
-  - [ ] Array declarations (`Public Data(100)`) - future enhancement
+  - [x] Array declarations (`Public Data(100)`, `Dim Matrix(10, 20)`)
 - [x] Assignment statements
   - [x] Simple assignment (`x = 5`)
   - [x] Assignment with expressions (`x = 1 + 2`)
-  - [ ] Assignment to array elements (`Data[0] = 5`) - future enhancement
+  - [x] Assignment to array elements (`Data[0] = 5`, `Matrix[1][2] = 100`)
 - [x] Function call statements
   - [x] Function calls with no arguments (`TimeIntoInterval()`)
   - [x] Function calls with arguments (`Scan(1, Temp_C, 0)`)
@@ -222,7 +222,7 @@
   - [x] Line continuation
   - [x] Whitespace and newline handling
   - [x] Integration tests (multi-line programs)
-- [x] Parser tests (97 tests passing)
+- [x] Parser tests (73 tests passing)
   - [x] Primary expressions (literals, identifiers, parentheses)
   - [x] Binary operations (arithmetic, comparison, logical)
   - [x] Unary operations (negation, NOT)
@@ -230,7 +230,7 @@
   - [x] Parenthesized expressions
   - [x] Function call expressions (no args, single arg, multiple args, expression args, nested)
   - [x] Array access expressions (simple, variable index, expression index, multi-dimensional)
-  - [x] Assignment statements (simple assignment, assignment with expressions)
+  - [x] Assignment statements (simple, with expressions, array elements)
   - [x] Variable declarations (Public, Dim, Const with type annotations and initializers)
   - [x] Function call statements (as statements, not just expressions)
   - [x] Program structure (BeginProg, EndProg, DataTable with arguments, EndTable)
