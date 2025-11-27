@@ -105,11 +105,11 @@ pub enum TokenKind {
 /// A token with its kind, lexeme, and position
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Token {
-    /// The kind of token
+    /// The kind of token (e.g., Integer, Keyword, Operator)
     pub kind: TokenKind,
-    /// The original text from source
+    /// The original text from source code
     pub lexeme: String,
-    /// The span in source code
+    /// The source code location of this token
     pub span: Span,
 }
 

@@ -34,9 +34,13 @@ pub enum VariableScope {
 /// Symbol information for variables and functions
 #[derive(Debug, Clone, PartialEq)]
 pub struct Symbol {
+    /// The symbol name (variable or function)
     pub name: String,
+    /// The scope of the symbol (Global for Public, Local for Dim)
     pub scope: VariableScope,
+    /// The source code location where this symbol was declared
     pub declaration_span: Span,
+    /// Optional type annotation (e.g., "Float", "String")
     pub type_annotation: Option<String>,
 }
 
@@ -52,8 +56,11 @@ pub enum ErrorSeverity {
 /// Semantic error information
 #[derive(Debug, Clone, PartialEq)]
 pub struct SemanticError {
+    /// The error or warning message
     pub message: String,
+    /// The source code location where the issue was detected
     pub span: Span,
+    /// The severity level (Error or Warning)
     pub severity: ErrorSeverity,
 }
 

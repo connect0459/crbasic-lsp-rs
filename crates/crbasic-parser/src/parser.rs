@@ -1399,7 +1399,9 @@ impl Parser {
 /// Errors that can occur during parsing
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParseError {
+    /// The error message describing what went wrong
     pub message: String,
+    /// The source code location where the error occurred
     pub span: crate::lexer::token::Span,
 }
 

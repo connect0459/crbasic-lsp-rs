@@ -11,16 +11,22 @@ use tower_lsp::lsp_types::{Location, Position, Range, Url};
 /// Symbol kind for definition lookup
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SymbolKind {
+    /// Variable symbol
     Variable,
+    /// Function symbol
     Function,
+    /// Subroutine symbol
     Subroutine,
 }
 
 /// Symbol definition information
 #[derive(Debug, Clone, PartialEq)]
 pub struct SymbolDefinition {
+    /// The symbol name
     pub name: String,
+    /// The kind of symbol (Variable, Function, or Subroutine)
     pub kind: SymbolKind,
+    /// The source code location of the definition
     pub span: Span,
 }
 

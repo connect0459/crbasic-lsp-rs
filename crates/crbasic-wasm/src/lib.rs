@@ -25,7 +25,9 @@ pub struct ParseResult {
 /// Location information for errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorLocation {
+    /// Line number (1-indexed)
     pub line: usize,
+    /// Column number (1-indexed)
     pub column: usize,
 }
 

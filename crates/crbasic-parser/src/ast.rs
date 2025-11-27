@@ -8,7 +8,9 @@ use serde::{Deserialize, Serialize};
 /// A complete CRBasic program
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Program {
+    /// The top-level statements in the program
     pub statements: Vec<Statement>,
+    /// The source code span of the entire program
     pub span: Span,
 }
 
@@ -16,12 +18,20 @@ pub struct Program {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum AssignmentTarget {
     /// Simple identifier: x = 5
-    Identifier { name: String, span: Span },
+    Identifier {
+        /// The variable name
+        name: String,
+        /// The source code span
+        span: Span,
+    },
 
-    /// Array element access: Data[0] = 5 or Matrix[1][2] = 10
+    /// Array element access: `Data[0] = 5` or `Matrix[1][2] = 10`
     ArrayElement {
+        /// The array variable name
         array: String,
+        /// The index expressions (one per dimension)
         indices: Vec<Expression>,
+        /// The source code span
         span: Span,
     },
 }
@@ -31,79 +41,121 @@ pub enum AssignmentTarget {
 pub enum Statement {
     /// Variable declaration: Public/Dim/Const identifier[(dimensions)] [As type] [= initializer]
     VarDeclaration {
-        keyword: String, // "Public", "Dim", "Const"
+        /// The declaration keyword: "Public", "Dim", or "Const"
+        keyword: String,
+        /// The variable name
         name: String,
-        array_dimensions: Option<Vec<Expression>>, // Array size(s): Data(100) or Matrix(10, 20)
+        /// Array dimensions if this is an array (e.g., `Data(100)` or `Matrix(10, 20)`)
+        array_dimensions: Option<Vec<Expression>>,
+        /// Optional type annotation (e.g., "Float", "String")
         type_annotation: Option<String>,
-        initializer: Option<Expression>, // Required for Const, optional for Public/Dim
+        /// Optional initializer expression (required for Const, optional for Public/Dim)
+        initializer: Option<Expression>,
+        /// The source code span
         span: Span,
     },
 
-    /// Assignment: identifier = expression or array[index] = expression
+    /// Assignment: `identifier = expression` or `array[index] = expression`
     Assignment {
+        /// The target of the assignment (identifier or array element)
         target: AssignmentTarget,
+        /// The value expression
         value: Expression,
+        /// The source code span
         span: Span,
     },
 
     /// If-Then-Else statement
     IfStatement {
+        /// The condition expression
         condition: Expression,
+        /// Statements to execute if condition is true
         then_branch: Vec<Statement>,
+        /// Optional else branch statements
         else_branch: Option<Vec<Statement>>,
+        /// The source code span
         span: Span,
     },
 
     /// For-Next loop
     ForLoop {
+        /// The loop variable name
         variable: String,
+        /// Starting value expression
         start: Expression,
+        /// Ending value expression
         end: Expression,
+        /// Optional step value expression
         step: Option<Expression>,
+        /// Loop body statements
         body: Vec<Statement>,
+        /// The source code span
         span: Span,
     },
 
     /// Do-Loop
     DoLoop {
+        /// Optional loop condition
         condition: Option<Expression>,
-        condition_at_start: bool, // true for While, false for Until
+        /// Whether condition is at start (While) or end (Until)
+        condition_at_start: bool,
+        /// Loop body statements
         body: Vec<Statement>,
+        /// The source code span
         span: Span,
     },
 
     /// Function call as statement
     FunctionCall {
+        /// The function name
         name: String,
+        /// The argument expressions
         arguments: Vec<Expression>,
+        /// The source code span
         span: Span,
     },
 
     /// Expression statement (for testing and future extensions)
     /// In CRBasic, most expressions are not valid as statements,
     /// but this allows for more flexible parsing during development
-    Expression { expression: Expression, span: Span },
+    Expression {
+        /// The expression
+        expression: Expression,
+        /// The source code span
+        span: Span,
+    },
 
     /// Program structure: BeginProg/EndProg, DataTable/EndTable, etc.
     ProgramStructure {
-        keyword: String, // "BeginProg", "EndProg", "DataTable", "EndTable", etc.
-        arguments: Option<Vec<Expression>>, // Arguments for DataTable (e.g., table_name, autoallocate, size)
+        /// The structure keyword (e.g., "BeginProg", "EndProg", "DataTable", "EndTable")
+        keyword: String,
+        /// Optional arguments (e.g., for DataTable: table_name, autoallocate, size)
+        arguments: Option<Vec<Expression>>,
+        /// The source code span
         span: Span,
     },
 
     /// Function definition
     FunctionDefinition {
+        /// The function name
         name: String,
+        /// The parameter names
         parameters: Vec<String>,
+        /// The function body statements
         body: Vec<Statement>,
+        /// The source code span
         span: Span,
     },
 
     /// Subroutine definition
     SubroutineDefinition {
+        /// The subroutine name
         name: String,
+        /// The parameter names
         parameters: Vec<String>,
+        /// The subroutine body statements
         body: Vec<Statement>,
+        /// The source code span
         span: Span,
     },
 }
@@ -112,46 +164,84 @@ pub enum Statement {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Expression {
     /// Integer literal
-    IntegerLiteral { value: i64, span: Span },
+    IntegerLiteral {
+        /// The integer value
+        value: i64,
+        /// The source code span
+        span: Span,
+    },
 
     /// Float literal
-    FloatLiteral { value: f64, span: Span },
+    FloatLiteral {
+        /// The floating-point value
+        value: f64,
+        /// The source code span
+        span: Span,
+    },
 
     /// String literal
-    StringLiteral { value: String, span: Span },
+    StringLiteral {
+        /// The string value
+        value: String,
+        /// The source code span
+        span: Span,
+    },
 
     /// Boolean literal (True/False)
-    BooleanLiteral { value: bool, span: Span },
+    BooleanLiteral {
+        /// The boolean value
+        value: bool,
+        /// The source code span
+        span: Span,
+    },
 
     /// Identifier (variable reference)
-    Identifier { name: String, span: Span },
+    Identifier {
+        /// The variable name
+        name: String,
+        /// The source code span
+        span: Span,
+    },
 
     /// Binary operation (e.g., a + b, x > 5)
     BinaryOp {
+        /// The left operand
         left: Box<Expression>,
+        /// The binary operator
         operator: BinaryOperator,
+        /// The right operand
         right: Box<Expression>,
+        /// The source code span
         span: Span,
     },
 
     /// Unary operation (e.g., -x, NOT flag)
     UnaryOp {
+        /// The unary operator
         operator: UnaryOperator,
+        /// The operand
         operand: Box<Expression>,
+        /// The source code span
         span: Span,
     },
 
     /// Function call
     FunctionCall {
+        /// The function name
         name: String,
+        /// The argument expressions
         arguments: Vec<Expression>,
+        /// The source code span
         span: Span,
     },
 
-    /// Array access: array[index]
+    /// Array access: `array[index]`
     ArrayAccess {
+        /// The array expression
         array: Box<Expression>,
+        /// The index expression
         index: Box<Expression>,
+        /// The source code span
         span: Span,
     },
 }
@@ -159,33 +249,47 @@ pub enum Expression {
 /// Binary operators
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum BinaryOperator {
-    // Arithmetic
+    /// Addition operator (+)
     Add,
+    /// Subtraction operator (-)
     Subtract,
+    /// Multiplication operator (*)
     Multiply,
+    /// Division operator (/)
     Divide,
+    /// Power operator (^)
     Power,
+    /// Modulo operator (MOD)
     Modulo,
 
-    // Comparison
+    /// Equality operator (=)
     Equal,
+    /// Inequality operator (<>)
     NotEqual,
+    /// Less than operator (<)
     LessThan,
+    /// Greater than operator (>)
     GreaterThan,
+    /// Less than or equal operator (<=)
     LessThanOrEqual,
+    /// Greater than or equal operator (>=)
     GreaterThanOrEqual,
 
-    // Logical
+    /// Logical AND operator
     And,
+    /// Logical OR operator
     Or,
+    /// Logical XOR operator
     Xor,
 }
 
 /// Unary operators
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum UnaryOperator {
-    Negate, // -
-    Not,    // NOT
+    /// Negation operator (-)
+    Negate,
+    /// Logical NOT operator
+    Not,
 }
 
 impl Program {
