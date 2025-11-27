@@ -41,7 +41,25 @@ impl Parser {
                 continue;
             }
 
-            statements.push(self.parse_statement()?);
+            let stmt = self.parse_statement()?;
+
+            // Handle comma-separated variable declarations (e.g., Public a, b, c)
+            if let Statement::VarDeclaration { keyword, .. } = &stmt {
+                let keyword_clone = keyword.clone();
+                statements.push(stmt);
+
+                // Check for comma-separated additional variables
+                while matches!(self.peek().kind, TokenKind::Comma) {
+                    self.advance(); // consume comma
+
+                    // Parse additional variable with the same keyword
+                    let additional_var =
+                        self.parse_single_var_with_keyword(keyword_clone.clone())?;
+                    statements.push(additional_var);
+                }
+            } else {
+                statements.push(stmt);
+            }
         }
 
         let span = if statements.is_empty() {
@@ -222,6 +240,117 @@ impl Parser {
                 })
             }
         }
+    }
+
+    /// Parses a single variable declaration with a given keyword
+    /// Used for comma-separated declarations (e.g., Public a, b, c)
+    /// Syntax: identifier [(dimensions)] [As type] [= initializer]
+    fn parse_single_var_with_keyword(&mut self, keyword: String) -> Result<Statement, ParseError> {
+        // Get the span starting from the identifier position
+        let start_pos = self.peek().span.start;
+
+        // Expect identifier (variable name)
+        if !matches!(self.peek().kind, TokenKind::Identifier(_)) {
+            return Err(ParseError {
+                message: "Expected identifier after variable declaration keyword or comma"
+                    .to_string(),
+                span: self.peek().span,
+            });
+        }
+
+        let name_token = self.advance();
+        let name = if let TokenKind::Identifier(n) = &name_token.kind {
+            n.clone()
+        } else {
+            unreachable!()
+        };
+
+        let mut end_span = name_token.span;
+
+        // Check for optional array dimensions: identifier(size) or identifier(rows, cols)
+        let array_dimensions = if matches!(self.peek().kind, TokenKind::LeftParen) {
+            self.advance(); // consume '('
+
+            let mut dimensions = Vec::new();
+
+            // Parse first dimension (required if parentheses are present)
+            if !matches!(self.peek().kind, TokenKind::RightParen) {
+                dimensions.push(self.parse_expression()?);
+
+                // Parse additional dimensions separated by commas
+                while matches!(self.peek().kind, TokenKind::Comma) {
+                    self.advance(); // consume ','
+                    dimensions.push(self.parse_expression()?);
+                }
+            }
+
+            // Expect closing parenthesis
+            if !matches!(self.peek().kind, TokenKind::RightParen) {
+                return Err(ParseError {
+                    message: "Expected ')' after array dimensions".to_string(),
+                    span: self.peek().span,
+                });
+            }
+
+            let close_paren = self.advance(); // consume ')'
+            end_span = close_paren.span;
+
+            Some(dimensions)
+        } else {
+            None
+        };
+
+        // Check for optional type annotation (As type)
+        let type_annotation = if let TokenKind::Keyword(kw) = &self.peek().kind {
+            if kw == "As" {
+                self.advance(); // consume 'As'
+
+                // Expect type identifier
+                if !matches!(self.peek().kind, TokenKind::Identifier(_)) {
+                    return Err(ParseError {
+                        message: "Expected type name after 'As'".to_string(),
+                        span: self.peek().span,
+                    });
+                }
+
+                let type_token = self.advance();
+                end_span = type_token.span;
+
+                if let TokenKind::Identifier(type_name) = &type_token.kind {
+                    Some(type_name.clone())
+                } else {
+                    unreachable!()
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        // Check for optional initializer (= expression)
+        let initializer = if matches!(self.peek().kind, TokenKind::Equal) {
+            self.advance(); // consume '='
+
+            // Parse initializer expression
+            let init_expr = self.parse_expression()?;
+            end_span = init_expr.span();
+
+            Some(init_expr)
+        } else {
+            None
+        };
+
+        let span = crate::lexer::token::Span::new(start_pos, end_span.end);
+
+        Ok(Statement::VarDeclaration {
+            keyword,
+            name,
+            array_dimensions,
+            type_annotation,
+            initializer,
+            span,
+        })
     }
 
     /// Parses a variable declaration statement
@@ -2895,6 +3024,93 @@ mod tests {
                     "Expected variable declaration, got {:?}",
                     program.statements[0]
                 );
+            }
+        }
+
+        #[test]
+        fn parses_multiple_variable_declarations_with_comma() {
+            // Public PTemp, Batt_volt
+            let mut scanner = Scanner::new("Public PTemp, Batt_volt".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(
+                program.statements.len(),
+                2,
+                "Should parse two separate variable declarations"
+            );
+
+            // First variable: PTemp
+            if let Statement::VarDeclaration {
+                keyword,
+                name,
+                type_annotation,
+                initializer,
+                array_dimensions,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "Public");
+                assert_eq!(name, "PTemp");
+                assert_eq!(*type_annotation, None);
+                assert_eq!(*initializer, None);
+                assert_eq!(*array_dimensions, None);
+            } else {
+                panic!(
+                    "Expected variable declaration for PTemp, got {:?}",
+                    program.statements[0]
+                );
+            }
+
+            // Second variable: Batt_volt
+            if let Statement::VarDeclaration {
+                keyword,
+                name,
+                type_annotation,
+                initializer,
+                array_dimensions,
+                ..
+            } = &program.statements[1]
+            {
+                assert_eq!(keyword, "Public");
+                assert_eq!(name, "Batt_volt");
+                assert_eq!(*type_annotation, None);
+                assert_eq!(*initializer, None);
+                assert_eq!(*array_dimensions, None);
+            } else {
+                panic!(
+                    "Expected variable declaration for Batt_volt, got {:?}",
+                    program.statements[1]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_three_variable_declarations_with_comma() {
+            // Dim x, y, z
+            let mut scanner = Scanner::new("Dim x, y, z".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(
+                program.statements.len(),
+                3,
+                "Should parse three separate variable declarations"
+            );
+
+            let expected_names = ["x", "y", "z"];
+            for (i, expected_name) in expected_names.iter().enumerate() {
+                if let Statement::VarDeclaration { keyword, name, .. } = &program.statements[i] {
+                    assert_eq!(keyword, "Dim");
+                    assert_eq!(name, expected_name);
+                } else {
+                    panic!(
+                        "Expected variable declaration for {}, got {:?}",
+                        expected_name, program.statements[i]
+                    );
+                }
             }
         }
     }

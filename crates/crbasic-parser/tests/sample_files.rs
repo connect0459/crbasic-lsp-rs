@@ -129,7 +129,7 @@ mod parsing {
     // Run with `cargo test --ignored` to execute these tests
 
     #[test]
-    #[ignore = "Parser doesn't support comma-separated variable declarations"]
+    #[ignore = "Parser doesn't support NextScan as a statement"]
     fn parses_cr1000_sample_without_errors() {
         let source = read_sample_file("sample-cr1000.CR1");
         let result = parse(&source);

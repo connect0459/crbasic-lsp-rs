@@ -337,9 +337,10 @@
 
 ### Parser Limitations (discovered during integration testing)
 
-- [ ] Multiple variable declarations on single line (`Public PTemp, Batt_volt`)
+- [x] Multiple variable declarations on single line (`Public PTemp, Batt_volt`) ✅ Resolved
 - [x] Boolean literals as function arguments (`False`, `True`) ✅ Resolved
-- [x] NextScan keyword not recognized ✅ Resolved
+- [x] NextScan keyword not recognized (lexer) ✅ Resolved
+- [ ] NextScan as a statement (parser support needed)
 - [ ] Tab-indented statements handling
 
 ### Build Warnings
