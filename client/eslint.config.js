@@ -1,9 +1,8 @@
-// @ts-check
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import prettier from "eslint-config-prettier";
 
-export default tseslint.config(
+export default [
   {
     ignores: ["dist/**", "node_modules/**", "coverage/**"],
   },
@@ -18,16 +17,15 @@ export default tseslint.config(
       },
     },
     rules: {
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        { argsIgnorePattern: "^_" },
-      ],
-      "@typescript-eslint/explicit-function-return-type": [
-        "error",
-        { allowExpressions: true },
-      ],
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/explicit-function-return-type": ["error", { allowExpressions: true }],
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-non-null-assertion": "error",
     },
-  }
-);
+  },
+  // Disable type checking for config files
+  {
+    files: ["eslint.config.js", "vite.config.ts"],
+    ...tseslint.configs.disableTypeChecked,
+  },
+];

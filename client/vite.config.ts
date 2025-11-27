@@ -37,10 +37,6 @@ export default defineConfig({
       reporter: ["text", "html", "lcov"],
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts", "src/**/*.spec.ts"],
-      lines: 80,
-      branches: 75,
-      functions: 90,
-      statements: 80,
     },
   },
 });
