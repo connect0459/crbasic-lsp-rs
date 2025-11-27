@@ -7,6 +7,14 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 
+[[bin]]
+name = "crbasic-lsp"
+path = "src/main.rs"
+
+[lib]
+name = "crbasic_lsp"
+path = "src/lib.rs"
+
 [dependencies]
 crbasic-parser = { path = "../crbasic-parser" }
 tower-lsp = { workspace = true }

@@ -55,10 +55,20 @@
         "scopeName": "source.crbasic",
         "path": "./syntaxes/crbasic.tmLanguage.json"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "CRBasic",
+      "properties": {
+        "crbasic.server.path": {
+          "type": "string",
+          "default": null,
+          "description": "Path to the CRBasic language server executable. If not set, uses the bundled server."
+        }
+      }
+    }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build",
+    "vscode:prepublish": "npm run build && npm run copy-server",
     "build": "vite build",
     "dev": "vite build --watch",
     "test": "vitest",
@@ -67,7 +77,9 @@
     "lint:fix": "eslint src --ext ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "copy-server": "node scripts/copy-server.js",
+    "build-server": "cd .. && cargo build -p crbasic-lsp --bin crbasic-lsp --release"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"

@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
+import { builtinModules } from "module";
 
 export default defineConfig({
   build: {
@@ -10,7 +11,13 @@ export default defineConfig({
       formats: ["cjs"],
     },
     rollupOptions: {
-      external: ["vscode", "vscode-languageclient/node"],
+      external: [
+        "vscode",
+        "vscode-languageclient/node",
+        // Node.js built-in modules
+        ...builtinModules,
+        ...builtinModules.map((m) => `node:${m}`),
+      ],
       output: {
         globals: {
           vscode: "vscode",
@@ -20,6 +27,7 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: true,
     minify: false, // Keep readable for debugging
+    target: "node18", // Target Node.js 18+
   },
   test: {
     globals: true,

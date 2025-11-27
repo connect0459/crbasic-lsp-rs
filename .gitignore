@@ -30,6 +30,9 @@ lerna-debug.log*
 client/out/
 client/dist/
 
+# Bundled LSP server binary
+client/server/
+
 # Coverage
 coverage/
 *.lcov

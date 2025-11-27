@@ -213,11 +213,22 @@
 
 ## Phase 6: VSCode Extension Client 🔌
 
-- [ ] Extension activation logic
-- [ ] LSP client initialization
-- [ ] WASM LSP server integration
-- [ ] Configuration options
-- [ ] Extension commands
+- [x] Extension activation logic
+  - [x] activate() with LanguageClient initialization
+  - [x] deactivate() with client cleanup
+  - [x] Error handling with user notifications
+- [x] LSP client initialization
+  - [x] vscode-languageclient integration
+  - [x] stdio transport configuration
+  - [x] Document selector for CRBasic files
+- [x] Native LSP server binary
+  - [x] crbasic-lsp binary build (main.rs)
+  - [x] Server bundling script (copy-server.js)
+  - [x] Cross-platform support (Windows/Unix)
+- [x] Configuration options
+  - [x] crbasic.server.path setting for custom server path
+- [ ] Extension commands (future enhancement)
+- [ ] Extension packaging and publishing (future)
 
 ## Phase 7: Testing & Quality 🧪
 
