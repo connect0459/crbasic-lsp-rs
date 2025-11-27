@@ -74,9 +74,14 @@ impl DataloggerModel {
     /// The corresponding DataloggerModel
     pub fn from_extension(file_extension: &str) -> Self {
         match file_extension.to_lowercase().as_str() {
-            "cr1" | "cr1x" => DataloggerModel::CR200X,
-            "cr6" => DataloggerModel::CR6,
+            // Group A: CR200(X) series - 16 char max, 12 char truncation
+            "cr1" | "cr1x" | "cr2" => DataloggerModel::CR200X,
+            // Group B: CR6/CR1000X/GRANITE series - 39 char max, 35 char recommended
+            "cr3" | "cr5" | "cr6" | "cr8" | "cr9" | "cr9x" | "c9x" | "cr300" => {
+                DataloggerModel::CR6
+            }
             "crb" => DataloggerModel::GRANITE,
+            // Generic or unknown extensions
             _ => DataloggerModel::Unknown,
         }
     }
@@ -330,6 +335,54 @@ mod tests {
         fn detects_granite_from_crb_extension() {
             let model = DataloggerModel::from_extension("crb");
             assert_eq!(model, DataloggerModel::GRANITE);
+        }
+
+        #[test]
+        fn detects_cr200x_from_cr2_extension() {
+            let model = DataloggerModel::from_extension("cr2");
+            assert_eq!(model, DataloggerModel::CR200X);
+        }
+
+        #[test]
+        fn detects_cr6_from_cr3_extension() {
+            let model = DataloggerModel::from_extension("cr3");
+            assert_eq!(model, DataloggerModel::CR6);
+        }
+
+        #[test]
+        fn detects_cr6_from_cr5_extension() {
+            let model = DataloggerModel::from_extension("cr5");
+            assert_eq!(model, DataloggerModel::CR6);
+        }
+
+        #[test]
+        fn detects_cr6_from_cr8_extension() {
+            let model = DataloggerModel::from_extension("cr8");
+            assert_eq!(model, DataloggerModel::CR6);
+        }
+
+        #[test]
+        fn detects_cr6_from_cr9_extension() {
+            let model = DataloggerModel::from_extension("cr9");
+            assert_eq!(model, DataloggerModel::CR6);
+        }
+
+        #[test]
+        fn detects_cr6_from_cr9x_extension() {
+            let model = DataloggerModel::from_extension("cr9x");
+            assert_eq!(model, DataloggerModel::CR6);
+        }
+
+        #[test]
+        fn detects_cr6_from_c9x_extension() {
+            let model = DataloggerModel::from_extension("c9x");
+            assert_eq!(model, DataloggerModel::CR6);
+        }
+
+        #[test]
+        fn detects_cr6_from_cr300_extension() {
+            let model = DataloggerModel::from_extension("cr300");
+            assert_eq!(model, DataloggerModel::CR6);
         }
 
         #[test]

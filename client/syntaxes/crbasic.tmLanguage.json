@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "CRBasic",
   "scopeName": "source.crbasic",
-  "fileTypes": [".cr1", ".cr1x", ".cr2", ".cr3", ".cr5", ".cr6", ".cr8", ".cr9x", ".cr300", ".crb", ".dld"],
+  "fileTypes": [".cr1", ".cr1x", ".cr2", ".cr3", ".cr5", ".cr6", ".cr8", ".cr9", ".cr9x", ".c9x", ".cr300", ".crb", ".dld"],
   "patterns": [
     {
       "include": "#comments"

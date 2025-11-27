@@ -62,7 +62,9 @@ function createLanguageClient(context: vscode.ExtensionContext): LanguageClient 
     documentSelector: [{ scheme: "file", language: "crbasic" }],
     synchronize: {
       // Watch for changes to CRBasic files
-      fileEvents: vscode.workspace.createFileSystemWatcher("**/*.{cr1,cr1x,cr6,crb,dld}"),
+      fileEvents: vscode.workspace.createFileSystemWatcher(
+        "**/*.{cr1,cr1x,cr2,cr3,cr5,cr6,cr8,cr9,cr9x,c9x,cr300,crb,dld}"
+      ),
     },
   };
 
