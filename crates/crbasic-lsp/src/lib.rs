@@ -7,6 +7,7 @@ pub mod backend;
 pub mod completion;
 pub mod document;
 pub mod hover;
+pub mod signature;
 pub mod symbols;
 
 pub use backend::CRBasicLanguageServer;

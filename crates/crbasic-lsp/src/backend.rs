@@ -5,6 +5,7 @@
 use crate::completion::CompletionProvider;
 use crate::document::DocumentManager;
 use crate::hover::HoverProvider;
+use crate::signature::SignatureProvider;
 use crate::symbols;
 use crbasic_parser::SemanticError;
 use crbasic_parser::lexer::Scanner;
@@ -130,6 +131,11 @@ impl LanguageServer for CRBasicLanguageServer {
                     trigger_characters: Some(vec![".".to_string()]),
                     ..Default::default()
                 }),
+                signature_help_provider: Some(SignatureHelpOptions {
+                    trigger_characters: Some(vec!["(".to_string(), ",".to_string()]),
+                    retrigger_characters: Some(vec![",".to_string()]),
+                    ..Default::default()
+                }),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
                 document_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 ..Default::default()
@@ -233,6 +239,39 @@ impl LanguageServer for CRBasicLanguageServer {
         let items = CompletionProvider::get_all_completions(ast);
 
         Ok(Some(CompletionResponse::Array(items)))
+    }
+
+    async fn signature_help(&self, params: SignatureHelpParams) -> Result<Option<SignatureHelp>> {
+        let uri = params.text_document_position_params.text_document.uri;
+        let position = params.text_document_position_params.position;
+
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri) {
+            // Calculate cursor offset from position
+            let lines: Vec<&str> = doc.text.lines().collect();
+            let mut offset = 0usize;
+
+            for (i, line) in lines.iter().enumerate() {
+                if i == position.line as usize {
+                    offset += position.character as usize;
+                    break;
+                }
+                offset += line.len() + 1; // +1 for newline
+            }
+
+            // Extract function name and count parameters
+            if let Some(func_name) = SignatureProvider::extract_function_name(&doc.text, offset) {
+                let active_param =
+                    SignatureProvider::count_parameters_before_cursor(&doc.text, offset);
+                return Ok(SignatureProvider::get_signature_help(
+                    &func_name,
+                    active_param,
+                ));
+            }
+        }
+
+        Ok(None)
     }
 }
 

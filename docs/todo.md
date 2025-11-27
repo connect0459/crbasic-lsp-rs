@@ -157,9 +157,11 @@
   - [x] Keywords with snippets (control flow, declarations, program structure)
   - [x] Built-in functions (Scan, measurement, math, string, time functions)
   - [x] User-defined variables/functions (extracted from AST)
-- [ ] Signature help
-  - [ ] Built-in function signatures
-  - [ ] Parameter documentation
+- [x] Signature help
+  - [x] Built-in function signatures (Scan, measurement, math, string, time, etc.)
+  - [x] Parameter documentation with descriptions
+  - [x] Active parameter detection (comma counting)
+  - [x] Nested function support
 - [x] Hover information
   - [x] Keyword descriptions with syntax examples
   - [x] Position-based token lookup
@@ -233,7 +235,7 @@
   - [x] Variable name length validation (CR200X: 16 max, CR6: 39 max)
   - [x] Recommended length warnings (CR200X: 12, CR6: 35)
   - [x] Truncation collision detection (CR200X 12-char truncation)
-- [x] LSP handler tests (61 tests passing)
+- [x] LSP handler tests (85 tests passing)
   - [x] Document manager (open, update, close operations)
   - [x] Document analysis and caching
   - [x] Model detection from file URI
@@ -254,6 +256,11 @@
     - [x] Built-in function completions
     - [x] User-defined variable/function completions
     - [x] Completion item kinds and formatting
+  - [x] Signature help (24 tests)
+    - [x] Function signature lookup
+    - [x] Parameter documentation
+    - [x] Active parameter counting
+    - [x] Function name extraction
 
 ### Integration Tests
 
