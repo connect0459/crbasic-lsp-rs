@@ -727,6 +727,67 @@ mod tests {
         }
     }
 
+    mod boolean_literals {
+        use super::*;
+
+        #[test]
+        fn recognizes_true_as_keyword() {
+            let mut scanner = Scanner::new("True".to_string());
+            let tokens = scanner.scan_tokens();
+
+            assert_eq!(tokens.len(), 2);
+            match &tokens[0].kind {
+                TokenKind::Keyword(keyword) => {
+                    assert_eq!(keyword, "True", "True should be recognized as keyword");
+                }
+                _ => panic!("Expected Keyword token, got {:?}", tokens[0].kind),
+            }
+        }
+
+        #[test]
+        fn recognizes_false_as_keyword() {
+            let mut scanner = Scanner::new("False".to_string());
+            let tokens = scanner.scan_tokens();
+
+            assert_eq!(tokens.len(), 2);
+            match &tokens[0].kind {
+                TokenKind::Keyword(keyword) => {
+                    assert_eq!(keyword, "False", "False should be recognized as keyword");
+                }
+                _ => panic!("Expected Keyword token, got {:?}", tokens[0].kind),
+            }
+        }
+
+        #[test]
+        fn recognizes_boolean_case_insensitive() {
+            let test_cases = vec![
+                ("true", "True"),
+                ("TRUE", "True"),
+                ("false", "False"),
+                ("FALSE", "False"),
+            ];
+
+            for (input, expected) in test_cases {
+                let mut scanner = Scanner::new(input.to_string());
+                let tokens = scanner.scan_tokens();
+
+                match &tokens[0].kind {
+                    TokenKind::Keyword(keyword) => {
+                        assert_eq!(
+                            keyword, expected,
+                            "Input '{}' should normalize to '{}'",
+                            input, expected
+                        );
+                    }
+                    _ => panic!(
+                        "Expected Keyword token for input '{}', got {:?}",
+                        input, tokens[0].kind
+                    ),
+                }
+            }
+        }
+    }
+
     mod keywords {
         use super::*;
 

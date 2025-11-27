@@ -1216,6 +1216,15 @@ impl Parser {
                     _ => unreachable!(),
                 }
             }
+            TokenKind::Keyword(keyword) if keyword == "True" || keyword == "False" => {
+                let token = self.advance();
+                if let TokenKind::Keyword(kw) = &token.kind {
+                    let value = kw == "True";
+                    Ok(Expression::boolean(value, token.span))
+                } else {
+                    unreachable!()
+                }
+            }
             _ => {
                 let token = self.advance();
                 Err(ParseError {
@@ -1367,6 +1376,78 @@ mod tests {
                     }
                     _ => panic!("Expected identifier"),
                 }
+            }
+        }
+
+        #[test]
+        fn parses_true_literal() {
+            let mut scanner = Scanner::new("True".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::BooleanLiteral { value, .. } => {
+                        assert!(*value, "True should parse to boolean true");
+                    }
+                    _ => panic!("Expected boolean literal, got {:?}", expression),
+                }
+            } else {
+                panic!("Expected expression statement");
+            }
+        }
+
+        #[test]
+        fn parses_false_literal() {
+            let mut scanner = Scanner::new("False".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::BooleanLiteral { value, .. } => {
+                        assert!(!*value, "False should parse to boolean false");
+                    }
+                    _ => panic!("Expected boolean literal, got {:?}", expression),
+                }
+            } else {
+                panic!("Expected expression statement");
+            }
+        }
+
+        #[test]
+        fn parses_boolean_in_function_call() {
+            let mut scanner = Scanner::new("Call(True, False)".to_string());
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                assert_eq!(arguments.len(), 2);
+
+                match &arguments[0] {
+                    Expression::BooleanLiteral { value, .. } => {
+                        assert!(*value, "First argument should be True");
+                    }
+                    _ => panic!("Expected boolean literal for first argument"),
+                }
+
+                match &arguments[1] {
+                    Expression::BooleanLiteral { value, .. } => {
+                        assert!(!*value, "Second argument should be False");
+                    }
+                    _ => panic!("Expected boolean literal for second argument"),
+                }
+            } else {
+                panic!("Expected function call statement");
             }
         }
     }

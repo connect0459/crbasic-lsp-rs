@@ -120,6 +120,9 @@ pub enum Expression {
     /// String literal
     StringLiteral { value: String, span: Span },
 
+    /// Boolean literal (True/False)
+    BooleanLiteral { value: bool, span: Span },
+
     /// Identifier (variable reference)
     Identifier { name: String, span: Span },
 
@@ -218,6 +221,11 @@ impl Expression {
         Expression::StringLiteral { value, span }
     }
 
+    /// Creates a boolean literal expression
+    pub fn boolean(value: bool, span: Span) -> Self {
+        Expression::BooleanLiteral { value, span }
+    }
+
     /// Creates an identifier expression
     pub fn identifier(name: String, span: Span) -> Self {
         Expression::Identifier { name, span }
@@ -229,6 +237,7 @@ impl Expression {
             Expression::IntegerLiteral { span, .. } => *span,
             Expression::FloatLiteral { span, .. } => *span,
             Expression::StringLiteral { span, .. } => *span,
+            Expression::BooleanLiteral { span, .. } => *span,
             Expression::Identifier { span, .. } => *span,
             Expression::BinaryOp { span, .. } => *span,
             Expression::UnaryOp { span, .. } => *span,

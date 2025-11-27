@@ -56,6 +56,7 @@
   - [x] Integer literals
   - [x] Float literals
   - [x] String literals
+  - [x] Boolean literals (True/False)
   - [x] Identifiers
   - [x] Parenthesized expressions
 - [x] Binary operations
@@ -234,19 +235,20 @@
 
 ### Unit Tests
 
-- [x] Lexer tests (32 tests passing - coverage target: 80% line, 75% branch)
+- [x] Lexer tests (35 tests passing - coverage target: 80% line, 75% branch)
   - [x] Empty source and EOF
   - [x] Comments (single-quote, mid-line, empty)
   - [x] Numeric literals (integer, float, scientific notation)
   - [x] String literals (simple, escape sequences, escaped quotes)
   - [x] Identifiers (simple, with numbers, starting with underscore)
   - [x] Keywords (case-insensitive matching, canonical form)
+  - [x] Boolean literals (True/False, case-insensitive)
   - [x] Operators (arithmetic, comparison)
   - [x] Delimiters (parentheses, brackets, comma)
   - [x] Line continuation
   - [x] Whitespace and newline handling
   - [x] Integration tests (multi-line programs)
-- [x] Parser tests (125 tests passing)
+- [x] Parser tests (131 tests passing)
   - [x] Primary expressions (literals, identifiers, parentheses)
   - [x] Binary operations (arithmetic, comparison, logical)
   - [x] Unary operations (negation, NOT)
@@ -336,7 +338,7 @@
 ### Parser Limitations (discovered during integration testing)
 
 - [ ] Multiple variable declarations on single line (`Public PTemp, Batt_volt`)
-- [ ] Boolean literals as function arguments (`False`, `True`)
+- [x] Boolean literals as function arguments (`False`, `True`) ✅ Resolved
 - [ ] NextScan keyword not recognized
 - [ ] Tab-indented statements handling
 
