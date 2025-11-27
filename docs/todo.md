@@ -153,10 +153,10 @@
 
 ### Advanced LSP Features
 
-- [ ] IntelliSense (completion)
-  - [ ] Keywords
-  - [ ] Built-in functions
-  - [ ] User-defined variables/functions
+- [x] IntelliSense (completion)
+  - [x] Keywords with snippets (control flow, declarations, program structure)
+  - [x] Built-in functions (Scan, measurement, math, string, time functions)
+  - [x] User-defined variables/functions (extracted from AST)
 - [ ] Signature help
   - [ ] Built-in function signatures
   - [ ] Parameter documentation
@@ -233,7 +233,7 @@
   - [x] Variable name length validation (CR200X: 16 max, CR6: 39 max)
   - [x] Recommended length warnings (CR200X: 12, CR6: 35)
   - [x] Truncation collision detection (CR200X 12-char truncation)
-- [x] LSP handler tests (38 tests passing)
+- [x] LSP handler tests (61 tests passing)
   - [x] Document manager (open, update, close operations)
   - [x] Document analysis and caching
   - [x] Model detection from file URI
@@ -249,6 +249,11 @@
     - [x] Keyword hover descriptions
     - [x] Position-based token lookup
     - [x] Half-open interval span handling
+  - [x] Completion / IntelliSense (23 tests)
+    - [x] Keyword completions with snippets
+    - [x] Built-in function completions
+    - [x] User-defined variable/function completions
+    - [x] Completion item kinds and formatting
 
 ### Integration Tests
 

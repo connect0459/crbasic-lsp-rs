@@ -2,6 +2,7 @@
 //!
 //! This module implements the Language Server Protocol backend using tower-lsp.
 
+use crate::completion::CompletionProvider;
 use crate::document::DocumentManager;
 use crate::hover::HoverProvider;
 use crate::symbols;
@@ -124,6 +125,11 @@ impl LanguageServer for CRBasicLanguageServer {
                 text_document_sync: Some(TextDocumentSyncCapability::Kind(
                     TextDocumentSyncKind::FULL,
                 )),
+                completion_provider: Some(CompletionOptions {
+                    resolve_provider: Some(false),
+                    trigger_characters: Some(vec![".".to_string()]),
+                    ..Default::default()
+                }),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
                 document_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 ..Default::default()
@@ -214,6 +220,19 @@ impl LanguageServer for CRBasicLanguageServer {
         }
 
         Ok(None)
+    }
+
+    async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
+        let uri = params.text_document_position.text_document.uri;
+
+        let manager = self.document_manager.read().await;
+
+        // Get AST if available for user-defined completions
+        let ast = manager.get(&uri).and_then(|doc| doc.ast.as_ref());
+
+        let items = CompletionProvider::get_all_completions(ast);
+
+        Ok(Some(CompletionResponse::Array(items)))
     }
 }
 
