@@ -54,7 +54,7 @@ Once published, install from the VSCode Marketplace:
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/crbasic-lsp-rs.git
+git clone https://github.com/connect0459/crbasic-lsp-rs.git
 cd crbasic-lsp-rs
 
 # Install Rust dependencies and build
@@ -147,21 +147,12 @@ Contributions are welcome! Please read our development guidelines:
 - CRBasic language specification from [Campbell Scientific](https://www.campbellsci.com/)
 - Inspired by existing community extensions ([daiwalkr/cr-basic-ms-vscode](https://marketplace.visualstudio.com/items?itemName=daiwalkr.cr-basic-ms-vscode))
 
-## Status
+## Development Status
 
-🚧 **Under Active Development** 🚧
+🚧 **Pre-release** - Core features complete, documentation in progress
 
-Current progress:
-
-- [x] Research and architecture design
-- [ ] Project structure setup
-- [ ] TextMate Grammar implementation
-- [ ] Rust parser implementation
-- [ ] LSP server implementation
-- [ ] WASM integration
-- [ ] VSCode extension client
-- [ ] Testing and validation
+For detailed progress tracking, see [docs/todo.md](./docs/todo.md).
 
 ## Contact
 
-For questions, issues, or contributions, please open an issue on [GitHub](https://github.com/YOUR_USERNAME/crbasic-lsp-rs/issues).
+For questions, issues, or contributions, please open an issue on [GitHub](https://github.com/connect0459/crbasic-lsp-rs/issues).

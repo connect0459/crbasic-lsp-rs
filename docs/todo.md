@@ -332,8 +332,17 @@
   - Documented all struct fields, enum variants, and functions
   - Verified with `cargo doc -D missing_docs -D warnings`
   - Generated documentation available at `target/doc/`
-- [ ] User guide (README updates)
-- [ ] Developer guide (ARCHITECTURE.md updates)
+- [x] User guide (README updates) ✅ Complete
+  - Simplified Development Status section to focus on overview only
+  - Fixed GitHub repository URLs (connect0459/crbasic-lsp-rs)
+  - Moved detailed progress tracking to docs/todo.md
+  - Maintained focus on project overview, usage, and license
+- [x] Developer guide (ARCHITECTURE.md updates) ✅ Complete
+  - Updated Project Structure with actual file organization
+  - Added Implementation Status section with completed features
+  - Updated Testing Strategy with current test results (146 tests)
+  - Added Parser Capabilities section
+  - Updated Extension Points with future enhancements
 - [ ] Example programs
 - [ ] Release preparation
 
