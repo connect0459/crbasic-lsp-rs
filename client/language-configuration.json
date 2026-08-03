@@ -16,6 +16,16 @@
     ["[", "]"],
     ["\"", "\""]
   ],
+  "indentationRules": {
+    "increaseIndentPattern": {
+      "pattern": "^\\s*(BeginProg\\b|DataTable\\s*\\(|Sub\\s|Function\\s|For\\s|Do\\b|SlowSequence\\b|Select\\s+Case\\b|Else\\b|ElseIf\\b.*\\bThen\\s*$|Case\\b|If\\b.*\\bThen\\s*$)",
+      "flags": "i"
+    },
+    "decreaseIndentPattern": {
+      "pattern": "^\\s*(EndProg\\b|EndTable\\b|EndSub\\b|EndFunction\\b|EndSequence\\b|EndSelect\\b|EndIf\\b|Next\\b|Loop\\b|Else\\b|ElseIf\\b|Case\\b)",
+      "flags": "i"
+    }
+  },
   "folding": {
     "markers": {
       "start": "^\\s*(BeginProg|DataTable|Sub|Function|If|For|Do)",

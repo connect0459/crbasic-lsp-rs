@@ -1,0 +1,96 @@
+/**
+ * Tests for the CRBasic auto-indent rules in language-configuration.json.
+ *
+ * VSCode applies these regexes directly against a single line of text to
+ * decide whether to indent the next line or dedent the line just typed.
+ * These tests exercise that same regex/line contract so a bad pattern is
+ * caught here instead of by manually pressing Enter in the editor.
+ */
+
+import { describe, test, expect } from "vitest";
+import * as fs from "fs";
+import * as path from "path";
+
+interface IndentPattern {
+  pattern: string;
+  flags: string;
+}
+
+interface LanguageConfiguration {
+  indentationRules: {
+    increaseIndentPattern: IndentPattern;
+    decreaseIndentPattern: IndentPattern;
+  };
+}
+
+function loadConfig(): LanguageConfiguration {
+  const configPath = path.join(__dirname, "..", "language-configuration.json");
+  const raw = fs.readFileSync(configPath, "utf-8");
+  return JSON.parse(raw) as LanguageConfiguration;
+}
+
+function toRegExp(p: IndentPattern): RegExp {
+  return new RegExp(p.pattern, p.flags);
+}
+
+describe("language-configuration.json indentationRules", () => {
+  const config = loadConfig();
+  const increase = toRegExp(config.indentationRules.increaseIndentPattern);
+  const decrease = toRegExp(config.indentationRules.decreaseIndentPattern);
+
+  describe("increaseIndentPattern", () => {
+    test.each([
+      "BeginProg",
+      "DataTable(Test, 1, -1)",
+      "Sub MySub(x)",
+      "Function MyFunc(x)",
+      "For i = 1 To 10",
+      "Do",
+      "Do While x < 10",
+      "SlowSequence",
+      "Select Case x",
+      "Else",
+      "ElseIf x > 5 Then",
+      "Case 1",
+      "If x > 5 Then",
+      "  If x > 5 Then",
+    ])("matches block-opening line: %s", (line) => {
+      expect(increase.test(line)).toBe(true);
+    });
+
+    test.each(["If x > 5 Then y = 1", "x = 5", "CallTable(Status)", "NextScan"])(
+      "does not match non-block-opening line: %s",
+      (line) => {
+        expect(increase.test(line)).toBe(false);
+      }
+    );
+  });
+
+  describe("decreaseIndentPattern", () => {
+    test.each([
+      "EndProg",
+      "EndTable",
+      "EndSub",
+      "EndFunction",
+      "EndSequence",
+      "EndSelect",
+      "EndIf",
+      "Next",
+      "Next i",
+      "Loop",
+      "Else",
+      "ElseIf x > 5 Then",
+      "Case 1",
+      "Case Else",
+    ])("matches block-closing line: %s", (line) => {
+      expect(decrease.test(line)).toBe(true);
+    });
+
+    test.each(["NextScan", "x = 5", "CallTable(Status)"])(
+      "does not match non-block-closing line: %s",
+      (line) => {
+        expect(decrease.test(line)).toBe(false);
+      }
+    );
+  });
+});
