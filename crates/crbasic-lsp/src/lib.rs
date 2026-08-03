@@ -9,6 +9,7 @@ pub mod definition;
 pub mod document;
 pub mod hover;
 pub mod references;
+pub mod rename;
 pub mod signature;
 pub mod symbols;
 

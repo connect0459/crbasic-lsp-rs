@@ -495,3 +495,115 @@ mod document_symbols {
         }
     }
 }
+
+mod rename {
+    use super::*;
+
+    #[tokio::test]
+    async fn renames_all_occurrences_of_variable() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nPublic Temp\nTemp = 5\nTemp = Temp + 1\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let rename_params = RenameParams {
+            text_document_position: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 1,
+                    character: 7, // "Temp" in declaration
+                },
+            },
+            new_name: "Temperature".to_string(),
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        };
+
+        let result = service.inner().rename(rename_params).await;
+        assert!(result.is_ok(), "Rename should succeed");
+
+        let edit = result
+            .expect("Rename should succeed")
+            .expect("Should produce a workspace edit");
+        let changes = edit.changes.expect("Should contain changes");
+        let edits = changes.get(&uri).expect("Should have edits for the URI");
+
+        // Expected: declaration (line 1), assignment (line 2), and two uses in line 3
+        assert!(
+            edits.len() >= 3,
+            "Should rename at least 3 occurrences of Temp (found {})",
+            edits.len()
+        );
+        assert!(edits.iter().all(|e| e.new_text == "Temperature"));
+    }
+
+    #[tokio::test]
+    async fn rejects_rename_with_invalid_identifier() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nPublic Temp\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let rename_params = RenameParams {
+            text_document_position: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 1,
+                    character: 7,
+                },
+            },
+            new_name: "Invalid Name".to_string(),
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        };
+
+        let result = service.inner().rename(rename_params).await;
+
+        assert!(result.is_err(), "Rename with an invalid name should fail");
+    }
+
+    #[tokio::test]
+    async fn prepare_rename_returns_range_for_variable() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nPublic Temp\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let position_params = TextDocumentPositionParams {
+            text_document: TextDocumentIdentifier { uri: uri.clone() },
+            position: Position {
+                line: 1,
+                character: 7,
+            },
+        };
+
+        let result = service.inner().prepare_rename(position_params).await;
+        assert!(result.is_ok(), "Prepare rename should succeed");
+        assert!(
+            matches!(result, Ok(Some(PrepareRenameResponse::Range(_)))),
+            "Should return the range of the identifier under the cursor"
+        );
+    }
+}

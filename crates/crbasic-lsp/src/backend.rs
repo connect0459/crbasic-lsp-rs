@@ -7,6 +7,7 @@ use crate::definition::DefinitionProvider;
 use crate::document::DocumentManager;
 use crate::hover::HoverProvider;
 use crate::references::ReferencesProvider;
+use crate::rename::RenameProvider;
 use crate::signature::SignatureProvider;
 use crate::symbols;
 use crbasic_parser::SemanticError;
@@ -164,6 +165,10 @@ impl LanguageServer for CRBasicLanguageServer {
                 definition_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 references_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 document_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
+                rename_provider: Some(tower_lsp::lsp_types::OneOf::Right(RenameOptions {
+                    prepare_provider: Some(true),
+                    work_done_progress_options: Default::default(),
+                })),
                 ..Default::default()
             },
             server_info: Some(ServerInfo {
@@ -349,6 +354,47 @@ impl LanguageServer for CRBasicLanguageServer {
                 uri,
                 include_declaration,
             ));
+        }
+
+        Ok(None)
+    }
+
+    async fn prepare_rename(
+        &self,
+        params: TextDocumentPositionParams,
+    ) -> Result<Option<PrepareRenameResponse>> {
+        let uri = params.text_document.uri;
+        let position = params.position;
+
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri) {
+            // Tokenize the document
+            let mut scanner = Scanner::new(&doc.text);
+            let tokens = scanner.scan_tokens();
+
+            if let Some(range) = RenameProvider::prepare_rename(&tokens, position) {
+                return Ok(Some(PrepareRenameResponse::Range(range)));
+            }
+        }
+
+        Ok(None)
+    }
+
+    async fn rename(&self, params: RenameParams) -> Result<Option<WorkspaceEdit>> {
+        let uri = params.text_document_position.text_document.uri;
+        let position = params.text_document_position.position;
+        let new_name = params.new_name;
+
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri) {
+            // Tokenize the document
+            let mut scanner = Scanner::new(&doc.text);
+            let tokens = scanner.scan_tokens();
+
+            return RenameProvider::get_rename_edit(&tokens, position, &new_name, uri)
+                .map_err(tower_lsp::jsonrpc::Error::invalid_params);
         }
 
         Ok(None)
