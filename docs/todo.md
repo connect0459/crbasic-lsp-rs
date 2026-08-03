@@ -477,4 +477,15 @@
     4 models, avoiding duplicate coverage of the same profile data through
     two call paths
   - `ValidationProfile` re-exported from `crbasic-parser`'s crate root
-- [ ] Integration with Campbell Scientific toolchain
+- [ ] Integration with Campbell Scientific toolchain ⏸️ Deferred
+  - Checked `docs/researches/research-001-crbasic-for-vscode.md`: it
+    documents the language spec (from CS's public help pages) but no
+    public API/CLI for the official toolchain (CRBasic Editor, LoggerNet,
+    Short Cut)
+  - Concrete scope depends on access to proprietary CS software (e.g. a
+    local CRBasic Editor compiler binary to shell out to for real
+    compilation diagnostics, or LoggerNet-specific naming conventions like
+    `Flag()` arrays) that isn't available in this environment to build
+    against or test
+  - Revisit once a concrete integration target (specific CS tool +
+    interface) is identified
