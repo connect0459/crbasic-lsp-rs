@@ -192,6 +192,10 @@
   - [x] Variable declarations (Public, Dim, Const)
   - [x] Nested symbols in functions/subroutines
   - [x] Symbol kind classification (Function, Method, Variable, Constant, Namespace)
+- [x] Rename symbol
+  - [x] `textDocument/prepareRename` (identifier range lookup and validation)
+  - [x] `textDocument/rename` (workspace edit renaming all occurrences)
+  - [x] New name identifier syntax validation (`ResponseError` on invalid input)
 
 ### Model-Dependent Validation
 
@@ -277,7 +281,7 @@
   - [x] Variable name length validation (CR200X: 16 max, CR6: 39 max)
   - [x] Recommended length warnings (CR200X: 12, CR6: 35)
   - [x] Truncation collision detection (CR200X 12-char truncation)
-- [x] LSP handler tests (105 unit tests + 13 integration tests = 118 tests passing)
+- [x] LSP handler tests (111 unit tests + 16 integration tests = 127 tests passing)
   - [x] Document manager (open, update, close operations)
   - [x] Document analysis and caching
   - [x] Model detection from file URI
@@ -312,6 +316,10 @@
     - [x] Single and multiple reference finding
     - [x] Identifier filtering
     - [x] Location generation with correct URIs and ranges
+  - [x] Rename Symbol (6 tests)
+    - [x] New name identifier syntax validation
+    - [x] Identifier range lookup for `prepareRename`
+    - [x] Workspace edit construction renaming every occurrence
 - [x] WASM binding tests (18 tests passing)
   - [x] Tokenize API (returns JSON array)
   - [x] Parse API (success/error handling)
@@ -328,7 +336,7 @@
   - [x] AST structure tests (2 evergreen tests - all passing, 6 non-evergreen tests removed)
   - [x] Semantic analysis tests (4 tests - all passing)
   - [x] Real-world validation test (1 comprehensive test - all passing)
-- [x] LSP feature integration tests (13 tests in `tests/lsp_integration.rs`) ✅ All passing
+- [x] LSP feature integration tests (16 tests in `tests/lsp_integration.rs`) ✅ All passing
   - [x] Document synchronization (open, change, close)
   - [x] Diagnostics publishing (valid program, invalid syntax, CR200X truncation warnings)
   - [x] Completion / IntelliSense (keywords, user-defined variables)
@@ -337,6 +345,8 @@
   - [x] Go to definition (variable declaration lookup)
   - [x] Find references (all variable references)
   - [x] Document symbols (program structure extraction)
+  - [x] Rename symbol (rename all occurrences, reject invalid names,
+    `prepareRename` range lookup)
 
 ### E2E Tests
 
@@ -413,7 +423,17 @@
 ## Future Enhancements 🚀
 
 - [ ] Code formatting (auto-indent)
-- [ ] Refactoring support (rename variable)
+- [x] Refactoring support (rename variable) ✅ Resolved
+  - Added `RenameProvider` (`crates/crbasic-lsp/src/rename.rs`) handling
+    `textDocument/rename` and `textDocument/prepareRename`
+  - `prepare_rename` returns the range of the identifier under the cursor;
+    `get_rename_edit` builds a `WorkspaceEdit` renaming every occurrence of
+    that identifier in the token stream
+  - Rejects rename requests whose `new_name` is not a valid CRBasic
+    identifier (ASCII letter/underscore start, alphanumeric/underscore body),
+    returning a `ResponseError` per the LSP spec
+  - 6 unit tests (`crates/crbasic-lsp/src/rename.rs`) + 3 integration tests
+    (`crates/crbasic-lsp/tests/lsp_integration.rs`)
 - [ ] Snippet library
 - [ ] Datalogger-specific validation profiles
 - [ ] Integration with Campbell Scientific toolchain
