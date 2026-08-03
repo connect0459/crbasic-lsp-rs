@@ -355,7 +355,9 @@ impl Scanner {
     }
 
     fn peek_next(&self) -> Option<char> {
-        self.source.chars().nth(self.current + 1)
+        let mut chars = self.source[self.current..].chars();
+        chars.next()?;
+        chars.next()
     }
 
     fn scan_comment_text(&mut self) -> String {
@@ -421,10 +423,7 @@ impl Scanner {
     }
 
     fn advance(&mut self) -> Option<char> {
-        if self.is_at_end() {
-            return None;
-        }
-        let ch = self.source.chars().nth(self.current)?;
+        let ch = self.source[self.current..].chars().next()?;
         self.current += ch.len_utf8();
         if ch == '\n' {
             self.line += 1;
@@ -436,7 +435,7 @@ impl Scanner {
     }
 
     fn peek(&self) -> char {
-        self.source.chars().nth(self.current).unwrap_or('\0')
+        self.source[self.current..].chars().next().unwrap_or('\0')
     }
 
     fn is_at_end(&self) -> bool {
@@ -548,6 +547,41 @@ mod tests {
             }
 
             assert_eq!(tokens[1].kind, TokenKind::Eof);
+        }
+
+        #[test]
+        fn recognizes_comment_containing_multibyte_utf8_character() {
+            let mut scanner = Scanner::new("' Temp \u{b0}C\nPublic x".to_string());
+            let tokens = scanner.scan_tokens();
+
+            match &tokens[0].kind {
+                TokenKind::Comment(text) => {
+                    assert_eq!(
+                        text, " Temp \u{b0}C",
+                        "Comment should preserve multibyte UTF-8 characters"
+                    );
+                }
+                _ => panic!("Expected Comment token, got {:?}", tokens[0].kind),
+            }
+
+            assert_eq!(
+                tokens[1].kind,
+                TokenKind::Newline,
+                "Newline after a multibyte character must still be recognized"
+            );
+
+            match &tokens[2].kind {
+                TokenKind::Keyword(name) => assert_eq!(name, "Public"),
+                _ => panic!(
+                    "Expected Public keyword after the comment line, got {:?}",
+                    tokens[2].kind
+                ),
+            }
+
+            match &tokens[3].kind {
+                TokenKind::Identifier(name) => assert_eq!(name, "x"),
+                _ => panic!("Expected Identifier token, got {:?}", tokens[3].kind),
+            }
         }
     }
 
@@ -669,6 +703,33 @@ mod tests {
                     assert_eq!(value, "He said \"Hi\"", "String should contain quote marks");
                 }
                 _ => panic!("Expected String token, got {:?}", tokens[0].kind),
+            }
+        }
+
+        #[test]
+        fn recognizes_string_containing_multibyte_utf8_character() {
+            let mut scanner = Scanner::new("\"Temp \u{b0}C\" 42".to_string());
+            let tokens = scanner.scan_tokens();
+
+            match &tokens[0].kind {
+                TokenKind::String(value) => {
+                    assert_eq!(
+                        value, "Temp \u{b0}C",
+                        "String should preserve multibyte UTF-8 characters"
+                    );
+                }
+                _ => panic!("Expected String token, got {:?}", tokens[0].kind),
+            }
+
+            match &tokens[1].kind {
+                TokenKind::Integer(value) => assert_eq!(
+                    value, "42",
+                    "Token after a multibyte string must still be recognized"
+                ),
+                _ => panic!(
+                    "Expected Integer token after the string, got {:?}",
+                    tokens[1].kind
+                ),
             }
         }
     }

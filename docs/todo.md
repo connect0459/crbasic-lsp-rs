@@ -41,7 +41,16 @@
 - [x] Empty comments
 - [x] Multi-line programs with mixed tokens
 - [x] Case-insensitive keyword matching (covered in keywords tests)
-- [ ] Invalid UTF-8 handling (future: error handling)
+- [x] Multibyte UTF-8 characters in comments/strings ✅ Resolved
+  - `Scanner` mixed byte-offset (`advance`) and char-index (`peek`/`peek_next`)
+    semantics for its `current` cursor; any multibyte UTF-8 character (e.g.
+    `°`, `µ`, non-ASCII text in a comment or string literal) desynced the two,
+    causing `scan_comment_text`/`scan_string` to spin forever instead of
+    terminating (confirmed via manual repro before the fix)
+  - Fixed by making `peek`/`peek_next` byte-offset aware
+    (`source[current..].chars().next()`), matching `advance`
+  - As a side effect, removed the `O(n)` `chars().nth()` re-scan on every
+    lookahead call
 
 ## Phase 3: Parser Implementation (TDD) 🚧
 
