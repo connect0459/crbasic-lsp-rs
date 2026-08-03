@@ -1,0 +1,42 @@
+'============================================================
+' Example 2: Variable Scope and Function/Sub Copy-Back
+'
+' CRBasic's scope and parameter-passing rules differ from most
+' languages:
+'   - A Public variable is ALWAYS global, even when the Public
+'     statement appears inside a Sub or Function body.
+'   - Function parameters are copied in but never copied back:
+'     the caller's variable is unchanged after the call returns.
+'   - Sub parameters ARE copied back: the caller's variable is
+'     updated when the Sub returns, like a by-reference argument.
+'
+' Try it in the editor:
+'   - Go to Definition on RunningTotal from inside AddSample.
+'   - Find All References on RunningTotal from its declaration.
+'   - Hover over Function and Sub for the copy-back documentation.
+'============================================================
+
+Dim Sample1
+Dim Sample2
+
+' Doubles its argument locally; the caller's variable is
+' untouched after the call returns.
+Function Doubled(value)
+  value = value * 2
+  Doubled = value
+EndFunction
+
+' RunningTotal is declared Public here, inside the Sub body --
+' it is still a global variable, not local to AddSample.
+Sub AddSample(amount)
+  Public RunningTotal
+  RunningTotal = RunningTotal + amount
+  amount = amount * 2 ' copied back to the caller on return
+EndSub
+
+BeginProg
+  Sample1 = 10
+  Sample2 = Doubled(Sample1) ' Sample1 stays 10; Sample2 becomes 20
+
+  AddSample(Sample1) ' RunningTotal accumulates; Sample1 becomes 20
+EndProg

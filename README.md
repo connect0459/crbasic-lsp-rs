@@ -121,6 +121,7 @@ crbasic-lsp-rs/
 ├── docs/                        # Documentation
 │   ├── ARCHITECTURE.md          # Architecture overview
 │   ├── adrs/                    # Architecture decision records
+│   ├── examples/                # Curated feature-showcase example programs
 │   └── researches/              # Research documents
 └── README.md                    # This file
 ```
@@ -130,6 +131,7 @@ crbasic-lsp-rs/
 - [Architecture](./docs/ARCHITECTURE.md): System architecture and design
 - [ADRs](./docs/adrs/): Architecture decision records
 - [Research](./docs/researches/research-001-crbasic-for-vscode.md): CRBasic language analysis
+- [Examples](./docs/examples/): Curated programs showcasing specific extension features
 
 ## Contributing
 

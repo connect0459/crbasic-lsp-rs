@@ -1,0 +1,31 @@
+'============================================================
+' Example 1: Getting Started
+'
+' The basic shape every CRBasic program follows: declarations,
+' a DataTable, and the main Scan loop.
+'
+' Try it in the editor:
+'   - Hover over BeginProg, Scan, or DataTable for documentation.
+'   - Trigger completion (Ctrl+Space) on a blank line and look for
+'     the ScanLoop / NewProgram pattern snippets.
+'   - Go to Definition / Find All References on BattVolt.
+'============================================================
+
+Const ScanIntervalSec = 5
+
+Public BattVolt
+Public PanelTemp_C
+
+DataTable(Status, True, -1)
+  DataInterval(0, 1, Min, 10)
+  Sample(1, BattVolt, FP2)
+  Sample(1, PanelTemp_C, FP2)
+EndTable
+
+BeginProg
+  Scan(ScanIntervalSec, Sec, 0, 0)
+    Battery(BattVolt)
+    PanelTemp(PanelTemp_C, 60)
+    CallTable(Status)
+  NextScan
+EndProg

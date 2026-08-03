@@ -1,0 +1,36 @@
+'============================================================
+' Example 3: CR200X Variable Name Length Pitfalls
+'
+' On CR200(X) series dataloggers, Public variable names longer
+' than 12 characters are truncated to 12 characters in output
+' tables. Two variables that share the same first 12 characters
+' then collide, producing a "duplicate field name" error at
+' compile time on the real datalogger -- this extension predicts
+' that error while you type.
+'
+' This file is deliberately imperfect: open it (as a .CR1 file,
+' so the extension targets the CR200X model) to see the
+' diagnostics described below.
+'============================================================
+
+Public RH ' fine: short name, no issue
+
+' Warning only: 13 characters, over the 12-char recommendation,
+' but under the 16-char hard limit.
+Public Battery_Volt1
+
+' Error + warning: 25 characters, over both the 12-char
+' recommendation and the 16-char hard limit.
+Public WindSpeedSensorNorthField
+
+' Collision: both names share the first 12 characters
+' ("Temperature_"), so both get truncated to the same output
+' field name.
+Public Temperature_S1
+Public Temperature_S2
+
+BeginProg
+  Scan(5, Sec, 0, 0)
+    Battery(Battery_Volt1)
+  NextScan
+EndProg
