@@ -46,7 +46,7 @@ Once published, install from the VSCode Marketplace:
 ### Prerequisites
 
 - [Rust](https://www.rust-lang.org/tools/install) (latest stable)
-- [Node.js](https://nodejs.org/) v18+ and npm
+- [nvm](https://github.com/nvm-sh/nvm) (recommended) for managing the Node.js version pinned in `.nvmrc`, and npm
 - [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
 - [pre-commit](https://pre-commit.com/) (optional, for git hooks)
 
@@ -56,6 +56,9 @@ Once published, install from the VSCode Marketplace:
 # Clone the repository
 git clone https://github.com/connect0459/crbasic-lsp-rs.git
 cd crbasic-lsp-rs
+
+# Use the pinned Node.js version
+nvm use
 
 # Install Rust dependencies and build
 cargo build
