@@ -257,6 +257,10 @@
     the real language client
   - 4 unit tests (`client/src/commands.test.ts`, Red→Green)
 - [ ] Extension packaging and publishing (future)
+  - [ ] Extension icon (image asset + `icon` field in `client/package.json`)
+  - [ ] `vsce package` script/config to produce a `.vsix` locally
+  - [ ] VS Code Marketplace publisher account and Personal Access Token
+  - [ ] Publish workflow (GitHub Actions `vsce publish` on release tag)
 
 ## Phase 7: Testing & Quality 🧪
 
@@ -417,7 +421,31 @@
     analyzer instead of just asserted in prose
   - Linked from the main `README.md`'s Documentation section and Project
     Structure tree
+- [x] CI/CD pipeline (GitHub Actions) ✅ Resolved
+  - Added `.github/workflows/ci.yml` with two jobs, mirroring `just verify`:
+    `rust` (`cargo fmt --all --check`, `cargo clippy --all-targets
+    --all-features -- -D warnings`, `cargo test --workspace`) and `client`
+    (`npm run lint`, `npm run format:check`, `npm run type-check`,
+    `npm test -- --run`)
+  - Triggers on push to `main`, on every pull request, and manually via
+    `workflow_dispatch`; `dorny/paths-filter` skips each job's checks when
+    the push/PR touches neither that job's paths nor the workflow file
+    itself, so a client-only change doesn't pay for a Rust toolchain setup
+    and vice versa
+  - All third-party actions pinned by commit SHA (with the version as a
+    trailing comment) rather than by mutable tag, following the same
+    convention used in the user's other repositories
+  - Verified locally: `cargo test --workspace` passes (327 lib/integration
+    tests; the 2 `crbasic-parser` doctests fail locally only because this
+    machine's global `~/.cargo/config.toml` injects a `-lpython3.11`
+    linker flag for an unrelated project -- not reproducible on a clean CI
+    runner), `client`'s lint/format:check/type-check/test (44 tests) all
+    pass, and `actionlint` reports no issues on the workflow file itself
 - [ ] Release preparation
+  - [ ] Versioning policy from `0.1.0` (SemVer pre-1.0 conventions, when to
+    cut `1.0.0`)
+  - [ ] GitHub Releases workflow (tag → release notes → artifact upload)
+  - [ ] `CHANGELOG.md` (format and update cadence)
 
 ## Known Issues / Technical Debt 🐛
 
