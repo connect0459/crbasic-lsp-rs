@@ -130,7 +130,7 @@ impl DefinitionProvider {
     ///
     /// # Returns
     /// The identifier name if found at position
-    pub fn find_identifier_at_position(tokens: &[Token], position: Position) -> Option<String> {
+    pub fn find_identifier_at_position(tokens: &[Token<'_>], position: Position) -> Option<String> {
         let line = position.line as usize + 1;
         let column = position.character as usize + 1;
 
@@ -154,7 +154,7 @@ impl DefinitionProvider {
                 return None;
             }
 
-            Some(token.lexeme.clone())
+            Some(token.lexeme.to_string())
         })
     }
 
@@ -305,11 +305,11 @@ mod tests {
     mod find_identifier_at_position {
         use super::*;
 
-        fn create_identifier_token(name: &str, line: usize, start_col: usize) -> Token {
+        fn create_identifier_token(name: &str, line: usize, start_col: usize) -> Token<'_> {
             let end_col = start_col + name.len();
             Token {
-                kind: TokenKind::Identifier(name.to_string()),
-                lexeme: name.to_string(),
+                kind: TokenKind::Identifier(name),
+                lexeme: name,
                 span: create_span(line, start_col, line, end_col),
             }
         }
@@ -356,8 +356,8 @@ mod tests {
         #[test]
         fn ignores_non_identifier_tokens() {
             let tokens = vec![Token {
-                kind: TokenKind::Keyword("Public".to_string()),
-                lexeme: "Public".to_string(),
+                kind: TokenKind::Keyword("Public"),
+                lexeme: "Public",
                 span: create_span(1, 1, 1, 7),
             }];
             let position = Position {
@@ -374,10 +374,10 @@ mod tests {
     mod get_definition {
         use super::*;
 
-        fn setup_test() -> (Vec<Token>, HashMap<String, SymbolDefinition>, Url) {
+        fn setup_test() -> (Vec<Token<'static>>, HashMap<String, SymbolDefinition>, Url) {
             let tokens = vec![Token {
-                kind: TokenKind::Identifier("Temp_C".to_string()),
-                lexeme: "Temp_C".to_string(),
+                kind: TokenKind::Identifier("Temp_C"),
+                lexeme: "Temp_C",
                 span: create_span(5, 10, 5, 16),
             }];
 
@@ -417,8 +417,8 @@ mod tests {
         #[test]
         fn returns_none_for_unknown_symbol() {
             let tokens = vec![Token {
-                kind: TokenKind::Identifier("Unknown".to_string()),
-                lexeme: "Unknown".to_string(),
+                kind: TokenKind::Identifier("Unknown"),
+                lexeme: "Unknown",
                 span: create_span(5, 10, 5, 17),
             }];
             let definitions = HashMap::new();

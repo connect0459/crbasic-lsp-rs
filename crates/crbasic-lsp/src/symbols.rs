@@ -189,7 +189,7 @@ mod tests {
     use crbasic_parser::Parser;
 
     fn parse(source: &str) -> Program {
-        let mut scanner = crbasic_parser::lexer::Scanner::new(source.to_string());
+        let mut scanner = crbasic_parser::lexer::Scanner::new(source);
         let tokens = scanner.scan_tokens();
         let mut parser = Parser::new(tokens);
         parser.parse().expect("Parse should succeed")

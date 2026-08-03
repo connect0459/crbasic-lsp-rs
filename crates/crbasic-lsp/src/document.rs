@@ -77,7 +77,7 @@ impl Document {
     /// * `Err(String)` - Parse error message
     pub fn analyze(&mut self) -> Result<(), String> {
         // Tokenize
-        let mut scanner = crbasic_parser::lexer::Scanner::new(self.text.clone());
+        let mut scanner = crbasic_parser::lexer::Scanner::new(&self.text);
         let tokens = scanner.scan_tokens();
 
         // Parse

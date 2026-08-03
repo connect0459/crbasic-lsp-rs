@@ -37,25 +37,31 @@ impl Span {
 }
 
 /// Token kinds in CRBasic
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum TokenKind {
+///
+/// Literal/identifier/keyword/comment text borrows directly from the source
+/// string (`&'a str`) to avoid a per-token allocation; only `String` (the
+/// escape-resolved value of a string literal) must own its data, since
+/// escape processing can produce text that no longer matches any source
+/// slice.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub enum TokenKind<'a> {
     // Literals
     /// Integer literal (e.g., 42, 1000)
-    Integer(String),
+    Integer(&'a str),
     /// Float literal (e.g., 3.14, 1.0e-5)
-    Float(String),
+    Float(&'a str),
     /// String literal (e.g., "Hello")
     String(String),
 
     // Identifiers and Keywords
     /// Identifier (variable names, function names)
-    Identifier(String),
+    Identifier(&'a str),
     /// Keyword (e.g., If, For, Public)
-    Keyword(String),
+    Keyword(&'a str),
 
     // Comments
     /// Single-line comment starting with '
-    Comment(String),
+    Comment(&'a str),
 
     // Operators
     /// Addition operator (+)
@@ -103,19 +109,19 @@ pub enum TokenKind {
 }
 
 /// A token with its kind, lexeme, and position
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Token {
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Token<'a> {
     /// The kind of token (e.g., Integer, Keyword, Operator)
-    pub kind: TokenKind,
+    pub kind: TokenKind<'a>,
     /// The original text from source code
-    pub lexeme: String,
+    pub lexeme: &'a str,
     /// The source code location of this token
     pub span: Span,
 }
 
-impl Token {
+impl<'a> Token<'a> {
     /// Creates a new token
-    pub fn new(kind: TokenKind, lexeme: String, span: Span) -> Self {
+    pub fn new(kind: TokenKind<'a>, lexeme: &'a str, span: Span) -> Self {
         Self { kind, lexeme, span }
     }
 }

@@ -33,7 +33,10 @@ impl HoverProvider {
     /// # Returns
     /// * `Some(&Token)` if a token is found at the position
     /// * `None` if no token is found
-    fn find_token_at_position(tokens: &[Token], position: Position) -> Option<&Token> {
+    fn find_token_at_position<'a>(
+        tokens: &'a [Token<'a>],
+        position: Position,
+    ) -> Option<&'a Token<'a>> {
         // Convert LSP position (0-indexed) to parser position (1-indexed)
         let line = position.line as usize + 1;
         let column = position.character as usize + 1;
@@ -380,8 +383,8 @@ mod tests {
         use super::*;
         use crbasic_parser::lexer::Scanner;
 
-        fn tokenize(source: &str) -> Vec<Token> {
-            let mut scanner = Scanner::new(source.to_string());
+        fn tokenize(source: &str) -> Vec<Token<'_>> {
+            let mut scanner = Scanner::new(source);
             scanner.scan_tokens()
         }
 

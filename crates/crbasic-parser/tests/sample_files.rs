@@ -22,8 +22,8 @@ fn read_sample_file(filename: &str) -> String {
 }
 
 /// Helper to tokenize source code
-fn tokenize(source: &str) -> Vec<crbasic_parser::Token> {
-    let mut scanner = Scanner::new(source.to_string());
+fn tokenize(source: &str) -> Vec<crbasic_parser::Token<'_>> {
+    let mut scanner = Scanner::new(source);
     scanner.scan_tokens()
 }
 

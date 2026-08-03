@@ -3,18 +3,80 @@
 //! This module provides the main lexical analysis functionality.
 
 use super::token::{Position, Span, Token, TokenKind};
-use std::collections::HashMap;
+
+/// CRBasic keywords paired with their canonical (PascalCase, or upper-case
+/// for logical operators) spelling, checked case-insensitively so that
+/// `BeginProg`/`BEGINPROG`/`beginprog` all resolve to the same keyword.
+const KEYWORDS: &[(&str, &str)] = &[
+    // Control flow keywords
+    ("if", "If"),
+    ("then", "Then"),
+    ("else", "Else"),
+    ("elseif", "ElseIf"),
+    ("endif", "EndIf"),
+    ("for", "For"),
+    ("to", "To"),
+    ("step", "Step"),
+    ("next", "Next"),
+    ("nextscan", "NextScan"),
+    ("do", "Do"),
+    ("loop", "Loop"),
+    ("while", "While"),
+    ("exitfor", "ExitFor"),
+    ("exitdo", "ExitDo"),
+    ("case", "Case"),
+    ("is", "Is"),
+    ("select", "Select"),
+    ("exitselect", "ExitSelect"),
+    ("continue", "Continue"),
+    ("break", "Break"),
+    ("goto", "GoTo"),
+    // Declaration keywords
+    ("public", "Public"),
+    ("dim", "Dim"),
+    ("const", "Const"),
+    ("alias", "Alias"),
+    ("as", "As"),
+    ("units", "Units"),
+    // Program structure keywords
+    ("beginprog", "BeginProg"),
+    ("endprog", "EndProg"),
+    ("datatable", "DataTable"),
+    ("endtable", "EndTable"),
+    // Function keywords
+    ("function", "Function"),
+    ("endfunction", "EndFunction"),
+    ("sub", "Sub"),
+    ("endsub", "EndSub"),
+    // Logical operators
+    ("and", "AND"),
+    ("or", "OR"),
+    ("not", "NOT"),
+    ("xor", "XOR"),
+    ("mod", "MOD"),
+    // Boolean literals
+    ("true", "True"),
+    ("false", "False"),
+];
+
+/// Looks up the canonical spelling of a CRBasic keyword, case-insensitively,
+/// without allocating (avoids a `to_lowercase()` temporary per identifier).
+fn lookup_keyword(word: &str) -> Option<&'static str> {
+    KEYWORDS
+        .iter()
+        .find(|(candidate, _)| candidate.eq_ignore_ascii_case(word))
+        .map(|(_, canonical)| *canonical)
+}
 
 /// Scanner for tokenizing CRBasic source code
-pub struct Scanner {
-    source: String,
+pub struct Scanner<'a> {
+    source: &'a str,
     current: usize,
     line: usize,
     column: usize,
-    keywords: HashMap<String, String>,
 }
 
-impl Scanner {
+impl<'a> Scanner<'a> {
     /// Creates a new scanner for the given source code
     ///
     /// # Arguments
@@ -24,89 +86,22 @@ impl Scanner {
     /// ```
     /// use crbasic_parser::lexer::Scanner;
     ///
-    /// let scanner = Scanner::new("Public Temp_C".to_string());
+    /// let scanner = Scanner::new("Public Temp_C");
     /// ```
-    pub fn new(source: String) -> Self {
-        let keywords = Self::init_keywords();
+    pub fn new(source: &'a str) -> Self {
         Self {
             source,
             current: 0,
             line: 1,
             column: 1,
-            keywords,
         }
-    }
-
-    /// Initializes the keyword map with CRBasic keywords
-    ///
-    /// All keywords are stored in lowercase for case-insensitive lookup,
-    /// with their canonical (PascalCase) form as the value.
-    fn init_keywords() -> HashMap<String, String> {
-        let mut keywords = HashMap::new();
-
-        // Control flow keywords
-        keywords.insert("if".to_string(), "If".to_string());
-        keywords.insert("then".to_string(), "Then".to_string());
-        keywords.insert("else".to_string(), "Else".to_string());
-        keywords.insert("elseif".to_string(), "ElseIf".to_string());
-        keywords.insert("endif".to_string(), "EndIf".to_string());
-        keywords.insert("for".to_string(), "For".to_string());
-        keywords.insert("to".to_string(), "To".to_string());
-        keywords.insert("step".to_string(), "Step".to_string());
-        keywords.insert("next".to_string(), "Next".to_string());
-        keywords.insert("nextscan".to_string(), "NextScan".to_string());
-        keywords.insert("do".to_string(), "Do".to_string());
-        keywords.insert("loop".to_string(), "Loop".to_string());
-        keywords.insert("while".to_string(), "While".to_string());
-        keywords.insert("exitfor".to_string(), "ExitFor".to_string());
-        keywords.insert("exitdo".to_string(), "ExitDo".to_string());
-        keywords.insert("case".to_string(), "Case".to_string());
-        keywords.insert("is".to_string(), "Is".to_string());
-        keywords.insert("select".to_string(), "Select".to_string());
-        keywords.insert("exitselect".to_string(), "ExitSelect".to_string());
-        keywords.insert("continue".to_string(), "Continue".to_string());
-        keywords.insert("break".to_string(), "Break".to_string());
-        keywords.insert("goto".to_string(), "GoTo".to_string());
-
-        // Declaration keywords
-        keywords.insert("public".to_string(), "Public".to_string());
-        keywords.insert("dim".to_string(), "Dim".to_string());
-        keywords.insert("const".to_string(), "Const".to_string());
-        keywords.insert("alias".to_string(), "Alias".to_string());
-        keywords.insert("as".to_string(), "As".to_string());
-        keywords.insert("units".to_string(), "Units".to_string());
-
-        // Program structure keywords
-        keywords.insert("beginprog".to_string(), "BeginProg".to_string());
-        keywords.insert("endprog".to_string(), "EndProg".to_string());
-        keywords.insert("datatable".to_string(), "DataTable".to_string());
-        keywords.insert("endtable".to_string(), "EndTable".to_string());
-
-        // Function keywords
-        keywords.insert("function".to_string(), "Function".to_string());
-        keywords.insert("endfunction".to_string(), "EndFunction".to_string());
-        keywords.insert("sub".to_string(), "Sub".to_string());
-        keywords.insert("endsub".to_string(), "EndSub".to_string());
-
-        // Logical operators
-        keywords.insert("and".to_string(), "AND".to_string());
-        keywords.insert("or".to_string(), "OR".to_string());
-        keywords.insert("not".to_string(), "NOT".to_string());
-        keywords.insert("xor".to_string(), "XOR".to_string());
-        keywords.insert("mod".to_string(), "MOD".to_string());
-
-        // Boolean literals
-        keywords.insert("true".to_string(), "True".to_string());
-        keywords.insert("false".to_string(), "False".to_string());
-
-        keywords
     }
 
     /// Scans all tokens from the source code
     ///
     /// # Returns
     /// A vector of tokens, including an EOF token at the end
-    pub fn scan_tokens(&mut self) -> Vec<Token> {
+    pub fn scan_tokens(&mut self) -> Vec<Token<'a>> {
         let mut tokens = Vec::new();
 
         while !self.is_at_end() {
@@ -119,7 +114,7 @@ impl Scanner {
         tokens
     }
 
-    fn scan_token(&mut self) -> Option<Token> {
+    fn scan_token(&mut self) -> Option<Token<'a>> {
         let start_pos = Position::new(self.line, self.column);
         let start_index = self.current;
 
@@ -133,7 +128,7 @@ impl Scanner {
                 let span = Span::new(start_pos, end_pos);
                 Some(Token::new(
                     TokenKind::Comment(comment_text),
-                    self.source[start_index..self.current].to_string(),
+                    &self.source[start_index..self.current],
                     span,
                 ))
             }
@@ -144,41 +139,41 @@ impl Scanner {
                 let span = Span::new(start_pos, end_pos);
                 Some(Token::new(
                     TokenKind::String(string_value),
-                    self.source[start_index..self.current].to_string(),
+                    &self.source[start_index..self.current],
                     span,
                 ))
             }
             '0'..='9' => {
                 // Number literal: integer or float
-                let number_text = self.scan_number(ch);
+                self.scan_number();
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
+                let number_text = &self.source[start_index..self.current];
 
                 // Determine if it's a float or integer
                 let kind = if number_text.contains('.')
                     || number_text.contains('e')
                     || number_text.contains('E')
                 {
-                    TokenKind::Float(number_text.clone())
+                    TokenKind::Float(number_text)
                 } else {
-                    TokenKind::Integer(number_text.clone())
+                    TokenKind::Integer(number_text)
                 };
 
                 Some(Token::new(kind, number_text, span))
             }
             'a'..='z' | 'A'..='Z' | '_' => {
                 // Identifier or keyword: starts with letter or underscore
-                let identifier = self.scan_identifier(ch);
+                self.scan_identifier();
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
+                let identifier = &self.source[start_index..self.current];
 
                 // Check if the identifier is a keyword (case-insensitive)
-                let kind = if let Some(canonical_keyword) =
-                    self.keywords.get(&identifier.to_lowercase())
-                {
-                    TokenKind::Keyword(canonical_keyword.clone())
+                let kind = if let Some(canonical_keyword) = lookup_keyword(identifier) {
+                    TokenKind::Keyword(canonical_keyword)
                 } else {
-                    TokenKind::Identifier(identifier.clone())
+                    TokenKind::Identifier(identifier)
                 };
 
                 Some(Token::new(kind, identifier, span))
@@ -186,32 +181,32 @@ impl Scanner {
             '+' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Plus, "+".to_string(), span))
+                Some(Token::new(TokenKind::Plus, "+", span))
             }
             '-' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Minus, "-".to_string(), span))
+                Some(Token::new(TokenKind::Minus, "-", span))
             }
             '*' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Star, "*".to_string(), span))
+                Some(Token::new(TokenKind::Star, "*", span))
             }
             '/' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Slash, "/".to_string(), span))
+                Some(Token::new(TokenKind::Slash, "/", span))
             }
             '^' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Caret, "^".to_string(), span))
+                Some(Token::new(TokenKind::Caret, "^", span))
             }
             '=' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Equal, "=".to_string(), span))
+                Some(Token::new(TokenKind::Equal, "=", span))
             }
             '<' => {
                 // Could be <, <=, or <>
@@ -228,7 +223,7 @@ impl Scanner {
                 let span = Span::new(start_pos, end_pos);
                 Some(Token::new(
                     kind,
-                    self.source[start_index..self.current].to_string(),
+                    &self.source[start_index..self.current],
                     span,
                 ))
             }
@@ -244,39 +239,39 @@ impl Scanner {
                 let span = Span::new(start_pos, end_pos);
                 Some(Token::new(
                     kind,
-                    self.source[start_index..self.current].to_string(),
+                    &self.source[start_index..self.current],
                     span,
                 ))
             }
             '(' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::LeftParen, "(".to_string(), span))
+                Some(Token::new(TokenKind::LeftParen, "(", span))
             }
             ')' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::RightParen, ")".to_string(), span))
+                Some(Token::new(TokenKind::RightParen, ")", span))
             }
             '[' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::LeftBracket, "[".to_string(), span))
+                Some(Token::new(TokenKind::LeftBracket, "[", span))
             }
             ']' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::RightBracket, "]".to_string(), span))
+                Some(Token::new(TokenKind::RightBracket, "]", span))
             }
             ',' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Comma, ",".to_string(), span))
+                Some(Token::new(TokenKind::Comma, ",", span))
             }
             '\n' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Newline, "\n".to_string(), span))
+                Some(Token::new(TokenKind::Newline, "\n", span))
             }
             ' ' | '\t' | '\r' => {
                 // Check for line continuation: space/tab + underscore + newline
@@ -287,7 +282,7 @@ impl Scanner {
                     let span = Span::new(start_pos, end_pos);
                     Some(Token::new(
                         TokenKind::LineContinuation,
-                        " _\n".to_string(),
+                        &self.source[start_index..self.current],
                         span,
                     ))
                 } else {
@@ -302,56 +297,45 @@ impl Scanner {
         }
     }
 
-    fn scan_number(&mut self, first_digit: char) -> String {
-        let mut number = first_digit.to_string();
-
+    /// Scans a number literal, advancing the cursor past it.
+    ///
+    /// Does not build a `String`: the caller reconstructs the lexeme by
+    /// slicing `source[start_index..self.current]`, since this scan never
+    /// transforms the source text.
+    fn scan_number(&mut self) {
         // Scan integer part
         while self.peek().is_ascii_digit() {
-            number.push(
-                self.advance()
-                    .expect("Character should exist after peek check"),
-            );
+            self.advance()
+                .expect("Character should exist after peek check");
         }
 
         // Check for decimal point
         if self.peek() == '.' && self.peek_next().is_some_and(|c| c.is_ascii_digit()) {
-            number.push(
-                self.advance()
-                    .expect("Decimal point should exist after peek check"),
-            ); // consume '.'
+            self.advance()
+                .expect("Decimal point should exist after peek check"); // consume '.'
             while self.peek().is_ascii_digit() {
-                number.push(
-                    self.advance()
-                        .expect("Character should exist after peek check"),
-                );
+                self.advance()
+                    .expect("Character should exist after peek check");
             }
         }
 
         // Check for scientific notation (e or E)
         if matches!(self.peek(), 'e' | 'E') {
-            number.push(
-                self.advance()
-                    .expect("Exponent character should exist after peek check"),
-            ); // consume 'e' or 'E'
+            self.advance()
+                .expect("Exponent character should exist after peek check"); // consume 'e' or 'E'
 
             // Optional sign
             if matches!(self.peek(), '+' | '-') {
-                number.push(
-                    self.advance()
-                        .expect("Sign character should exist after peek check"),
-                );
+                self.advance()
+                    .expect("Sign character should exist after peek check");
             }
 
             // Exponent digits
             while self.peek().is_ascii_digit() {
-                number.push(
-                    self.advance()
-                        .expect("Character should exist after peek check"),
-                );
+                self.advance()
+                    .expect("Character should exist after peek check");
             }
         }
-
-        number
     }
 
     fn peek_next(&self) -> Option<char> {
@@ -360,12 +344,12 @@ impl Scanner {
         chars.next()
     }
 
-    fn scan_comment_text(&mut self) -> String {
+    fn scan_comment_text(&mut self) -> &'a str {
         let start = self.current;
         while !self.is_at_end() && self.peek() != '\n' {
             self.advance();
         }
-        self.source[start..self.current].to_string()
+        &self.source[start..self.current]
     }
 
     fn scan_string(&mut self) -> String {
@@ -405,21 +389,20 @@ impl Scanner {
         value
     }
 
-    fn scan_identifier(&mut self, first_char: char) -> String {
-        let mut identifier = first_char.to_string();
-
-        // Continue scanning alphanumeric characters and underscores
+    /// Scans an identifier or keyword, advancing the cursor past it.
+    ///
+    /// Does not build a `String`: the caller reconstructs the lexeme by
+    /// slicing `source[start_index..self.current]`, since this scan never
+    /// transforms the source text.
+    fn scan_identifier(&mut self) {
         while !self.is_at_end() {
             let ch = self.peek();
             if ch.is_ascii_alphanumeric() || ch == '_' {
-                identifier.push(ch);
                 self.advance();
             } else {
                 break;
             }
         }
-
-        identifier
     }
 
     fn advance(&mut self) -> Option<char> {
@@ -442,10 +425,10 @@ impl Scanner {
         self.current >= self.source.len()
     }
 
-    fn create_eof_token(&self) -> Token {
+    fn create_eof_token(&self) -> Token<'a> {
         let pos = Position::new(self.line, self.column);
         let span = Span::new(pos, pos);
-        Token::new(TokenKind::Eof, String::new(), span)
+        Token::new(TokenKind::Eof, "", span)
     }
 }
 
@@ -458,7 +441,7 @@ mod tests {
 
         #[test]
         fn returns_eof_token() {
-            let mut scanner = Scanner::new(String::new());
+            let mut scanner = Scanner::new("");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(
@@ -479,7 +462,7 @@ mod tests {
 
         #[test]
         fn recognizes_comment_at_start_of_line() {
-            let mut scanner = Scanner::new("' This is a comment".to_string());
+            let mut scanner = Scanner::new("' This is a comment");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(
@@ -491,7 +474,7 @@ mod tests {
             match &tokens[0].kind {
                 TokenKind::Comment(text) => {
                     assert_eq!(
-                        text, " This is a comment",
+                        *text, " This is a comment",
                         "Comment should contain text after single quote"
                     );
                 }
@@ -503,27 +486,27 @@ mod tests {
 
         #[test]
         fn recognizes_comment_after_code() {
-            let mut scanner = Scanner::new("Temp = 42 ' This is a mid-line comment".to_string());
+            let mut scanner = Scanner::new("Temp = 42 ' This is a mid-line comment");
             let tokens = scanner.scan_tokens();
 
             // Should have: Identifier, Equal, Integer, Comment, EOF
             assert_eq!(tokens.len(), 5);
 
             match &tokens[0].kind {
-                TokenKind::Identifier(name) => assert_eq!(name, "Temp"),
+                TokenKind::Identifier(name) => assert_eq!(*name, "Temp"),
                 _ => panic!("Expected Identifier token"),
             }
 
             assert_eq!(tokens[1].kind, TokenKind::Equal);
 
             match &tokens[2].kind {
-                TokenKind::Integer(value) => assert_eq!(value, "42"),
+                TokenKind::Integer(value) => assert_eq!(*value, "42"),
                 _ => panic!("Expected Integer token"),
             }
 
             match &tokens[3].kind {
                 TokenKind::Comment(text) => {
-                    assert_eq!(text, " This is a mid-line comment");
+                    assert_eq!(*text, " This is a mid-line comment");
                 }
                 _ => panic!("Expected Comment token"),
             }
@@ -533,7 +516,7 @@ mod tests {
 
         #[test]
         fn recognizes_empty_comment() {
-            let mut scanner = Scanner::new("'".to_string());
+            let mut scanner = Scanner::new("'");
             let tokens = scanner.scan_tokens();
 
             // Should have: Comment (empty), EOF
@@ -541,7 +524,7 @@ mod tests {
 
             match &tokens[0].kind {
                 TokenKind::Comment(text) => {
-                    assert_eq!(text, "", "Empty comment should have empty text");
+                    assert_eq!(*text, "", "Empty comment should have empty text");
                 }
                 _ => panic!("Expected Comment token"),
             }
@@ -551,13 +534,13 @@ mod tests {
 
         #[test]
         fn recognizes_comment_containing_multibyte_utf8_character() {
-            let mut scanner = Scanner::new("' Temp \u{b0}C\nPublic x".to_string());
+            let mut scanner = Scanner::new("' Temp \u{b0}C\nPublic x");
             let tokens = scanner.scan_tokens();
 
             match &tokens[0].kind {
                 TokenKind::Comment(text) => {
                     assert_eq!(
-                        text, " Temp \u{b0}C",
+                        *text, " Temp \u{b0}C",
                         "Comment should preserve multibyte UTF-8 characters"
                     );
                 }
@@ -571,7 +554,7 @@ mod tests {
             );
 
             match &tokens[2].kind {
-                TokenKind::Keyword(name) => assert_eq!(name, "Public"),
+                TokenKind::Keyword(name) => assert_eq!(*name, "Public"),
                 _ => panic!(
                     "Expected Public keyword after the comment line, got {:?}",
                     tokens[2].kind
@@ -579,7 +562,7 @@ mod tests {
             }
 
             match &tokens[3].kind {
-                TokenKind::Identifier(name) => assert_eq!(name, "x"),
+                TokenKind::Identifier(name) => assert_eq!(*name, "x"),
                 _ => panic!("Expected Identifier token, got {:?}", tokens[3].kind),
             }
         }
@@ -590,7 +573,7 @@ mod tests {
 
         #[test]
         fn recognizes_integer_literal() {
-            let mut scanner = Scanner::new("42".to_string());
+            let mut scanner = Scanner::new("42");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(
@@ -601,7 +584,7 @@ mod tests {
 
             match &tokens[0].kind {
                 TokenKind::Integer(value) => {
-                    assert_eq!(value, "42", "Integer value should be 42");
+                    assert_eq!(*value, "42", "Integer value should be 42");
                 }
                 _ => panic!("Expected Integer token, got {:?}", tokens[0].kind),
             }
@@ -611,7 +594,7 @@ mod tests {
 
         #[test]
         fn recognizes_float_literal() {
-            let mut scanner = Scanner::new("3.14".to_string());
+            let mut scanner = Scanner::new("3.14");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(
@@ -622,7 +605,7 @@ mod tests {
 
             match &tokens[0].kind {
                 TokenKind::Float(value) => {
-                    assert_eq!(value, "3.14", "Float value should be 3.14");
+                    assert_eq!(*value, "3.14", "Float value should be 3.14");
                 }
                 _ => panic!("Expected Float token, got {:?}", tokens[0].kind),
             }
@@ -632,7 +615,7 @@ mod tests {
 
         #[test]
         fn recognizes_scientific_notation() {
-            let mut scanner = Scanner::new("1.5e-3".to_string());
+            let mut scanner = Scanner::new("1.5e-3");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 2);
@@ -640,7 +623,7 @@ mod tests {
             match &tokens[0].kind {
                 TokenKind::Float(value) => {
                     assert_eq!(
-                        value, "1.5e-3",
+                        *value, "1.5e-3",
                         "Scientific notation should be recognized as float"
                     );
                 }
@@ -654,7 +637,7 @@ mod tests {
 
         #[test]
         fn recognizes_simple_string() {
-            let mut scanner = Scanner::new("\"Hello\"".to_string());
+            let mut scanner = Scanner::new("\"Hello\"");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(
@@ -675,7 +658,7 @@ mod tests {
 
         #[test]
         fn recognizes_string_with_escape_sequences() {
-            let mut scanner = Scanner::new("\"Hello\\nWorld\"".to_string());
+            let mut scanner = Scanner::new("\"Hello\\nWorld\"");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 2);
@@ -693,7 +676,7 @@ mod tests {
 
         #[test]
         fn recognizes_string_with_escaped_quotes() {
-            let mut scanner = Scanner::new("\"He said \\\"Hi\\\"\"".to_string());
+            let mut scanner = Scanner::new("\"He said \\\"Hi\\\"\"");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 2);
@@ -708,7 +691,7 @@ mod tests {
 
         #[test]
         fn recognizes_string_containing_multibyte_utf8_character() {
-            let mut scanner = Scanner::new("\"Temp \u{b0}C\" 42".to_string());
+            let mut scanner = Scanner::new("\"Temp \u{b0}C\" 42");
             let tokens = scanner.scan_tokens();
 
             match &tokens[0].kind {
@@ -723,7 +706,7 @@ mod tests {
 
             match &tokens[1].kind {
                 TokenKind::Integer(value) => assert_eq!(
-                    value, "42",
+                    *value, "42",
                     "Token after a multibyte string must still be recognized"
                 ),
                 _ => panic!(
@@ -739,7 +722,7 @@ mod tests {
 
         #[test]
         fn recognizes_simple_identifier() {
-            let mut scanner = Scanner::new("Temp_C".to_string());
+            let mut scanner = Scanner::new("Temp_C");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(
@@ -750,7 +733,7 @@ mod tests {
 
             match &tokens[0].kind {
                 TokenKind::Identifier(name) => {
-                    assert_eq!(name, "Temp_C", "Identifier should be Temp_C");
+                    assert_eq!(*name, "Temp_C", "Identifier should be Temp_C");
                 }
                 _ => panic!("Expected Identifier token, got {:?}", tokens[0].kind),
             }
@@ -760,14 +743,14 @@ mod tests {
 
         #[test]
         fn recognizes_identifier_starting_with_underscore() {
-            let mut scanner = Scanner::new("_internal".to_string());
+            let mut scanner = Scanner::new("_internal");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 2);
 
             match &tokens[0].kind {
                 TokenKind::Identifier(name) => {
-                    assert_eq!(name, "_internal", "Identifier should be _internal");
+                    assert_eq!(*name, "_internal", "Identifier should be _internal");
                 }
                 _ => panic!("Expected Identifier token, got {:?}", tokens[0].kind),
             }
@@ -775,14 +758,14 @@ mod tests {
 
         #[test]
         fn recognizes_identifier_with_numbers() {
-            let mut scanner = Scanner::new("temp123".to_string());
+            let mut scanner = Scanner::new("temp123");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 2);
 
             match &tokens[0].kind {
                 TokenKind::Identifier(name) => {
-                    assert_eq!(name, "temp123", "Identifier should be temp123");
+                    assert_eq!(*name, "temp123", "Identifier should be temp123");
                 }
                 _ => panic!("Expected Identifier token, got {:?}", tokens[0].kind),
             }
@@ -794,13 +777,13 @@ mod tests {
 
         #[test]
         fn recognizes_true_as_keyword() {
-            let mut scanner = Scanner::new("True".to_string());
+            let mut scanner = Scanner::new("True");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 2);
             match &tokens[0].kind {
                 TokenKind::Keyword(keyword) => {
-                    assert_eq!(keyword, "True", "True should be recognized as keyword");
+                    assert_eq!(*keyword, "True", "True should be recognized as keyword");
                 }
                 _ => panic!("Expected Keyword token, got {:?}", tokens[0].kind),
             }
@@ -808,13 +791,13 @@ mod tests {
 
         #[test]
         fn recognizes_false_as_keyword() {
-            let mut scanner = Scanner::new("False".to_string());
+            let mut scanner = Scanner::new("False");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 2);
             match &tokens[0].kind {
                 TokenKind::Keyword(keyword) => {
-                    assert_eq!(keyword, "False", "False should be recognized as keyword");
+                    assert_eq!(*keyword, "False", "False should be recognized as keyword");
                 }
                 _ => panic!("Expected Keyword token, got {:?}", tokens[0].kind),
             }
@@ -830,13 +813,13 @@ mod tests {
             ];
 
             for (input, expected) in test_cases {
-                let mut scanner = Scanner::new(input.to_string());
+                let mut scanner = Scanner::new(input);
                 let tokens = scanner.scan_tokens();
 
                 match &tokens[0].kind {
                     TokenKind::Keyword(keyword) => {
                         assert_eq!(
-                            keyword, expected,
+                            *keyword, expected,
                             "Input '{}' should normalize to '{}'",
                             input, expected
                         );
@@ -855,7 +838,7 @@ mod tests {
 
         #[test]
         fn recognizes_keyword_with_canonical_case() {
-            let mut scanner = Scanner::new("Public".to_string());
+            let mut scanner = Scanner::new("Public");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(
@@ -866,7 +849,7 @@ mod tests {
 
             match &tokens[0].kind {
                 TokenKind::Keyword(keyword) => {
-                    assert_eq!(keyword, "Public", "Keyword should be normalized to Public");
+                    assert_eq!(*keyword, "Public", "Keyword should be normalized to Public");
                 }
                 _ => panic!("Expected Keyword token, got {:?}", tokens[0].kind),
             }
@@ -876,7 +859,7 @@ mod tests {
 
         #[test]
         fn recognizes_keyword_case_insensitive_lowercase() {
-            let mut scanner = Scanner::new("public".to_string());
+            let mut scanner = Scanner::new("public");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 2);
@@ -884,7 +867,7 @@ mod tests {
             match &tokens[0].kind {
                 TokenKind::Keyword(keyword) => {
                     assert_eq!(
-                        keyword, "Public",
+                        *keyword, "Public",
                         "Lowercase keyword should be normalized to Public"
                     );
                 }
@@ -894,7 +877,7 @@ mod tests {
 
         #[test]
         fn recognizes_keyword_case_insensitive_uppercase() {
-            let mut scanner = Scanner::new("PUBLIC".to_string());
+            let mut scanner = Scanner::new("PUBLIC");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 2);
@@ -902,7 +885,7 @@ mod tests {
             match &tokens[0].kind {
                 TokenKind::Keyword(keyword) => {
                     assert_eq!(
-                        keyword, "Public",
+                        *keyword, "Public",
                         "Uppercase keyword should be normalized to Public"
                     );
                 }
@@ -919,7 +902,7 @@ mod tests {
             ];
 
             for (input, expected) in test_cases {
-                let mut scanner = Scanner::new(input.to_string());
+                let mut scanner = Scanner::new(input);
                 let tokens = scanner.scan_tokens();
 
                 assert_eq!(
@@ -932,7 +915,7 @@ mod tests {
                 match &tokens[0].kind {
                     TokenKind::Keyword(keyword) => {
                         assert_eq!(
-                            keyword, expected,
+                            *keyword, expected,
                             "Input '{}' should normalize to '{}'",
                             input, expected
                         );
@@ -947,14 +930,14 @@ mod tests {
 
         #[test]
         fn distinguishes_keyword_from_identifier() {
-            let mut scanner = Scanner::new("publicVar".to_string());
+            let mut scanner = Scanner::new("publicVar");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 2);
 
             match &tokens[0].kind {
                 TokenKind::Identifier(name) => {
-                    assert_eq!(name, "publicVar", "Should be identifier, not keyword");
+                    assert_eq!(*name, "publicVar", "Should be identifier, not keyword");
                 }
                 _ => panic!("Expected Identifier token, got {:?}", tokens[0].kind),
             }
@@ -966,7 +949,7 @@ mod tests {
 
         #[test]
         fn recognizes_arithmetic_operators() {
-            let mut scanner = Scanner::new("+-*/^".to_string());
+            let mut scanner = Scanner::new("+-*/^");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 6, "Should return 5 operator tokens and EOF");
@@ -981,7 +964,7 @@ mod tests {
 
         #[test]
         fn recognizes_comparison_operators_single_char() {
-            let mut scanner = Scanner::new("= < >".to_string());
+            let mut scanner = Scanner::new("= < >");
             let tokens = scanner.scan_tokens();
 
             // Filter out non-operator tokens (whitespace will be skipped)
@@ -997,7 +980,7 @@ mod tests {
 
         #[test]
         fn recognizes_comparison_operators_two_char() {
-            let mut scanner = Scanner::new("<> <= >=".to_string());
+            let mut scanner = Scanner::new("<> <= >=");
             let tokens = scanner.scan_tokens();
 
             // Should have: NotEqual, LessThanOrEqual, GreaterThanOrEqual, EOF
@@ -1018,7 +1001,7 @@ mod tests {
 
         #[test]
         fn recognizes_parentheses() {
-            let mut scanner = Scanner::new("()".to_string());
+            let mut scanner = Scanner::new("()");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 3, "Should return 2 delimiter tokens and EOF");
@@ -1030,7 +1013,7 @@ mod tests {
 
         #[test]
         fn recognizes_brackets() {
-            let mut scanner = Scanner::new("[]".to_string());
+            let mut scanner = Scanner::new("[]");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 3);
@@ -1042,7 +1025,7 @@ mod tests {
 
         #[test]
         fn recognizes_comma() {
-            let mut scanner = Scanner::new(",".to_string());
+            let mut scanner = Scanner::new(",");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 2);
@@ -1057,7 +1040,7 @@ mod tests {
 
         #[test]
         fn skips_spaces_and_tabs() {
-            let mut scanner = Scanner::new("  \t  42  \t  ".to_string());
+            let mut scanner = Scanner::new("  \t  42  \t  ");
             let tokens = scanner.scan_tokens();
 
             // Should only have the integer and EOF (whitespace skipped)
@@ -1065,7 +1048,7 @@ mod tests {
 
             match &tokens[0].kind {
                 TokenKind::Integer(value) => {
-                    assert_eq!(value, "42");
+                    assert_eq!(*value, "42");
                 }
                 _ => panic!("Expected Integer token, got {:?}", tokens[0].kind),
             }
@@ -1075,21 +1058,21 @@ mod tests {
 
         #[test]
         fn recognizes_newline() {
-            let mut scanner = Scanner::new("42\n43".to_string());
+            let mut scanner = Scanner::new("42\n43");
             let tokens = scanner.scan_tokens();
 
             // Should have: 42, Newline, 43, EOF
             assert_eq!(tokens.len(), 4);
 
             match &tokens[0].kind {
-                TokenKind::Integer(value) => assert_eq!(value, "42"),
+                TokenKind::Integer(value) => assert_eq!(*value, "42"),
                 _ => panic!("Expected Integer token"),
             }
 
             assert_eq!(tokens[1].kind, TokenKind::Newline);
 
             match &tokens[2].kind {
-                TokenKind::Integer(value) => assert_eq!(value, "43"),
+                TokenKind::Integer(value) => assert_eq!(*value, "43"),
                 _ => panic!("Expected Integer token"),
             }
 
@@ -1098,7 +1081,7 @@ mod tests {
 
         #[test]
         fn handles_multiple_newlines() {
-            let mut scanner = Scanner::new("42\n\n43".to_string());
+            let mut scanner = Scanner::new("42\n\n43");
             let tokens = scanner.scan_tokens();
 
             // Each newline should produce a Newline token
@@ -1106,7 +1089,7 @@ mod tests {
             assert_eq!(tokens.len(), 5);
 
             match &tokens[0].kind {
-                TokenKind::Integer(value) => assert_eq!(value, "42"),
+                TokenKind::Integer(value) => assert_eq!(*value, "42"),
                 _ => panic!("Expected Integer token"),
             }
 
@@ -1114,7 +1097,7 @@ mod tests {
             assert_eq!(tokens[2].kind, TokenKind::Newline);
 
             match &tokens[3].kind {
-                TokenKind::Integer(value) => assert_eq!(value, "43"),
+                TokenKind::Integer(value) => assert_eq!(*value, "43"),
                 _ => panic!("Expected Integer token"),
             }
 
@@ -1127,21 +1110,21 @@ mod tests {
 
         #[test]
         fn recognizes_line_continuation() {
-            let mut scanner = Scanner::new("Temp _\nC".to_string());
+            let mut scanner = Scanner::new("Temp _\nC");
             let tokens = scanner.scan_tokens();
 
             // Should have: Identifier("Temp"), LineContinuation, Identifier("C"), EOF
             assert_eq!(tokens.len(), 4);
 
             match &tokens[0].kind {
-                TokenKind::Identifier(name) => assert_eq!(name, "Temp"),
+                TokenKind::Identifier(name) => assert_eq!(*name, "Temp"),
                 _ => panic!("Expected Identifier token"),
             }
 
             assert_eq!(tokens[1].kind, TokenKind::LineContinuation);
 
             match &tokens[2].kind {
-                TokenKind::Identifier(name) => assert_eq!(name, "C"),
+                TokenKind::Identifier(name) => assert_eq!(*name, "C"),
                 _ => panic!("Expected Identifier token"),
             }
 
@@ -1150,7 +1133,7 @@ mod tests {
 
         #[test]
         fn distinguishes_underscore_in_identifier_from_continuation() {
-            let mut scanner = Scanner::new("Temp_C".to_string());
+            let mut scanner = Scanner::new("Temp_C");
             let tokens = scanner.scan_tokens();
 
             // Should have: Identifier("Temp_C"), EOF
@@ -1158,7 +1141,7 @@ mod tests {
             assert_eq!(tokens.len(), 2);
 
             match &tokens[0].kind {
-                TokenKind::Identifier(name) => assert_eq!(name, "Temp_C"),
+                TokenKind::Identifier(name) => assert_eq!(*name, "Temp_C"),
                 _ => panic!("Expected Identifier token"),
             }
 
@@ -1176,7 +1159,7 @@ mod tests {
   Temp_C = 25.5 ' Temperature in Celsius
 EndProg"#;
 
-            let mut scanner = Scanner::new(source.to_string());
+            let mut scanner = Scanner::new(source);
             let tokens = scanner.scan_tokens();
 
             // Verify key tokens are present
@@ -1186,7 +1169,7 @@ EndProg"#;
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Keyword(kw) if kw == "BeginProg")),
+                    .any(|k| matches!(k, TokenKind::Keyword(kw) if *kw == "BeginProg")),
                 "Should contain BeginProg keyword"
             );
 
@@ -1194,7 +1177,7 @@ EndProg"#;
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Keyword(kw) if kw == "Public")),
+                    .any(|k| matches!(k, TokenKind::Keyword(kw) if *kw == "Public")),
                 "Should contain Public keyword"
             );
 
@@ -1202,7 +1185,7 @@ EndProg"#;
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Temp_C")),
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if *id == "Temp_C")),
                 "Should contain Temp_C identifier"
             );
 
@@ -1216,7 +1199,7 @@ EndProg"#;
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Float(val) if val == "25.5")),
+                    .any(|k| matches!(k, TokenKind::Float(val) if *val == "25.5")),
                 "Should contain 25.5 float literal"
             );
 
@@ -1232,7 +1215,7 @@ EndProg"#;
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Keyword(kw) if kw == "EndProg")),
+                    .any(|k| matches!(k, TokenKind::Keyword(kw) if *kw == "EndProg")),
                 "Should contain EndProg keyword"
             );
 
@@ -1253,7 +1236,7 @@ EndProg"#;
   Status = 1
 EndIf"#;
 
-            let mut scanner = Scanner::new(source.to_string());
+            let mut scanner = Scanner::new(source);
             let tokens = scanner.scan_tokens();
 
             let token_kinds: Vec<_> = tokens.iter().map(|t| &t.kind).collect();
@@ -1262,19 +1245,19 @@ EndIf"#;
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Keyword(kw) if kw == "If")),
+                    .any(|k| matches!(k, TokenKind::Keyword(kw) if *kw == "If")),
                 "Should contain If keyword"
             );
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Keyword(kw) if kw == "Then")),
+                    .any(|k| matches!(k, TokenKind::Keyword(kw) if *kw == "Then")),
                 "Should contain Then keyword"
             );
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Keyword(kw) if kw == "EndIf")),
+                    .any(|k| matches!(k, TokenKind::Keyword(kw) if *kw == "EndIf")),
                 "Should contain EndIf keyword"
             );
 
@@ -1290,13 +1273,13 @@ EndIf"#;
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Temp")),
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if *id == "Temp")),
                 "Should contain Temp identifier"
             );
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Status")),
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if *id == "Status")),
                 "Should contain Status identifier"
             );
         }
@@ -1305,7 +1288,7 @@ EndIf"#;
         fn tokenizes_function_with_parameters() {
             let source = r#"Result = Calculate(X, Y + 2.5)"#;
 
-            let mut scanner = Scanner::new(source.to_string());
+            let mut scanner = Scanner::new(source);
             let tokens = scanner.scan_tokens();
 
             let token_kinds: Vec<_> = tokens.iter().map(|t| &t.kind).collect();
@@ -1314,13 +1297,13 @@ EndIf"#;
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Result")),
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if *id == "Result")),
                 "Should contain Result identifier"
             );
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Calculate")),
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if *id == "Calculate")),
                 "Should contain Calculate identifier"
             );
 
@@ -1356,7 +1339,7 @@ EndIf"#;
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Float(val) if val == "2.5")),
+                    .any(|k| matches!(k, TokenKind::Float(val) if *val == "2.5")),
                 "Should contain 2.5 literal"
             );
         }
@@ -1365,7 +1348,7 @@ EndIf"#;
         fn tokenizes_array_access() {
             let source = r#"Data[Index] = Values(1, 2)"#;
 
-            let mut scanner = Scanner::new(source.to_string());
+            let mut scanner = Scanner::new(source);
             let tokens = scanner.scan_tokens();
 
             let token_kinds: Vec<_> = tokens.iter().map(|t| &t.kind).collect();
@@ -1402,13 +1385,13 @@ EndIf"#;
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Data")),
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if *id == "Data")),
                 "Should contain Data identifier"
             );
             assert!(
                 token_kinds
                     .iter()
-                    .any(|k| matches!(k, TokenKind::Identifier(id) if id == "Index")),
+                    .any(|k| matches!(k, TokenKind::Identifier(id) if *id == "Index")),
                 "Should contain Index identifier"
             );
         }

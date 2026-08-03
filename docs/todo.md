@@ -389,7 +389,26 @@
   - Updated `typescript-eslint` to 8.18.2
 - [x] Vite CJS API deprecation warning ✅ Resolved
   - Renamed `vite.config.ts` to `vite.config.mts` for ESM support
-- [ ] Performance optimization (large files >1000 lines)
+- [x] Performance optimization (large files >1000 lines) ✅ Resolved
+  - Measured against a synthetic 1000-line/24,448-char program: Lexer was
+    1.03–1.59ms against a <1ms target (Parser 0.36–0.59ms and Diagnostics
+    1.5–2.2ms were already well within their <10ms/<50ms targets)
+  - Root cause: `Scanner`/`Token`/`TokenKind` allocated a new `String` for
+    every token's lexeme, plus a `to_lowercase()` temporary and a clone for
+    every identifier/keyword lookup against a per-`Scanner::new`-rebuilt
+    `HashMap<String, String>`
+  - Fixed by giving `Token`/`TokenKind` a lifetime so they borrow `&str`
+    slices directly from the source instead of allocating, and replacing the
+    keyword `HashMap` with a static table checked via `eq_ignore_ascii_case`
+    (no allocation, no per-`Scanner::new` rebuild cost). As a side effect,
+    `crbasic-lsp` no longer clones the whole document text before tokenizing
+    on every hover/definition/references/symbols/diagnostics request, and
+    `crbasic-wasm` no longer copies the whole source string on every call
+  - Result: Lexer now 0.73–0.83ms (release build), clearing the <1ms target
+  - Added `crates/crbasic-parser/tests/performance.rs` as a permanent
+    regression guard (budgets relaxed under `cfg!(debug_assertions)` since
+    `cargo test` runs in debug mode by default; run
+    `cargo test --release --test performance` to check the real numbers)
 
 ## Future Enhancements 🚀
 

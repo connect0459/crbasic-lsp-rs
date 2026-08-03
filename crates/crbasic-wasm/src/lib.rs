@@ -66,7 +66,7 @@ pub struct AnalysisResult {
 /// JSON string containing an array of tokens
 #[wasm_bindgen]
 pub fn tokenize(source: &str) -> String {
-    let mut scanner = Scanner::new(source.to_string());
+    let mut scanner = Scanner::new(source);
     let tokens = scanner.scan_tokens();
     serde_json::to_string(&tokens)
         .unwrap_or_else(|e| format!(r#"{{"error": "Serialization failed: {}"}}"#, e))
@@ -81,7 +81,7 @@ pub fn tokenize(source: &str) -> String {
 /// JSON string containing ParseResult with AST or error
 #[wasm_bindgen]
 pub fn parse(source: &str) -> String {
-    let mut scanner = Scanner::new(source.to_string());
+    let mut scanner = Scanner::new(source);
     let tokens = scanner.scan_tokens();
     let mut parser = Parser::new(tokens);
     let result = match parser.parse() {
@@ -123,7 +123,7 @@ pub fn parse(source: &str) -> String {
 #[wasm_bindgen]
 pub fn analyze(source: &str, file_path: &str) -> String {
     // Tokenize the source
-    let mut scanner = Scanner::new(source.to_string());
+    let mut scanner = Scanner::new(source);
     let tokens = scanner.scan_tokens();
 
     // Parse the source

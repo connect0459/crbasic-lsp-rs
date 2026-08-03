@@ -18,7 +18,7 @@ impl ReferencesProvider {
     ///
     /// # Returns
     /// The identifier name if found at position
-    pub fn find_identifier_at_position(tokens: &[Token], position: Position) -> Option<String> {
+    pub fn find_identifier_at_position(tokens: &[Token<'_>], position: Position) -> Option<String> {
         let line = position.line as usize + 1;
         let column = position.character as usize + 1;
 
@@ -42,7 +42,7 @@ impl ReferencesProvider {
                 return None;
             }
 
-            Some(token.lexeme.clone())
+            Some(token.lexeme.to_string())
         })
     }
 
@@ -54,13 +54,13 @@ impl ReferencesProvider {
     ///
     /// # Returns
     /// All token spans where the symbol appears
-    pub fn find_all_references(tokens: &[Token], symbol_name: &str) -> Vec<Span> {
+    pub fn find_all_references(tokens: &[Token<'_>], symbol_name: &str) -> Vec<Span> {
         tokens
             .iter()
             .filter_map(|token| {
                 // Match both Identifier and Keyword tokens (for function calls)
                 match &token.kind {
-                    TokenKind::Identifier(name) if name == symbol_name => Some(token.span),
+                    TokenKind::Identifier(name) if *name == symbol_name => Some(token.span),
                     _ if token.lexeme == symbol_name => {
                         // Also check lexeme for case-insensitive matches
                         if matches!(&token.kind, TokenKind::Identifier(_)) {
@@ -136,11 +136,11 @@ mod tests {
         )
     }
 
-    fn create_identifier_token(name: &str, line: usize, start_col: usize) -> Token {
+    fn create_identifier_token(name: &str, line: usize, start_col: usize) -> Token<'_> {
         let end_col = start_col + name.len();
         Token {
-            kind: TokenKind::Identifier(name.to_string()),
-            lexeme: name.to_string(),
+            kind: TokenKind::Identifier(name),
+            lexeme: name,
             span: create_span(line, start_col, line, end_col),
         }
     }
@@ -198,7 +198,7 @@ mod tests {
     mod get_references {
         use super::*;
 
-        fn setup_test() -> (Vec<Token>, Url) {
+        fn setup_test() -> (Vec<Token<'static>>, Url) {
             let tokens = vec![
                 create_identifier_token("Temp_C", 1, 8),  // Declaration
                 create_identifier_token("Temp_C", 3, 1),  // Reference 1

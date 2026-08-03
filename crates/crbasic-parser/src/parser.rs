@@ -6,12 +6,12 @@ use crate::ast::{Expression, Program, Statement};
 use crate::lexer::token::{Token, TokenKind};
 
 /// Parser for CRBasic source code
-pub struct Parser {
-    tokens: Vec<Token>,
+pub struct Parser<'a> {
+    tokens: Vec<Token<'a>>,
     current: usize,
 }
 
-impl Parser {
+impl<'a> Parser<'a> {
     /// Creates a new parser from a vector of tokens
     ///
     /// # Arguments
@@ -22,11 +22,11 @@ impl Parser {
     /// use crbasic_parser::lexer::Scanner;
     /// use crbasic_parser::parser::Parser;
     ///
-    /// let mut scanner = Scanner::new("42".to_string());
+    /// let mut scanner = Scanner::new("42");
     /// let tokens = scanner.scan_tokens();
     /// let parser = Parser::new(tokens);
     /// ```
-    pub fn new(tokens: Vec<Token>) -> Self {
+    pub fn new(tokens: Vec<Token<'a>>) -> Self {
         Self { tokens, current: 0 }
     }
 
@@ -89,39 +89,39 @@ impl Parser {
     /// Parses a single statement
     fn parse_statement(&mut self) -> Result<Statement, ParseError> {
         // Check for control flow keywords (If, For, Do, etc.)
-        if let TokenKind::Keyword(kw) = &self.peek().kind
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && kw == "If"
         {
             return self.parse_if_statement();
         }
 
-        if let TokenKind::Keyword(kw) = &self.peek().kind
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && kw == "For"
         {
             return self.parse_for_loop();
         }
 
-        if let TokenKind::Keyword(kw) = &self.peek().kind
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && kw == "Do"
         {
             return self.parse_do_loop();
         }
 
         // Check for function/subroutine definition keywords
-        if let TokenKind::Keyword(kw) = &self.peek().kind
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && kw == "Function"
         {
             return self.parse_function_definition();
         }
 
-        if let TokenKind::Keyword(kw) = &self.peek().kind
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && kw == "Sub"
         {
             return self.parse_subroutine_definition();
         }
 
         // Check for program structure keywords (BeginProg, EndProg, etc.)
-        if let TokenKind::Keyword(kw) = &self.peek().kind
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "BeginProg"
                 || kw == "EndProg"
                 || kw == "DataTable"
@@ -132,7 +132,7 @@ impl Parser {
         }
 
         // Check for variable declaration keywords (Public, Dim, Const)
-        if let TokenKind::Keyword(kw) = &self.peek().kind
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "Public" || kw == "Dim" || kw == "Const")
         {
             return self.parse_var_declaration();
@@ -144,8 +144,8 @@ impl Parser {
             let saved_pos = self.current;
 
             // Try to parse as assignment
-            if let TokenKind::Identifier(name) = &self.peek().kind {
-                let ident_name = name.clone();
+            if let &TokenKind::Identifier(name) = &self.peek().kind {
+                let ident_name = name.to_string();
                 let ident_span = self.advance().span;
 
                 // Check for array element access: identifier[index]
@@ -263,8 +263,8 @@ impl Parser {
         }
 
         let name_token = self.advance();
-        let name = if let TokenKind::Identifier(n) = &name_token.kind {
-            n.clone()
+        let name = if let &TokenKind::Identifier(n) = &name_token.kind {
+            n.to_string()
         } else {
             unreachable!()
         };
@@ -305,7 +305,7 @@ impl Parser {
         };
 
         // Check for optional type annotation (As type)
-        let type_annotation = if let TokenKind::Keyword(kw) = &self.peek().kind {
+        let type_annotation = if let &TokenKind::Keyword(kw) = &self.peek().kind {
             if kw == "As" {
                 self.advance(); // consume 'As'
 
@@ -320,8 +320,8 @@ impl Parser {
                 let type_token = self.advance();
                 end_span = type_token.span;
 
-                if let TokenKind::Identifier(type_name) = &type_token.kind {
-                    Some(type_name.clone())
+                if let &TokenKind::Identifier(type_name) = &type_token.kind {
+                    Some(type_name.to_string())
                 } else {
                     unreachable!()
                 }
@@ -362,8 +362,8 @@ impl Parser {
     fn parse_var_declaration(&mut self) -> Result<Statement, ParseError> {
         // Get the keyword (Public, Dim, or Const)
         let keyword_token = self.advance();
-        let keyword = if let TokenKind::Keyword(kw) = &keyword_token.kind {
-            kw.clone()
+        let keyword = if let &TokenKind::Keyword(kw) = &keyword_token.kind {
+            kw.to_string()
         } else {
             return Err(ParseError {
                 message: "Expected variable declaration keyword".to_string(),
@@ -382,8 +382,8 @@ impl Parser {
         }
 
         let name_token = self.advance();
-        let name = if let TokenKind::Identifier(n) = &name_token.kind {
-            n.clone()
+        let name = if let &TokenKind::Identifier(n) = &name_token.kind {
+            n.to_string()
         } else {
             unreachable!()
         };
@@ -424,7 +424,7 @@ impl Parser {
         };
 
         // Check for optional type annotation (As type)
-        let type_annotation = if let TokenKind::Keyword(kw) = &self.peek().kind {
+        let type_annotation = if let &TokenKind::Keyword(kw) = &self.peek().kind {
             if kw == "As" {
                 self.advance(); // consume 'As'
 
@@ -439,8 +439,8 @@ impl Parser {
                 let type_token = self.advance();
                 end_span = type_token.span;
 
-                if let TokenKind::Identifier(type_name) = &type_token.kind {
-                    Some(type_name.clone())
+                if let &TokenKind::Identifier(type_name) = &type_token.kind {
+                    Some(type_name.to_string())
                 } else {
                     unreachable!()
                 }
@@ -487,8 +487,8 @@ impl Parser {
         // Get the keyword (BeginProg, EndProg, etc.)
         let keyword_token = self.advance();
         let span = keyword_token.span;
-        let keyword = if let TokenKind::Keyword(kw) = &keyword_token.kind {
-            kw.clone()
+        let keyword = if let &TokenKind::Keyword(kw) = &keyword_token.kind {
+            kw.to_string()
         } else {
             return Err(ParseError {
                 message: "Expected program structure keyword".to_string(),
@@ -550,7 +550,7 @@ impl Parser {
         let condition = self.parse_expression()?;
 
         // Expect 'Then' keyword
-        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Then") {
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Then") {
             return Err(ParseError {
                 message: "Expected 'Then' after If condition".to_string(),
                 span: self.peek().span,
@@ -568,7 +568,7 @@ impl Parser {
         self.skip_whitespace_and_comments();
         while !matches!(
             self.peek().kind,
-            TokenKind::Keyword(ref kw) if kw == "Else" || kw == "EndIf"
+            TokenKind::Keyword(kw) if kw == "Else" || kw == "EndIf"
         ) && !self.is_at_end()
         {
             then_branch.push(self.parse_statement()?);
@@ -576,8 +576,7 @@ impl Parser {
         }
 
         // Check for optional Else branch
-        let else_branch = if matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Else")
-        {
+        let else_branch = if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Else") {
             self.advance(); // consume 'Else'
 
             // Consume optional newline after Else
@@ -588,7 +587,7 @@ impl Parser {
             // Parse else branch statements until EndIf
             let mut else_stmts = Vec::new();
             self.skip_whitespace_and_comments();
-            while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndIf")
+            while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndIf")
                 && !self.is_at_end()
             {
                 else_stmts.push(self.parse_statement()?);
@@ -601,7 +600,7 @@ impl Parser {
         };
 
         // Expect 'EndIf' keyword
-        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndIf") {
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndIf") {
             return Err(ParseError {
                 message: "Expected 'EndIf' to close If statement".to_string(),
                 span: self.peek().span,
@@ -633,8 +632,8 @@ impl Parser {
         let start_span = for_token.span;
 
         // Parse variable name (must be an identifier)
-        let variable = if let TokenKind::Identifier(name) = &self.peek().kind {
-            let var_name = name.clone();
+        let variable = if let &TokenKind::Identifier(name) = &self.peek().kind {
+            let var_name = name.to_string();
             self.advance();
             var_name
         } else {
@@ -660,7 +659,7 @@ impl Parser {
         let start = self.parse_expression()?;
 
         // Expect 'To' keyword
-        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "To") {
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "To") {
             return Err(ParseError {
                 message: "Expected 'To' keyword in For loop".to_string(),
                 span: self.peek().span,
@@ -672,7 +671,7 @@ impl Parser {
         let end = self.parse_expression()?;
 
         // Check for optional 'Step' keyword
-        let step = if matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Step") {
+        let step = if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Step") {
             self.advance(); // consume 'Step'
             Some(self.parse_expression()?)
         } else {
@@ -687,7 +686,7 @@ impl Parser {
         // Parse body statements until 'Next'
         let mut body = Vec::new();
         self.skip_whitespace_and_comments();
-        while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Next")
+        while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Next")
             && !self.is_at_end()
         {
             body.push(self.parse_statement()?);
@@ -695,7 +694,7 @@ impl Parser {
         }
 
         // Expect 'Next' keyword
-        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Next") {
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Next") {
             return Err(ParseError {
                 message: "Expected 'Next' to close For loop".to_string(),
                 span: self.peek().span,
@@ -735,7 +734,7 @@ impl Parser {
         let mut condition_at_start = false;
         let mut condition = None;
 
-        if matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "While") {
+        if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "While") {
             self.advance(); // consume 'While'
             condition_at_start = true;
             condition = Some(self.parse_expression()?);
@@ -749,7 +748,7 @@ impl Parser {
         // Parse body statements until 'Loop'
         let mut body = Vec::new();
         self.skip_whitespace_and_comments();
-        while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Loop")
+        while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Loop")
             && !self.is_at_end()
         {
             body.push(self.parse_statement()?);
@@ -757,7 +756,7 @@ impl Parser {
         }
 
         // Expect 'Loop' keyword
-        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "Loop") {
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Loop") {
             return Err(ParseError {
                 message: "Expected 'Loop' to close Do statement".to_string(),
                 span: self.peek().span,
@@ -766,7 +765,7 @@ impl Parser {
         self.advance(); // consume 'Loop'
 
         // Check for optional 'While' keyword after 'Loop'
-        if matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "While") {
+        if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "While") {
             // Cannot have condition both at start and end
             if condition_at_start {
                 return Err(ParseError {
@@ -805,8 +804,8 @@ impl Parser {
         let start_span = function_token.span;
 
         // Parse function name (must be an identifier)
-        let name = if let TokenKind::Identifier(name) = &self.peek().kind {
-            let func_name = name.clone();
+        let name = if let &TokenKind::Identifier(name) = &self.peek().kind {
+            let func_name = name.to_string();
             self.advance();
             func_name
         } else {
@@ -827,8 +826,8 @@ impl Parser {
 
             // Parse comma-separated parameters
             while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
-                if let TokenKind::Identifier(param_name) = &self.peek().kind {
-                    params.push(param_name.clone());
+                if let &TokenKind::Identifier(param_name) = &self.peek().kind {
+                    params.push(param_name.to_string());
                     self.advance();
 
                     // Check for comma
@@ -865,7 +864,7 @@ impl Parser {
         // Parse body statements until 'EndFunction'
         let mut body = Vec::new();
         self.skip_whitespace_and_comments();
-        while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndFunction")
+        while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndFunction")
             && !self.is_at_end()
         {
             body.push(self.parse_statement()?);
@@ -873,7 +872,7 @@ impl Parser {
         }
 
         // Expect 'EndFunction' keyword
-        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndFunction") {
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndFunction") {
             return Err(ParseError {
                 message: "Expected 'EndFunction' to close Function definition".to_string(),
                 span: self.peek().span,
@@ -905,8 +904,8 @@ impl Parser {
         let start_span = sub_token.span;
 
         // Parse subroutine name (must be an identifier)
-        let name = if let TokenKind::Identifier(name) = &self.peek().kind {
-            let sub_name = name.clone();
+        let name = if let &TokenKind::Identifier(name) = &self.peek().kind {
+            let sub_name = name.to_string();
             self.advance();
             sub_name
         } else {
@@ -927,8 +926,8 @@ impl Parser {
 
             // Parse comma-separated parameters
             while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
-                if let TokenKind::Identifier(param_name) = &self.peek().kind {
-                    params.push(param_name.clone());
+                if let &TokenKind::Identifier(param_name) = &self.peek().kind {
+                    params.push(param_name.to_string());
                     self.advance();
 
                     // Check for comma
@@ -965,7 +964,7 @@ impl Parser {
         // Parse body statements until 'EndSub'
         let mut body = Vec::new();
         self.skip_whitespace_and_comments();
-        while !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndSub")
+        while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndSub")
             && !self.is_at_end()
         {
             body.push(self.parse_statement()?);
@@ -973,7 +972,7 @@ impl Parser {
         }
 
         // Expect 'EndSub' keyword
-        if !matches!(self.peek().kind, TokenKind::Keyword(ref kw) if kw == "EndSub") {
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndSub") {
             return Err(ParseError {
                 message: "Expected 'EndSub' to close Sub definition".to_string(),
                 span: self.peek().span,
@@ -1008,7 +1007,7 @@ impl Parser {
 
         loop {
             // Check if current token is OR keyword
-            if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if kw == "OR") {
+            if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if *kw == "OR") {
                 break;
             }
 
@@ -1034,7 +1033,7 @@ impl Parser {
 
         loop {
             // Check if current token is XOR keyword
-            if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if kw == "XOR") {
+            if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if *kw == "XOR") {
                 break;
             }
 
@@ -1060,7 +1059,7 @@ impl Parser {
 
         loop {
             // Check if current token is AND keyword
-            if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if kw == "AND") {
+            if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if *kw == "AND") {
                 break;
             }
 
@@ -1191,7 +1190,7 @@ impl Parser {
         // Check for unary operators
         let operator = match &self.peek().kind {
             TokenKind::Minus => Some(crate::ast::UnaryOperator::Negate),
-            TokenKind::Keyword(kw) if kw == "NOT" => Some(crate::ast::UnaryOperator::Not),
+            TokenKind::Keyword(kw) if *kw == "NOT" => Some(crate::ast::UnaryOperator::Not),
             _ => None,
         };
 
@@ -1260,11 +1259,11 @@ impl Parser {
                     TokenKind::String(value) => Ok(Expression::string(value.clone(), token.span)),
                     TokenKind::Identifier(name) => {
                         // Clone necessary data to avoid borrow issues
-                        let ident_name = name.clone();
+                        let ident_name = name.to_string();
                         let ident_span = token.span;
 
                         // Start with base identifier expression
-                        let mut expr = Expression::identifier(ident_name.clone(), ident_span);
+                        let mut expr = Expression::identifier(ident_name.to_string(), ident_span);
 
                         // Check for postfix operations (function call or array access)
                         loop {
@@ -1306,7 +1305,7 @@ impl Parser {
                                         end_paren_span.end,
                                     );
                                     expr = Expression::FunctionCall {
-                                        name: ident_name.clone(),
+                                        name: ident_name.to_string(),
                                         arguments,
                                         span,
                                     };
@@ -1349,9 +1348,9 @@ impl Parser {
                     _ => unreachable!(),
                 }
             }
-            TokenKind::Keyword(keyword) if keyword == "True" || keyword == "False" => {
+            TokenKind::Keyword(keyword) if *keyword == "True" || *keyword == "False" => {
                 let token = self.advance();
-                if let TokenKind::Keyword(kw) = &token.kind {
+                if let &TokenKind::Keyword(kw) = &token.kind {
                     let value = kw == "True";
                     Ok(Expression::boolean(value, token.span))
                 } else {
@@ -1369,12 +1368,12 @@ impl Parser {
     }
 
     /// Returns the current token without consuming it
-    fn peek(&self) -> &Token {
+    fn peek(&self) -> &Token<'a> {
         &self.tokens[self.current]
     }
 
     /// Consumes and returns the current token
-    fn advance(&mut self) -> &Token {
+    fn advance(&mut self) -> &Token<'a> {
         if !self.is_at_end() {
             self.current += 1;
         }
@@ -1433,7 +1432,7 @@ mod tests {
 
         #[test]
         fn parses_integer_literal() {
-            let mut scanner = Scanner::new("42".to_string());
+            let mut scanner = Scanner::new("42");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1456,7 +1455,7 @@ mod tests {
 
         #[test]
         fn parses_float_literal() {
-            let mut scanner = Scanner::new("25.5".to_string());
+            let mut scanner = Scanner::new("25.5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1476,7 +1475,7 @@ mod tests {
 
         #[test]
         fn parses_string_literal() {
-            let mut scanner = Scanner::new("\"Hello\"".to_string());
+            let mut scanner = Scanner::new("\"Hello\"");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1496,7 +1495,7 @@ mod tests {
 
         #[test]
         fn parses_identifier() {
-            let mut scanner = Scanner::new("Temp_C".to_string());
+            let mut scanner = Scanner::new("Temp_C");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1516,7 +1515,7 @@ mod tests {
 
         #[test]
         fn parses_true_literal() {
-            let mut scanner = Scanner::new("True".to_string());
+            let mut scanner = Scanner::new("True");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1537,7 +1536,7 @@ mod tests {
 
         #[test]
         fn parses_false_literal() {
-            let mut scanner = Scanner::new("False".to_string());
+            let mut scanner = Scanner::new("False");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1558,7 +1557,7 @@ mod tests {
 
         #[test]
         fn parses_boolean_in_function_call() {
-            let mut scanner = Scanner::new("Call(True, False)".to_string());
+            let mut scanner = Scanner::new("Call(True, False)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1593,7 +1592,7 @@ mod tests {
 
         #[test]
         fn parses_addition() {
-            let mut scanner = Scanner::new("1 + 2".to_string());
+            let mut scanner = Scanner::new("1 + 2");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1631,7 +1630,7 @@ mod tests {
 
         #[test]
         fn parses_subtraction() {
-            let mut scanner = Scanner::new("5 - 3".to_string());
+            let mut scanner = Scanner::new("5 - 3");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1650,7 +1649,7 @@ mod tests {
 
         #[test]
         fn parses_multiplication() {
-            let mut scanner = Scanner::new("4 * 3".to_string());
+            let mut scanner = Scanner::new("4 * 3");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1669,7 +1668,7 @@ mod tests {
 
         #[test]
         fn parses_division() {
-            let mut scanner = Scanner::new("10 / 2".to_string());
+            let mut scanner = Scanner::new("10 / 2");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1688,7 +1687,7 @@ mod tests {
 
         #[test]
         fn parses_power() {
-            let mut scanner = Scanner::new("2 ^ 3".to_string());
+            let mut scanner = Scanner::new("2 ^ 3");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1708,7 +1707,7 @@ mod tests {
         #[test]
         fn respects_operator_precedence_multiplication_before_addition() {
             // 1 + 2 * 3 should parse as 1 + (2 * 3), not (1 + 2) * 3
-            let mut scanner = Scanner::new("1 + 2 * 3".to_string());
+            let mut scanner = Scanner::new("1 + 2 * 3");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1752,7 +1751,7 @@ mod tests {
 
         #[test]
         fn parses_equality() {
-            let mut scanner = Scanner::new("x = 5".to_string());
+            let mut scanner = Scanner::new("x = 5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1771,7 +1770,7 @@ mod tests {
 
         #[test]
         fn parses_not_equal() {
-            let mut scanner = Scanner::new("x <> 5".to_string());
+            let mut scanner = Scanner::new("x <> 5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1790,7 +1789,7 @@ mod tests {
 
         #[test]
         fn parses_less_than() {
-            let mut scanner = Scanner::new("x < 5".to_string());
+            let mut scanner = Scanner::new("x < 5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1809,7 +1808,7 @@ mod tests {
 
         #[test]
         fn parses_greater_than() {
-            let mut scanner = Scanner::new("x > 5".to_string());
+            let mut scanner = Scanner::new("x > 5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1828,7 +1827,7 @@ mod tests {
 
         #[test]
         fn parses_less_than_or_equal() {
-            let mut scanner = Scanner::new("x <= 5".to_string());
+            let mut scanner = Scanner::new("x <= 5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1847,7 +1846,7 @@ mod tests {
 
         #[test]
         fn parses_greater_than_or_equal() {
-            let mut scanner = Scanner::new("x >= 5".to_string());
+            let mut scanner = Scanner::new("x >= 5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1867,7 +1866,7 @@ mod tests {
         #[test]
         fn comparison_has_lower_precedence_than_arithmetic() {
             // 1 + 2 = 3 should parse as (1 + 2) = 3, not 1 + (2 = 3)
-            let mut scanner = Scanner::new("1 + 2 = 3".to_string());
+            let mut scanner = Scanner::new("1 + 2 = 3");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1911,7 +1910,7 @@ mod tests {
 
         #[test]
         fn parses_and_operation() {
-            let mut scanner = Scanner::new("x AND y".to_string());
+            let mut scanner = Scanner::new("x AND y");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1930,7 +1929,7 @@ mod tests {
 
         #[test]
         fn parses_or_operation() {
-            let mut scanner = Scanner::new("x OR y".to_string());
+            let mut scanner = Scanner::new("x OR y");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1949,7 +1948,7 @@ mod tests {
 
         #[test]
         fn parses_xor_operation() {
-            let mut scanner = Scanner::new("x XOR y".to_string());
+            let mut scanner = Scanner::new("x XOR y");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -1969,7 +1968,7 @@ mod tests {
         #[test]
         fn logical_and_has_higher_precedence_than_or() {
             // x OR y AND z should parse as x OR (y AND z), not (x OR y) AND z
-            let mut scanner = Scanner::new("x OR y AND z".to_string());
+            let mut scanner = Scanner::new("x OR y AND z");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2009,7 +2008,7 @@ mod tests {
         #[test]
         fn comparison_has_higher_precedence_than_logical() {
             // x = 5 AND y = 10 should parse as (x = 5) AND (y = 10)
-            let mut scanner = Scanner::new("x = 5 AND y = 10".to_string());
+            let mut scanner = Scanner::new("x = 5 AND y = 10");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2053,7 +2052,7 @@ mod tests {
 
         #[test]
         fn parses_negation() {
-            let mut scanner = Scanner::new("-5".to_string());
+            let mut scanner = Scanner::new("-5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2081,7 +2080,7 @@ mod tests {
 
         #[test]
         fn parses_not_operation() {
-            let mut scanner = Scanner::new("NOT flag".to_string());
+            let mut scanner = Scanner::new("NOT flag");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2110,7 +2109,7 @@ mod tests {
         #[test]
         fn unary_has_higher_precedence_than_addition() {
             // -1 + 2 should parse as (-1) + 2, not -(1 + 2)
-            let mut scanner = Scanner::new("-1 + 2".to_string());
+            let mut scanner = Scanner::new("-1 + 2");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2150,7 +2149,7 @@ mod tests {
         #[test]
         fn double_negation() {
             // --5 should parse as -(-5)
-            let mut scanner = Scanner::new("--5".to_string());
+            let mut scanner = Scanner::new("--5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2183,7 +2182,7 @@ mod tests {
 
         #[test]
         fn parses_simple_parenthesized_expression() {
-            let mut scanner = Scanner::new("(5)".to_string());
+            let mut scanner = Scanner::new("(5)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2203,7 +2202,7 @@ mod tests {
         #[test]
         fn parentheses_override_precedence() {
             // (1 + 2) * 3 should parse as multiplication with (1 + 2) as left operand
-            let mut scanner = Scanner::new("(1 + 2) * 3".to_string());
+            let mut scanner = Scanner::new("(1 + 2) * 3");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2243,7 +2242,7 @@ mod tests {
         #[test]
         fn nested_parentheses() {
             // ((5)) should parse as just 5
-            let mut scanner = Scanner::new("((5))".to_string());
+            let mut scanner = Scanner::new("((5))");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2263,7 +2262,7 @@ mod tests {
         #[test]
         fn parentheses_with_unary() {
             // -(1 + 2) should parse as negation of (1 + 2)
-            let mut scanner = Scanner::new("-(1 + 2)".to_string());
+            let mut scanner = Scanner::new("-(1 + 2)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2296,7 +2295,7 @@ mod tests {
 
         #[test]
         fn parses_function_call_with_no_arguments() {
-            let mut scanner = Scanner::new("TimeIntoInterval()".to_string());
+            let mut scanner = Scanner::new("TimeIntoInterval()");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2316,7 +2315,7 @@ mod tests {
 
         #[test]
         fn parses_function_call_with_single_argument() {
-            let mut scanner = Scanner::new("Sqrt(16)".to_string());
+            let mut scanner = Scanner::new("Sqrt(16)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2343,7 +2342,7 @@ mod tests {
 
         #[test]
         fn parses_function_call_with_multiple_arguments() {
-            let mut scanner = Scanner::new("Scan(1, Temp_C, 0)".to_string());
+            let mut scanner = Scanner::new("Scan(1, Temp_C, 0)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2369,7 +2368,7 @@ mod tests {
         #[test]
         fn parses_function_call_with_expression_arguments() {
             // Max(1 + 2, 5) - function with binary operation as argument
-            let mut scanner = Scanner::new("Max(1 + 2, 5)".to_string());
+            let mut scanner = Scanner::new("Max(1 + 2, 5)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2395,7 +2394,7 @@ mod tests {
         #[test]
         fn parses_nested_function_calls() {
             // Avg(Max(1, 2), 3) - nested function calls
-            let mut scanner = Scanner::new("Avg(Max(1, 2), 3)".to_string());
+            let mut scanner = Scanner::new("Avg(Max(1, 2), 3)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2433,7 +2432,7 @@ mod tests {
 
         #[test]
         fn parses_simple_array_access() {
-            let mut scanner = Scanner::new("Data[0]".to_string());
+            let mut scanner = Scanner::new("Data[0]");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2464,7 +2463,7 @@ mod tests {
 
         #[test]
         fn parses_array_access_with_variable_index() {
-            let mut scanner = Scanner::new("Temp_C[i]".to_string());
+            let mut scanner = Scanner::new("Temp_C[i]");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2496,7 +2495,7 @@ mod tests {
         #[test]
         fn parses_array_access_with_expression_index() {
             // Data[i + 1] - expression as index
-            let mut scanner = Scanner::new("Data[i + 1]".to_string());
+            let mut scanner = Scanner::new("Data[i + 1]");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2520,7 +2519,7 @@ mod tests {
         #[test]
         fn parses_multi_dimensional_array_access() {
             // Matrix[1][2] - multi-dimensional array
-            let mut scanner = Scanner::new("Matrix[1][2]".to_string());
+            let mut scanner = Scanner::new("Matrix[1][2]");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2568,7 +2567,7 @@ mod tests {
         #[test]
         fn parses_simple_assignment_to_variable() {
             // x = 5
-            let mut scanner = Scanner::new("x = 5".to_string());
+            let mut scanner = Scanner::new("x = 5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2601,7 +2600,7 @@ mod tests {
         #[test]
         fn parses_assignment_with_expression_as_value() {
             // x = 1 + 2
-            let mut scanner = Scanner::new("x = 1 + 2".to_string());
+            let mut scanner = Scanner::new("x = 1 + 2");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2631,7 +2630,7 @@ mod tests {
         #[test]
         fn parses_array_element_assignment() {
             // Data[0] = 5
-            let mut scanner = Scanner::new("Data[0] = 5".to_string());
+            let mut scanner = Scanner::new("Data[0] = 5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2667,7 +2666,7 @@ mod tests {
         #[test]
         fn parses_array_element_assignment_with_variable_index() {
             // Data[i] = 10
-            let mut scanner = Scanner::new("Data[i] = 10".to_string());
+            let mut scanner = Scanner::new("Data[i] = 10");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2701,7 +2700,7 @@ mod tests {
         #[test]
         fn parses_multi_dimensional_array_assignment() {
             // Matrix[1][2] = 100
-            let mut scanner = Scanner::new("Matrix[1][2] = 100".to_string());
+            let mut scanner = Scanner::new("Matrix[1][2] = 100");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2741,7 +2740,7 @@ mod tests {
         #[test]
         fn parses_array_element_assignment_with_expression_value() {
             // Data[0] = x + 1
-            let mut scanner = Scanner::new("Data[0] = x + 1".to_string());
+            let mut scanner = Scanner::new("Data[0] = x + 1");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2774,7 +2773,7 @@ mod tests {
         #[test]
         fn parses_public_declaration_without_type() {
             // Public Temp_C
-            let mut scanner = Scanner::new("Public Temp_C".to_string());
+            let mut scanner = Scanner::new("Public Temp_C");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2804,7 +2803,7 @@ mod tests {
         #[test]
         fn parses_public_declaration_with_type_annotation() {
             // Public Temp_C As Float
-            let mut scanner = Scanner::new("Public Temp_C As Float".to_string());
+            let mut scanner = Scanner::new("Public Temp_C As Float");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2834,7 +2833,7 @@ mod tests {
         #[test]
         fn parses_dim_declaration() {
             // Dim i
-            let mut scanner = Scanner::new("Dim i".to_string());
+            let mut scanner = Scanner::new("Dim i");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2865,7 +2864,7 @@ mod tests {
         #[allow(clippy::approx_constant)]
         fn parses_const_declaration_with_initializer() {
             // Const PI = 3.14
-            let mut scanner = Scanner::new("Const PI = 3.14".to_string());
+            let mut scanner = Scanner::new("Const PI = 3.14");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2901,7 +2900,7 @@ mod tests {
         #[test]
         fn parses_array_declaration_with_single_dimension() {
             // Public Data(100)
-            let mut scanner = Scanner::new("Public Data(100)".to_string());
+            let mut scanner = Scanner::new("Public Data(100)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2940,7 +2939,7 @@ mod tests {
         #[test]
         fn parses_array_declaration_with_multiple_dimensions() {
             // Dim Matrix(10, 20)
-            let mut scanner = Scanner::new("Dim Matrix(10, 20)".to_string());
+            let mut scanner = Scanner::new("Dim Matrix(10, 20)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -2976,7 +2975,7 @@ mod tests {
         #[test]
         fn parses_array_declaration_with_type_annotation() {
             // Public Temps(5) As Float
-            let mut scanner = Scanner::new("Public Temps(5) As Float".to_string());
+            let mut scanner = Scanner::new("Public Temps(5) As Float");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3006,7 +3005,7 @@ mod tests {
         #[test]
         fn parses_array_declaration_with_expression_dimension() {
             // Public Buffer(MAX_SIZE)
-            let mut scanner = Scanner::new("Public Buffer(MAX_SIZE)".to_string());
+            let mut scanner = Scanner::new("Public Buffer(MAX_SIZE)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3036,7 +3035,7 @@ mod tests {
         #[test]
         fn parses_multiple_variable_declarations_with_comma() {
             // Public PTemp, Batt_volt
-            let mut scanner = Scanner::new("Public PTemp, Batt_volt".to_string());
+            let mut scanner = Scanner::new("Public PTemp, Batt_volt");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3095,7 +3094,7 @@ mod tests {
         #[test]
         fn parses_three_variable_declarations_with_comma() {
             // Dim x, y, z
-            let mut scanner = Scanner::new("Dim x, y, z".to_string());
+            let mut scanner = Scanner::new("Dim x, y, z");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3127,7 +3126,7 @@ mod tests {
         #[test]
         fn parses_function_call_as_statement() {
             // Scan(1, Temp_C, 0)
-            let mut scanner = Scanner::new("Scan(1, Temp_C, 0)".to_string());
+            let mut scanner = Scanner::new("Scan(1, Temp_C, 0)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3156,7 +3155,7 @@ mod tests {
         #[test]
         fn parses_function_call_with_no_arguments_as_statement() {
             // TimeIntoInterval()
-            let mut scanner = Scanner::new("TimeIntoInterval()".to_string());
+            let mut scanner = Scanner::new("TimeIntoInterval()");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3184,7 +3183,7 @@ mod tests {
         #[test]
         fn parses_begin_prog_statement() {
             // BeginProg
-            let mut scanner = Scanner::new("BeginProg".to_string());
+            let mut scanner = Scanner::new("BeginProg");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3204,7 +3203,7 @@ mod tests {
         #[test]
         fn parses_end_prog_statement() {
             // EndProg
-            let mut scanner = Scanner::new("EndProg".to_string());
+            let mut scanner = Scanner::new("EndProg");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3226,7 +3225,7 @@ mod tests {
             // BeginProg
             // EndProg
             let source = "BeginProg\nEndProg".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3252,7 +3251,7 @@ mod tests {
         fn parses_data_table_with_arguments() {
             // DataTable("MinMax", 1, -1)
             let source = "DataTable(\"MinMax\", 1, -1)".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3297,7 +3296,7 @@ mod tests {
         #[test]
         fn parses_end_table_statement() {
             // EndTable
-            let mut scanner = Scanner::new("EndTable".to_string());
+            let mut scanner = Scanner::new("EndTable");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3322,7 +3321,7 @@ mod tests {
             //   x = 10
             // EndTable
             let source = "DataTable(\"MinMax\", 1, -1)\n  x = 10\nEndTable".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3364,7 +3363,7 @@ mod tests {
         #[test]
         fn parses_nextscan_statement() {
             // NextScan
-            let mut scanner = Scanner::new("NextScan".to_string());
+            let mut scanner = Scanner::new("NextScan");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3396,7 +3395,7 @@ mod tests {
             //   y = 10
             // EndIf
             let source = "If x > 5 Then\n  y = 10\nEndIf".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3432,7 +3431,7 @@ mod tests {
             //   y = 0
             // EndIf
             let source = "If x > 5 Then\n  y = 10\nElse\n  y = 0\nEndIf".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3473,7 +3472,7 @@ mod tests {
             //   x = x + 1
             // Next
             let source = "For i = 1 To 10\n  x = x + 1\nNext".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3515,7 +3514,7 @@ mod tests {
             //   Scan(i, Temp_C, 0)
             // Next
             let source = "For i = 0 To 100 Step 10\n  Scan(i, Temp_C, 0)\nNext".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3563,7 +3562,7 @@ mod tests {
             // Next
             let source =
                 "For i = start_val To end_val Step step_val\n  x = i * 2\nNext".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3621,7 +3620,7 @@ mod tests {
             //   x = x + 1
             // Loop
             let source = "Do While x < 10\n  x = x + 1\nLoop".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3665,7 +3664,7 @@ mod tests {
             //   x = x + 1
             // Loop While x < 10
             let source = "Do\n  x = x + 1\nLoop While x < 10".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3709,7 +3708,7 @@ mod tests {
             //   Scan(1, Temp_C, 0)
             // Loop
             let source = "Do\n  Scan(1, Temp_C, 0)\nLoop".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3754,7 +3753,7 @@ mod tests {
             //   GetValue = 42
             // EndFunction
             let source = "Function GetValue\n  GetValue = 42\nEndFunction".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3783,7 +3782,7 @@ mod tests {
             //   Add = a + b
             // EndFunction
             let source = "Function Add(a, b)\n  Add = a + b\nEndFunction".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3814,7 +3813,7 @@ mod tests {
             //   x = 0
             // EndSub
             let source = "Sub Initialize\n  x = 0\nEndSub".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3845,7 +3844,7 @@ mod tests {
             // EndSub
             let source =
                 "Sub UpdateValues(val1, val2, val3)\n  x = val1\n  y = val2\nEndSub".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3882,7 +3881,7 @@ mod tests {
             // \tSample(1, PTemp, FP2)
             // EndTable
             let source = "DataTable(Test, 1, -1)\n\tSample(1, PTemp, FP2)\nEndTable".to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3921,7 +3920,7 @@ mod tests {
             let source =
                 "Scan(1, Sec, 0, 0)\n\t\tPanelTemp(PTemp, 60)\n\t\tBattery(Batt_volt)\nNextScan"
                     .to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3964,7 +3963,7 @@ mod tests {
             let source =
                 "BeginProg\n\tScan(1, Sec, 0, 0)\n\t\tPanelTemp(PTemp, 60)\n\tNextScan\nEndProg"
                     .to_string();
-            let mut scanner = Scanner::new(source);
+            let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 

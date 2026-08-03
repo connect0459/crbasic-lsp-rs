@@ -244,7 +244,7 @@ impl LanguageServer for CRBasicLanguageServer {
 
         if let Some(doc) = manager.get(&uri) {
             // Tokenize the document
-            let mut scanner = Scanner::new(doc.text.clone());
+            let mut scanner = Scanner::new(&doc.text);
             let tokens = scanner.scan_tokens();
 
             // Get hover information at position
@@ -311,7 +311,7 @@ impl LanguageServer for CRBasicLanguageServer {
 
         if let Some(doc) = manager.get(&uri) {
             // Tokenize the document
-            let mut scanner = Scanner::new(doc.text.clone());
+            let mut scanner = Scanner::new(&doc.text);
             let tokens = scanner.scan_tokens();
 
             // Extract definitions from AST
@@ -339,7 +339,7 @@ impl LanguageServer for CRBasicLanguageServer {
 
         if let Some(doc) = manager.get(&uri) {
             // Tokenize the document
-            let mut scanner = Scanner::new(doc.text.clone());
+            let mut scanner = Scanner::new(&doc.text);
             let tokens = scanner.scan_tokens();
 
             // Find all references
