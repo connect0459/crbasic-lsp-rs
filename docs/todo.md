@@ -450,7 +450,29 @@
 
 ## Future Enhancements 🚀
 
-- [ ] Code formatting (auto-indent)
+- [x] Code formatting (auto-indent) ✅ Resolved (type-time only)
+  - Added `indentationRules` to `client/language-configuration.json`, so
+    VSCode's built-in editor indents/dedents as you type -- no LSP
+    `textDocument/formatting` provider was added (scoped out; revisit
+    separately if whole-document "Format Document" is wanted)
+  - `increaseIndentPattern` covers block openers (`BeginProg`,
+    `DataTable(`, `Sub`, `Function`, `For`, `Do`, `SlowSequence`,
+    `Select Case`) plus the block-if form (`If ... Then` at end of line,
+    distinct from the one-line `If ... Then stmt` form, which does not
+    indent); `Else`/`ElseIf`/`Case` both dedent their own line and indent
+    the next, matching how `else`/`case` behave in curly-brace languages
+  - `decreaseIndentPattern` covers the matching closers (`EndProg`,
+    `EndTable`, `EndSub`, `EndFunction`, `EndSequence`, `EndSelect`,
+    `EndIf`, `Next`, `Loop`) plus `Else`/`ElseIf`/`Case`; `\b` word
+    boundaries keep `Next` from matching `NextScan` (a real, separate
+    CRBasic keyword)
+  - Both patterns use VSCode's `{pattern, flags}` object form with
+    `flags: "i"` for case-insensitive matching, since CRBasic keywords
+    are case-insensitive
+  - 35 Vitest cases (`client/src/language-configuration.test.ts`,
+    table-driven) exercise the compiled regexes the same way VSCode does
+    (`pattern.test(singleLine)`), covering every block keyword plus the
+    `NextScan`/one-line-`If` false-positive risks
 - [x] Refactoring support (rename variable) ✅ Resolved
   - Added `RenameProvider` (`crates/crbasic-lsp/src/rename.rs`) handling
     `textDocument/rename` and `textDocument/prepareRename`
