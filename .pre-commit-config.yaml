@@ -1,6 +1,4 @@
-# Pre-commit hooks configuration
 repos:
-  # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -8,12 +6,18 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
-        args: ['--maxkb=1000']
+        args: ['--maxkb=1024']
       - id: check-merge-conflict
       - id: mixed-line-ending
         args: ['--fix=lf']
 
-  # Rust formatting
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.23.2
+    hooks:
+      - id: markdownlint-cli2
+        args: ["--fix"]
+        exclude: ^(node_modules|target)/
+
   - repo: local
     hooks:
       - id: cargo-fmt
@@ -23,9 +27,6 @@ repos:
         types: [rust]
         pass_filenames: false
 
-  # Rust linting
-  - repo: local
-    hooks:
       - id: cargo-clippy
         name: cargo clippy
         entry: cargo clippy --all-targets --all-features -- -D warnings
@@ -33,9 +34,6 @@ repos:
         types: [rust]
         pass_filenames: false
 
-  # TypeScript/JavaScript formatting
-  - repo: local
-    hooks:
       - id: prettier
         name: prettier
         entry: bash -c 'cd client && npm run format'
@@ -44,20 +42,9 @@ repos:
         exclude: ^(node_modules|dist|target|pkg)/
         pass_filenames: false
 
-  # TypeScript linting
-  - repo: local
-    hooks:
       - id: eslint
         name: eslint
         entry: bash -c 'cd client && npm run lint'
         language: system
         files: \.ts$
         pass_filenames: false
-
-  # Markdown linting
-  - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.21.0
-    hooks:
-      - id: markdownlint-cli2
-        args: ["--fix"]
-        exclude: ^(node_modules|target)/
