@@ -143,6 +143,8 @@
   - [x] CR200X: 16 char max, 12-char truncation collision detection
   - [x] CR6/GRANITE: 39 char max, 35 char recommended
   - [x] File extension-based model detection
+  - [x] Rules centralized in a `ValidationProfile` per model (see Future
+    Enhancements → Datalogger-specific validation profiles)
 
 ## Phase 4: LSP Server Implementation 📡
 
@@ -277,8 +279,11 @@
   - [x] Program structure (BeginProg, EndProg, DataTable with arguments, EndTable)
   - [x] Control flow structures (If-Then-Else-EndIf, For-Next loops, Do-Loop structures)
   - [x] Function/Subroutine definitions (Function, Sub with parameters)
-- [x] Semantic analyzer tests (28 tests passing)
+- [x] Semantic analyzer tests (23 tests passing)
   - [x] Datalogger model detection (file extension → model mapping, 14 extension tests)
+  - [x] Validation profile thresholds (table-driven across all 4 models:
+    `model_name`, `max_variable_length`, `recommended_variable_length`,
+    `truncation_length`)
   - [x] Variable scope tracking (Public = Global, Dim = Local)
   - [x] Variable name length validation (CR200X: 16 max, CR6: 39 max)
   - [x] Recommended length warnings (CR200X: 12, CR6: 35)
@@ -454,5 +459,22 @@
     rather than VSCode-only (unlike a `contributes.snippets` JSON file)
   - 3 unit tests (`crates/crbasic-lsp/src/completion.rs`) + 1 integration
     test (`crates/crbasic-lsp/tests/lsp_integration.rs`)
-- [ ] Datalogger-specific validation profiles
+- [x] Datalogger-specific validation profiles ✅ Resolved
+  - Added `ValidationProfile` (`crates/crbasic-parser/src/semantic.rs`):
+    a single struct holding every per-model rule (`model_name`,
+    `max_variable_length`, `recommended_variable_length`,
+    `recommended_length_reason`, `truncation_length`)
+  - `DataloggerModel::profile()` is now the sole source of truth; adding a
+    new model means adding one match arm here instead of editing four
+    scattered ones
+  - Removed the now-redundant `max_variable_length()`,
+    `recommended_variable_length()`, `truncation_length()`, and the
+    private `SemanticAnalyzer::model_name()` helper — nothing outside
+    `semantic.rs` called them, and `analyze_variable_declaration` /
+    `check_truncation_collisions` read the profile directly
+  - Consolidated 6 single-fact tests into 1 table-driven test
+    (`each_model_has_its_documented_validation_thresholds`) covering all
+    4 models, avoiding duplicate coverage of the same profile data through
+    two call paths
+  - `ValidationProfile` re-exported from `crbasic-parser`'s crate root
 - [ ] Integration with Campbell Scientific toolchain
