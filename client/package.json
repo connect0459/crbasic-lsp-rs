@@ -58,6 +58,16 @@
         "path": "./syntaxes/crbasic.tmLanguage.json"
       }
     ],
+    "commands": [
+      {
+        "command": "crbasic.restartServer",
+        "title": "CRBasic: Restart Language Server"
+      },
+      {
+        "command": "crbasic.showServerOutput",
+        "title": "CRBasic: Show Server Output"
+      }
+    ],
     "configuration": {
       "title": "CRBasic",
       "properties": {

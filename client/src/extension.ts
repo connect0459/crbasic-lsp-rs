@@ -13,6 +13,7 @@ import {
   ServerOptions,
   TransportKind,
 } from "vscode-languageclient/node";
+import { restartServer, showServerOutput } from "./commands";
 
 let client: LanguageClient | undefined;
 
@@ -72,6 +73,39 @@ function createLanguageClient(context: vscode.ExtensionContext): LanguageClient 
 }
 
 /**
+ * Reports a command result to the user via VSCode's message API
+ *
+ * @param result - The outcome returned by a command handler
+ */
+function reportCommandResult(result: { ok: boolean; message?: string }): void {
+  if (!result.message) {
+    return;
+  }
+
+  if (result.ok) {
+    void vscode.window.showInformationMessage(result.message);
+  } else {
+    void vscode.window.showWarningMessage(result.message);
+  }
+}
+
+/**
+ * Registers the extension's commands (Command Palette entries)
+ *
+ * @param context - The extension context provided by VSCode
+ */
+function registerCommands(context: vscode.ExtensionContext): void {
+  context.subscriptions.push(
+    vscode.commands.registerCommand("crbasic.restartServer", async () => {
+      reportCommandResult(await restartServer(client));
+    }),
+    vscode.commands.registerCommand("crbasic.showServerOutput", () => {
+      reportCommandResult(showServerOutput(client));
+    })
+  );
+}
+
+/**
  * Extension activation function
  *
  * Called when the extension is activated (when a CRBasic file is opened).
@@ -80,6 +114,8 @@ function createLanguageClient(context: vscode.ExtensionContext): LanguageClient 
  */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   console.log("CRBasic LSP extension is activating...");
+
+  registerCommands(context);
 
   try {
     // Create and start the language client
