@@ -345,6 +345,10 @@
   - [x] AST structure tests (2 evergreen tests - all passing, 6 non-evergreen tests removed)
   - [x] Semantic analysis tests (4 tests - all passing)
   - [x] Real-world validation test (1 comprehensive test - all passing)
+- [x] Example program tests (3 tests in `tests/example_programs.rs`) ✅ All passing
+  - [x] Getting-started example has zero diagnostics
+  - [x] Scope-and-copyback example has zero diagnostics
+  - [x] CR200X pitfalls example reproduces the documented errors/warnings
 - [x] LSP feature integration tests (17 tests in `tests/lsp_integration.rs`) ✅ All passing
   - [x] Document synchronization (open, change, close)
   - [x] Diagnostics publishing (valid program, invalid syntax, CR200X truncation warnings)
@@ -387,7 +391,22 @@
   - Updated Testing Strategy with current test results (146 tests)
   - Added Parser Capabilities section
   - Updated Extension Points with future enhancements
-- [ ] Example programs
+- [x] Example programs ✅ Resolved
+  - Added `docs/examples/` with 3 curated, heavily-commented programs
+    distinct from `docs/sample-codes/` (real-world parser regression
+    fixtures): `01-getting-started.CR6` (basic program shape),
+    `02-scope-and-copyback.CR6` (Public-inside-Sub global scope,
+    Function vs Sub parameter copy-back), and
+    `03-cr200x-length-pitfalls.CR1` (deliberately triggers the max-length,
+    recommended-length, and 12-char truncation-collision diagnostics)
+  - Added `docs/examples/README.md` explaining what each file demonstrates
+    and which LSP feature to try (hover, go-to-definition, find
+    references, completion snippets)
+  - Added `crates/crbasic-parser/tests/example_programs.rs` (3 tests) so
+    the examples' documented behavior stays verified against the real
+    analyzer instead of just asserted in prose
+  - Linked from the main `README.md`'s Documentation section and Project
+    Structure tree
 - [ ] Release preparation
 
 ## Known Issues / Technical Debt 🐛
