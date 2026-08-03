@@ -10,4 +10,6 @@ pub mod semantic;
 
 pub use lexer::{Token, TokenKind};
 pub use parser::{ParseError, Parser};
-pub use semantic::{DataloggerModel, SemanticAnalyzer, SemanticError, VariableScope};
+pub use semantic::{
+    DataloggerModel, SemanticAnalyzer, SemanticError, ValidationProfile, VariableScope,
+};

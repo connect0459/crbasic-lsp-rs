@@ -22,6 +22,25 @@ pub enum DataloggerModel {
     Unknown,
 }
 
+/// Model-specific variable name validation rules
+///
+/// Centralizes every per-model rule in one place. Adding support for a new
+/// datalogger model means adding one match arm to
+/// [`DataloggerModel::profile`] instead of editing several scattered ones.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ValidationProfile {
+    /// Human-readable model name used in diagnostic messages
+    pub model_name: &'static str,
+    /// Variable names longer than this are a compile-time error
+    pub max_variable_length: usize,
+    /// Variable names longer than this trigger a warning (`None` = no warning)
+    pub recommended_variable_length: Option<usize>,
+    /// Explanation appended to the recommended-length warning
+    pub recommended_length_reason: &'static str,
+    /// Length variable names are truncated to in output tables (`None` = not truncated)
+    pub truncation_length: Option<usize>,
+}
+
 /// Variable scope classification
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VariableScope {
@@ -93,29 +112,37 @@ impl DataloggerModel {
         }
     }
 
-    /// Returns the maximum variable name length for this model
-    pub fn max_variable_length(&self) -> usize {
+    /// Returns the variable name validation profile for this model
+    pub fn profile(&self) -> ValidationProfile {
         match self {
-            DataloggerModel::CR200X => 16,
-            DataloggerModel::CR6 | DataloggerModel::GRANITE => 39,
-            DataloggerModel::Unknown => 39, // Default to more permissive
-        }
-    }
-
-    /// Returns the recommended variable name length for this model
-    pub fn recommended_variable_length(&self) -> Option<usize> {
-        match self {
-            DataloggerModel::CR200X => Some(12), // 12 char truncation warning
-            DataloggerModel::CR6 | DataloggerModel::GRANITE => Some(35), // Leave room for suffix
-            DataloggerModel::Unknown => None,
-        }
-    }
-
-    /// Returns the truncation length for output processing (CR200X only)
-    pub fn truncation_length(&self) -> Option<usize> {
-        match self {
-            DataloggerModel::CR200X => Some(12),
-            _ => None,
+            DataloggerModel::CR200X => ValidationProfile {
+                model_name: "CR200X",
+                max_variable_length: 16,
+                recommended_variable_length: Some(12), // 12 char truncation warning
+                recommended_length_reason: "Output processing truncates to 12 characters",
+                truncation_length: Some(12),
+            },
+            DataloggerModel::CR6 => ValidationProfile {
+                model_name: "CR6",
+                max_variable_length: 39,
+                recommended_variable_length: Some(35), // Leave room for output suffix
+                recommended_length_reason: "Leave room for output processing suffix",
+                truncation_length: None,
+            },
+            DataloggerModel::GRANITE => ValidationProfile {
+                model_name: "GRANITE",
+                max_variable_length: 39,
+                recommended_variable_length: Some(35),
+                recommended_length_reason: "Leave room for output processing suffix",
+                truncation_length: None,
+            },
+            DataloggerModel::Unknown => ValidationProfile {
+                model_name: "Unknown",
+                max_variable_length: 39, // Default to the more permissive threshold
+                recommended_variable_length: None,
+                recommended_length_reason: "",
+                truncation_length: None,
+            },
         }
     }
 }
@@ -224,15 +251,14 @@ impl SemanticAnalyzer {
             VariableScope::Local
         };
 
+        let profile = self.model.profile();
+
         // Check variable name length
-        let max_length = self.model.max_variable_length();
-        if name.len() > max_length {
+        if name.len() > profile.max_variable_length {
             self.errors.push(SemanticError {
                 message: format!(
                     "Variable name '{}' exceeds maximum length of {} characters for {} model",
-                    name,
-                    max_length,
-                    self.model_name()
+                    name, profile.max_variable_length, profile.model_name
                 ),
                 span,
                 severity: ErrorSeverity::Error,
@@ -240,17 +266,13 @@ impl SemanticAnalyzer {
         }
 
         // Check recommended length
-        if let Some(recommended_length) = self.model.recommended_variable_length()
+        if let Some(recommended_length) = profile.recommended_variable_length
             && name.len() > recommended_length
         {
-            let reason = match self.model {
-                DataloggerModel::CR200X => "Output processing truncates to 12 characters",
-                _ => "Leave room for output processing suffix",
-            };
             self.errors.push(SemanticError {
                 message: format!(
                     "Variable name '{}' exceeds recommended length of {} characters. {}",
-                    name, recommended_length, reason
+                    name, recommended_length, profile.recommended_length_reason
                 ),
                 span,
                 severity: ErrorSeverity::Warning,
@@ -271,7 +293,7 @@ impl SemanticAnalyzer {
 
     /// Checks for truncation collisions in CR200X model
     fn check_truncation_collisions(&mut self) {
-        if let Some(trunc_length) = self.model.truncation_length() {
+        if let Some(trunc_length) = self.model.profile().truncation_length {
             let mut truncated_names: HashMap<String, Vec<&Symbol>> = HashMap::new();
 
             // Group symbols by their truncated names
@@ -299,16 +321,6 @@ impl SemanticAnalyzer {
                     }
                 }
             }
-        }
-    }
-
-    /// Returns a human-readable model name
-    fn model_name(&self) -> &str {
-        match self.model {
-            DataloggerModel::CR200X => "CR200X",
-            DataloggerModel::CR6 => "CR6",
-            DataloggerModel::GRANITE => "GRANITE",
-            DataloggerModel::Unknown => "Unknown",
         }
     }
 }
@@ -397,38 +409,59 @@ mod tests {
             let model = DataloggerModel::from_extension("txt");
             assert_eq!(model, DataloggerModel::Unknown);
         }
+    }
+
+    mod validation_profile {
+        use super::*;
 
         #[test]
-        fn cr200x_max_length_is_16() {
-            assert_eq!(DataloggerModel::CR200X.max_variable_length(), 16);
-        }
+        fn each_model_has_its_documented_validation_thresholds() {
+            let cases = [
+                (
+                    DataloggerModel::CR200X,
+                    ValidationProfile {
+                        model_name: "CR200X",
+                        max_variable_length: 16,
+                        recommended_variable_length: Some(12),
+                        recommended_length_reason: "Output processing truncates to 12 characters",
+                        truncation_length: Some(12),
+                    },
+                ),
+                (
+                    DataloggerModel::CR6,
+                    ValidationProfile {
+                        model_name: "CR6",
+                        max_variable_length: 39,
+                        recommended_variable_length: Some(35),
+                        recommended_length_reason: "Leave room for output processing suffix",
+                        truncation_length: None,
+                    },
+                ),
+                (
+                    DataloggerModel::GRANITE,
+                    ValidationProfile {
+                        model_name: "GRANITE",
+                        max_variable_length: 39,
+                        recommended_variable_length: Some(35),
+                        recommended_length_reason: "Leave room for output processing suffix",
+                        truncation_length: None,
+                    },
+                ),
+                (
+                    DataloggerModel::Unknown,
+                    ValidationProfile {
+                        model_name: "Unknown",
+                        max_variable_length: 39,
+                        recommended_variable_length: None,
+                        recommended_length_reason: "",
+                        truncation_length: None,
+                    },
+                ),
+            ];
 
-        #[test]
-        fn cr6_max_length_is_39() {
-            assert_eq!(DataloggerModel::CR6.max_variable_length(), 39);
-        }
-
-        #[test]
-        fn cr200x_recommended_length_is_12() {
-            assert_eq!(
-                DataloggerModel::CR200X.recommended_variable_length(),
-                Some(12)
-            );
-        }
-
-        #[test]
-        fn cr6_recommended_length_is_35() {
-            assert_eq!(DataloggerModel::CR6.recommended_variable_length(), Some(35));
-        }
-
-        #[test]
-        fn cr200x_truncation_length_is_12() {
-            assert_eq!(DataloggerModel::CR200X.truncation_length(), Some(12));
-        }
-
-        #[test]
-        fn cr6_has_no_truncation() {
-            assert_eq!(DataloggerModel::CR6.truncation_length(), None);
+            for (model, expected) in cases {
+                assert_eq!(model.profile(), expected, "{model:?} profile mismatch");
+            }
         }
     }
 
