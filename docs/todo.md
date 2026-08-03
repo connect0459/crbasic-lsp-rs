@@ -245,7 +245,17 @@
   - [x] Cross-platform support (Windows/Unix)
 - [x] Configuration options
   - [x] crbasic.server.path setting for custom server path
-- [ ] Extension commands (future enhancement)
+- [x] Extension commands ✅ Resolved
+  - Added `crbasic.restartServer` ("CRBasic: Restart Language Server")
+    and `crbasic.showServerOutput` ("CRBasic: Show Server Output") to
+    `contributes.commands` in `client/package.json`
+  - Command-handler decision logic lives in `client/src/commands.ts`,
+    decoupled from the `vscode` module (which only exists inside the
+    Extension Host) via a small `ServerConnection` interface -- so it can
+    be unit tested directly instead of only as a smoke test. `extension.ts`
+    wires these pure functions to `vscode.commands.registerCommand` and
+    the real language client
+  - 4 unit tests (`client/src/commands.test.ts`, Red→Green)
 - [ ] Extension packaging and publishing (future)
 
 ## Phase 7: Testing & Quality 🧪
