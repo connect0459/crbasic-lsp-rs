@@ -239,6 +239,51 @@ mod completion {
             panic!("Expected completion array");
         }
     }
+
+    #[tokio::test]
+    async fn provides_pattern_snippet_completions() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\n\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let completion_params = CompletionParams {
+            text_document_position: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 1,
+                    character: 0,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+            context: None,
+        };
+
+        let result = service.inner().completion(completion_params).await;
+        assert!(result.is_ok(), "Completion should succeed");
+
+        // Verify that multi-statement pattern snippets are present
+        if let Ok(Some(CompletionResponse::Array(items))) = result {
+            let has_scan_loop = items.iter().any(|item| item.label == "ScanLoop");
+            let has_new_program = items.iter().any(|item| item.label == "NewProgram");
+            assert!(has_scan_loop, "Should include 'ScanLoop' pattern snippet");
+            assert!(
+                has_new_program,
+                "Should include 'NewProgram' pattern snippet"
+            );
+        } else {
+            panic!("Expected completion array");
+        }
+    }
 }
 
 mod hover {

@@ -362,10 +362,42 @@ impl CompletionProvider {
         items
     }
 
-    /// Returns all completion items (keywords, built-ins, and user-defined)
+    /// Returns multi-statement pattern snippets for common CRBasic idioms
+    ///
+    /// Unlike the single-keyword snippets in [`Self::get_keyword_completions`],
+    /// these combine several statements into a ready-to-edit block (e.g. a
+    /// full Scan/NextScan loop paired with its CallTable), matching how the
+    /// pattern is actually written in real datalogger programs.
+    pub fn get_pattern_snippet_completions() -> Vec<CompletionItem> {
+        vec![
+            Self::create_pattern_snippet(
+                "ScanLoop",
+                "Scan(${1:Interval}, ${2:Sec}, ${3:0}, ${4:0})\n\t$0\n\tCallTable(${5:TableName})\nNextScan",
+                "Scan/NextScan loop with a CallTable call",
+            ),
+            Self::create_pattern_snippet(
+                "SlowSequenceLoop",
+                "SlowSequence\n\tScan(${1:Interval}, ${2:Sec}, ${3:0}, ${4:0})\n\t\t$0\n\t\tCallTable(${5:TableName})\n\tNextScan\nEndSequence",
+                "Low-priority scan sequence for non-time-critical measurements",
+            ),
+            Self::create_pattern_snippet(
+                "DataTableSample",
+                "DataTable(${1:TableName}, ${2:True}, ${3:-1})\n\tSample(${4:1}, ${5:SourceVariable}, ${6:FP2})\n\t$0\nEndTable",
+                "DataTable definition with a Sample output field",
+            ),
+            Self::create_pattern_snippet(
+                "NewProgram",
+                "Const ${1:ScanIntervalSec} = ${2:5}\nPublic ${3:VarName} As ${4:Float}\n\nDataTable(${5:TableName},True,-1)\n\tSample(1,${3:VarName},FP2)\nEndTable\n\nBeginProg\n\tScan(${1:ScanIntervalSec},Sec,0,0)\n\t\t$0\n\t\tCallTable(${5:TableName})\n\tNextScan\nEndProg",
+                "Starter program skeleton: declarations, DataTable, Scan loop",
+            ),
+        ]
+    }
+
+    /// Returns all completion items (keywords, built-ins, pattern snippets, and user-defined)
     pub fn get_all_completions(ast: Option<&Program>) -> Vec<CompletionItem> {
         let mut items = Self::get_keyword_completions();
         items.extend(Self::get_builtin_function_completions());
+        items.extend(Self::get_pattern_snippet_completions());
 
         if let Some(ast) = ast {
             items.extend(Self::get_user_defined_completions(ast));
@@ -499,6 +531,17 @@ impl CompletionProvider {
         CompletionItem {
             label: label.to_string(),
             kind: Some(CompletionItemKind::KEYWORD),
+            detail: Some(detail.to_string()),
+            insert_text: Some(insert_text.to_string()),
+            insert_text_format: Some(InsertTextFormat::SNIPPET),
+            ..Default::default()
+        }
+    }
+
+    fn create_pattern_snippet(label: &str, insert_text: &str, detail: &str) -> CompletionItem {
+        CompletionItem {
+            label: label.to_string(),
+            kind: Some(CompletionItemKind::SNIPPET),
             detail: Some(detail.to_string()),
             insert_text: Some(insert_text.to_string()),
             insert_text_format: Some(InsertTextFormat::SNIPPET),
@@ -785,6 +828,61 @@ mod tests {
                 .find(|c| c.label == "Temperature")
                 .unwrap();
             assert!(temp.detail.as_ref().unwrap().contains("Float"));
+        }
+    }
+
+    mod pattern_snippet_completions {
+        use super::*;
+
+        #[test]
+        fn returns_pattern_snippet_completions() {
+            let completions = CompletionProvider::get_pattern_snippet_completions();
+
+            assert!(!completions.is_empty());
+        }
+
+        #[test]
+        fn includes_expected_patterns_with_snippet_kind() {
+            let completions = CompletionProvider::get_pattern_snippet_completions();
+
+            let cases = [
+                ("ScanLoop", "NextScan"),
+                ("SlowSequenceLoop", "EndSequence"),
+                ("DataTableSample", "EndTable"),
+                ("NewProgram", "EndProg"),
+            ];
+
+            for (label, expected_fragment) in cases {
+                let item = completions
+                    .iter()
+                    .find(|c| c.label == label)
+                    .unwrap_or_else(|| panic!("Missing pattern snippet: {label}"));
+
+                assert_eq!(item.kind, Some(CompletionItemKind::SNIPPET));
+                assert_eq!(item.insert_text_format, Some(InsertTextFormat::SNIPPET));
+                let insert_text = item.insert_text.as_ref().expect("Should have insert text");
+                assert!(
+                    insert_text.contains(expected_fragment),
+                    "{label} snippet should contain {expected_fragment}"
+                );
+            }
+        }
+
+        #[test]
+        fn new_program_links_table_name_placeholder_across_declaration_and_usage() {
+            let completions = CompletionProvider::get_pattern_snippet_completions();
+            let new_program = completions
+                .iter()
+                .find(|c| c.label == "NewProgram")
+                .expect("Should include NewProgram snippet");
+            let insert_text = new_program
+                .insert_text
+                .as_ref()
+                .expect("Should have insert text");
+
+            // The table name tabstop must be reused between DataTable and CallTable
+            // so the client fills both in sync as the user edits the placeholder.
+            assert_eq!(insert_text.matches("TableName}").count(), 2);
         }
     }
 
