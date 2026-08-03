@@ -167,6 +167,8 @@
   - [x] Keywords with snippets (control flow, declarations, program structure)
   - [x] Built-in functions (Scan, measurement, math, string, time functions)
   - [x] User-defined variables/functions (extracted from AST)
+  - [x] Multi-statement pattern snippets (`ScanLoop`, `SlowSequenceLoop`,
+    `DataTableSample`, `NewProgram`)
 - [x] Signature help
   - [x] Built-in function signatures (Scan, measurement, math, string, time, etc.)
   - [x] Parameter documentation with descriptions
@@ -281,7 +283,7 @@
   - [x] Variable name length validation (CR200X: 16 max, CR6: 39 max)
   - [x] Recommended length warnings (CR200X: 12, CR6: 35)
   - [x] Truncation collision detection (CR200X 12-char truncation)
-- [x] LSP handler tests (111 unit tests + 16 integration tests = 127 tests passing)
+- [x] LSP handler tests (114 unit tests + 17 integration tests = 131 tests passing)
   - [x] Document manager (open, update, close operations)
   - [x] Document analysis and caching
   - [x] Model detection from file URI
@@ -297,10 +299,12 @@
     - [x] Keyword hover descriptions
     - [x] Position-based token lookup
     - [x] Half-open interval span handling
-  - [x] Completion / IntelliSense (23 tests)
+  - [x] Completion / IntelliSense (26 tests)
     - [x] Keyword completions with snippets
     - [x] Built-in function completions
     - [x] User-defined variable/function completions
+    - [x] Multi-statement pattern snippets (linked tabstops across
+      declaration and usage, e.g. DataTable name shared with CallTable)
     - [x] Completion item kinds and formatting
   - [x] Signature help (24 tests)
     - [x] Function signature lookup
@@ -336,10 +340,10 @@
   - [x] AST structure tests (2 evergreen tests - all passing, 6 non-evergreen tests removed)
   - [x] Semantic analysis tests (4 tests - all passing)
   - [x] Real-world validation test (1 comprehensive test - all passing)
-- [x] LSP feature integration tests (16 tests in `tests/lsp_integration.rs`) ✅ All passing
+- [x] LSP feature integration tests (17 tests in `tests/lsp_integration.rs`) ✅ All passing
   - [x] Document synchronization (open, change, close)
   - [x] Diagnostics publishing (valid program, invalid syntax, CR200X truncation warnings)
-  - [x] Completion / IntelliSense (keywords, user-defined variables)
+  - [x] Completion / IntelliSense (keywords, user-defined variables, pattern snippets)
   - [x] Hover information (keyword descriptions)
   - [x] Signature help (built-in function signatures)
   - [x] Go to definition (variable declaration lookup)
@@ -434,6 +438,21 @@
     returning a `ResponseError` per the LSP spec
   - 6 unit tests (`crates/crbasic-lsp/src/rename.rs`) + 3 integration tests
     (`crates/crbasic-lsp/tests/lsp_integration.rs`)
-- [ ] Snippet library
+- [x] Snippet library ✅ Resolved
+  - Added `CompletionProvider::get_pattern_snippet_completions`
+    (`crates/crbasic-lsp/src/completion.rs`), extending the existing
+    single-keyword snippets with multi-statement CRBasic idioms:
+    `ScanLoop` (Scan/NextScan + CallTable), `SlowSequenceLoop`
+    (SlowSequence/EndSequence wrapping a Scan loop), `DataTableSample`
+    (DataTable + Sample field), and `NewProgram` (a full starter skeleton:
+    Const/Public declarations, DataTable, BeginProg/Scan/EndProg)
+  - `NewProgram` links tabstops across declaration and usage (e.g. the
+    table name typed once fills both the `DataTable` and `CallTable`
+    placeholders), demonstrating linked-placeholder snippet editing
+  - Delivered via the LSP `textDocument/completion` response
+    (`CompletionItemKind::SNIPPET`), keeping snippets editor-agnostic
+    rather than VSCode-only (unlike a `contributes.snippets` JSON file)
+  - 3 unit tests (`crates/crbasic-lsp/src/completion.rs`) + 1 integration
+    test (`crates/crbasic-lsp/tests/lsp_integration.rs`)
 - [ ] Datalogger-specific validation profiles
 - [ ] Integration with Campbell Scientific toolchain
