@@ -171,6 +171,8 @@ We will validate this decision by:
 
 ## Affected Files
 
+### Initial Implementation (2025-11-21)
+
 - `client/syntaxes/crbasic.tmLanguage.json`: TextMate Grammar definition
 - `client/package.json`: Grammar registration in extension manifest
 - `crates/crbasic-lsp/src/keywords.rs`: Shared keyword definitions (future)

@@ -160,6 +160,8 @@ If WASM performance becomes a bottleneck (>100ms parsing time), we will re-evalu
 
 ## Affected Files
 
+### Initial Implementation (2025-11-21)
+
 - `Cargo.toml`: Workspace configuration for Rust crates
 - `crates/crbasic-parser/`: Core parser implementation
 - `crates/crbasic-lsp/`: LSP server implementation
@@ -167,6 +169,13 @@ If WASM performance becomes a bottleneck (>100ms parsing time), we will re-evalu
 - `client/package.json`: WASM dependency management
 - `client/src/extension.ts`: WASM LSP client initialization
 - `.github/workflows/ci.yml`: CI pipeline for WASM builds (future)
+
+### ADR Numbering Fix (2026-08-06)
+
+- `docs/adrs/adr-001-rust-wasm-lsp-architecture.md`: removed the stale
+  "ADR-003: Datalogger model detection strategy (future)" placeholder link
+  once ADR-003 was claimed by a different, unrelated decision (see
+  [ADR-003](./adr-003-release-process.md))
 
 ## Related Decisions
 

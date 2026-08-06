@@ -40,47 +40,105 @@ would hide that dependency.
 
 ## Considered Options
 
-### Versioning: Independent per-package vs. lockstep
+This ADR bundles three coupled decisions (see Context); each is a separate
+options comparison.
 
-- **Independent** (each Cargo crate and the client extension version on its
-  own): matches how a pure library ecosystem would do it, but the client
-  extension has no meaning without a specific server version bundled inside
-  it — an independent scheme would require a compatibility matrix for a
-  1:1:1:1 relationship, which is pure overhead here.
-- **Lockstep** (selected): one version number, set once in
-  `Cargo.toml`'s `[workspace.package] version` (already the source for all
-  three crates via `version.workspace = true`) and mirrored in
-  `client/package.json`. A single number always answers "what version is
-  this extension + server pair".
+### Decision A: Versioning scheme
 
-### Changelog: freeform commit log vs. Keep a Changelog
+#### Option A1: Independent per-package versioning
 
-- **Freeform** (point users at `git log`): commit messages answer "why", not
-  "what shipped in version X for a user"; conventional commit prefixes
-  (`feat`, `fix`, ...) are a developer-facing taxonomy, not release notes.
-- **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/)** (selected): a
-  human-curated `CHANGELOG.md` with an `## [Unreleased]` section that
+**Pros**:
+
+- Matches how a pure library ecosystem would do it — each crate advertises
+  its own compatibility guarantees.
+
+**Cons**:
+
+- The client extension has no meaning without a specific server version
+  bundled inside it; independent versioning would require a compatibility
+  matrix for what is really a 1:1:1:1 relationship, which is pure overhead
+  here.
+
+#### Option A2: Lockstep versioning (Selected)
+
+**Pros**:
+
+- One version number, set once in `Cargo.toml`'s `[workspace.package]
+  version` (already the source for all three crates via
+  `version.workspace = true`) and mirrored in `client/package.json`.
+- A single number always answers "what version is this extension + server
+  pair", with no compatibility matrix to maintain.
+
+**Cons**:
+
+- A change scoped to a single crate still bumps the version of every crate
+  in the workspace.
+
+### Decision B: Changelog format
+
+#### Option B1: Freeform commit log
+
+**Pros**:
+
+- No extra file to maintain; `git log` is always accurate by construction.
+
+**Cons**:
+
+- Commit messages answer "why", not "what shipped in version X for a
+  user"; conventional commit prefixes (`feat`, `fix`, ...) are a
+  developer-facing taxonomy, not release notes.
+
+#### Option B2: Keep a Changelog (Selected)
+
+**Pros**:
+
+- A human-curated `CHANGELOG.md` with an `## [Unreleased]` section that
   accumulates entries as work lands, retitled to `## [X.Y.Z] - YYYY-MM-DD`
-  at release time. Machine-parseable enough to drive release notes
-  automatically (see below), human-readable enough to be the actual release
-  notes.
+  at release time.
+- Machine-parseable enough to drive release notes automatically (see
+  Decision C), human-readable enough to be the actual release notes.
 
-### Automation: manual release notes vs. tag-triggered workflow
+**Cons**:
 
-- **Manual**: whoever cuts the release copies the changelog section into the
-  GitHub Release UI by hand — error-prone (easy to tag a version whose
+- Requires discipline: every user-facing PR must remember to add an entry.
+
+### Decision C: Release automation
+
+#### Option C1: Manual release notes
+
+**Pros**:
+
+- No workflow to write or maintain.
+
+**Cons**:
+
+- Whoever cuts the release copies the changelog section into the GitHub
+  Release UI by hand — error-prone (easy to tag a version whose
   `Cargo.toml`/`package.json` don't actually match) and it is invisible
   whether the tagged commit still passes the quality gates.
-- **Tag-triggered workflow** (selected): pushing a `vX.Y.Z` tag runs
-  `.github/workflows/release.yml`, which (1) asserts the tag matches both
-  `Cargo.toml` and `client/package.json`, (2) re-runs the same fmt/clippy/test
-  and lint/format/type-check/test gates as `ci.yml`, (3) extracts that
-  version's `CHANGELOG.md` section, and (4) creates the GitHub Release with
-  those notes. It deliberately does **not** build or attach a `.vsix`, and
-  does **not** run `vsce publish` — both require the multi-platform
-  packaging gap above to be closed first (tracked in `docs/todo.md`).
+
+#### Option C2: Tag-triggered workflow (Selected)
+
+**Pros**:
+
+- Pushing a `vX.Y.Z` tag runs `.github/workflows/release.yml`, which (1)
+  asserts the tag matches both `Cargo.toml` and `client/package.json`, (2)
+  re-runs the same fmt/clippy/test and lint/format/type-check/test gates as
+  `ci.yml`, (3) extracts that version's `CHANGELOG.md` section, and (4)
+  creates the GitHub Release with those notes.
+
+**Cons**:
+
+- Duplicates `ci.yml`'s quality-gate steps rather than sharing a reusable
+  workflow (see Consequences).
+- Deliberately does **not** build or attach a `.vsix`, and does **not** run
+  `vsce publish` — both require the multi-platform packaging gap (see
+  Context) to be closed first (tracked in `docs/todo.md`).
 
 ## Decision Outcome
+
+**Chosen options**: Option A2 (lockstep SemVer), Option B2 (Keep a
+Changelog), and Option C2 (tag-triggered release workflow).
 
 1. **Versioning**: Lockstep SemVer. Pre-`1.0.0`, a breaking change (removing
    or renaming a public API surface — WASM bindings, LSP capabilities
@@ -136,6 +194,8 @@ We will validate this decision by:
    fast instead of creating an incorrect Release.
 
 ## Affected Files
+
+### Initial Implementation (2026-08-06)
 
 - `CHANGELOG.md` (new): Keep a Changelog record, starting at `[Unreleased]`.
 - `.github/workflows/release.yml` (new): tag-triggered release automation.
