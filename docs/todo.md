@@ -259,6 +259,8 @@
 - [ ] Extension packaging and publishing (future)
   - [ ] Extension icon (image asset + `icon` field in `client/package.json`)
   - [ ] `vsce package` script/config to produce a `.vsix` locally
+    - Blocked on the multi-platform packaging gap (see Known Issues /
+      Technical Debt → Packaging Gap)
   - [ ] VS Code Marketplace publisher account and Personal Access Token
   - [ ] Publish workflow (GitHub Actions `vsce publish` on release tag)
 
@@ -441,11 +443,30 @@
     linker flag for an unrelated project -- not reproducible on a clean CI
     runner), `client`'s lint/format:check/type-check/test (44 tests) all
     pass, and `actionlint` reports no issues on the workflow file itself
-- [ ] Release preparation
-  - [ ] Versioning policy from `0.1.0` (SemVer pre-1.0 conventions, when to
+- [x] Release preparation ✅ Resolved
+  - [x] Versioning policy from `0.1.0` (SemVer pre-1.0 conventions, when to
     cut `1.0.0`)
-  - [ ] GitHub Releases workflow (tag → release notes → artifact upload)
-  - [ ] `CHANGELOG.md` (format and update cadence)
+    - Documented in `docs/adrs/adr-003-release-process.md`: lockstep SemVer
+      across the Cargo workspace and `client/package.json`; pre-1.0 breaking
+      changes bump MINOR, everything else bumps PATCH; `1.0.0` requires
+      Marketplace publication, the multi-platform packaging gap (see new
+      technical-debt item below) closed, and a stable WASM/LSP public API
+  - [x] GitHub Releases workflow (tag → release notes → artifact upload)
+    - Added `.github/workflows/release.yml`, triggered only by pushing a
+      `v*.*.*` tag: asserts the tag matches `Cargo.toml` and
+      `client/package.json`, re-runs the same fmt/clippy/test and
+      lint/format/type-check/test gates as `ci.yml`, extracts that version's
+      `CHANGELOG.md` section, and creates a GitHub Release with those notes
+      via `softprops/action-gh-release`
+    - Deliberately does not build/attach a `.vsix` or run `vsce publish` --
+      both require the multi-platform packaging gap below to be solved
+      first; `actionlint` reports no issues on the new workflow file
+  - [x] `CHANGELOG.md` (format and update cadence)
+    - Added at repo root in Keep a Changelog format, starting with a single
+      `[Unreleased]` section (no tag has ever been pushed yet); cadence is
+      documented in ADR-003: every user-facing change adds an entry under
+      `[Unreleased]` in the same PR, retitled to `[X.Y.Z] - YYYY-MM-DD`
+      immediately before tagging
 
 ## Known Issues / Technical Debt 🐛
 
@@ -456,6 +477,24 @@
 - [x] NextScan keyword not recognized (lexer) ✅ Resolved
 - [x] NextScan as a statement (parser support) ✅ Resolved
 - [x] Tab-indented statements handling ✅ Resolved (lexer already skips tabs correctly)
+
+### Packaging Gap (discovered while designing the release workflow)
+
+- [ ] Multi-platform `.vsix` packaging
+  - `client/scripts/copy-server.js` copies whatever OS's `crbasic-lsp`
+    binary happens to exist at `target/release/` on the build machine, and
+    `client/src/extension.ts`'s `getServerPath` only branches on win32 vs.
+    non-win32 -- there is no per-platform (`win32-x64`, `darwin-arm64`,
+    `linux-x64`, ...) packaging. A `.vsix` built today only works on the OS
+    that built it
+  - This is a drift from
+    [ADR-001](./adrs/adr-001-rust-wasm-lsp-architecture.md)'s stated
+    rationale ("no external binary dependencies... single WASM binary works
+    everywhere"): the client ended up bundling a native binary instead of
+    loading `crbasic-wasm` directly in the extension host
+  - Blocks the remaining Phase 6 "Extension packaging and publishing" items
+    (`vsce package` needs a `--target <platform>` build matrix, one native
+    binary compiled per target, before it can produce a working artifact)
 
 ### Build Warnings
 
