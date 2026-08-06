@@ -1,11 +1,28 @@
 # Changelog
 
-All notable changes to this project are documented in this file.
+<!--
+When cutting a new release, update THREE places in this file:
+
+1. Rename [Unreleased] to [X.Y.Z] with today's date (above).
+2. Update the reference links at the very bottom of this file:
+    - Change [Unreleased] to compare the new tag against HEAD.
+    - Add [X.Y.Z] comparing the new tag against the previous tag.
+3. After the PR is merged, create a GitHub Release (this creates the remote
+   tag). Pull main first so HEAD is the merge commit, then use `--target main`
+   or pass the full 40-character SHA — the GitHub API rejects abbreviated SHAs:
+
+    ```console
+    git checkout main && git pull origin main
+    gh release create vX.Y.Z --title "vX.Y.Z" \
+      --notes-file path/to/gh-release-draft.md \
+      --target main
+    ```
+-->
+
+All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/) under
-the pre-`1.0.0` conventions recorded in
-[ADR-003](./docs/adrs/adr-003-release-process.md).
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
@@ -27,4 +44,6 @@ the pre-`1.0.0` conventions recorded in
   (`.github/workflows/ci.yml`) covering both the Rust workspace and the
   TypeScript client.
 
-[Unreleased]: https://github.com/connect0459/crbasic-lsp-rs/commits/main
+---
+
+[Unreleased]: <https://github.com/connect0459/crbasic-lsp-rs/commits/main>
