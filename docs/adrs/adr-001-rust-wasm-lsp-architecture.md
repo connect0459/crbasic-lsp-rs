@@ -171,7 +171,11 @@ If WASM performance becomes a bottleneck (>100ms parsing time), we will re-evalu
 ## Related Decisions
 
 - [ADR-002](./adr-002-textmate-grammar-first.md): TextMate Grammar for initial syntax highlighting
-- [ADR-003](./adr-003-model-detection-strategy.md): Datalogger model detection strategy (future)
+
+Datalogger model detection strategy was implemented directly as
+`ValidationProfile` (`crates/crbasic-parser/src/semantic.rs`) without a
+dedicated ADR; see `docs/todo.md`'s "Datalogger-specific validation
+profiles" entry for the rationale.
 
 ## References
 
