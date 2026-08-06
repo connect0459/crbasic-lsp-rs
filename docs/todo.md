@@ -258,9 +258,9 @@
   - 4 unit tests (`client/src/commands.test.ts`, Red→Green)
 - [ ] Extension packaging and publishing (future)
   - [ ] Extension icon (image asset + `icon` field in `client/package.json`)
-  - [ ] `vsce package` script/config to produce a `.vsix` locally
-    - Blocked on the multi-platform packaging gap (see Known Issues /
-      Technical Debt → Packaging Gap)
+  - [x] `vsce package` script/config to produce a `.vsix` locally ✅ Resolved
+    - See Known Issues / Technical Debt → Packaging Gap for details
+      ([ADR-004](./adrs/adr-004-multi-platform-packaging.md))
   - [ ] VS Code Marketplace publisher account and Personal Access Token
   - [ ] Publish workflow (GitHub Actions `vsce publish` on release tag)
 
@@ -480,21 +480,41 @@
 
 ### Packaging Gap (discovered while designing the release workflow)
 
-- [ ] Multi-platform `.vsix` packaging
-  - `client/scripts/copy-server.js` copies whatever OS's `crbasic-lsp`
-    binary happens to exist at `target/release/` on the build machine, and
-    `client/src/extension.ts`'s `getServerPath` only branches on win32 vs.
-    non-win32 -- there is no per-platform (`win32-x64`, `darwin-arm64`,
-    `linux-x64`, ...) packaging. A `.vsix` built today only works on the OS
-    that built it
-  - This is a drift from
-    [ADR-001](./adrs/adr-001-rust-wasm-lsp-architecture.md)'s stated
-    rationale ("no external binary dependencies... single WASM binary works
-    everywhere"): the client ended up bundling a native binary instead of
-    loading `crbasic-wasm` directly in the extension host
-  - Blocks the remaining Phase 6 "Extension packaging and publishing" items
-    (`vsce package` needs a `--target <platform>` build matrix, one native
-    binary compiled per target, before it can produce a working artifact)
+- [x] Multi-platform `.vsix` packaging ✅ Resolved
+  - Documented in [ADR-004](./adrs/adr-004-multi-platform-packaging.md):
+    adopted VS Code's platform-specific extension mechanism (one native
+    `.vsix` per target) over a single universal package or an
+    in-extension-host WASM rewrite
+  - Added `client/scripts/targets.js` (VS Code target ↔ Rust triple
+    mapping, the single source of truth), `copy-server.js --target
+    <vscodeTarget>`, `package-vsix.js <target>|all` (runs `vsce package
+    --target` per target), and `place-artifacts.js` (relocates CI-downloaded
+    binaries into the `target/<triple>/release/` layout)
+  - `.github/workflows/release.yml`'s single job split into
+    `verify`/`build`/`package`; `build` is a 6-target matrix covering
+    `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`, `win32-x64`,
+    `win32-arm64` across 3 native runners (macOS and Windows each
+    cross-compile their own second architecture; Linux's `aarch64` leg
+    cross-compiles via `gcc-aarch64-linux-gnu`)
+  - Added a `workflow_dispatch` trigger so the full build+package matrix can
+    be run and inspected (as a workflow artifact) without cutting a real
+    release
+  - Added `client/.vscodeignore` to trim dev-only files from every package
+    now that the bloat multiplies across 6 `.vsix` files instead of 1
+  - **Not yet verified in real CI**: the `linux-arm64` and `win32-arm64`
+    cross-compilation legs. Verified locally instead: both `darwin-x64` and
+    `darwin-arm64` cross-compile correctly on this host, and the packaged
+    `.vsix` for each was confirmed (via `file`) to contain only its own
+    correct-architecture binary. Run the new `workflow_dispatch` trigger at
+    least once before relying on this for a real tagged release
+  - This remains a correctness fix within the current native-binary
+    architecture, not a resolution of
+    [ADR-001](./adrs/adr-001-rust-wasm-lsp-architecture.md)'s original
+    "single WASM binary works everywhere" rationale (see ADR-004's
+    Consequences)
+- [ ] Run `release.yml`'s `workflow_dispatch` trigger at least once to
+  validate the `linux-arm64` and `win32-arm64` cross-compilation legs on
+  real GitHub Actions runners, before the first real tagged release
 
 ### Build Warnings
 
