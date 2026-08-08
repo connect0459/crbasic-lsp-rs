@@ -262,7 +262,19 @@
     - See Known Issues / Technical Debt → Packaging Gap for details
       ([ADR-004](./adrs/adr-004-multi-platform-packaging.md))
   - [ ] VS Code Marketplace publisher account and Personal Access Token
-  - [ ] Publish workflow (GitHub Actions `vsce publish` on release tag)
+  - [x] Publish workflow (GitHub Actions `vsce publish` on release tag) ✅ Resolved
+    - Added a `publish` job to `.github/workflows/release.yml`, running after
+      `package` and gated on `github.event_name == 'push'` (skipped entirely
+      on `workflow_dispatch` dry runs)
+    - Downloads the `vsix-packages` artifact and runs `vsce publish
+      --packagePath ../dist-vsix/*.vsix`, relying on `vsce` inferring each
+      package's target from its own manifest rather than repackaging
+    - Reads the Marketplace token from a `VSCE_PAT` secret (`vsce publish -p`
+      defaults to this env var); if the secret is unset, the step logs
+      `::warning::` and exits 0 instead of failing, since the publisher
+      account and PAT above don't exist yet -- flipping it on later needs no
+      workflow change
+    - `actionlint` reports no issues on the updated workflow file
 
 ## Phase 7: Testing & Quality 🧪
 
