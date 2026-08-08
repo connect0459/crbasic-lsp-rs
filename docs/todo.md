@@ -524,9 +524,19 @@
     [ADR-001](./adrs/adr-001-rust-wasm-lsp-architecture.md)'s original
     "single WASM binary works everywhere" rationale (see ADR-004's
     Consequences)
-- [ ] Run `release.yml`'s `workflow_dispatch` trigger at least once to
+- [x] Run `release.yml`'s `workflow_dispatch` trigger at least once to
   validate the `linux-arm64` and `win32-arm64` cross-compilation legs on
   real GitHub Actions runners, before the first real tagged release
+  ✅ Resolved
+  - Ran via `gh workflow run Release --ref main`:
+    [run 31252687294](https://github.com/connect0459/crbasic-lsp-rs/actions/runs/31252687294)
+  - `verify`, all 6 `build` matrix legs (including `linux-arm64` and
+    `win32-arm64`), and `package` all completed successfully; `publish`
+    correctly reported `skipped` since `workflow_dispatch` isn't
+    `github.event_name == 'push'`
+  - Downloaded artifacts confirm real output: one `server-<target>` binary
+    artifact per target plus a `vsix-packages` artifact containing all 6
+    packaged `.vsix` files (~9.4 MB total)
 
 ### Build Warnings
 
