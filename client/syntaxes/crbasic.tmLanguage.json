@@ -2,7 +2,21 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "CRBasic",
   "scopeName": "source.crbasic",
-  "fileTypes": [".cr1", ".cr1x", ".cr2", ".cr3", ".cr5", ".cr6", ".cr8", ".cr9", ".cr9x", ".c9x", ".cr300", ".crb", ".dld"],
+  "fileTypes": [
+    ".cr1",
+    ".cr1x",
+    ".cr2",
+    ".cr3",
+    ".cr5",
+    ".cr6",
+    ".cr8",
+    ".cr9",
+    ".cr9x",
+    ".c9x",
+    ".cr300",
+    ".crb",
+    ".dld"
+  ],
   "patterns": [
     {
       "include": "#comments"
@@ -78,11 +92,11 @@
     },
     "control-keywords": {
       "name": "keyword.control.crbasic",
-      "match": "(?i)\\b(If|Then|Else|ElseIf|EndIf|For|To|Step|Next|Do|While|Until|Loop|Exit|Continue|Select|Case|EndSelect)\\b"
+      "match": "(?i)\\b(If|Then|Else|ElseIf|EndIf|For|To|Step|Next|Do|Loop|While|ExitFor|ExitDo|Case|Is|Select|EndSelect|ExitSelect|Continue|Break|GoTo)\\b"
     },
     "declaration-keywords": {
       "name": "storage.type.crbasic",
-      "match": "(?i)\\b(Public|Dim|Const|Alias|As|Units|Long|Float|String|Boolean|FP2|IEEE4|IEEE8)\\b"
+      "match": "(?i)\\b(Public|Dim|Const|Alias|As|Units)\\b"
     },
     "structure-keywords": {
       "patterns": [
@@ -92,7 +106,7 @@
         },
         {
           "name": "keyword.control.datatable.crbasic",
-          "match": "(?i)\\b(DataTable|EndTable|DataInterval)\\b"
+          "match": "(?i)\\b(DataTable|EndTable)\\b"
         },
         {
           "name": "keyword.control.function.crbasic",
@@ -100,13 +114,13 @@
         },
         {
           "name": "keyword.control.scan.crbasic",
-          "match": "(?i)\\b(Scan|NextScan)\\b"
+          "match": "(?i)\\b(Scan|SlowSequence|EndSequence|NextScan)\\b"
         }
       ]
     },
     "builtin-functions-measurement": {
       "name": "support.function.measurement.crbasic",
-      "match": "(?i)\\b(Battery|PanelTemp|Voltage|VoltSE|VoltDiff|BrHalf|BrFull|Therm107|Therm108|Therm109|TCDiff|Resistance|PeriodAvg|PulseCount|FreqCount|Thermocouple|PortSet|SDI12Recorder|PulsePort|ExciteV|BrHalf3W|BrHalf4W|BrFull6W|TCDiff|TCSE)\\b"
+      "match": "(?i)\\b(Battery|PanelTemp|Voltage|VoltSe|VoltDiff|BrHalf|BrFull|Therm107|Therm108|Therm109|TCDiff|Resistance|PeriodAvg|PulseCount|FreqCount|Thermocouple|PortSet|PulsePort|ExciteV|BrHalf3W|BrHalf4W|BrFull6W|TCSE)\\b"
     },
     "builtin-functions-communication": {
       "name": "support.function.communication.crbasic",
@@ -114,25 +128,25 @@
     },
     "builtin-functions-data": {
       "name": "support.function.data.crbasic",
-      "match": "(?i)\\b(Sample|Average|StdDev|Variance|Minimum|Maximum|Totalize|Histogram|FieldNames|TableName|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList)\\b"
+      "match": "(?i)\\b(Sample|Average|StdDev|Variance|Minimum|Maximum|Totalize|Histogram|FieldNames|TableName|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval)\\b"
     },
     "builtin-functions-general": {
       "patterns": [
         {
           "name": "support.function.string.crbasic",
-          "match": "(?i)\\b(SplitStr|FormatFloat|FormatLong|Mid|Left|Right|Len|InStr|LCase|UCase|Trim|RTrim|LTrim|Replace|Chr|Asc|StrComp|CheckSum|HexToDec|DecToHex)\\b"
+          "match": "(?i)\\b(SplitStr|FormatFloat|FormatLong|Mid|Left|Right|Len|InStr|LCase|UCase|LowerCase|UpperCase|Trim|RTrim|LTrim|Replace|Chr|Asc|StrComp|CheckSum|HexToDec|DecToHex)\\b"
         },
         {
           "name": "support.function.math.crbasic",
-          "match": "(?i)\\b(ABS|SGN|SQR|EXP|LN|LOG|SIN|COS|TAN|ASIN|ACOS|ATAN|ATN2|INT|FIX|ROUND|MOD|RND|Ceiling|Floor)\\b"
+          "match": "(?i)\\b(Abs|Sgn|Sqr|Sqrt|Exp|Ln|Log|Log10|Sin|Cos|Tan|Asin|Acos|Atn|Atn2|Int|Fix|Round|Rnd|Ceiling|Floor)\\b"
         },
         {
           "name": "support.function.time.crbasic",
-          "match": "(?i)\\b(RealTime|TimeIntoInterval|Timer|Delay|CallTable|SetStatus|Watch|MoveBytes|ArrayLength|NAN|IsNAN)\\b"
+          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|ExitScan|CallTable|SetStatus|Watch|MoveBytes|ArrayLength|NaN|IsNaN)\\b"
         },
         {
           "name": "support.function.logical.crbasic",
-          "match": "(?i)\\b(IIF|NOT|AND|OR|XOR|TRUE|FALSE)\\b"
+          "match": "(?i)\\b(IIf)\\b"
         }
       ]
     },
@@ -149,6 +163,10 @@
         {
           "name": "keyword.operator.logical.crbasic",
           "match": "(?i)\\b(AND|OR|NOT|XOR)\\b"
+        },
+        {
+          "name": "constant.language.boolean.crbasic",
+          "match": "(?i)\\b(True|False)\\b"
         },
         {
           "name": "keyword.operator.assignment.crbasic",

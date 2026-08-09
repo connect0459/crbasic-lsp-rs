@@ -4,10 +4,12 @@
 //! which is used in Campbell Scientific data loggers.
 
 pub mod ast;
+pub mod keywords;
 pub mod lexer;
 pub mod parser;
 pub mod semantic;
 
+pub use keywords::{BUILTIN_FUNCTIONS, LANGUAGE_KEYWORDS};
 pub use lexer::{Token, TokenKind};
 pub use parser::{ParseError, Parser};
 pub use semantic::{
