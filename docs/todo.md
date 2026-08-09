@@ -697,9 +697,25 @@ complete; none of these were previously tracked anywhere in this file.
     `crates/crbasic-lsp/src/completion.rs::get_builtin_function_completions`;
     never built, so the two lists have since diverged independently
 - [ ] Additional standard LSP providers not yet implemented
-  - `codeActionProvider` (quick fixes for diagnostics), `foldingRangeProvider`,
-    `workspaceSymbolProvider`, `inlayHintProvider`, `codeLensProvider`,
-    `documentHighlightProvider`, `callHierarchyProvider`
+  - [x] `documentHighlightProvider` ✅ Resolved
+    - Added `DocumentHighlightProvider`
+      (`crates/crbasic-lsp/src/document_highlight.rs`), reusing
+      `ReferencesProvider::find_identifier_at_position` and
+      `find_all_references` rather than duplicating the identifier lookup
+      and occurrence search -- a document highlight is the same query as
+      Find All References, scoped to the open document instead of the
+      whole workspace
+      - Every occurrence is reported with `DocumentHighlightKind::TEXT`;
+        CRBasic's AST has no per-token read/write distinction, so a finer
+        `Read`/`Write` classification isn't available yet
+      - Wired into `crates/crbasic-lsp/src/backend.rs`:
+        `document_highlight_provider` capability plus the
+        `textDocument/documentHighlight` handler
+      - 5 unit tests (`document_highlight.rs`) + 2 integration tests
+        (`crates/crbasic-lsp/tests/lsp_integration.rs`)
+  - Still not implemented: `codeActionProvider` (quick fixes for
+    diagnostics), `foldingRangeProvider`, `workspaceSymbolProvider`,
+    `inlayHintProvider`, `codeLensProvider`, `callHierarchyProvider`
   - Diagnostics also never populate `related_information` (hardcoded to
     `None` in both places `backend.rs` builds a `Diagnostic`)
 - [ ] Rust test coverage measurement in CI
