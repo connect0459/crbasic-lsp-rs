@@ -107,6 +107,9 @@ jobs:
           filters: |
             code:
               - 'client/**'
+              - 'scripts/generate-grammar.js'
+              - 'crates/crbasic-parser/keywords.json'
+              - 'crates/crbasic-parser/src/keywords_generated.rs'
               - '.github/workflows/ci.yml'
 
       - name: Set up Node.js
@@ -141,6 +144,11 @@ jobs:
         if: steps.filter.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
         shell: bash
         run: npm test -- --run
+
+      - name: Check generated grammar is up to date
+        if: steps.filter.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: node ../scripts/generate-grammar.js --check
 
       - name: Skip CI checks (no relevant changes)
         if: steps.filter.outputs.code != 'true' && github.event_name != 'workflow_dispatch'

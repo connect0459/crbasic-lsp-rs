@@ -25,12 +25,17 @@ test-client:
 build-wasm:
     cd crates/crbasic-wasm && wasm-pack build --target web
 
+# Regenerate keywords_generated.rs and crbasic.tmLanguage.json from keywords.json
+generate-grammar:
+    node scripts/generate-grammar.js
+
 # Verify code quality and all workspaces (matches CI)
 verify:
     cargo fmt --all --check
     cargo clippy --all-targets --all-features -- -D warnings
     just test-rust
     just coverage
+    node scripts/generate-grammar.js --check
     cd client && npm run lint
     cd client && npm run format:check
     just test-client
