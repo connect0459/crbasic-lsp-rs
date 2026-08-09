@@ -165,6 +165,11 @@ impl<'a> Scanner<'a> {
                 let span = Span::new(start_pos, end_pos);
                 Some(Token::new(TokenKind::Caret, "^", span))
             }
+            '&' => {
+                let end_pos = Position::new(self.line, self.column);
+                let span = Span::new(start_pos, end_pos);
+                Some(Token::new(TokenKind::Ampersand, "&", span))
+            }
             '=' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
@@ -988,6 +993,17 @@ mod tests {
             assert_eq!(tokens[3].kind, TokenKind::Slash);
             assert_eq!(tokens[4].kind, TokenKind::Caret);
             assert_eq!(tokens[5].kind, TokenKind::Eof);
+        }
+
+        #[test]
+        fn recognizes_string_concatenation_operator() {
+            let mut scanner = Scanner::new("&");
+            let tokens = scanner.scan_tokens();
+
+            assert_eq!(tokens.len(), 2);
+
+            assert_eq!(tokens[0].kind, TokenKind::Ampersand);
+            assert_eq!(tokens[1].kind, TokenKind::Eof);
         }
 
         #[test]

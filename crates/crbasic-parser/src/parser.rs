@@ -1517,7 +1517,7 @@ impl<'a> Parser<'a> {
         Ok(left)
     }
 
-    /// Parses additive expressions (+, -)
+    /// Parses additive expressions (+, -, &)
     fn parse_additive(&mut self) -> Result<Expression, ParseError> {
         let mut left = self.parse_multiplicative()?;
 
@@ -1525,6 +1525,7 @@ impl<'a> Parser<'a> {
             let operator = match &self.peek().kind {
                 TokenKind::Plus => crate::ast::BinaryOperator::Add,
                 TokenKind::Minus => crate::ast::BinaryOperator::Subtract,
+                TokenKind::Ampersand => crate::ast::BinaryOperator::Concatenate,
                 _ => break,
             };
 
@@ -2137,6 +2138,57 @@ mod tests {
                             assert_eq!(*operator, BinaryOperator::Modulo);
                         } else {
                             panic!("Expected modulo for left operand");
+                        }
+                    }
+                    _ => panic!("Expected binary operation"),
+                }
+            } else {
+                panic!("Expected expression statement");
+            }
+        }
+
+        #[test]
+        fn parses_string_concatenation() {
+            let source = r#""Table_" & "Data""#.to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::BinaryOp { operator, .. } => {
+                        assert_eq!(*operator, BinaryOperator::Concatenate);
+                    }
+                    _ => panic!("Expected binary operation"),
+                }
+            } else {
+                panic!("Expected expression statement");
+            }
+        }
+
+        #[test]
+        fn concatenation_has_same_precedence_as_addition() {
+            // "a" & "b" + "c" should parse as ("a" & "b") + "c", left-to-right
+            let source = r#""a" & "b" + "c""#.to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::BinaryOp { left, operator, .. } => {
+                        assert_eq!(*operator, BinaryOperator::Add);
+
+                        if let Expression::BinaryOp { operator, .. } = &**left {
+                            assert_eq!(*operator, BinaryOperator::Concatenate);
+                        } else {
+                            panic!("Expected concatenation for left operand");
                         }
                     }
                     _ => panic!("Expected binary operation"),

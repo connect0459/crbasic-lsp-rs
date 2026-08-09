@@ -70,6 +70,8 @@ pub enum TokenKind<'a> {
     Slash,
     /// Power operator (^)
     Caret,
+    /// String concatenation operator (&)
+    Ampersand,
     /// Assignment/Equality operator (=)
     Equal,
     /// Less than (<)

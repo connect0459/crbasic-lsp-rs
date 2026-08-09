@@ -339,6 +339,8 @@ pub enum BinaryOperator {
     Power,
     /// Modulo operator (MOD)
     Modulo,
+    /// String concatenation operator (&)
+    Concatenate,
 
     /// Equality operator (=)
     Equal,
