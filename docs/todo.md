@@ -927,11 +927,26 @@ complete; none of these were previously tracked anywhere in this file.
     reliable enough to gate CI on. The stated 75% branch target remains
     unverified
   - `just coverage` is also wired into `just verify`
-- [ ] Dependency review: `tower-lsp`
-  - `tower-lsp = "0.20"` is the last release of the upstream crate; a
-    maintained fork (`tower-lsp-f`, currently 0.26.0) exists -- needs a
-    deliberate stay-vs-migrate decision rather than silent drift, since
-    this touches [ADR-001](./adrs/adr-001-rust-wasm-lsp-architecture.md)
+- [x] Dependency review: `tower-lsp` ✅ Resolved
+  - Documented in [ADR-005](./adrs/adr-005-tower-lsp-server-migration.md):
+    migrated from `tower-lsp = "0.20"` (last released 2024-08-15, no newer
+    version since) to `tower-lsp-server = "0.23"`, the `tower-lsp-community`
+    organization's actively-released fork (1.4M+ downloads, updated
+    2025-12-07) -- chosen over the also-considered `tower-lsp-f` personal
+    fork for its stronger community-governance signal
+  - Beyond the crate rename (`tower_lsp` -> `tower_lsp_server`,
+    `lsp_types` -> `ls_types`), pulled in three real API changes across
+    `crates/crbasic-lsp/src`: `Url` replaced by a `fluent_uri`-backed `Uri`
+    type (including rewriting `Document::detect_model` to use
+    `Uri::to_file_path()` + `Path::extension()` instead of string-splitting
+    `uri.path()`), `#[async_trait]` dropped in favor of native `async fn`
+    in traits, and `workspace/symbol` now returning
+    `WorkspaceSymbolResponse` instead of a bare `Vec<SymbolInformation>`
+  - Verified: `cargo build --workspace`, `cargo test --workspace` (429
+    lib/integration tests, no regressions; the pre-existing local-only
+    doctest linker failure noted in Phase 8 is unrelated), `cargo clippy
+    --all-targets --all-features -- -D warnings`, and `cargo fmt --all
+    --check` all pass
 - [x] Dependency review: `thiserror` ✅ Resolved
   - Audited every crate for `thiserror::Error` usage before attempting the
     assumed `1.0`→`2.0.20` version bump: none exists anywhere in the
