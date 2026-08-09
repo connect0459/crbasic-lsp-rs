@@ -8,6 +8,7 @@ use crate::document::DocumentManager;
 use crate::hover::HoverProvider;
 use crate::references::ReferencesProvider;
 use crate::rename::RenameProvider;
+use crate::semantic_tokens::SemanticTokensProvider;
 use crate::signature::SignatureProvider;
 use crate::symbols;
 use crbasic_parser::SemanticError;
@@ -165,6 +166,15 @@ impl LanguageServer for CRBasicLanguageServer {
                     prepare_provider: Some(true),
                     work_done_progress_options: Default::default(),
                 })),
+                semantic_tokens_provider: Some(
+                    SemanticTokensServerCapabilities::SemanticTokensOptions(
+                        SemanticTokensOptions {
+                            legend: SemanticTokensProvider::legend(),
+                            full: Some(SemanticTokensFullOptions::Bool(true)),
+                            ..Default::default()
+                        },
+                    ),
+                ),
                 ..Default::default()
             },
             server_info: Some(ServerInfo {
@@ -377,6 +387,29 @@ impl LanguageServer for CRBasicLanguageServer {
 
             return RenameProvider::get_rename_edit(&tokens, position, &new_name, uri)
                 .map_err(tower_lsp::jsonrpc::Error::invalid_params);
+        }
+
+        Ok(None)
+    }
+
+    async fn semantic_tokens_full(
+        &self,
+        params: SemanticTokensParams,
+    ) -> Result<Option<SemanticTokensResult>> {
+        let uri = params.text_document.uri;
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri)
+            && let Some(ast) = &doc.ast
+        {
+            let mut scanner = Scanner::new(&doc.text);
+            let tokens = scanner.scan_tokens();
+
+            let data = SemanticTokensProvider::get_semantic_tokens(ast, &tokens);
+            return Ok(Some(SemanticTokensResult::Tokens(SemanticTokens {
+                result_id: None,
+                data,
+            })));
         }
 
         Ok(None)

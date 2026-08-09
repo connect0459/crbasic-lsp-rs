@@ -632,3 +632,54 @@ mod rename {
         );
     }
 }
+
+mod semantic_tokens {
+    use super::*;
+
+    #[tokio::test]
+    async fn distinguishes_public_variable_declaration_from_its_reference() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nPublic Temp\nTemp = 5\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let params = SemanticTokensParams {
+            text_document: TextDocumentIdentifier { uri: uri.clone() },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        };
+
+        let result = service.inner().semantic_tokens_full(params).await;
+        assert!(result.is_ok(), "Semantic tokens request should succeed");
+
+        let tokens = match result.expect("Should succeed") {
+            Some(SemanticTokensResult::Tokens(tokens)) => tokens.data,
+            other => panic!("Expected full semantic tokens, got {other:?}"),
+        };
+
+        assert_eq!(tokens.len(), 2, "Should classify both Temp occurrences");
+        assert_ne!(
+            tokens[0].token_modifiers_bitset & 1,
+            0,
+            "Declaring occurrence should carry the declaration modifier"
+        );
+        assert_eq!(
+            tokens[1].token_modifiers_bitset & 1,
+            0,
+            "Reference should not carry the declaration modifier"
+        );
+        assert_ne!(
+            tokens[0].token_modifiers_bitset & (1 << 2),
+            0,
+            "Public variable should carry the global modifier"
+        );
+    }
+}
