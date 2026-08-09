@@ -141,34 +141,94 @@ impl<'a> Scanner<'a> {
                 Some(Token::new(kind, lexeme, span))
             }
             '+' => {
+                let kind = if self.peek() == '=' {
+                    self.advance();
+                    TokenKind::PlusEqual
+                } else {
+                    TokenKind::Plus
+                };
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Plus, "+", span))
+                Some(Token::new(
+                    kind,
+                    &self.source[start_index..self.current],
+                    span,
+                ))
             }
             '-' => {
+                let kind = if self.peek() == '=' {
+                    self.advance();
+                    TokenKind::MinusEqual
+                } else {
+                    TokenKind::Minus
+                };
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Minus, "-", span))
+                Some(Token::new(
+                    kind,
+                    &self.source[start_index..self.current],
+                    span,
+                ))
             }
             '*' => {
+                let kind = if self.peek() == '=' {
+                    self.advance();
+                    TokenKind::StarEqual
+                } else {
+                    TokenKind::Star
+                };
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Star, "*", span))
+                Some(Token::new(
+                    kind,
+                    &self.source[start_index..self.current],
+                    span,
+                ))
             }
             '/' => {
+                let kind = if self.peek() == '=' {
+                    self.advance();
+                    TokenKind::SlashEqual
+                } else {
+                    TokenKind::Slash
+                };
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Slash, "/", span))
+                Some(Token::new(
+                    kind,
+                    &self.source[start_index..self.current],
+                    span,
+                ))
             }
             '^' => {
+                let kind = if self.peek() == '=' {
+                    self.advance();
+                    TokenKind::CaretEqual
+                } else {
+                    TokenKind::Caret
+                };
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Caret, "^", span))
+                Some(Token::new(
+                    kind,
+                    &self.source[start_index..self.current],
+                    span,
+                ))
             }
             '&' => {
+                let kind = if self.peek() == '=' {
+                    self.advance();
+                    TokenKind::AmpersandEqual
+                } else {
+                    TokenKind::Ampersand
+                };
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::Ampersand, "&", span))
+                Some(Token::new(
+                    kind,
+                    &self.source[start_index..self.current],
+                    span,
+                ))
             }
             '=' => {
                 let end_pos = Position::new(self.line, self.column);
@@ -1004,6 +1064,25 @@ mod tests {
 
             assert_eq!(tokens[0].kind, TokenKind::Ampersand);
             assert_eq!(tokens[1].kind, TokenKind::Eof);
+        }
+
+        #[test]
+        fn recognizes_compound_assignment_operators() {
+            let mut scanner = Scanner::new("+= -= *= /= ^= &=");
+            let tokens = scanner.scan_tokens();
+
+            let operator_tokens: Vec<&Token> = tokens
+                .iter()
+                .filter(|t| !matches!(t.kind, TokenKind::Eof))
+                .collect();
+
+            assert_eq!(operator_tokens.len(), 6);
+            assert_eq!(operator_tokens[0].kind, TokenKind::PlusEqual);
+            assert_eq!(operator_tokens[1].kind, TokenKind::MinusEqual);
+            assert_eq!(operator_tokens[2].kind, TokenKind::StarEqual);
+            assert_eq!(operator_tokens[3].kind, TokenKind::SlashEqual);
+            assert_eq!(operator_tokens[4].kind, TokenKind::CaretEqual);
+            assert_eq!(operator_tokens[5].kind, TokenKind::AmpersandEqual);
         }
 
         #[test]

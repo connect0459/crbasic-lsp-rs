@@ -216,24 +216,54 @@ impl<'a> Parser<'a> {
                     })
                 };
 
-                if let Some(target) = target
-                    && matches!(self.peek().kind, TokenKind::Equal)
-                {
-                    self.advance();
-
-                    let value = self.parse_expression()?;
-
-                    if matches!(self.peek().kind, TokenKind::Newline) {
+                if let Some(target) = target {
+                    if matches!(self.peek().kind, TokenKind::Equal) {
                         self.advance();
+
+                        let value = self.parse_expression()?;
+
+                        if matches!(self.peek().kind, TokenKind::Newline) {
+                            self.advance();
+                        }
+
+                        let span =
+                            crate::lexer::token::Span::new(target.span().start, value.span().end);
+                        return Ok(Statement::Assignment {
+                            target,
+                            value,
+                            span,
+                        });
                     }
 
-                    let span =
-                        crate::lexer::token::Span::new(target.span().start, value.span().end);
-                    return Ok(Statement::Assignment {
-                        target,
-                        value,
-                        span,
-                    });
+                    if let Some(operator) = Self::compound_assignment_operator(&self.peek().kind) {
+                        self.advance();
+
+                        let rhs = self.parse_expression()?;
+
+                        if matches!(self.peek().kind, TokenKind::Newline) {
+                            self.advance();
+                        }
+
+                        let target_expr = Self::assignment_target_to_expression(&target);
+                        let value_span = crate::lexer::token::Span::new(
+                            target_expr.span().start,
+                            rhs.span().end,
+                        );
+                        let value = Expression::BinaryOp {
+                            left: Box::new(target_expr),
+                            operator,
+                            right: Box::new(rhs),
+                            span: value_span,
+                        };
+
+                        let span =
+                            crate::lexer::token::Span::new(target.span().start, value.span().end);
+                        return Ok(Statement::Assignment {
+                            target,
+                            value,
+                            span,
+                        });
+                    }
                 }
 
                 self.current = saved_pos;
@@ -264,6 +294,50 @@ impl<'a> Parser<'a> {
                     span,
                 })
             }
+        }
+    }
+
+    /// Maps a compound-assignment token (e.g. `+=`) to the `BinaryOperator`
+    /// its desugared form (`x = x + y`) should use, or `None` for any other
+    /// token.
+    fn compound_assignment_operator(kind: &TokenKind) -> Option<crate::ast::BinaryOperator> {
+        use crate::ast::BinaryOperator;
+
+        match kind {
+            TokenKind::PlusEqual => Some(BinaryOperator::Add),
+            TokenKind::MinusEqual => Some(BinaryOperator::Subtract),
+            TokenKind::StarEqual => Some(BinaryOperator::Multiply),
+            TokenKind::SlashEqual => Some(BinaryOperator::Divide),
+            TokenKind::CaretEqual => Some(BinaryOperator::Power),
+            TokenKind::AmpersandEqual => Some(BinaryOperator::Concatenate),
+            _ => None,
+        }
+    }
+
+    /// Rebuilds an `AssignmentTarget` as the equivalent read `Expression`,
+    /// needed to desugar `x += y` into `x = x + y` (the left operand reads
+    /// the same variable/array element the assignment writes to).
+    fn assignment_target_to_expression(target: &crate::ast::AssignmentTarget) -> Expression {
+        match target {
+            crate::ast::AssignmentTarget::Identifier { name, span } => Expression::Identifier {
+                name: name.clone(),
+                span: *span,
+            },
+            crate::ast::AssignmentTarget::ArrayElement {
+                array,
+                indices,
+                span,
+            } => indices.iter().fold(
+                Expression::Identifier {
+                    name: array.clone(),
+                    span: *span,
+                },
+                |acc, index| Expression::ArrayAccess {
+                    array: Box::new(acc),
+                    index: Box::new(index.clone()),
+                    span: *span,
+                },
+            ),
         }
     }
 
@@ -3203,6 +3277,85 @@ mod tests {
                     assert_eq!(*operator, BinaryOperator::Add);
                 } else {
                     panic!("Expected binary operation as value");
+                }
+            } else {
+                panic!("Expected assignment statement");
+            }
+        }
+
+        #[test]
+        fn desugars_compound_assignment_operators_to_assignment_with_binary_op() {
+            use crate::ast::BinaryOperator;
+
+            let cases = [
+                ("x += 1", BinaryOperator::Add),
+                ("x -= 1", BinaryOperator::Subtract),
+                ("x *= 2", BinaryOperator::Multiply),
+                ("x /= 2", BinaryOperator::Divide),
+                ("x ^= 2", BinaryOperator::Power),
+                ("x &= \"a\"", BinaryOperator::Concatenate),
+            ];
+
+            for (source, expected_operator) in cases {
+                let mut scanner = Scanner::new(source);
+                let tokens = scanner.scan_tokens();
+                let mut parser = Parser::new(tokens);
+
+                let program = parser
+                    .parse()
+                    .unwrap_or_else(|e| panic!("Should parse '{source}' successfully: {e:?}"));
+                assert_eq!(program.statements.len(), 1, "for source: {source}");
+
+                if let Statement::Assignment { target, value, .. } = &program.statements[0] {
+                    assert!(
+                        matches!(
+                            target,
+                            crate::ast::AssignmentTarget::Identifier { name, .. } if name == "x"
+                        ),
+                        "for source: {source}"
+                    );
+
+                    if let Expression::BinaryOp { left, operator, .. } = value {
+                        assert_eq!(*operator, expected_operator, "for source: {source}");
+                        assert!(
+                            matches!(&**left, Expression::Identifier { name, .. } if name == "x"),
+                            "for source: {source}"
+                        );
+                    } else {
+                        panic!("Expected desugared binary operation for source: {source}");
+                    }
+                } else {
+                    panic!(
+                        "Expected assignment statement for source: {source}, got {:?}",
+                        program.statements[0]
+                    );
+                }
+            }
+        }
+
+        #[test]
+        fn desugars_compound_assignment_to_array_element() {
+            use crate::ast::BinaryOperator;
+
+            let source = "Data[0] += 1".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Assignment { target, value, .. } = &program.statements[0] {
+                assert!(matches!(
+                    target,
+                    crate::ast::AssignmentTarget::ArrayElement { array, .. } if array == "Data"
+                ));
+
+                if let Expression::BinaryOp { left, operator, .. } = value {
+                    assert_eq!(*operator, BinaryOperator::Add);
+                    assert!(matches!(&**left, Expression::ArrayAccess { .. }));
+                } else {
+                    panic!("Expected desugared binary operation as value");
                 }
             } else {
                 panic!("Expected assignment statement");

@@ -72,6 +72,19 @@ pub enum TokenKind<'a> {
     Caret,
     /// String concatenation operator (&)
     Ampersand,
+
+    /// Compound add-assign (+=)
+    PlusEqual,
+    /// Compound subtract-assign (-=)
+    MinusEqual,
+    /// Compound multiply-assign (*=)
+    StarEqual,
+    /// Compound divide-assign (/=)
+    SlashEqual,
+    /// Compound power-assign (^=)
+    CaretEqual,
+    /// Compound concatenate-assign (&=)
+    AmpersandEqual,
     /// Assignment/Equality operator (=)
     Equal,
     /// Less than (<)
