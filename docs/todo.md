@@ -811,7 +811,30 @@ complete; none of these were previously tracked anywhere in this file.
       `textDocument/inlayHint` handler
     - 9 unit tests (`inlay_hint.rs`) + 2 integration tests
       (`crates/crbasic-lsp/tests/lsp_integration.rs`)
-  - Still not implemented: `codeLensProvider`, `callHierarchyProvider`
+  - [x] `codeLensProvider` ✅ Resolved
+    - Added `CodeLensProvider` (`crates/crbasic-lsp/src/code_lens.rs`):
+      shows a "N references" lens above every `Public`/`Dim`/`Const`
+      variable and `Function`/`Sub` declaration
+      - Declaration sites come from `DefinitionProvider::extract_definitions`
+        and the occurrence search from `ReferencesProvider::find_all_references`
+        -- both reused as-is rather than re-derived
+      - The declaring occurrence is excluded from the count using the same
+        "first identifier token on the declaration's source line" heuristic
+        `semantic_tokens.rs` already relies on (documented there: CRBasic
+        requires declaration before use, so this holds for every real
+        program)
+      - An unused symbol still gets a "0 references" lens rather than being
+        hidden, since that's useful for spotting dead code
+      - The lens's `Command` is built eagerly (`editor.action.showReferences`
+        with the pre-resolved locations as arguments) instead of deferring
+        to `codeLens/resolve`, since all the data needed is already on hand
+        at request time
+    - Wired into `backend.rs`: `code_lens_provider` capability
+      (`resolve_provider: Some(false)`) plus the `textDocument/codeLens`
+      handler
+    - 9 unit tests (`code_lens.rs`) + 2 integration tests
+      (`crates/crbasic-lsp/tests/lsp_integration.rs`)
+  - Still not implemented: `callHierarchyProvider`
   - Diagnostics also never populate `related_information` (hardcoded to
     `None` in both places `backend.rs` builds a `Diagnostic`)
 - [ ] Rust test coverage measurement in CI
