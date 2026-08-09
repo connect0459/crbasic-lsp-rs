@@ -257,7 +257,24 @@
     the real language client
   - 4 unit tests (`client/src/commands.test.ts`, Red→Green)
 - [ ] Extension packaging and publishing (future)
-  - [ ] Extension icon (image asset + `icon` field in `client/package.json`)
+  - [x] Extension icon (image asset + `icon` field in `client/package.json`) ✅ Resolved
+    - Original artwork only: an external sensor wired into a chassis with a
+      terminal block, a status LED, and a mini live-readout trace, on a flat
+      dark-navy badge with a teal accent -- no Campbell Scientific logo,
+      trademark, or brand color, since this extension is unofficial and
+      third-party
+    - Confirmed via `campbellsci.com/copyright` that using their trademarked
+      logo/name would fall under a use "that implies your own endorsement or
+      ownership, rather than Campbell Scientific's"; precedent from other
+      unofficial vendor-language extensions (`vscode_abap_remote_fs`,
+      `vscode-rpgle`) confirmed the norm is original artwork, not the
+      vendor's logo
+    - Source vector kept at `client/images/icon.svg`; `vsce` rejects SVG as
+      the `icon` field itself ("SVGs cannot be used as icons"), so
+      `client/images/icon.png` (256x256, meeting the Retina requirement) is
+      what `package.json`'s `icon` field points to
+    - Verified with `npx vsce package`: both files bundle correctly under
+      `images/` in the packaged `.vsix`
   - [x] `vsce package` script/config to produce a `.vsix` locally ✅ Resolved
     - See Known Issues / Technical Debt → Packaging Gap for details
       ([ADR-004](./adrs/adr-004-multi-platform-packaging.md))
