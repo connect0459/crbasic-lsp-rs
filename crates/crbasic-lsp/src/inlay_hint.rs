@@ -6,8 +6,9 @@
 //! (`SignatureProvider`) for built-in functions, and reading them straight
 //! from the AST for user-defined `Function`/`Sub` definitions.
 
+use crate::call_sites::collect_call_sites;
 use crate::signature::SignatureProvider;
-use crbasic_parser::ast::{AssignmentTarget, Expression, Program, Statement};
+use crbasic_parser::ast::{Expression, Program, Statement};
 use crbasic_parser::lexer::token::Position as ParserPosition;
 use std::collections::HashMap;
 use tower_lsp::lsp_types::{InlayHint, InlayHintKind, InlayHintLabel, Position, Range};
@@ -25,14 +26,11 @@ impl InlayHintProvider {
     pub fn get_inlay_hints(program: &Program, range: Range) -> Vec<InlayHint> {
         let user_defined = Self::collect_user_defined_parameters(&program.statements);
 
-        let mut call_sites = Vec::new();
-        Self::collect_call_sites(&program.statements, &mut call_sites);
-
-        call_sites
+        collect_call_sites(&program.statements)
             .into_iter()
-            .filter_map(|(name, arguments)| {
-                let parameter_names = Self::resolve_parameter_names(name, &user_defined)?;
-                Some(Self::hints_for_call(&parameter_names, arguments))
+            .filter_map(|site| {
+                let parameter_names = Self::resolve_parameter_names(site.name, &user_defined)?;
+                Some(Self::hints_for_call(&parameter_names, site.arguments))
             })
             .flatten()
             .filter(|hint| Self::within_range(hint.position, range))
@@ -100,127 +98,6 @@ impl InlayHintProvider {
                 _ => None,
             })
             .collect()
-    }
-
-    /// Collects `(name, arguments)` for every function call in the program,
-    /// including calls nested inside expressions
-    fn collect_call_sites<'a>(
-        statements: &'a [Statement],
-        sites: &mut Vec<(&'a str, &'a [Expression])>,
-    ) {
-        for statement in statements {
-            match statement {
-                Statement::VarDeclaration {
-                    array_dimensions,
-                    initializer,
-                    ..
-                } => {
-                    if let Some(dimensions) = array_dimensions {
-                        for expr in dimensions {
-                            Self::collect_from_expression(expr, sites);
-                        }
-                    }
-                    if let Some(init) = initializer {
-                        Self::collect_from_expression(init, sites);
-                    }
-                }
-                Statement::Assignment { target, value, .. } => {
-                    if let AssignmentTarget::ArrayElement { indices, .. } = target {
-                        for index in indices {
-                            Self::collect_from_expression(index, sites);
-                        }
-                    }
-                    Self::collect_from_expression(value, sites);
-                }
-                Statement::IfStatement {
-                    condition,
-                    then_branch,
-                    else_branch,
-                    ..
-                } => {
-                    Self::collect_from_expression(condition, sites);
-                    Self::collect_call_sites(then_branch, sites);
-                    if let Some(else_stmts) = else_branch {
-                        Self::collect_call_sites(else_stmts, sites);
-                    }
-                }
-                Statement::ForLoop {
-                    start,
-                    end,
-                    step,
-                    body,
-                    ..
-                } => {
-                    Self::collect_from_expression(start, sites);
-                    Self::collect_from_expression(end, sites);
-                    if let Some(step_expr) = step {
-                        Self::collect_from_expression(step_expr, sites);
-                    }
-                    Self::collect_call_sites(body, sites);
-                }
-                Statement::DoLoop {
-                    condition, body, ..
-                } => {
-                    if let Some(cond) = condition {
-                        Self::collect_from_expression(cond, sites);
-                    }
-                    Self::collect_call_sites(body, sites);
-                }
-                Statement::FunctionCall {
-                    name, arguments, ..
-                } => {
-                    sites.push((name, arguments));
-                    for arg in arguments {
-                        Self::collect_from_expression(arg, sites);
-                    }
-                }
-                Statement::Expression { expression, .. } => {
-                    Self::collect_from_expression(expression, sites);
-                }
-                Statement::ProgramStructure { arguments, .. } => {
-                    if let Some(args) = arguments {
-                        for arg in args {
-                            Self::collect_from_expression(arg, sites);
-                        }
-                    }
-                }
-                Statement::FunctionDefinition { body, .. }
-                | Statement::SubroutineDefinition { body, .. } => {
-                    Self::collect_call_sites(body, sites);
-                }
-            }
-        }
-    }
-
-    /// Recurses into an expression tree looking for nested function calls
-    fn collect_from_expression<'a>(
-        expr: &'a Expression,
-        sites: &mut Vec<(&'a str, &'a [Expression])>,
-    ) {
-        match expr {
-            Expression::BinaryOp { left, right, .. } => {
-                Self::collect_from_expression(left, sites);
-                Self::collect_from_expression(right, sites);
-            }
-            Expression::UnaryOp { operand, .. } => Self::collect_from_expression(operand, sites),
-            Expression::FunctionCall {
-                name, arguments, ..
-            } => {
-                sites.push((name, arguments));
-                for arg in arguments {
-                    Self::collect_from_expression(arg, sites);
-                }
-            }
-            Expression::ArrayAccess { array, index, .. } => {
-                Self::collect_from_expression(array, sites);
-                Self::collect_from_expression(index, sites);
-            }
-            Expression::IntegerLiteral { .. }
-            | Expression::FloatLiteral { .. }
-            | Expression::StringLiteral { .. }
-            | Expression::BooleanLiteral { .. }
-            | Expression::Identifier { .. } => {}
-        }
     }
 }
 

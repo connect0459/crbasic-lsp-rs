@@ -4,6 +4,7 @@
 //! enabling IDE features like diagnostics, completion, and go-to-definition.
 
 pub mod backend;
+pub mod call_sites;
 pub mod code_action;
 pub mod code_lens;
 pub mod completion;
