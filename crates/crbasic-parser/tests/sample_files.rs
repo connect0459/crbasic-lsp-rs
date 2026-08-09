@@ -42,7 +42,6 @@ mod tokenization {
         let source = read_sample_file("sample-cr1000.CR1");
         let tokens = tokenize(&source);
         assert!(!tokens.is_empty(), "Should produce tokens");
-        // Last token should be EOF
         assert!(
             matches!(
                 tokens.last(),
@@ -336,7 +335,6 @@ mod semantic_analysis {
     #[test]
     fn cr1000_sample_analyzed_with_cr200x_model() {
         let errors = analyze_sample("sample-cr1000.CR1", DataloggerModel::CR200X);
-        // CR1000 sample should be compatible with CR200X model
         let error_count = errors
             .iter()
             .filter(|e| e.severity == ErrorSeverity::Error)
@@ -419,15 +417,12 @@ mod real_world_validation {
         for (filename, model) in sample_files {
             let source = read_sample_file(filename);
 
-            // Step 1: Tokenization
             let tokens = tokenize(&source);
             assert!(!tokens.is_empty(), "{}: Should produce tokens", filename);
 
-            // Step 2: Parsing
             let program = parse(&source)
                 .unwrap_or_else(|_| panic!("{}: Should parse successfully", filename));
 
-            // Step 3: Semantic Analysis
             let mut analyzer = crbasic_parser::SemanticAnalyzer::new(model);
             let errors = analyzer.analyze(&program);
             let error_count = errors

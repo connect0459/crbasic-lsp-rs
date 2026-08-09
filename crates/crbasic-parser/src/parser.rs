@@ -35,7 +35,6 @@ impl<'a> Parser<'a> {
         let mut statements = Vec::new();
 
         while !self.is_at_end() {
-            // Skip newlines and comments at the top level
             if matches!(self.peek().kind, TokenKind::Newline | TokenKind::Comment(_)) {
                 self.advance();
                 continue;
@@ -43,16 +42,13 @@ impl<'a> Parser<'a> {
 
             let stmt = self.parse_statement()?;
 
-            // Handle comma-separated variable declarations (e.g., Public a, b, c)
             if let Statement::VarDeclaration { keyword, .. } = &stmt {
                 let keyword_clone = keyword.clone();
                 statements.push(stmt);
 
-                // Check for comma-separated additional variables
                 while matches!(self.peek().kind, TokenKind::Comma) {
-                    self.advance(); // consume comma
+                    self.advance();
 
-                    // Parse additional variable with the same keyword
                     let additional_var =
                         self.parse_single_var_with_keyword(keyword_clone.clone())?;
                     statements.push(additional_var);
@@ -63,13 +59,11 @@ impl<'a> Parser<'a> {
         }
 
         let span = if statements.is_empty() {
-            // Empty program: use EOF token span
             self.tokens
                 .last()
                 .expect("Token list should always contain at least EOF token")
                 .span
         } else {
-            // Span from first statement to last statement
             let start = statements
                 .first()
                 .expect("Statements list should not be empty when checked")
@@ -88,7 +82,6 @@ impl<'a> Parser<'a> {
 
     /// Parses a single statement
     fn parse_statement(&mut self) -> Result<Statement, ParseError> {
-        // Check for control flow keywords (If, For, Do, etc.)
         if let &TokenKind::Keyword(kw) = &self.peek().kind
             && kw == "If"
         {
@@ -107,7 +100,6 @@ impl<'a> Parser<'a> {
             return self.parse_do_loop();
         }
 
-        // Check for function/subroutine definition keywords
         if let &TokenKind::Keyword(kw) = &self.peek().kind
             && kw == "Function"
         {
@@ -120,7 +112,6 @@ impl<'a> Parser<'a> {
             return self.parse_subroutine_definition();
         }
 
-        // Check for program structure keywords (BeginProg, EndProg, etc.)
         if let &TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "BeginProg"
                 || kw == "EndProg"
@@ -131,7 +122,6 @@ impl<'a> Parser<'a> {
             return self.parse_program_structure();
         }
 
-        // Check for variable declaration keywords (Public, Dim, Const)
         if let &TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "Public" || kw == "Dim" || kw == "Const")
         {
@@ -143,29 +133,24 @@ impl<'a> Parser<'a> {
         if matches!(self.peek().kind, TokenKind::Identifier(_)) {
             let saved_pos = self.current;
 
-            // Try to parse as assignment
             if let &TokenKind::Identifier(name) = &self.peek().kind {
                 let ident_name = name.to_string();
                 let ident_span = self.advance().span;
 
-                // Check for array element access: identifier[index]
                 let target = if matches!(self.peek().kind, TokenKind::LeftBracket) {
-                    // Parse array indices
                     let mut indices = Vec::new();
                     let mut last_bracket_span = ident_span;
 
                     while matches!(self.peek().kind, TokenKind::LeftBracket) {
-                        self.advance(); // consume '['
+                        self.advance();
                         let index_expr = self.parse_expression()?;
                         indices.push(index_expr);
 
-                        // Expect closing bracket
                         if !matches!(self.peek().kind, TokenKind::RightBracket) {
-                            // Not a valid array assignment, restore and parse as expression
                             self.current = saved_pos;
                             break;
                         }
-                        last_bracket_span = self.advance().span; // consume ']'
+                        last_bracket_span = self.advance().span;
                     }
 
                     // If we broke out early, this will be handled by the expression parser below
@@ -187,16 +172,13 @@ impl<'a> Parser<'a> {
                     })
                 };
 
-                // Check if we have a valid target and next token is '=' (assignment operator)
                 if let Some(target) = target
                     && matches!(self.peek().kind, TokenKind::Equal)
                 {
-                    self.advance(); // consume '='
+                    self.advance();
 
-                    // Parse right-hand side expression
                     let value = self.parse_expression()?;
 
-                    // Consume optional newline after statement
                     if matches!(self.peek().kind, TokenKind::Newline) {
                         self.advance();
                     }
@@ -210,22 +192,17 @@ impl<'a> Parser<'a> {
                     });
                 }
 
-                // Not an assignment, restore position and parse as expression
                 self.current = saved_pos;
             }
         }
 
-        // Parse as expression statement
         let expr = self.parse_expression()?;
 
-        // Consume optional newline after statement
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
 
-        // Convert expression to a statement
         // Function calls are converted to FunctionCall statements for better semantic representation
-        // Other expressions are wrapped in Expression statements
         match expr {
             Expression::FunctionCall {
                 name,
@@ -250,10 +227,8 @@ impl<'a> Parser<'a> {
     /// Used for comma-separated declarations (e.g., Public a, b, c)
     /// Syntax: identifier [(dimensions)] [As type] [= initializer]
     fn parse_single_var_with_keyword(&mut self, keyword: String) -> Result<Statement, ParseError> {
-        // Get the span starting from the identifier position
         let start_pos = self.peek().span.start;
 
-        // Expect identifier (variable name)
         if !matches!(self.peek().kind, TokenKind::Identifier(_)) {
             return Err(ParseError {
                 message: "Expected identifier after variable declaration keyword or comma"
@@ -271,24 +246,20 @@ impl<'a> Parser<'a> {
 
         let mut end_span = name_token.span;
 
-        // Check for optional array dimensions: identifier(size) or identifier(rows, cols)
         let array_dimensions = if matches!(self.peek().kind, TokenKind::LeftParen) {
-            self.advance(); // consume '('
+            self.advance();
 
             let mut dimensions = Vec::new();
 
-            // Parse first dimension (required if parentheses are present)
             if !matches!(self.peek().kind, TokenKind::RightParen) {
                 dimensions.push(self.parse_expression()?);
 
-                // Parse additional dimensions separated by commas
                 while matches!(self.peek().kind, TokenKind::Comma) {
-                    self.advance(); // consume ','
+                    self.advance();
                     dimensions.push(self.parse_expression()?);
                 }
             }
 
-            // Expect closing parenthesis
             if !matches!(self.peek().kind, TokenKind::RightParen) {
                 return Err(ParseError {
                     message: "Expected ')' after array dimensions".to_string(),
@@ -296,7 +267,7 @@ impl<'a> Parser<'a> {
                 });
             }
 
-            let close_paren = self.advance(); // consume ')'
+            let close_paren = self.advance();
             end_span = close_paren.span;
 
             Some(dimensions)
@@ -304,12 +275,10 @@ impl<'a> Parser<'a> {
             None
         };
 
-        // Check for optional type annotation (As type)
         let type_annotation = if let &TokenKind::Keyword(kw) = &self.peek().kind {
             if kw == "As" {
-                self.advance(); // consume 'As'
+                self.advance();
 
-                // Expect type identifier
                 if !matches!(self.peek().kind, TokenKind::Identifier(_)) {
                     return Err(ParseError {
                         message: "Expected type name after 'As'".to_string(),
@@ -332,11 +301,9 @@ impl<'a> Parser<'a> {
             None
         };
 
-        // Check for optional initializer (= expression)
         let initializer = if matches!(self.peek().kind, TokenKind::Equal) {
-            self.advance(); // consume '='
+            self.advance();
 
-            // Parse initializer expression
             let init_expr = self.parse_expression()?;
             end_span = init_expr.span();
 
@@ -360,7 +327,6 @@ impl<'a> Parser<'a> {
     /// Parses a variable declaration statement
     /// Syntax: Public/Dim/Const identifier [As type]
     fn parse_var_declaration(&mut self) -> Result<Statement, ParseError> {
-        // Get the keyword (Public, Dim, or Const)
         let keyword_token = self.advance();
         let keyword = if let &TokenKind::Keyword(kw) = &keyword_token.kind {
             kw.to_string()
@@ -373,7 +339,6 @@ impl<'a> Parser<'a> {
 
         let start_span = keyword_token.span;
 
-        // Expect identifier (variable name)
         if !matches!(self.peek().kind, TokenKind::Identifier(_)) {
             return Err(ParseError {
                 message: "Expected identifier after variable declaration keyword".to_string(),
@@ -390,24 +355,20 @@ impl<'a> Parser<'a> {
 
         let mut end_span = name_token.span;
 
-        // Check for optional array dimensions: identifier(size) or identifier(rows, cols)
         let array_dimensions = if matches!(self.peek().kind, TokenKind::LeftParen) {
-            self.advance(); // consume '('
+            self.advance();
 
             let mut dimensions = Vec::new();
 
-            // Parse first dimension (required if parentheses are present)
             if !matches!(self.peek().kind, TokenKind::RightParen) {
                 dimensions.push(self.parse_expression()?);
 
-                // Parse additional dimensions separated by commas
                 while matches!(self.peek().kind, TokenKind::Comma) {
-                    self.advance(); // consume ','
+                    self.advance();
                     dimensions.push(self.parse_expression()?);
                 }
             }
 
-            // Expect closing parenthesis
             if !matches!(self.peek().kind, TokenKind::RightParen) {
                 return Err(ParseError {
                     message: "Expected ')' after array dimensions".to_string(),
@@ -415,7 +376,7 @@ impl<'a> Parser<'a> {
                 });
             }
 
-            let close_paren = self.advance(); // consume ')'
+            let close_paren = self.advance();
             end_span = close_paren.span;
 
             Some(dimensions)
@@ -423,12 +384,10 @@ impl<'a> Parser<'a> {
             None
         };
 
-        // Check for optional type annotation (As type)
         let type_annotation = if let &TokenKind::Keyword(kw) = &self.peek().kind {
             if kw == "As" {
-                self.advance(); // consume 'As'
+                self.advance();
 
-                // Expect type identifier
                 if !matches!(self.peek().kind, TokenKind::Identifier(_)) {
                     return Err(ParseError {
                         message: "Expected type name after 'As'".to_string(),
@@ -451,11 +410,9 @@ impl<'a> Parser<'a> {
             None
         };
 
-        // Check for optional initializer (= expression)
         let initializer = if matches!(self.peek().kind, TokenKind::Equal) {
-            self.advance(); // consume '='
+            self.advance();
 
-            // Parse initializer expression
             let init_expr = self.parse_expression()?;
             end_span = init_expr.span();
 
@@ -464,7 +421,6 @@ impl<'a> Parser<'a> {
             None
         };
 
-        // Consume optional newline after statement
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
@@ -484,7 +440,6 @@ impl<'a> Parser<'a> {
     /// Parses a program structure statement
     /// Syntax: BeginProg, EndProg, DataTable(...), EndTable, etc.
     fn parse_program_structure(&mut self) -> Result<Statement, ParseError> {
-        // Get the keyword (BeginProg, EndProg, etc.)
         let keyword_token = self.advance();
         let span = keyword_token.span;
         let keyword = if let &TokenKind::Keyword(kw) = &keyword_token.kind {
@@ -496,38 +451,33 @@ impl<'a> Parser<'a> {
             });
         };
 
-        // Check for arguments (only for DataTable)
         let arguments =
             if keyword == "DataTable" && matches!(self.peek().kind, TokenKind::LeftParen) {
-                self.advance(); // consume '('
+                self.advance();
 
                 let mut args = Vec::new();
 
-                // Parse comma-separated arguments
                 while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
                     args.push(self.parse_expression()?);
 
-                    // Check for comma
                     if matches!(self.peek().kind, TokenKind::Comma) {
                         self.advance();
                     }
                 }
 
-                // Expect closing ')'
                 if !matches!(self.peek().kind, TokenKind::RightParen) {
                     return Err(ParseError {
                         message: "Expected ')' after DataTable arguments".to_string(),
                         span: self.peek().span,
                     });
                 }
-                self.advance(); // consume ')'
+                self.advance();
 
                 Some(args)
             } else {
                 None
             };
 
-        // Consume optional newline after statement
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
@@ -542,28 +492,23 @@ impl<'a> Parser<'a> {
     /// Parses an If statement
     /// Syntax: If condition Then statements [Else statements] EndIf
     fn parse_if_statement(&mut self) -> Result<Statement, ParseError> {
-        // Consume 'If' keyword
         let if_token = self.advance();
         let start_span = if_token.span;
 
-        // Parse condition expression
         let condition = self.parse_expression()?;
 
-        // Expect 'Then' keyword
         if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Then") {
             return Err(ParseError {
                 message: "Expected 'Then' after If condition".to_string(),
                 span: self.peek().span,
             });
         }
-        self.advance(); // consume 'Then'
+        self.advance();
 
-        // Consume optional newline after Then
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
 
-        // Parse then branch statements until Else or EndIf
         let mut then_branch = Vec::new();
         self.skip_whitespace_and_comments();
         while !matches!(
@@ -575,16 +520,13 @@ impl<'a> Parser<'a> {
             self.skip_whitespace_and_comments();
         }
 
-        // Check for optional Else branch
         let else_branch = if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Else") {
-            self.advance(); // consume 'Else'
+            self.advance();
 
-            // Consume optional newline after Else
             if matches!(self.peek().kind, TokenKind::Newline) {
                 self.advance();
             }
 
-            // Parse else branch statements until EndIf
             let mut else_stmts = Vec::new();
             self.skip_whitespace_and_comments();
             while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndIf")
@@ -599,17 +541,15 @@ impl<'a> Parser<'a> {
             None
         };
 
-        // Expect 'EndIf' keyword
         if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndIf") {
             return Err(ParseError {
                 message: "Expected 'EndIf' to close If statement".to_string(),
                 span: self.peek().span,
             });
         }
-        let endif_token = self.advance(); // consume 'EndIf'
+        let endif_token = self.advance();
         let end_span = endif_token.span;
 
-        // Consume optional newline after EndIf
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
@@ -627,11 +567,9 @@ impl<'a> Parser<'a> {
     /// Parses a For loop statement
     /// Syntax: For variable = start To end [Step step] ... Next
     fn parse_for_loop(&mut self) -> Result<Statement, ParseError> {
-        // Consume 'For' keyword
         let for_token = self.advance();
         let start_span = for_token.span;
 
-        // Parse variable name (must be an identifier)
         let variable = if let &TokenKind::Identifier(name) = &self.peek().kind {
             let var_name = name.to_string();
             self.advance();
@@ -646,44 +584,37 @@ impl<'a> Parser<'a> {
             });
         };
 
-        // Expect '=' token
         if !matches!(self.peek().kind, TokenKind::Equal) {
             return Err(ParseError {
                 message: "Expected '=' after For variable".to_string(),
                 span: self.peek().span,
             });
         }
-        self.advance(); // consume '='
+        self.advance();
 
-        // Parse start expression
         let start = self.parse_expression()?;
 
-        // Expect 'To' keyword
         if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "To") {
             return Err(ParseError {
                 message: "Expected 'To' keyword in For loop".to_string(),
                 span: self.peek().span,
             });
         }
-        self.advance(); // consume 'To'
+        self.advance();
 
-        // Parse end expression
         let end = self.parse_expression()?;
 
-        // Check for optional 'Step' keyword
         let step = if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Step") {
-            self.advance(); // consume 'Step'
+            self.advance();
             Some(self.parse_expression()?)
         } else {
             None
         };
 
-        // Consume optional newline after For header
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
 
-        // Parse body statements until 'Next'
         let mut body = Vec::new();
         self.skip_whitespace_and_comments();
         while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Next")
@@ -693,17 +624,15 @@ impl<'a> Parser<'a> {
             self.skip_whitespace_and_comments();
         }
 
-        // Expect 'Next' keyword
         if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Next") {
             return Err(ParseError {
                 message: "Expected 'Next' to close For loop".to_string(),
                 span: self.peek().span,
             });
         }
-        let next_token = self.advance(); // consume 'Next'
+        let next_token = self.advance();
         let end_span = next_token.span;
 
-        // Consume optional newline after Next
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
@@ -726,26 +655,22 @@ impl<'a> Parser<'a> {
     ///   Do ... Loop While condition (condition at end)
     ///   Do ... Loop (no condition - infinite loop)
     fn parse_do_loop(&mut self) -> Result<Statement, ParseError> {
-        // Consume 'Do' keyword
         let do_token = self.advance();
         let start_span = do_token.span;
 
-        // Check for optional 'While' keyword after 'Do'
         let mut condition_at_start = false;
         let mut condition = None;
 
         if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "While") {
-            self.advance(); // consume 'While'
+            self.advance();
             condition_at_start = true;
             condition = Some(self.parse_expression()?);
         }
 
-        // Consume optional newline after Do header
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
 
-        // Parse body statements until 'Loop'
         let mut body = Vec::new();
         self.skip_whitespace_and_comments();
         while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Loop")
@@ -755,18 +680,15 @@ impl<'a> Parser<'a> {
             self.skip_whitespace_and_comments();
         }
 
-        // Expect 'Loop' keyword
         if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Loop") {
             return Err(ParseError {
                 message: "Expected 'Loop' to close Do statement".to_string(),
                 span: self.peek().span,
             });
         }
-        self.advance(); // consume 'Loop'
+        self.advance();
 
-        // Check for optional 'While' keyword after 'Loop'
         if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "While") {
-            // Cannot have condition both at start and end
             if condition_at_start {
                 return Err(ParseError {
                     message: "Cannot have While condition both at start and end of Do-Loop"
@@ -775,13 +697,12 @@ impl<'a> Parser<'a> {
                 });
             }
 
-            self.advance(); // consume 'While'
+            self.advance();
             condition = Some(self.parse_expression()?);
         }
 
         let end_span = self.peek().span;
 
-        // Consume optional newline after Loop
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
@@ -799,11 +720,9 @@ impl<'a> Parser<'a> {
     /// Parses a Function definition
     /// Syntax: Function name[(param1, param2, ...)] ... EndFunction
     fn parse_function_definition(&mut self) -> Result<Statement, ParseError> {
-        // Consume 'Function' keyword
         let function_token = self.advance();
         let start_span = function_token.span;
 
-        // Parse function name (must be an identifier)
         let name = if let &TokenKind::Identifier(name) = &self.peek().kind {
             let func_name = name.to_string();
             self.advance();
@@ -818,19 +737,16 @@ impl<'a> Parser<'a> {
             });
         };
 
-        // Check for optional parameters
         let parameters = if matches!(self.peek().kind, TokenKind::LeftParen) {
-            self.advance(); // consume '('
+            self.advance();
 
             let mut params = Vec::new();
 
-            // Parse comma-separated parameters
             while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
                 if let &TokenKind::Identifier(param_name) = &self.peek().kind {
                     params.push(param_name.to_string());
                     self.advance();
 
-                    // Check for comma
                     if matches!(self.peek().kind, TokenKind::Comma) {
                         self.advance();
                     }
@@ -842,26 +758,23 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            // Expect closing ')'
             if !matches!(self.peek().kind, TokenKind::RightParen) {
                 return Err(ParseError {
                     message: "Expected ')' after function parameters".to_string(),
                     span: self.peek().span,
                 });
             }
-            self.advance(); // consume ')'
+            self.advance();
 
             params
         } else {
             Vec::new()
         };
 
-        // Consume optional newline after function header
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
 
-        // Parse body statements until 'EndFunction'
         let mut body = Vec::new();
         self.skip_whitespace_and_comments();
         while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndFunction")
@@ -871,17 +784,15 @@ impl<'a> Parser<'a> {
             self.skip_whitespace_and_comments();
         }
 
-        // Expect 'EndFunction' keyword
         if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndFunction") {
             return Err(ParseError {
                 message: "Expected 'EndFunction' to close Function definition".to_string(),
                 span: self.peek().span,
             });
         }
-        let end_function_token = self.advance(); // consume 'EndFunction'
+        let end_function_token = self.advance();
         let end_span = end_function_token.span;
 
-        // Consume optional newline after EndFunction
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
@@ -899,11 +810,9 @@ impl<'a> Parser<'a> {
     /// Parses a Subroutine definition
     /// Syntax: Sub name[(param1, param2, ...)] ... EndSub
     fn parse_subroutine_definition(&mut self) -> Result<Statement, ParseError> {
-        // Consume 'Sub' keyword
         let sub_token = self.advance();
         let start_span = sub_token.span;
 
-        // Parse subroutine name (must be an identifier)
         let name = if let &TokenKind::Identifier(name) = &self.peek().kind {
             let sub_name = name.to_string();
             self.advance();
@@ -918,19 +827,16 @@ impl<'a> Parser<'a> {
             });
         };
 
-        // Check for optional parameters
         let parameters = if matches!(self.peek().kind, TokenKind::LeftParen) {
-            self.advance(); // consume '('
+            self.advance();
 
             let mut params = Vec::new();
 
-            // Parse comma-separated parameters
             while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
                 if let &TokenKind::Identifier(param_name) = &self.peek().kind {
                     params.push(param_name.to_string());
                     self.advance();
 
-                    // Check for comma
                     if matches!(self.peek().kind, TokenKind::Comma) {
                         self.advance();
                     }
@@ -942,26 +848,23 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            // Expect closing ')'
             if !matches!(self.peek().kind, TokenKind::RightParen) {
                 return Err(ParseError {
                     message: "Expected ')' after subroutine parameters".to_string(),
                     span: self.peek().span,
                 });
             }
-            self.advance(); // consume ')'
+            self.advance();
 
             params
         } else {
             Vec::new()
         };
 
-        // Consume optional newline after subroutine header
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
 
-        // Parse body statements until 'EndSub'
         let mut body = Vec::new();
         self.skip_whitespace_and_comments();
         while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndSub")
@@ -971,17 +874,15 @@ impl<'a> Parser<'a> {
             self.skip_whitespace_and_comments();
         }
 
-        // Expect 'EndSub' keyword
         if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndSub") {
             return Err(ParseError {
                 message: "Expected 'EndSub' to close Sub definition".to_string(),
                 span: self.peek().span,
             });
         }
-        let end_sub_token = self.advance(); // consume 'EndSub'
+        let end_sub_token = self.advance();
         let end_span = end_sub_token.span;
 
-        // Consume optional newline after EndSub
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
@@ -1006,7 +907,6 @@ impl<'a> Parser<'a> {
         let mut left = self.parse_logical_xor()?;
 
         loop {
-            // Check if current token is OR keyword
             if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if *kw == "OR") {
                 break;
             }
@@ -1032,7 +932,6 @@ impl<'a> Parser<'a> {
         let mut left = self.parse_logical_and()?;
 
         loop {
-            // Check if current token is XOR keyword
             if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if *kw == "XOR") {
                 break;
             }
@@ -1058,7 +957,6 @@ impl<'a> Parser<'a> {
         let mut left = self.parse_comparison()?;
 
         loop {
-            // Check if current token is AND keyword
             if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if *kw == "AND") {
                 break;
             }
@@ -1187,7 +1085,6 @@ impl<'a> Parser<'a> {
 
     /// Parses unary expressions (-, NOT)
     fn parse_unary(&mut self) -> Result<Expression, ParseError> {
-        // Check for unary operators
         let operator = match &self.peek().kind {
             TokenKind::Minus => Some(crate::ast::UnaryOperator::Negate),
             TokenKind::Keyword(kw) if *kw == "NOT" => Some(crate::ast::UnaryOperator::Not),
@@ -1209,7 +1106,6 @@ impl<'a> Parser<'a> {
             });
         }
 
-        // No unary operator, parse primary expression
         self.parse_primary()
     }
 
@@ -1219,19 +1115,17 @@ impl<'a> Parser<'a> {
 
         match &token.kind {
             TokenKind::LeftParen => {
-                // Parenthesized expression
-                self.advance(); // consume '('
+                self.advance();
 
                 let expr = self.parse_expression()?;
 
-                // Expect closing ')'
                 if !matches!(self.peek().kind, TokenKind::RightParen) {
                     return Err(ParseError {
                         message: "Expected ')' after expression".to_string(),
                         span: self.peek().span,
                     });
                 }
-                self.advance(); // consume ')'
+                self.advance();
 
                 Ok(expr)
             }
@@ -1262,35 +1156,27 @@ impl<'a> Parser<'a> {
                         let ident_name = name.to_string();
                         let ident_span = token.span;
 
-                        // Start with base identifier expression
                         let mut expr = Expression::identifier(ident_name.to_string(), ident_span);
 
-                        // Check for postfix operations (function call or array access)
                         loop {
                             match self.peek().kind {
                                 TokenKind::LeftParen => {
-                                    // Function call
-                                    self.advance(); // consume '('
+                                    self.advance();
 
-                                    // Parse argument list
                                     let mut arguments = Vec::new();
 
-                                    // Check for empty argument list
                                     if !matches!(self.peek().kind, TokenKind::RightParen) {
                                         loop {
-                                            // Parse argument expression
                                             arguments.push(self.parse_expression()?);
 
-                                            // Check for comma (more arguments) or closing paren
                                             if matches!(self.peek().kind, TokenKind::Comma) {
-                                                self.advance(); // consume ','
+                                                self.advance();
                                             } else {
                                                 break;
                                             }
                                         }
                                     }
 
-                                    // Expect closing ')'
                                     if !matches!(self.peek().kind, TokenKind::RightParen) {
                                         return Err(ParseError {
                                             message: "Expected ')' after function arguments"
@@ -1311,13 +1197,10 @@ impl<'a> Parser<'a> {
                                     };
                                 }
                                 TokenKind::LeftBracket => {
-                                    // Array access
-                                    self.advance(); // consume '['
+                                    self.advance();
 
-                                    // Parse index expression
                                     let index = self.parse_expression()?;
 
-                                    // Expect closing ']'
                                     if !matches!(self.peek().kind, TokenKind::RightBracket) {
                                         return Err(ParseError {
                                             message: "Expected ']' after array index".to_string(),
@@ -1337,7 +1220,6 @@ impl<'a> Parser<'a> {
                                     };
                                 }
                                 _ => {
-                                    // No more postfix operations
                                     break;
                                 }
                             }
@@ -1440,7 +1322,6 @@ mod tests {
 
             assert_eq!(program.statements.len(), 1);
 
-            // Extract the expression from the expression statement
             if let Statement::Expression { expression, .. } = &program.statements[0] {
                 match expression {
                     Expression::IntegerLiteral { value, .. } => {
@@ -1609,14 +1490,12 @@ mod tests {
                     } => {
                         assert_eq!(*operator, BinaryOperator::Add);
 
-                        // Check left operand
                         if let Expression::IntegerLiteral { value, .. } = **left {
                             assert_eq!(value, 1);
                         } else {
                             panic!("Expected integer literal for left operand");
                         }
 
-                        // Check right operand
                         if let Expression::IntegerLiteral { value, .. } = **right {
                             assert_eq!(value, 2);
                         } else {
@@ -1722,17 +1601,14 @@ mod tests {
                         right,
                         ..
                     } => {
-                        // Top level should be addition
                         assert_eq!(*operator, BinaryOperator::Add);
 
-                        // Left should be 1
                         if let Expression::IntegerLiteral { value, .. } = **left {
                             assert_eq!(value, 1);
                         } else {
                             panic!("Expected integer literal for left operand");
                         }
 
-                        // Right should be 2 * 3
                         if let Expression::BinaryOp { operator, .. } = &**right {
                             assert_eq!(*operator, BinaryOperator::Multiply);
                         } else {
@@ -1881,17 +1757,14 @@ mod tests {
                         right,
                         ..
                     } => {
-                        // Top level should be equality
                         assert_eq!(*operator, BinaryOperator::Equal);
 
-                        // Left should be 1 + 2
                         if let Expression::BinaryOp { operator, .. } = &**left {
                             assert_eq!(*operator, BinaryOperator::Add);
                         } else {
                             panic!("Expected addition for left operand");
                         }
 
-                        // Right should be 3
                         if let Expression::IntegerLiteral { value, .. } = **right {
                             assert_eq!(value, 3);
                         } else {
@@ -1983,17 +1856,14 @@ mod tests {
                         right,
                         ..
                     } => {
-                        // Top level should be OR
                         assert_eq!(*operator, BinaryOperator::Or);
 
-                        // Left should be identifier x
                         if let Expression::Identifier { name, .. } = &**left {
                             assert_eq!(name, "x");
                         } else {
                             panic!("Expected identifier for left operand");
                         }
 
-                        // Right should be y AND z
                         if let Expression::BinaryOp { operator, .. } = &**right {
                             assert_eq!(*operator, BinaryOperator::And);
                         } else {
@@ -2023,17 +1893,14 @@ mod tests {
                         right,
                         ..
                     } => {
-                        // Top level should be AND
                         assert_eq!(*operator, BinaryOperator::And);
 
-                        // Left should be x = 5
                         if let Expression::BinaryOp { operator, .. } = &**left {
                             assert_eq!(*operator, BinaryOperator::Equal);
                         } else {
                             panic!("Expected equality for left operand");
                         }
 
-                        // Right should be y = 10
                         if let Expression::BinaryOp { operator, .. } = &**right {
                             assert_eq!(*operator, BinaryOperator::Equal);
                         } else {
@@ -2066,7 +1933,6 @@ mod tests {
                     } => {
                         assert_eq!(*operator, UnaryOperator::Negate);
 
-                        // Check operand is integer 5
                         if let Expression::IntegerLiteral { value, .. } = **operand {
                             assert_eq!(value, 5);
                         } else {
@@ -2094,7 +1960,6 @@ mod tests {
                     } => {
                         assert_eq!(*operator, UnaryOperator::Not);
 
-                        // Check operand is identifier "flag"
                         if let Expression::Identifier { name, .. } = &**operand {
                             assert_eq!(name, "flag");
                         } else {
@@ -2163,7 +2028,6 @@ mod tests {
                     } => {
                         assert_eq!(*operator, UnaryOperator::Negate);
 
-                        // Inner should also be negation
                         if let Expression::UnaryOp { operator, .. } = &**operand {
                             assert_eq!(*operator, UnaryOperator::Negate);
                         } else {
@@ -2217,17 +2081,14 @@ mod tests {
                         right,
                         ..
                     } => {
-                        // Top level should be multiplication
                         assert_eq!(*operator, BinaryOperator::Multiply);
 
-                        // Left should be (1 + 2)
                         if let Expression::BinaryOp { operator, .. } = &**left {
                             assert_eq!(*operator, BinaryOperator::Add);
                         } else {
                             panic!("Expected addition for left operand");
                         }
 
-                        // Right should be 3
                         if let Expression::IntegerLiteral { value, .. } = **right {
                             assert_eq!(value, 3);
                         } else {
@@ -2277,7 +2138,6 @@ mod tests {
                         use crate::ast::UnaryOperator;
                         assert_eq!(*operator, UnaryOperator::Negate);
 
-                        // Operand should be addition
                         if let Expression::BinaryOp { operator, .. } = &**operand {
                             assert_eq!(*operator, BinaryOperator::Add);
                         } else {
@@ -2329,7 +2189,6 @@ mod tests {
                 assert_eq!(name, "Sqrt");
                 assert_eq!(arguments.len(), 1);
 
-                // Check first argument is integer 16
                 if let Expression::IntegerLiteral { value, .. } = &arguments[0] {
                     assert_eq!(*value, 16);
                 } else {
@@ -2356,7 +2215,6 @@ mod tests {
                 assert_eq!(name, "Scan");
                 assert_eq!(arguments.len(), 3);
 
-                // Verify argument types
                 assert!(matches!(arguments[0], Expression::IntegerLiteral { .. }));
                 assert!(matches!(arguments[1], Expression::Identifier { .. }));
                 assert!(matches!(arguments[2], Expression::IntegerLiteral { .. }));
@@ -2367,7 +2225,6 @@ mod tests {
 
         #[test]
         fn parses_function_call_with_expression_arguments() {
-            // Max(1 + 2, 5) - function with binary operation as argument
             let mut scanner = Scanner::new("Max(1 + 2, 5)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2382,9 +2239,7 @@ mod tests {
                 assert_eq!(name, "Max");
                 assert_eq!(arguments.len(), 2);
 
-                // First argument should be binary operation (1 + 2)
                 assert!(matches!(arguments[0], Expression::BinaryOp { .. }));
-                // Second argument should be integer literal 5
                 assert!(matches!(arguments[1], Expression::IntegerLiteral { .. }));
             } else {
                 panic!("Expected function call statement");
@@ -2393,7 +2248,6 @@ mod tests {
 
         #[test]
         fn parses_nested_function_calls() {
-            // Avg(Max(1, 2), 3) - nested function calls
             let mut scanner = Scanner::new("Avg(Max(1, 2), 3)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2408,7 +2262,6 @@ mod tests {
                 assert_eq!(name, "Avg");
                 assert_eq!(arguments.len(), 2);
 
-                // First argument should be a function call to Max
                 if let Expression::FunctionCall {
                     name, arguments, ..
                 } = &arguments[0]
@@ -2419,7 +2272,6 @@ mod tests {
                     panic!("Expected nested function call");
                 }
 
-                // Second argument should be integer 3
                 assert!(matches!(arguments[1], Expression::IntegerLiteral { .. }));
             } else {
                 panic!("Expected function call statement");
@@ -2442,14 +2294,12 @@ mod tests {
             if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
                 match &arguments[0] {
                     Expression::ArrayAccess { array, index, .. } => {
-                        // Array should be identifier "Data"
                         if let Expression::Identifier { name, .. } = &**array {
                             assert_eq!(name, "Data");
                         } else {
                             panic!("Expected identifier for array");
                         }
 
-                        // Index should be integer 0
                         if let Expression::IntegerLiteral { value, .. } = &**index {
                             assert_eq!(*value, 0);
                         } else {
@@ -2473,14 +2323,12 @@ mod tests {
             if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
                 match &arguments[0] {
                     Expression::ArrayAccess { array, index, .. } => {
-                        // Array should be identifier "Temp_C"
                         if let Expression::Identifier { name, .. } = &**array {
                             assert_eq!(name, "Temp_C");
                         } else {
                             panic!("Expected identifier for array");
                         }
 
-                        // Index should be identifier "i"
                         if let Expression::Identifier { name, .. } = &**index {
                             assert_eq!(name, "i");
                         } else {
@@ -2494,7 +2342,6 @@ mod tests {
 
         #[test]
         fn parses_array_access_with_expression_index() {
-            // Data[i + 1] - expression as index
             let mut scanner = Scanner::new("Data[i + 1]");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2505,10 +2352,8 @@ mod tests {
             if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
                 match &arguments[0] {
                     Expression::ArrayAccess { array, index, .. } => {
-                        // Array should be identifier "Data"
                         assert!(matches!(**array, Expression::Identifier { .. }));
 
-                        // Index should be binary operation (i + 1)
                         assert!(matches!(**index, Expression::BinaryOp { .. }));
                     }
                     _ => panic!("Expected array access expression"),
@@ -2518,7 +2363,6 @@ mod tests {
 
         #[test]
         fn parses_multi_dimensional_array_access() {
-            // Matrix[1][2] - multi-dimensional array
             let mut scanner = Scanner::new("Matrix[1][2]");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2529,16 +2373,13 @@ mod tests {
             if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
                 match &arguments[0] {
                     Expression::ArrayAccess { array, index, .. } => {
-                        // Array should be another ArrayAccess (Matrix[1])
                         if let Expression::ArrayAccess { array, index, .. } = &**array {
-                            // Inner array should be identifier "Matrix"
                             if let Expression::Identifier { name, .. } = &**array {
                                 assert_eq!(name, "Matrix");
                             } else {
                                 panic!("Expected identifier for inner array");
                             }
 
-                            // First index should be integer 1
                             if let Expression::IntegerLiteral { value, .. } = &**index {
                                 assert_eq!(*value, 1);
                             } else {
@@ -2548,7 +2389,6 @@ mod tests {
                             panic!("Expected nested array access");
                         }
 
-                        // Second index should be integer 2
                         if let Expression::IntegerLiteral { value, .. } = &**index {
                             assert_eq!(*value, 2);
                         } else {
@@ -2566,7 +2406,6 @@ mod tests {
 
         #[test]
         fn parses_simple_assignment_to_variable() {
-            // x = 5
             let mut scanner = Scanner::new("x = 5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2576,14 +2415,12 @@ mod tests {
 
             // Should be an Assignment statement, not a placeholder FunctionCall
             if let Statement::Assignment { target, value, .. } = &program.statements[0] {
-                // Target should be identifier "x"
                 if let crate::ast::AssignmentTarget::Identifier { name, .. } = target {
                     assert_eq!(name, "x");
                 } else {
                     panic!("Expected identifier as target");
                 }
 
-                // Value should be integer 5
                 if let Expression::IntegerLiteral { value, .. } = value {
                     assert_eq!(*value, 5);
                 } else {
@@ -2599,7 +2436,6 @@ mod tests {
 
         #[test]
         fn parses_assignment_with_expression_as_value() {
-            // x = 1 + 2
             let mut scanner = Scanner::new("x = 1 + 2");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2608,14 +2444,12 @@ mod tests {
             assert_eq!(program.statements.len(), 1);
 
             if let Statement::Assignment { target, value, .. } = &program.statements[0] {
-                // Target should be identifier "x"
                 if let crate::ast::AssignmentTarget::Identifier { name, .. } = target {
                     assert_eq!(name, "x");
                 } else {
                     panic!("Expected identifier as target");
                 }
 
-                // Value should be a binary operation (1 + 2)
                 if let Expression::BinaryOp { operator, .. } = value {
                     use crate::ast::BinaryOperator;
                     assert_eq!(*operator, BinaryOperator::Add);
@@ -2629,7 +2463,6 @@ mod tests {
 
         #[test]
         fn parses_array_element_assignment() {
-            // Data[0] = 5
             let mut scanner = Scanner::new("Data[0] = 5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2638,7 +2471,6 @@ mod tests {
             assert_eq!(program.statements.len(), 1);
 
             if let Statement::Assignment { target, value, .. } = &program.statements[0] {
-                // Target should be array element
                 if let crate::ast::AssignmentTarget::ArrayElement { array, indices, .. } = target {
                     assert_eq!(array, "Data");
                     assert_eq!(indices.len(), 1);
@@ -2652,7 +2484,6 @@ mod tests {
                     panic!("Expected array element as target");
                 }
 
-                // Value should be integer 5
                 if let Expression::IntegerLiteral { value, .. } = value {
                     assert_eq!(*value, 5);
                 } else {
@@ -2665,7 +2496,6 @@ mod tests {
 
         #[test]
         fn parses_array_element_assignment_with_variable_index() {
-            // Data[i] = 10
             let mut scanner = Scanner::new("Data[i] = 10");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2699,7 +2529,6 @@ mod tests {
 
         #[test]
         fn parses_multi_dimensional_array_assignment() {
-            // Matrix[1][2] = 100
             let mut scanner = Scanner::new("Matrix[1][2] = 100");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2739,7 +2568,6 @@ mod tests {
 
         #[test]
         fn parses_array_element_assignment_with_expression_value() {
-            // Data[0] = x + 1
             let mut scanner = Scanner::new("Data[0] = x + 1");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2772,7 +2600,6 @@ mod tests {
 
         #[test]
         fn parses_public_declaration_without_type() {
-            // Public Temp_C
             let mut scanner = Scanner::new("Public Temp_C");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2802,7 +2629,6 @@ mod tests {
 
         #[test]
         fn parses_public_declaration_with_type_annotation() {
-            // Public Temp_C As Float
             let mut scanner = Scanner::new("Public Temp_C As Float");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2832,7 +2658,6 @@ mod tests {
 
         #[test]
         fn parses_dim_declaration() {
-            // Dim i
             let mut scanner = Scanner::new("Dim i");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2863,7 +2688,6 @@ mod tests {
         #[test]
         #[allow(clippy::approx_constant)]
         fn parses_const_declaration_with_initializer() {
-            // Const PI = 3.14
             let mut scanner = Scanner::new("Const PI = 3.14");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2883,7 +2707,6 @@ mod tests {
                 assert_eq!(name, "PI");
                 assert_eq!(*type_annotation, None);
 
-                // Initializer should be a float literal 3.14
                 if let Some(Expression::FloatLiteral { value, .. }) = initializer {
                     assert!((value - 3.14).abs() < 0.001);
                 } else {
@@ -2899,7 +2722,6 @@ mod tests {
 
         #[test]
         fn parses_array_declaration_with_single_dimension() {
-            // Public Data(100)
             let mut scanner = Scanner::new("Public Data(100)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2938,7 +2760,6 @@ mod tests {
 
         #[test]
         fn parses_array_declaration_with_multiple_dimensions() {
-            // Dim Matrix(10, 20)
             let mut scanner = Scanner::new("Dim Matrix(10, 20)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -2974,7 +2795,6 @@ mod tests {
 
         #[test]
         fn parses_array_declaration_with_type_annotation() {
-            // Public Temps(5) As Float
             let mut scanner = Scanner::new("Public Temps(5) As Float");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -3004,7 +2824,6 @@ mod tests {
 
         #[test]
         fn parses_array_declaration_with_expression_dimension() {
-            // Public Buffer(MAX_SIZE)
             let mut scanner = Scanner::new("Public Buffer(MAX_SIZE)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -3034,7 +2853,6 @@ mod tests {
 
         #[test]
         fn parses_multiple_variable_declarations_with_comma() {
-            // Public PTemp, Batt_volt
             let mut scanner = Scanner::new("Public PTemp, Batt_volt");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -3046,7 +2864,6 @@ mod tests {
                 "Should parse two separate variable declarations"
             );
 
-            // First variable: PTemp
             if let Statement::VarDeclaration {
                 keyword,
                 name,
@@ -3068,7 +2885,6 @@ mod tests {
                 );
             }
 
-            // Second variable: Batt_volt
             if let Statement::VarDeclaration {
                 keyword,
                 name,
@@ -3093,7 +2909,6 @@ mod tests {
 
         #[test]
         fn parses_three_variable_declarations_with_comma() {
-            // Dim x, y, z
             let mut scanner = Scanner::new("Dim x, y, z");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -3125,7 +2940,6 @@ mod tests {
 
         #[test]
         fn parses_function_call_as_statement() {
-            // Scan(1, Temp_C, 0)
             let mut scanner = Scanner::new("Scan(1, Temp_C, 0)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -3140,7 +2954,6 @@ mod tests {
                 assert_eq!(name, "Scan");
                 assert_eq!(arguments.len(), 3);
 
-                // Verify argument types
                 assert!(matches!(arguments[0], Expression::IntegerLiteral { .. }));
                 assert!(matches!(arguments[1], Expression::Identifier { .. }));
                 assert!(matches!(arguments[2], Expression::IntegerLiteral { .. }));
@@ -3154,7 +2967,6 @@ mod tests {
 
         #[test]
         fn parses_function_call_with_no_arguments_as_statement() {
-            // TimeIntoInterval()
             let mut scanner = Scanner::new("TimeIntoInterval()");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -3182,7 +2994,6 @@ mod tests {
 
         #[test]
         fn parses_begin_prog_statement() {
-            // BeginProg
             let mut scanner = Scanner::new("BeginProg");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -3202,7 +3013,6 @@ mod tests {
 
         #[test]
         fn parses_end_prog_statement() {
-            // EndProg
             let mut scanner = Scanner::new("EndProg");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -3222,8 +3032,6 @@ mod tests {
 
         #[test]
         fn parses_complete_begin_prog_end_prog() {
-            // BeginProg
-            // EndProg
             let source = "BeginProg\nEndProg".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3232,14 +3040,12 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 2);
 
-            // First statement should be BeginProg
             if let Statement::ProgramStructure { keyword, .. } = &program.statements[0] {
                 assert_eq!(keyword, "BeginProg");
             } else {
                 panic!("Expected BeginProg statement");
             }
 
-            // Second statement should be EndProg
             if let Statement::ProgramStructure { keyword, .. } = &program.statements[1] {
                 assert_eq!(keyword, "EndProg");
             } else {
@@ -3249,7 +3055,6 @@ mod tests {
 
         #[test]
         fn parses_data_table_with_arguments() {
-            // DataTable("MinMax", 1, -1)
             let source = "DataTable(\"MinMax\", 1, -1)".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3264,13 +3069,11 @@ mod tests {
             {
                 assert_eq!(keyword, "DataTable");
 
-                // Arguments should be present
                 assert!(arguments.is_some(), "DataTable should have arguments");
 
                 if let Some(args) = arguments {
                     assert_eq!(args.len(), 3);
 
-                    // First argument: "MinMax" (string)
                     assert!(matches!(
                         args[0],
                         Expression::StringLiteral {
@@ -3279,13 +3082,11 @@ mod tests {
                         } if s == "MinMax"
                     ));
 
-                    // Second argument: 1 (integer)
                     assert!(matches!(
                         args[1],
                         Expression::IntegerLiteral { value: 1, .. }
                     ));
 
-                    // Third argument: -1 (unary negation of integer)
                     assert!(matches!(args[2], Expression::UnaryOp { .. }));
                 }
             } else {
@@ -3295,7 +3096,6 @@ mod tests {
 
         #[test]
         fn parses_end_table_statement() {
-            // EndTable
             let mut scanner = Scanner::new("EndTable");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -3308,7 +3108,6 @@ mod tests {
             } = &program.statements[0]
             {
                 assert_eq!(keyword, "EndTable");
-                // EndTable should have no arguments
                 assert!(arguments.is_none(), "EndTable should have no arguments");
             } else {
                 panic!("Expected EndTable statement");
@@ -3317,18 +3116,14 @@ mod tests {
 
         #[test]
         fn parses_complete_data_table_structure() {
-            // DataTable("MinMax", 1, -1)
-            //   x = 10
-            // EndTable
             let source = "DataTable(\"MinMax\", 1, -1)\n  x = 10\nEndTable".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
             let program = parser.parse().expect("Should parse successfully");
-            assert_eq!(program.statements.len(), 3); // DataTable, x = 10, EndTable
+            assert_eq!(program.statements.len(), 3);
 
-            // First statement: DataTable with arguments
             if let Statement::ProgramStructure {
                 keyword, arguments, ..
             } = &program.statements[0]
@@ -3342,13 +3137,11 @@ mod tests {
                 panic!("Expected DataTable statement");
             }
 
-            // Second statement: assignment
             assert!(matches!(
                 program.statements[1],
                 Statement::Assignment { .. }
             ));
 
-            // Third statement: EndTable
             if let Statement::ProgramStructure {
                 keyword, arguments, ..
             } = &program.statements[2]
@@ -3362,7 +3155,6 @@ mod tests {
 
         #[test]
         fn parses_nextscan_statement() {
-            // NextScan
             let mut scanner = Scanner::new("NextScan");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -3375,7 +3167,6 @@ mod tests {
             } = &program.statements[0]
             {
                 assert_eq!(keyword, "NextScan");
-                // NextScan should have no arguments
                 assert!(arguments.is_none(), "NextScan should have no arguments");
             } else {
                 panic!(
@@ -3391,9 +3182,6 @@ mod tests {
 
         #[test]
         fn parses_simple_if_then_endif() {
-            // If x > 5 Then
-            //   y = 10
-            // EndIf
             let source = "If x > 5 Then\n  y = 10\nEndIf".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3409,14 +3197,11 @@ mod tests {
                 ..
             } = &program.statements[0]
             {
-                // Condition should be a comparison (x > 5)
                 assert!(matches!(condition, Expression::BinaryOp { .. }));
 
-                // Then branch should have one statement (y = 10)
                 assert_eq!(then_branch.len(), 1);
                 assert!(matches!(then_branch[0], Statement::Assignment { .. }));
 
-                // No else branch
                 assert!(else_branch.is_none());
             } else {
                 panic!("Expected if statement, got {:?}", program.statements[0]);
@@ -3425,11 +3210,6 @@ mod tests {
 
         #[test]
         fn parses_if_then_else_endif() {
-            // If x > 5 Then
-            //   y = 10
-            // Else
-            //   y = 0
-            // EndIf
             let source = "If x > 5 Then\n  y = 10\nElse\n  y = 0\nEndIf".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3445,13 +3225,10 @@ mod tests {
                 ..
             } = &program.statements[0]
             {
-                // Condition should be a comparison
                 assert!(matches!(condition, Expression::BinaryOp { .. }));
 
-                // Then branch should have one statement
                 assert_eq!(then_branch.len(), 1);
 
-                // Else branch should exist and have one statement
                 assert!(else_branch.is_some());
                 if let Some(else_stmts) = else_branch {
                     assert_eq!(else_stmts.len(), 1);
@@ -3468,9 +3245,6 @@ mod tests {
 
         #[test]
         fn parses_simple_for_loop_without_step() {
-            // For i = 1 To 10
-            //   x = x + 1
-            // Next
             let source = "For i = 1 To 10\n  x = x + 1\nNext".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3488,19 +3262,14 @@ mod tests {
                 ..
             } = &program.statements[0]
             {
-                // Variable should be "i"
                 assert_eq!(variable, "i");
 
-                // Start should be integer 1
                 assert!(matches!(start, Expression::IntegerLiteral { value: 1, .. }));
 
-                // End should be integer 10
                 assert!(matches!(end, Expression::IntegerLiteral { value: 10, .. }));
 
-                // Step should be None
                 assert!(step.is_none());
 
-                // Body should contain one assignment statement
                 assert_eq!(body.len(), 1);
                 assert!(matches!(body[0], Statement::Assignment { .. }));
             } else {
@@ -3510,9 +3279,6 @@ mod tests {
 
         #[test]
         fn parses_for_loop_with_step() {
-            // For i = 0 To 100 Step 10
-            //   Scan(i, Temp_C, 0)
-            // Next
             let source = "For i = 0 To 100 Step 10\n  Scan(i, Temp_C, 0)\nNext".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3530,24 +3296,18 @@ mod tests {
                 ..
             } = &program.statements[0]
             {
-                // Variable should be "i"
                 assert_eq!(variable, "i");
 
-                // Start should be integer 0
                 assert!(matches!(start, Expression::IntegerLiteral { value: 0, .. }));
 
-                // End should be integer 100
                 assert!(matches!(end, Expression::IntegerLiteral { value: 100, .. }));
 
-                // Step should be Some(10)
                 assert!(step.is_some());
                 if let Some(Expression::IntegerLiteral { value: 10, .. }) = step {
-                    // Correct
                 } else {
                     panic!("Expected step to be 10");
                 }
 
-                // Body should contain one function call statement
                 assert_eq!(body.len(), 1);
                 assert!(matches!(body[0], Statement::FunctionCall { .. }));
             } else {
@@ -3557,9 +3317,6 @@ mod tests {
 
         #[test]
         fn parses_for_loop_with_expressions() {
-            // For i = start_val To end_val Step step_val
-            //   x = i * 2
-            // Next
             let source =
                 "For i = start_val To end_val Step step_val\n  x = i * 2\nNext".to_string();
             let mut scanner = Scanner::new(&source);
@@ -3577,10 +3334,8 @@ mod tests {
                 ..
             } = &program.statements[0]
             {
-                // Variable should be "i"
                 assert_eq!(variable, "i");
 
-                // Start should be identifier "start_val"
                 assert!(matches!(
                     start,
                     Expression::Identifier {
@@ -3589,7 +3344,6 @@ mod tests {
                     } if name == "start_val"
                 ));
 
-                // End should be identifier "end_val"
                 assert!(matches!(
                     end,
                     Expression::Identifier {
@@ -3598,7 +3352,6 @@ mod tests {
                     } if name == "end_val"
                 ));
 
-                // Step should be identifier "step_val"
                 assert!(step.is_some());
                 if let Some(Expression::Identifier { name, .. }) = step {
                     assert_eq!(name, "step_val");
@@ -3616,9 +3369,6 @@ mod tests {
 
         #[test]
         fn parses_do_while_loop_with_condition_at_start() {
-            // Do While x < 10
-            //   x = x + 1
-            // Loop
             let source = "Do While x < 10\n  x = x + 1\nLoop".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3634,23 +3384,18 @@ mod tests {
                 ..
             } = &program.statements[0]
             {
-                // Condition should be present
                 assert!(condition.is_some());
 
-                // Condition should be a comparison (x < 10)
                 if let Some(Expression::BinaryOp { .. }) = condition {
-                    // Correct
                 } else {
                     panic!("Expected condition to be a comparison");
                 }
 
-                // Condition at start should be true
                 assert!(
                     *condition_at_start,
                     "Condition should be at start for Do While"
                 );
 
-                // Body should contain one assignment statement
                 assert_eq!(body.len(), 1);
                 assert!(matches!(body[0], Statement::Assignment { .. }));
             } else {
@@ -3660,9 +3405,6 @@ mod tests {
 
         #[test]
         fn parses_do_loop_with_condition_at_end() {
-            // Do
-            //   x = x + 1
-            // Loop While x < 10
             let source = "Do\n  x = x + 1\nLoop While x < 10".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3678,23 +3420,18 @@ mod tests {
                 ..
             } = &program.statements[0]
             {
-                // Condition should be present
                 assert!(condition.is_some());
 
-                // Condition should be a comparison (x < 10)
                 if let Some(Expression::BinaryOp { .. }) = condition {
-                    // Correct
                 } else {
                     panic!("Expected condition to be a comparison");
                 }
 
-                // Condition at start should be false
                 assert!(
                     !*condition_at_start,
                     "Condition should be at end for Loop While"
                 );
 
-                // Body should contain one assignment statement
                 assert_eq!(body.len(), 1);
                 assert!(matches!(body[0], Statement::Assignment { .. }));
             } else {
@@ -3704,9 +3441,6 @@ mod tests {
 
         #[test]
         fn parses_do_loop_without_condition() {
-            // Do
-            //   Scan(1, Temp_C, 0)
-            // Loop
             let source = "Do\n  Scan(1, Temp_C, 0)\nLoop".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3722,7 +3456,6 @@ mod tests {
                 ..
             } = &program.statements[0]
             {
-                // Condition should be None (infinite loop)
                 assert!(
                     condition.is_none(),
                     "Infinite loop should have no condition"
@@ -3735,7 +3468,6 @@ mod tests {
                     "Condition at start should be false for infinite loop"
                 );
 
-                // Body should contain one function call statement
                 assert_eq!(body.len(), 1);
                 assert!(matches!(body[0], Statement::FunctionCall { .. }));
             } else {
@@ -3749,9 +3481,6 @@ mod tests {
 
         #[test]
         fn parses_function_without_parameters() {
-            // Function GetValue
-            //   GetValue = 42
-            // EndFunction
             let source = "Function GetValue\n  GetValue = 42\nEndFunction".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3778,9 +3507,6 @@ mod tests {
 
         #[test]
         fn parses_function_with_parameters() {
-            // Function Add(a, b)
-            //   Add = a + b
-            // EndFunction
             let source = "Function Add(a, b)\n  Add = a + b\nEndFunction".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3809,9 +3535,6 @@ mod tests {
 
         #[test]
         fn parses_subroutine_without_parameters() {
-            // Sub Initialize
-            //   x = 0
-            // EndSub
             let source = "Sub Initialize\n  x = 0\nEndSub".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3838,10 +3561,6 @@ mod tests {
 
         #[test]
         fn parses_subroutine_with_parameters() {
-            // Sub UpdateValues(val1, val2, val3)
-            //   x = val1
-            //   y = val2
-            // EndSub
             let source =
                 "Sub UpdateValues(val1, val2, val3)\n  x = val1\n  y = val2\nEndSub".to_string();
             let mut scanner = Scanner::new(&source);
@@ -3877,9 +3596,6 @@ mod tests {
 
         #[test]
         fn parses_tab_indented_statements_in_data_table() {
-            // DataTable(Test, 1, -1)
-            // \tSample(1, PTemp, FP2)
-            // EndTable
             let source = "DataTable(Test, 1, -1)\n\tSample(1, PTemp, FP2)\nEndTable".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3889,7 +3605,6 @@ mod tests {
                 .parse()
                 .expect("Should parse tab-indented statements successfully");
 
-            // Should have 3 statements: DataTable, Sample (function call), EndTable
             assert_eq!(program.statements.len(), 3);
 
             // First: DataTable
@@ -3913,10 +3628,6 @@ mod tests {
 
         #[test]
         fn parses_double_tab_indented_statements() {
-            // Scan(1, Sec, 0, 0)
-            // \t\tPanelTemp(PTemp, 60)
-            // \t\tBattery(Batt_volt)
-            // NextScan
             let source =
                 "Scan(1, Sec, 0, 0)\n\t\tPanelTemp(PTemp, 60)\n\t\tBattery(Batt_volt)\nNextScan"
                     .to_string();
@@ -3928,10 +3639,8 @@ mod tests {
                 .parse()
                 .expect("Should parse double-tab-indented statements successfully");
 
-            // Should have 4 statements: Scan, PanelTemp, Battery, NextScan
             assert_eq!(program.statements.len(), 4);
 
-            // All function calls except last NextScan
             assert!(matches!(
                 program.statements[0],
                 Statement::FunctionCall { .. }
@@ -3945,7 +3654,6 @@ mod tests {
                 Statement::FunctionCall { .. }
             ));
 
-            // Last: NextScan (program structure)
             if let Statement::ProgramStructure { keyword, .. } = &program.statements[3] {
                 assert_eq!(keyword, "NextScan");
             } else {
@@ -3955,11 +3663,6 @@ mod tests {
 
         #[test]
         fn parses_mixed_indentation_levels() {
-            // BeginProg
-            // \tScan(1, Sec, 0, 0)
-            // \t\tPanelTemp(PTemp, 60)
-            // \tNextScan
-            // EndProg
             let source =
                 "BeginProg\n\tScan(1, Sec, 0, 0)\n\t\tPanelTemp(PTemp, 60)\n\tNextScan\nEndProg"
                     .to_string();
@@ -3971,10 +3674,8 @@ mod tests {
                 .parse()
                 .expect("Should parse mixed indentation levels successfully");
 
-            // Should have 5 statements
             assert_eq!(program.statements.len(), 5);
 
-            // Verify structure
             assert!(matches!(
                 program.statements[0],
                 Statement::ProgramStructure { .. }

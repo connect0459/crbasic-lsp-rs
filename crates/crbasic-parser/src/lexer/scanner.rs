@@ -8,7 +8,6 @@ use super::token::{Position, Span, Token, TokenKind};
 /// for logical operators) spelling, checked case-insensitively so that
 /// `BeginProg`/`BEGINPROG`/`beginprog` all resolve to the same keyword.
 const KEYWORDS: &[(&str, &str)] = &[
-    // Control flow keywords
     ("if", "If"),
     ("then", "Then"),
     ("else", "Else"),
@@ -31,30 +30,25 @@ const KEYWORDS: &[(&str, &str)] = &[
     ("continue", "Continue"),
     ("break", "Break"),
     ("goto", "GoTo"),
-    // Declaration keywords
     ("public", "Public"),
     ("dim", "Dim"),
     ("const", "Const"),
     ("alias", "Alias"),
     ("as", "As"),
     ("units", "Units"),
-    // Program structure keywords
     ("beginprog", "BeginProg"),
     ("endprog", "EndProg"),
     ("datatable", "DataTable"),
     ("endtable", "EndTable"),
-    // Function keywords
     ("function", "Function"),
     ("endfunction", "EndFunction"),
     ("sub", "Sub"),
     ("endsub", "EndSub"),
-    // Logical operators
     ("and", "AND"),
     ("or", "OR"),
     ("not", "NOT"),
     ("xor", "XOR"),
     ("mod", "MOD"),
-    // Boolean literals
     ("true", "True"),
     ("false", "False"),
 ];
@@ -122,7 +116,6 @@ impl<'a> Scanner<'a> {
 
         match ch {
             '\'' => {
-                // Single-quote comment: consume until end of line
                 let comment_text = self.scan_comment_text();
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
@@ -133,7 +126,6 @@ impl<'a> Scanner<'a> {
                 ))
             }
             '"' => {
-                // String literal: double-quoted with escape sequences
                 let string_value = self.scan_string();
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
@@ -144,13 +136,11 @@ impl<'a> Scanner<'a> {
                 ))
             }
             '0'..='9' => {
-                // Number literal: integer or float
                 self.scan_number();
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
                 let number_text = &self.source[start_index..self.current];
 
-                // Determine if it's a float or integer
                 let kind = if number_text.contains('.')
                     || number_text.contains('e')
                     || number_text.contains('E')
@@ -163,13 +153,11 @@ impl<'a> Scanner<'a> {
                 Some(Token::new(kind, number_text, span))
             }
             'a'..='z' | 'A'..='Z' | '_' => {
-                // Identifier or keyword: starts with letter or underscore
                 self.scan_identifier();
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
                 let identifier = &self.source[start_index..self.current];
 
-                // Check if the identifier is a keyword (case-insensitive)
                 let kind = if let Some(canonical_keyword) = lookup_keyword(identifier) {
                     TokenKind::Keyword(canonical_keyword)
                 } else {
@@ -209,12 +197,11 @@ impl<'a> Scanner<'a> {
                 Some(Token::new(TokenKind::Equal, "=", span))
             }
             '<' => {
-                // Could be <, <=, or <>
                 let kind = if self.peek() == '>' {
-                    self.advance(); // consume '>'
+                    self.advance();
                     TokenKind::NotEqual
                 } else if self.peek() == '=' {
-                    self.advance(); // consume '='
+                    self.advance();
                     TokenKind::LessThanOrEqual
                 } else {
                     TokenKind::LessThan
@@ -228,9 +215,8 @@ impl<'a> Scanner<'a> {
                 ))
             }
             '>' => {
-                // Could be > or >=
                 let kind = if self.peek() == '=' {
-                    self.advance(); // consume '='
+                    self.advance();
                     TokenKind::GreaterThanOrEqual
                 } else {
                     TokenKind::GreaterThan
@@ -274,10 +260,9 @@ impl<'a> Scanner<'a> {
                 Some(Token::new(TokenKind::Newline, "\n", span))
             }
             ' ' | '\t' | '\r' => {
-                // Check for line continuation: space/tab + underscore + newline
                 if self.peek() == '_' && self.peek_next() == Some('\n') {
-                    self.advance(); // consume '_'
-                    self.advance(); // consume '\n'
+                    self.advance();
+                    self.advance();
                     let end_pos = Position::new(self.line, self.column);
                     let span = Span::new(start_pos, end_pos);
                     Some(Token::new(
@@ -286,7 +271,6 @@ impl<'a> Scanner<'a> {
                         span,
                     ))
                 } else {
-                    // Skip whitespace
                     None
                 }
             }
@@ -303,34 +287,29 @@ impl<'a> Scanner<'a> {
     /// slicing `source[start_index..self.current]`, since this scan never
     /// transforms the source text.
     fn scan_number(&mut self) {
-        // Scan integer part
         while self.peek().is_ascii_digit() {
             self.advance()
                 .expect("Character should exist after peek check");
         }
 
-        // Check for decimal point
         if self.peek() == '.' && self.peek_next().is_some_and(|c| c.is_ascii_digit()) {
             self.advance()
-                .expect("Decimal point should exist after peek check"); // consume '.'
+                .expect("Decimal point should exist after peek check");
             while self.peek().is_ascii_digit() {
                 self.advance()
                     .expect("Character should exist after peek check");
             }
         }
 
-        // Check for scientific notation (e or E)
         if matches!(self.peek(), 'e' | 'E') {
             self.advance()
-                .expect("Exponent character should exist after peek check"); // consume 'e' or 'E'
+                .expect("Exponent character should exist after peek check");
 
-            // Optional sign
             if matches!(self.peek(), '+' | '-') {
                 self.advance()
                     .expect("Sign character should exist after peek check");
             }
 
-            // Exponent digits
             while self.peek().is_ascii_digit() {
                 self.advance()
                     .expect("Character should exist after peek check");
@@ -359,8 +338,7 @@ impl<'a> Scanner<'a> {
             let ch = self.peek();
 
             if ch == '\\' {
-                // Escape sequence
-                self.advance(); // consume backslash
+                self.advance();
                 if let Some(escaped_char) = self.advance() {
                     match escaped_char {
                         'n' => value.push('\n'),
@@ -369,7 +347,6 @@ impl<'a> Scanner<'a> {
                         '\\' => value.push('\\'),
                         '"' => value.push('"'),
                         _ => {
-                            // Unknown escape sequence: keep backslash and character
                             value.push('\\');
                             value.push(escaped_char);
                         }
@@ -381,7 +358,6 @@ impl<'a> Scanner<'a> {
             }
         }
 
-        // Consume closing quote
         if self.peek() == '"' {
             self.advance();
         }
@@ -489,7 +465,6 @@ mod tests {
             let mut scanner = Scanner::new("Temp = 42 ' This is a mid-line comment");
             let tokens = scanner.scan_tokens();
 
-            // Should have: Identifier, Equal, Integer, Comment, EOF
             assert_eq!(tokens.len(), 5);
 
             match &tokens[0].kind {
@@ -519,7 +494,6 @@ mod tests {
             let mut scanner = Scanner::new("'");
             let tokens = scanner.scan_tokens();
 
-            // Should have: Comment (empty), EOF
             assert_eq!(tokens.len(), 2);
 
             match &tokens[0].kind {
@@ -967,7 +941,6 @@ mod tests {
             let mut scanner = Scanner::new("= < >");
             let tokens = scanner.scan_tokens();
 
-            // Filter out non-operator tokens (whitespace will be skipped)
             let operator_tokens: Vec<&Token> = tokens
                 .iter()
                 .filter(|t| !matches!(t.kind, TokenKind::Eof))
@@ -983,8 +956,6 @@ mod tests {
             let mut scanner = Scanner::new("<> <= >=");
             let tokens = scanner.scan_tokens();
 
-            // Should have: NotEqual, LessThanOrEqual, GreaterThanOrEqual, EOF
-            // (whitespace is skipped for now, but that's OK for this test)
             let operator_tokens: Vec<&Token> = tokens
                 .iter()
                 .filter(|t| !matches!(t.kind, TokenKind::Eof))
@@ -1043,7 +1014,6 @@ mod tests {
             let mut scanner = Scanner::new("  \t  42  \t  ");
             let tokens = scanner.scan_tokens();
 
-            // Should only have the integer and EOF (whitespace skipped)
             assert_eq!(tokens.len(), 2);
 
             match &tokens[0].kind {
@@ -1061,7 +1031,6 @@ mod tests {
             let mut scanner = Scanner::new("42\n43");
             let tokens = scanner.scan_tokens();
 
-            // Should have: 42, Newline, 43, EOF
             assert_eq!(tokens.len(), 4);
 
             match &tokens[0].kind {
@@ -1084,8 +1053,6 @@ mod tests {
             let mut scanner = Scanner::new("42\n\n43");
             let tokens = scanner.scan_tokens();
 
-            // Each newline should produce a Newline token
-            // Should have: 42, Newline, Newline, 43, EOF
             assert_eq!(tokens.len(), 5);
 
             match &tokens[0].kind {
@@ -1113,7 +1080,6 @@ mod tests {
             let mut scanner = Scanner::new("Temp _\nC");
             let tokens = scanner.scan_tokens();
 
-            // Should have: Identifier("Temp"), LineContinuation, Identifier("C"), EOF
             assert_eq!(tokens.len(), 4);
 
             match &tokens[0].kind {
@@ -1136,8 +1102,6 @@ mod tests {
             let mut scanner = Scanner::new("Temp_C");
             let tokens = scanner.scan_tokens();
 
-            // Should have: Identifier("Temp_C"), EOF
-            // (underscore is part of the identifier, not line continuation)
             assert_eq!(tokens.len(), 2);
 
             match &tokens[0].kind {
@@ -1162,10 +1126,8 @@ EndProg"#;
             let mut scanner = Scanner::new(source);
             let tokens = scanner.scan_tokens();
 
-            // Verify key tokens are present
             let token_kinds: Vec<_> = tokens.iter().map(|t| &t.kind).collect();
 
-            // Should contain: BeginProg keyword
             assert!(
                 token_kinds
                     .iter()
@@ -1173,7 +1135,6 @@ EndProg"#;
                 "Should contain BeginProg keyword"
             );
 
-            // Should contain: Public keyword
             assert!(
                 token_kinds
                     .iter()
@@ -1181,7 +1142,6 @@ EndProg"#;
                 "Should contain Public keyword"
             );
 
-            // Should contain: Temp_C identifier
             assert!(
                 token_kinds
                     .iter()
@@ -1189,13 +1149,11 @@ EndProg"#;
                 "Should contain Temp_C identifier"
             );
 
-            // Should contain: = operator
             assert!(
                 token_kinds.iter().any(|k| matches!(k, TokenKind::Equal)),
                 "Should contain = operator"
             );
 
-            // Should contain: 25.5 float literal
             assert!(
                 token_kinds
                     .iter()
@@ -1203,7 +1161,6 @@ EndProg"#;
                 "Should contain 25.5 float literal"
             );
 
-            // Should contain: comment
             assert!(
                 token_kinds
                     .iter()
@@ -1211,7 +1168,6 @@ EndProg"#;
                 "Should contain temperature comment"
             );
 
-            // Should contain: EndProg keyword
             assert!(
                 token_kinds
                     .iter()
@@ -1219,13 +1175,11 @@ EndProg"#;
                 "Should contain EndProg keyword"
             );
 
-            // Should contain: newlines
             assert!(
                 token_kinds.iter().any(|k| matches!(k, TokenKind::Newline)),
                 "Should contain newlines"
             );
 
-            // Should end with EOF
             assert_eq!(tokens.last().unwrap().kind, TokenKind::Eof);
         }
 
@@ -1241,7 +1195,6 @@ EndIf"#;
 
             let token_kinds: Vec<_> = tokens.iter().map(|t| &t.kind).collect();
 
-            // Should contain: If, Then, EndIf keywords
             assert!(
                 token_kinds
                     .iter()
@@ -1261,7 +1214,6 @@ EndIf"#;
                 "Should contain EndIf keyword"
             );
 
-            // Should contain: > operator
             assert!(
                 token_kinds
                     .iter()
@@ -1269,7 +1221,6 @@ EndIf"#;
                 "Should contain > operator"
             );
 
-            // Should contain: identifiers
             assert!(
                 token_kinds
                     .iter()
@@ -1293,7 +1244,6 @@ EndIf"#;
 
             let token_kinds: Vec<_> = tokens.iter().map(|t| &t.kind).collect();
 
-            // Should contain: identifiers
             assert!(
                 token_kinds
                     .iter()
@@ -1307,7 +1257,6 @@ EndIf"#;
                 "Should contain Calculate identifier"
             );
 
-            // Should contain: delimiters
             assert!(
                 token_kinds
                     .iter()
@@ -1325,7 +1274,6 @@ EndIf"#;
                 "Should contain ,"
             );
 
-            // Should contain: operators
             assert!(
                 token_kinds.iter().any(|k| matches!(k, TokenKind::Equal)),
                 "Should contain ="
@@ -1335,7 +1283,6 @@ EndIf"#;
                 "Should contain +"
             );
 
-            // Should contain: numeric literal
             assert!(
                 token_kinds
                     .iter()
@@ -1353,7 +1300,6 @@ EndIf"#;
 
             let token_kinds: Vec<_> = tokens.iter().map(|t| &t.kind).collect();
 
-            // Should contain: brackets
             assert!(
                 token_kinds
                     .iter()
@@ -1367,7 +1313,6 @@ EndIf"#;
                 "Should contain ]"
             );
 
-            // Should contain: parentheses
             assert!(
                 token_kinds
                     .iter()
@@ -1381,7 +1326,6 @@ EndIf"#;
                 "Should contain )"
             );
 
-            // Should contain: identifiers
             assert!(
                 token_kinds
                     .iter()

@@ -45,7 +45,6 @@ impl Span {
 /// slice.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub enum TokenKind<'a> {
-    // Literals
     /// Integer literal (e.g., 42, 1000)
     Integer(&'a str),
     /// Float literal (e.g., 3.14, 1.0e-5)
@@ -53,17 +52,14 @@ pub enum TokenKind<'a> {
     /// String literal (e.g., "Hello")
     String(String),
 
-    // Identifiers and Keywords
     /// Identifier (variable names, function names)
     Identifier(&'a str),
     /// Keyword (e.g., If, For, Public)
     Keyword(&'a str),
 
-    // Comments
     /// Single-line comment starting with '
     Comment(&'a str),
 
-    // Operators
     /// Addition operator (+)
     Plus,
     /// Subtraction operator (-)
@@ -87,7 +83,6 @@ pub enum TokenKind<'a> {
     /// Not equal (<>)
     NotEqual,
 
-    // Delimiters
     /// Left parenthesis (
     LeftParen,
     /// Right parenthesis )
@@ -99,7 +94,6 @@ pub enum TokenKind<'a> {
     /// Comma ,
     Comma,
 
-    // Special
     /// Line continuation (space + underscore at end of line)
     LineContinuation,
     /// Newline

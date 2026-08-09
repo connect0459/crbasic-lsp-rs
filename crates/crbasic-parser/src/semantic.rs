@@ -100,14 +100,11 @@ impl DataloggerModel {
     /// The corresponding DataloggerModel
     pub fn from_extension(file_extension: &str) -> Self {
         match file_extension.to_lowercase().as_str() {
-            // Group A: CR200(X) series - 16 char max, 12 char truncation
             "cr1" | "cr1x" | "cr2" => DataloggerModel::CR200X,
-            // Group B: CR6/CR1000X/GRANITE series - 39 char max, 35 char recommended
             "cr3" | "cr5" | "cr6" | "cr8" | "cr9" | "cr9x" | "c9x" | "cr300" => {
                 DataloggerModel::CR6
             }
             "crb" => DataloggerModel::GRANITE,
-            // Generic or unknown extensions
             _ => DataloggerModel::Unknown,
         }
     }
@@ -118,14 +115,14 @@ impl DataloggerModel {
             DataloggerModel::CR200X => ValidationProfile {
                 model_name: "CR200X",
                 max_variable_length: 16,
-                recommended_variable_length: Some(12), // 12 char truncation warning
+                recommended_variable_length: Some(12),
                 recommended_length_reason: "Output processing truncates to 12 characters",
                 truncation_length: Some(12),
             },
             DataloggerModel::CR6 => ValidationProfile {
                 model_name: "CR6",
                 max_variable_length: 39,
-                recommended_variable_length: Some(35), // Leave room for output suffix
+                recommended_variable_length: Some(35),
                 recommended_length_reason: "Leave room for output processing suffix",
                 truncation_length: None,
             },
@@ -171,12 +168,10 @@ impl SemanticAnalyzer {
         self.errors.clear();
         self.symbols.clear();
 
-        // Analyze all statements
         for statement in &program.statements {
             self.analyze_statement(statement);
         }
 
-        // Check for truncation collisions (CR200X only)
         if self.model == DataloggerModel::CR200X {
             self.check_truncation_collisions();
         }
@@ -244,7 +239,6 @@ impl SemanticAnalyzer {
         type_annotation: Option<&str>,
         span: Span,
     ) {
-        // Determine scope based on keyword
         let scope = if keyword == "Public" {
             VariableScope::Global
         } else {
@@ -253,7 +247,6 @@ impl SemanticAnalyzer {
 
         let profile = self.model.profile();
 
-        // Check variable name length
         if name.len() > profile.max_variable_length {
             self.errors.push(SemanticError {
                 message: format!(
@@ -265,7 +258,6 @@ impl SemanticAnalyzer {
             });
         }
 
-        // Check recommended length
         if let Some(recommended_length) = profile.recommended_variable_length
             && name.len() > recommended_length
         {
@@ -279,7 +271,6 @@ impl SemanticAnalyzer {
             });
         }
 
-        // Add symbol to table
         self.symbols.insert(
             name.to_string(),
             Symbol {
@@ -296,7 +287,6 @@ impl SemanticAnalyzer {
         if let Some(trunc_length) = self.model.profile().truncation_length {
             let mut truncated_names: HashMap<String, Vec<&Symbol>> = HashMap::new();
 
-            // Group symbols by their truncated names
             for symbol in self.symbols.values() {
                 // Only check Public variables (only they appear in output tables)
                 if symbol.scope == VariableScope::Global {
@@ -305,7 +295,6 @@ impl SemanticAnalyzer {
                 }
             }
 
-            // Report collisions
             for (truncated, symbols) in truncated_names {
                 if symbols.len() > 1 {
                     for symbol in &symbols {
@@ -527,7 +516,7 @@ mod tests {
         #[test]
         fn cr200x_rejects_variable_names_longer_than_16_chars() {
             let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR200X);
-            let long_name = "Temperature_Sensor_1"; // 20 characters
+            let long_name = "Temperature_Sensor_1";
             let program = Program::new(
                 vec![Statement::VarDeclaration {
                     keyword: "Public".to_string(),
@@ -550,7 +539,7 @@ mod tests {
         #[test]
         fn cr200x_warns_for_variable_names_longer_than_12_chars() {
             let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR200X);
-            let medium_name = "Temperature_1"; // 13 characters
+            let medium_name = "Temperature_1";
             let program = Program::new(
                 vec![Statement::VarDeclaration {
                     keyword: "Public".to_string(),
@@ -577,7 +566,7 @@ mod tests {
         #[test]
         fn cr6_rejects_variable_names_longer_than_39_chars() {
             let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
-            let long_name = "Temperature_Sensor_Station_1_Measurement_Value"; // 46 characters
+            let long_name = "Temperature_Sensor_Station_1_Measurement_Value";
             let program = Program::new(
                 vec![Statement::VarDeclaration {
                     keyword: "Public".to_string(),
@@ -600,7 +589,7 @@ mod tests {
         #[test]
         fn cr6_warns_for_variable_names_longer_than_35_chars() {
             let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
-            let medium_name = "Temperature_Sensor_Station_1_Value_1"; // 36 characters
+            let medium_name = "Temperature_Sensor_Station_1_Value_1";
             let program = Program::new(
                 vec![Statement::VarDeclaration {
                     keyword: "Public".to_string(),
