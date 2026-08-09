@@ -509,32 +509,33 @@
 
 ### Parser Limitations (discovered while designing preprocessor directive support, 2026-08-09)
 
-- [ ] `ElseIf` not implemented in `If`/`EndIf` parsing (bug)
-  - `parse_if_statement` (`crates/crbasic-parser/src/parser.rs`) only stops
-    its `then_branch` loop at `Else` or `EndIf`; there is no `"ElseIf"`
-    case anywhere in the parser. `ElseIf` is registered in `keywords.json`
-    and has completion/hover/language-configuration coverage, so it reads
-    as supported, but a real `If ... ElseIf ... EndIf` program fails to
-    parse. Confirmed via repro:
-
-    ```crbasic
-    If x = 1 Then
-      x = 2
-    ElseIf x = 3 Then
-      x = 4
-    EndIf
-    ```
-
-    fails with `Unexpected token: Keyword("ElseIf")`.
+- [x] `ElseIf` not implemented in `If`/`EndIf` parsing (bug) ✅ Resolved
+  - `parse_if_statement` (`crates/crbasic-parser/src/parser.rs`) only
+    stopped its `then_branch` loop at `Else` or `EndIf`; there was no
+    `"ElseIf"` case anywhere in the parser. `ElseIf` was registered in
+    `keywords.json` and had completion/hover/language-configuration
+    coverage, so it read as supported, but a real
+    `If ... ElseIf ... EndIf` program failed to parse. Confirmed via repro
+    before fixing: `Unexpected token: Keyword("ElseIf")`.
   - Same bug class as the resolved `Mod` gap above (advertised via
     completion/hover, silently broken in the parser) but likely higher
     real-world impact, since `If`/`ElseIf`/`EndIf` chains are far more
     common in CRBasic programs than the `Mod` operator.
   - Found while researching preprocessor directive support below: `#If`'s
     real semantics (confirmed against Campbell Scientific's own docs, see
-    below) require the same `#ElseIf` chaining logic, so this needs
+    below) require the same `#ElseIf` chaining logic, so this needed
     deciding first rather than duplicating an `ElseIf`-chaining
     implementation independently for the `#`-prefixed form.
+  - Fixed by factoring the shared `condition Then statements` parsing into
+    a new `parse_if_clause` helper, called recursively so each `ElseIf`
+    desugars into a nested `IfStatement` held in `else_branch` -- only the
+    outermost `If` ever consumes the chain's single closing `EndIf`. Every
+    downstream consumer (folding, semantic tokens, definitions, call
+    sites) already walked `IfStatement`'s branches generically, so none
+    needed changes
+  - 3 new tests (`parses_if_elseif_endif`, `parses_if_elseif_else_endif`,
+    `parses_multiple_chained_elseif_branches`) added Red-first; full
+    workspace `build`/`test`/`clippy`/`fmt` gate passes
 
 ### Reference Implementation Comparison (2026-08-09)
 
@@ -804,10 +805,9 @@ Not flagged as gaps (verified during the same comparison):
     duplicate-declaration check at all today (`self.symbols` is a plain
     `HashMap` that silently overwrites on re-insertion) -- de-risks this
     design choice
-  - Blocked on the `ElseIf` bug above: `#ElseIf` needs the same chaining
-    logic runtime `ElseIf` is missing today; fixing `ElseIf` first avoids
-    a second, duplicate implementation of the same chaining logic for the
-    `#`-prefixed form
+  - No longer blocked: the `ElseIf` bug above is resolved, so `#ElseIf`
+    can reuse the same recursive `parse_if_clause`-style chaining shape
+    instead of needing its own implementation
   - `Include` (referenced by `#UnDef`'s real use case) is also entirely
     unsupported by this project -- separate, related gap, not addressed
     here
