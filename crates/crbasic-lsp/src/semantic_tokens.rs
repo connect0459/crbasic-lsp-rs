@@ -7,7 +7,7 @@
 use crbasic_parser::ast::{Program, Statement};
 use crbasic_parser::lexer::token::{Token, TokenKind};
 use std::collections::{HashMap, HashSet};
-use tower_lsp::lsp_types::{
+use tower_lsp_server::ls_types::{
     SemanticToken, SemanticTokenModifier, SemanticTokenType, SemanticTokensLegend,
 };
 

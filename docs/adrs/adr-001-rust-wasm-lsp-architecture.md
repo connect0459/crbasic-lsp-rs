@@ -180,6 +180,9 @@ If WASM performance becomes a bottleneck (>100ms parsing time), we will re-evalu
 ## Related Decisions
 
 - [ADR-002](./adr-002-textmate-grammar-first.md): TextMate Grammar for initial syntax highlighting
+- [ADR-005](./adr-005-tower-lsp-server-migration.md): migrates the LSP
+  framework crate from `tower-lsp` to `tower-lsp-server`, keeping this
+  ADR's Rust + `tower`-based LSP server choice intact
 
 Datalogger model detection strategy was implemented directly as
 `ValidationProfile` (`crates/crbasic-parser/src/semantic.rs`) without a

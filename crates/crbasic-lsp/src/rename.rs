@@ -6,7 +6,7 @@
 
 use crbasic_parser::lexer::token::{Span, Token, TokenKind};
 use std::collections::HashMap;
-use tower_lsp::lsp_types::{Position, Range, TextEdit, Url, WorkspaceEdit};
+use tower_lsp_server::ls_types::{Position, Range, TextEdit, Uri, WorkspaceEdit};
 
 /// Provides Rename Symbol functionality
 pub struct RenameProvider;
@@ -87,7 +87,7 @@ impl RenameProvider {
         tokens: &[Token<'_>],
         position: Position,
         new_name: &str,
-        uri: Url,
+        uri: Uri,
     ) -> Result<Option<WorkspaceEdit>, String> {
         if !Self::is_valid_identifier(new_name) {
             return Err(format!("\"{new_name}\" is not a valid CRBasic identifier"));
@@ -216,8 +216,8 @@ mod tests {
     mod get_rename_edit {
         use super::*;
 
-        fn test_uri() -> Url {
-            Url::parse("file:///test.cr1").expect("Valid URL")
+        fn test_uri() -> Uri {
+            "file:///test.cr1".parse::<Uri>().expect("Valid URL")
         }
 
         #[test]

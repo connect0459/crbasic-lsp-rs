@@ -6,13 +6,13 @@
 use crbasic_parser::ast::Program;
 use crbasic_parser::{DataloggerModel, Parser, SemanticAnalyzer, SemanticError};
 use std::collections::HashMap;
-use tower_lsp::lsp_types::Url;
+use tower_lsp_server::ls_types::Uri;
 
 /// Represents a single document in the LSP server
 #[derive(Debug, Clone)]
 pub struct Document {
     /// URI of the document
-    pub uri: Url,
+    pub uri: Uri,
     /// Text content of the document
     pub text: String,
     /// Version number (incremented on each change)
@@ -32,7 +32,7 @@ impl Document {
     /// * `uri` - The document URI
     /// * `text` - The document text content
     /// * `version` - The document version
-    pub fn new(uri: Url, text: String, version: i32) -> Self {
+    pub fn new(uri: Uri, text: String, version: i32) -> Self {
         let model = Self::detect_model(&uri);
 
         Self {
@@ -46,12 +46,15 @@ impl Document {
     }
 
     /// Detects the datalogger model from the file URI
-    fn detect_model(uri: &Url) -> DataloggerModel {
-        if let Some(path) = uri.path().rsplit('.').next() {
-            DataloggerModel::from_extension(path)
-        } else {
-            DataloggerModel::Unknown
-        }
+    fn detect_model(uri: &Uri) -> DataloggerModel {
+        uri.to_file_path()
+            .and_then(|path| {
+                path.extension()
+                    .map(|ext| ext.to_string_lossy().into_owned())
+            })
+            .map_or(DataloggerModel::Unknown, |ext| {
+                DataloggerModel::from_extension(&ext)
+            })
     }
 
     /// Updates the document content
@@ -101,7 +104,7 @@ impl Document {
 /// Manages all open documents in the LSP server
 #[derive(Debug, Default)]
 pub struct DocumentManager {
-    documents: HashMap<Url, Document>,
+    documents: HashMap<Uri, Document>,
 }
 
 impl DocumentManager {
@@ -118,7 +121,7 @@ impl DocumentManager {
     /// * `uri` - The document URI
     /// * `text` - The document text content
     /// * `version` - The document version
-    pub fn open(&mut self, uri: Url, text: String, version: i32) -> &mut Document {
+    pub fn open(&mut self, uri: Uri, text: String, version: i32) -> &mut Document {
         let doc = Document::new(uri.clone(), text, version);
         self.documents.insert(uri.clone(), doc);
         self.documents
@@ -136,7 +139,7 @@ impl DocumentManager {
     /// # Returns
     /// * `Some(&mut Document)` - The updated document
     /// * `None` - Document not found
-    pub fn update(&mut self, uri: &Url, text: String, version: i32) -> Option<&mut Document> {
+    pub fn update(&mut self, uri: &Uri, text: String, version: i32) -> Option<&mut Document> {
         if let Some(doc) = self.documents.get_mut(uri) {
             doc.update(text, version);
             Some(doc)
@@ -149,7 +152,7 @@ impl DocumentManager {
     ///
     /// # Arguments
     /// * `uri` - The document URI
-    pub fn close(&mut self, uri: &Url) {
+    pub fn close(&mut self, uri: &Uri) {
         self.documents.remove(uri);
     }
 
@@ -161,7 +164,7 @@ impl DocumentManager {
     /// # Returns
     /// * `Some(&Document)` - The document
     /// * `None` - Document not found
-    pub fn get(&self, uri: &Url) -> Option<&Document> {
+    pub fn get(&self, uri: &Uri) -> Option<&Document> {
         self.documents.get(uri)
     }
 
@@ -173,7 +176,7 @@ impl DocumentManager {
     /// # Returns
     /// * `Some(&mut Document)` - The document
     /// * `None` - Document not found
-    pub fn get_mut(&mut self, uri: &Url) -> Option<&mut Document> {
+    pub fn get_mut(&mut self, uri: &Uri) -> Option<&mut Document> {
         self.documents.get_mut(uri)
     }
 
@@ -183,7 +186,7 @@ impl DocumentManager {
     /// to search across every currently open document rather than one.
     /// Documents that haven't been analyzed yet (or whose last analysis
     /// failed to parse) are skipped, since they have no AST to search.
-    pub fn analyzed_documents(&self) -> impl Iterator<Item = (&Url, &Program)> {
+    pub fn analyzed_documents(&self) -> impl Iterator<Item = (&Uri, &Program)> {
         self.documents
             .values()
             .filter_map(|doc| doc.ast.as_ref().map(|ast| (&doc.uri, ast)))
@@ -197,8 +200,10 @@ mod tests {
     mod document {
         use super::*;
 
-        fn create_test_uri(extension: &str) -> Url {
-            Url::parse(&format!("file:///test.{}", extension)).expect("Valid URL should be created")
+        fn create_test_uri(extension: &str) -> Uri {
+            format!("file:///test.{}", extension)
+                .parse::<Uri>()
+                .expect("Valid URL should be created")
         }
 
         #[test]
@@ -273,8 +278,10 @@ mod tests {
     mod document_manager {
         use super::*;
 
-        fn create_test_uri(name: &str) -> Url {
-            Url::parse(&format!("file:///{}.cr6", name)).expect("Valid URL should be created")
+        fn create_test_uri(name: &str) -> Uri {
+            format!("file:///{}.cr6", name)
+                .parse::<Uri>()
+                .expect("Valid URL should be created")
         }
 
         #[test]
@@ -338,7 +345,7 @@ mod tests {
                 .analyze()
                 .expect("Analysis should succeed");
 
-            let uris: Vec<&Url> = manager.analyzed_documents().map(|(uri, _)| uri).collect();
+            let uris: Vec<&Uri> = manager.analyzed_documents().map(|(uri, _)| uri).collect();
 
             assert_eq!(uris.len(), 2);
             assert!(uris.contains(&&uri_a));

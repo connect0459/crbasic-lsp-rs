@@ -3,7 +3,7 @@
 //! This binary starts the CRBasic Language Server using stdio transport.
 
 use crbasic_lsp::CRBasicLanguageServer;
-use tower_lsp::{LspService, Server};
+use tower_lsp_server::{LspService, Server};
 
 #[tokio::main]
 async fn main() {

@@ -4,17 +4,22 @@
 //! including document synchronization, diagnostics, and language features.
 
 use crbasic_lsp::CRBasicLanguageServer;
-use tower_lsp::lsp_types::*;
-use tower_lsp::{LanguageServer, LspService};
+use tower_lsp_server::ls_types::*;
+use tower_lsp_server::{LanguageServer, LspService};
 
 /// Test helper to create an LSP service for testing
-async fn create_test_server() -> (LspService<CRBasicLanguageServer>, tower_lsp::ClientSocket) {
+async fn create_test_server() -> (
+    LspService<CRBasicLanguageServer>,
+    tower_lsp_server::ClientSocket,
+) {
     CRBasicLanguageServer::new_service()
 }
 
 /// Helper to create a test document URI
-fn test_uri(name: &str) -> Url {
-    Url::parse(&format!("file:///test/{}", name)).expect("Failed to create test URI")
+fn test_uri(name: &str) -> Uri {
+    format!("file:///test/{}", name)
+        .parse::<Uri>()
+        .expect("Failed to create test URI")
 }
 
 mod document_synchronization {
@@ -763,11 +768,15 @@ mod workspace_symbol {
             .await;
         assert!(result.is_ok(), "Workspace symbol search should succeed");
 
-        let symbols = result
+        let symbols = match result
             .expect("Should be Ok")
-            .expect("Should return symbols");
+            .expect("Should return symbols")
+        {
+            WorkspaceSymbolResponse::Flat(symbols) => symbols,
+            WorkspaceSymbolResponse::Nested(_) => panic!("Expected a flat symbol response"),
+        };
         assert_eq!(symbols.len(), 2);
-        let uris: Vec<&Url> = symbols.iter().map(|s| &s.location.uri).collect();
+        let uris: Vec<&Uri> = symbols.iter().map(|s| &s.location.uri).collect();
         assert!(uris.contains(&&uri_a));
         assert!(uris.contains(&&uri_b));
     }
@@ -799,9 +808,13 @@ mod workspace_symbol {
             .await;
         assert!(result.is_ok(), "Workspace symbol search should succeed");
 
-        let symbols = result
+        let symbols = match result
             .expect("Should be Ok")
-            .expect("Should return an empty list");
+            .expect("Should return an empty list")
+        {
+            WorkspaceSymbolResponse::Flat(symbols) => symbols,
+            WorkspaceSymbolResponse::Nested(_) => panic!("Expected a flat symbol response"),
+        };
         assert!(symbols.is_empty());
     }
 }
@@ -918,7 +931,7 @@ mod call_hierarchy {
 
     async fn open_program_with_a_caller_and_callee(
         service: &LspService<CRBasicLanguageServer>,
-        uri: &Url,
+        uri: &Uri,
     ) {
         service
             .inner()

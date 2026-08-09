@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   full expression/statement/control-flow grammar, and model-dependent
   semantic validation (variable name length limits and 12-character
   truncation collisions for CR200X, CR6, and GRANITE dataloggers).
-- Language Server (`crbasic-lsp`, via `tower-lsp`): diagnostics, completion,
+- Language Server (`crbasic-lsp`, via `tower-lsp-server`): diagnostics, completion,
   signature help, hover, go to definition, find all references, document
   symbols, and rename.
 - WASM bindings (`crbasic-wasm`): `tokenize`, `parse`, `analyze`, and

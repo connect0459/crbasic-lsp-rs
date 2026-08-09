@@ -23,9 +23,9 @@ use crate::references::ReferencesProvider;
 use crbasic_parser::ast::{Program, Statement};
 use crbasic_parser::lexer::token::{Span, Token};
 use std::collections::HashMap;
-use tower_lsp::lsp_types::{
+use tower_lsp_server::ls_types::{
     CallHierarchyIncomingCall, CallHierarchyItem, CallHierarchyOutgoingCall, Position, Range,
-    SymbolKind, Url,
+    SymbolKind, Uri,
 };
 
 /// Provides Call Hierarchy functionality
@@ -43,7 +43,7 @@ impl CallHierarchyProvider {
     pub fn prepare(
         tokens: &[Token],
         ast: &Program,
-        uri: &Url,
+        uri: &Uri,
         position: Position,
     ) -> Option<CallHierarchyItem> {
         let name = ReferencesProvider::find_identifier_at_position(tokens, position)?;
@@ -56,7 +56,7 @@ impl CallHierarchyProvider {
     /// `Function`/`Sub`, across every given document
     pub fn incoming_calls<'a>(
         item: &CallHierarchyItem,
-        documents: impl Iterator<Item = (&'a Url, &'a Program)>,
+        documents: impl Iterator<Item = (&'a Uri, &'a Program)>,
     ) -> Vec<CallHierarchyIncomingCall> {
         let mut results = Vec::new();
 
@@ -100,9 +100,9 @@ impl CallHierarchyProvider {
     /// declaration
     pub fn outgoing_calls<'a>(
         item: &CallHierarchyItem,
-        documents: impl Iterator<Item = (&'a Url, &'a Program)>,
+        documents: impl Iterator<Item = (&'a Uri, &'a Program)>,
     ) -> Vec<CallHierarchyOutgoingCall> {
-        let documents: Vec<(&Url, &Program)> = documents.collect();
+        let documents: Vec<(&Uri, &Program)> = documents.collect();
 
         let Some(body) = Self::find_body(&item.name, &documents) else {
             return Vec::new();
@@ -141,7 +141,7 @@ impl CallHierarchyProvider {
     }
 
     /// Finds the body of the `Function`/`Sub` named `name` across `documents`
-    fn find_body<'a>(name: &str, documents: &[(&'a Url, &'a Program)]) -> Option<&'a [Statement]> {
+    fn find_body<'a>(name: &str, documents: &[(&'a Uri, &'a Program)]) -> Option<&'a [Statement]> {
         documents.iter().find_map(|(_, program)| {
             program
                 .statements
@@ -165,7 +165,7 @@ impl CallHierarchyProvider {
     /// Builds a [`CallHierarchyItem`] for a declaration, or `None` if it
     /// isn't callable (only `Function`/`Sub` declarations have a place in a
     /// call hierarchy)
-    fn item_for_definition(definition: &SymbolDefinition, uri: &Url) -> Option<CallHierarchyItem> {
+    fn item_for_definition(definition: &SymbolDefinition, uri: &Uri) -> Option<CallHierarchyItem> {
         let kind = match definition.kind {
             DefinitionSymbolKind::Function => SymbolKind::FUNCTION,
             DefinitionSymbolKind::Subroutine => SymbolKind::METHOD,
@@ -261,8 +261,10 @@ mod tests {
         }
     }
 
-    fn uri(name: &str) -> Url {
-        Url::parse(&format!("file:///{name}.cr6")).expect("Valid URL")
+    fn uri(name: &str) -> Uri {
+        format!("file:///{name}.cr6")
+            .parse::<Uri>()
+            .expect("Valid URL")
     }
 
     mod prepare {
@@ -356,7 +358,7 @@ mod tests {
     mod incoming_calls {
         use super::*;
 
-        fn function_item(name: &str, doc_uri: Url) -> CallHierarchyItem {
+        fn function_item(name: &str, doc_uri: Uri) -> CallHierarchyItem {
             CallHierarchyItem {
                 name: name.to_string(),
                 kind: SymbolKind::FUNCTION,
@@ -440,7 +442,7 @@ mod tests {
     mod outgoing_calls {
         use super::*;
 
-        fn function_item(name: &str, doc_uri: Url) -> CallHierarchyItem {
+        fn function_item(name: &str, doc_uri: Uri) -> CallHierarchyItem {
             CallHierarchyItem {
                 name: name.to_string(),
                 kind: SymbolKind::FUNCTION,

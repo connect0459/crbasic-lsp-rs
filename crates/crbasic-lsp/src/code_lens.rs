@@ -9,7 +9,7 @@ use crate::definition::{DefinitionProvider, SymbolDefinition};
 use crate::references::ReferencesProvider;
 use crbasic_parser::ast::Program;
 use crbasic_parser::lexer::token::{Span, Token};
-use tower_lsp::lsp_types::{CodeLens, Command, Location, Position, Range, Url};
+use tower_lsp_server::ls_types::{CodeLens, Command, Location, Position, Range, Uri};
 
 /// Provides Code Lens functionality
 pub struct CodeLensProvider;
@@ -21,7 +21,7 @@ impl CodeLensProvider {
     /// * `ast` - The parsed AST program
     /// * `tokens` - The token stream for the document
     /// * `uri` - The document URI
-    pub fn get_code_lenses(ast: &Program, tokens: &[Token], uri: &Url) -> Vec<CodeLens> {
+    pub fn get_code_lenses(ast: &Program, tokens: &[Token], uri: &Uri) -> Vec<CodeLens> {
         let mut definitions: Vec<SymbolDefinition> = DefinitionProvider::extract_definitions(ast)
             .into_values()
             .collect();
@@ -35,7 +35,7 @@ impl CodeLensProvider {
     }
 
     /// Builds the "N references" lens for a single declared symbol
-    fn lens_for_definition(definition: &SymbolDefinition, tokens: &[Token], uri: &Url) -> CodeLens {
+    fn lens_for_definition(definition: &SymbolDefinition, tokens: &[Token], uri: &Uri) -> CodeLens {
         let locations = Self::reference_locations(definition, tokens, uri);
         let count = locations.len();
         let title = format!("{count} reference{}", if count == 1 { "" } else { "s" });
@@ -66,7 +66,7 @@ impl CodeLensProvider {
     fn reference_locations(
         definition: &SymbolDefinition,
         tokens: &[Token],
-        uri: &Url,
+        uri: &Uri,
     ) -> Vec<Location> {
         let declaration_line = definition.span.start.line;
         let mut skipped_declaration = false;
@@ -140,8 +140,8 @@ mod tests {
         }
     }
 
-    fn uri() -> Url {
-        Url::parse("file:///test.cr6").expect("Valid URL")
+    fn uri() -> Uri {
+        "file:///test.cr6".parse::<Uri>().expect("Valid URL")
     }
 
     fn command_title(lens: &CodeLens) -> &str {

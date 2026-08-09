@@ -8,7 +8,7 @@
 
 use crbasic_parser::ast::{Program, Statement};
 use crbasic_parser::lexer::token::Position;
-use tower_lsp::lsp_types::FoldingRange;
+use tower_lsp_server::ls_types::FoldingRange;
 
 /// Provides Folding Range functionality
 pub struct FoldingRangeProvider;

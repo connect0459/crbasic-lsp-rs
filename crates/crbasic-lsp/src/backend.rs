@@ -24,9 +24,9 @@ use crbasic_parser::lexer::token::Position;
 use crbasic_parser::semantic::SemanticErrorKind;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tower_lsp::jsonrpc::Result;
-use tower_lsp::lsp_types::*;
-use tower_lsp::{Client, LanguageServer};
+use tower_lsp_server::jsonrpc::Result;
+use tower_lsp_server::ls_types::*;
+use tower_lsp_server::{Client, LanguageServer};
 
 /// The CRBasic Language Server backend
 pub struct CRBasicLanguageServer {
@@ -64,8 +64,11 @@ impl CRBasicLanguageServer {
     /// // Use service for testing...
     /// # }
     /// ```
-    pub fn new_service() -> (tower_lsp::LspService<Self>, tower_lsp::ClientSocket) {
-        tower_lsp::LspService::build(Self::new).finish()
+    pub fn new_service() -> (
+        tower_lsp_server::LspService<Self>,
+        tower_lsp_server::ClientSocket,
+    ) {
+        tower_lsp_server::LspService::build(Self::new).finish()
     }
 
     /// Converts semantic errors to LSP diagnostics
@@ -138,26 +141,26 @@ impl CRBasicLanguageServer {
     }
 
     /// Converts parser Position (1-indexed) to LSP Position (0-indexed)
-    fn position_to_lsp(pos: Position) -> tower_lsp::lsp_types::Position {
-        tower_lsp::lsp_types::Position {
+    fn position_to_lsp(pos: Position) -> tower_lsp_server::ls_types::Position {
+        tower_lsp_server::ls_types::Position {
             line: pos.line.saturating_sub(1) as u32,
             character: pos.column.saturating_sub(1) as u32,
         }
     }
 
     /// Analyzes a document and publishes diagnostics
-    async fn analyze_and_publish_diagnostics(&self, uri: Url) {
+    async fn analyze_and_publish_diagnostics(&self, uri: Uri) {
         let mut manager = self.document_manager.write().await;
 
         if let Some(doc) = manager.get_mut(&uri) {
             if let Err(e) = doc.analyze() {
                 let diagnostic = Diagnostic {
                     range: Range {
-                        start: tower_lsp::lsp_types::Position {
+                        start: tower_lsp_server::ls_types::Position {
                             line: 0,
                             character: 0,
                         },
-                        end: tower_lsp::lsp_types::Position {
+                        end: tower_lsp_server::ls_types::Position {
                             line: 0,
                             character: 0,
                         },
@@ -186,7 +189,6 @@ impl CRBasicLanguageServer {
     }
 }
 
-#[tower_lsp::async_trait]
 impl LanguageServer for CRBasicLanguageServer {
     async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
         Ok(InitializeResult {
@@ -205,10 +207,10 @@ impl LanguageServer for CRBasicLanguageServer {
                     ..Default::default()
                 }),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
-                definition_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
-                references_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
-                document_highlight_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
-                document_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
+                definition_provider: Some(tower_lsp_server::ls_types::OneOf::Left(true)),
+                references_provider: Some(tower_lsp_server::ls_types::OneOf::Left(true)),
+                document_highlight_provider: Some(tower_lsp_server::ls_types::OneOf::Left(true)),
+                document_symbol_provider: Some(tower_lsp_server::ls_types::OneOf::Left(true)),
                 code_action_provider: Some(CodeActionProviderCapability::Options(
                     CodeActionOptions {
                         code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
@@ -216,13 +218,13 @@ impl LanguageServer for CRBasicLanguageServer {
                     },
                 )),
                 folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
-                workspace_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
+                workspace_symbol_provider: Some(tower_lsp_server::ls_types::OneOf::Left(true)),
                 inlay_hint_provider: Some(OneOf::Left(true)),
                 code_lens_provider: Some(CodeLensOptions {
                     resolve_provider: Some(false),
                 }),
                 call_hierarchy_provider: Some(CallHierarchyServerCapability::Simple(true)),
-                rename_provider: Some(tower_lsp::lsp_types::OneOf::Right(RenameOptions {
+                rename_provider: Some(tower_lsp_server::ls_types::OneOf::Right(RenameOptions {
                     prepare_provider: Some(true),
                     work_done_progress_options: Default::default(),
                 })),
@@ -241,6 +243,7 @@ impl LanguageServer for CRBasicLanguageServer {
                 name: "crbasic-lsp".to_string(),
                 version: Some(env!("CARGO_PKG_VERSION").to_string()),
             }),
+            ..Default::default()
         })
     }
 
@@ -321,12 +324,12 @@ impl LanguageServer for CRBasicLanguageServer {
     async fn symbol(
         &self,
         params: WorkspaceSymbolParams,
-    ) -> Result<Option<Vec<SymbolInformation>>> {
+    ) -> Result<Option<WorkspaceSymbolResponse>> {
         let manager = self.document_manager.read().await;
 
         let results = WorkspaceSymbolProvider::search(manager.analyzed_documents(), &params.query);
 
-        Ok(Some(results))
+        Ok(Some(WorkspaceSymbolResponse::Flat(results)))
     }
 
     async fn inlay_hint(&self, params: InlayHintParams) -> Result<Option<Vec<InlayHint>>> {
@@ -586,7 +589,7 @@ impl LanguageServer for CRBasicLanguageServer {
             let tokens = scanner.scan_tokens();
 
             return RenameProvider::get_rename_edit(&tokens, position, &new_name, uri)
-                .map_err(tower_lsp::jsonrpc::Error::invalid_params);
+                .map_err(tower_lsp_server::jsonrpc::Error::invalid_params);
         }
 
         Ok(None)

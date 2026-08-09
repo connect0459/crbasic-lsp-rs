@@ -6,7 +6,7 @@
 use crbasic_parser::ast::{Program, Statement};
 use crbasic_parser::lexer::token::{Span, Token, TokenKind};
 use std::collections::HashMap;
-use tower_lsp::lsp_types::{Location, Position, Range, Url};
+use tower_lsp_server::ls_types::{Location, Position, Range, Uri};
 
 /// Symbol kind for definition lookup
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -169,7 +169,7 @@ impl DefinitionProvider {
         tokens: &[Token],
         position: Position,
         definitions: &HashMap<String, SymbolDefinition>,
-        uri: Url,
+        uri: Uri,
     ) -> Option<Location> {
         let identifier = Self::find_identifier_at_position(tokens, position)?;
         let definition = definitions.get(&identifier)?;
@@ -371,7 +371,7 @@ mod tests {
     mod get_definition {
         use super::*;
 
-        fn setup_test() -> (Vec<Token<'static>>, HashMap<String, SymbolDefinition>, Url) {
+        fn setup_test() -> (Vec<Token<'static>>, HashMap<String, SymbolDefinition>, Uri) {
             let tokens = vec![Token {
                 kind: TokenKind::Identifier("Temp_C"),
                 lexeme: "Temp_C",
@@ -388,7 +388,7 @@ mod tests {
                 },
             );
 
-            let uri = Url::parse("file:///test.cr1").expect("Valid URL");
+            let uri = "file:///test.cr1".parse::<Uri>().expect("Valid URL");
 
             (tokens, definitions, uri)
         }
@@ -419,7 +419,7 @@ mod tests {
                 span: create_span(5, 10, 5, 17),
             }];
             let definitions = HashMap::new();
-            let uri = Url::parse("file:///test.cr1").expect("Valid URL");
+            let uri = "file:///test.cr1".parse::<Uri>().expect("Valid URL");
             let position = Position {
                 line: 4,
                 character: 10,

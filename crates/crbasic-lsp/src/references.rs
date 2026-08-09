@@ -4,7 +4,7 @@
 //! to find all occurrences of a symbol throughout the document.
 
 use crbasic_parser::lexer::token::{Span, Token, TokenKind};
-use tower_lsp::lsp_types::{Location, Position, Range, Url};
+use tower_lsp_server::ls_types::{Location, Position, Range, Uri};
 
 /// Provides Find All References functionality
 pub struct ReferencesProvider;
@@ -87,7 +87,7 @@ impl ReferencesProvider {
     pub fn get_references(
         tokens: &[Token],
         position: Position,
-        uri: Url,
+        uri: Uri,
         _include_declaration: bool,
     ) -> Option<Vec<Location>> {
         let symbol_name = Self::find_identifier_at_position(tokens, position)?;
@@ -197,13 +197,13 @@ mod tests {
     mod get_references {
         use super::*;
 
-        fn setup_test() -> (Vec<Token<'static>>, Url) {
+        fn setup_test() -> (Vec<Token<'static>>, Uri) {
             let tokens = vec![
                 create_identifier_token("Temp_C", 1, 8),
                 create_identifier_token("Temp_C", 3, 1),
                 create_identifier_token("Temp_C", 5, 10),
             ];
-            let uri = Url::parse("file:///test.cr1").expect("Valid URL");
+            let uri = "file:///test.cr1".parse::<Uri>().expect("Valid URL");
             (tokens, uri)
         }
 

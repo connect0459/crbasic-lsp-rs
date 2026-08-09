@@ -11,7 +11,7 @@
 
 use crate::symbols;
 use crbasic_parser::ast::Program;
-use tower_lsp::lsp_types::{DocumentSymbol, Location, SymbolInformation, Url};
+use tower_lsp_server::ls_types::{DocumentSymbol, Location, SymbolInformation, Uri};
 
 /// Provides Workspace Symbol functionality
 pub struct WorkspaceSymbolProvider;
@@ -27,7 +27,7 @@ impl WorkspaceSymbolProvider {
     /// * `documents` - Each open document's URI paired with its cached AST
     /// * `query` - The search string
     pub fn search<'a>(
-        documents: impl Iterator<Item = (&'a Url, &'a Program)>,
+        documents: impl Iterator<Item = (&'a Uri, &'a Program)>,
         query: &str,
     ) -> Vec<SymbolInformation> {
         let query_lower = query.to_lowercase();
@@ -43,7 +43,7 @@ impl WorkspaceSymbolProvider {
     /// Recursively flattens a document's nested symbol tree into matching
     /// [`SymbolInformation`] entries, attaching `uri` to each
     fn flatten(
-        uri: &Url,
+        uri: &Uri,
         document_symbols: &[DocumentSymbol],
         query_lower: &str,
     ) -> Vec<SymbolInformation> {
@@ -102,8 +102,10 @@ mod tests {
         }
     }
 
-    fn uri(name: &str) -> Url {
-        Url::parse(&format!("file:///{name}.cr6")).expect("Valid URL")
+    fn uri(name: &str) -> Uri {
+        format!("file:///{name}.cr6")
+            .parse::<Uri>()
+            .expect("Valid URL")
     }
 
     mod search {

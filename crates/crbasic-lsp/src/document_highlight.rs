@@ -6,7 +6,7 @@
 
 use crate::references::ReferencesProvider;
 use crbasic_parser::lexer::token::{Span, Token};
-use tower_lsp::lsp_types::{DocumentHighlight, DocumentHighlightKind, Position, Range};
+use tower_lsp_server::ls_types::{DocumentHighlight, DocumentHighlightKind, Position, Range};
 
 /// Provides Document Highlight functionality
 pub struct DocumentHighlightProvider;

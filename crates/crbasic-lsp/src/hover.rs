@@ -4,7 +4,9 @@
 //! and user-defined symbols in CRBasic source code.
 
 use crbasic_parser::lexer::token::{Token, TokenKind};
-use tower_lsp::lsp_types::{Hover, HoverContents, MarkupContent, MarkupKind, Position, Range};
+use tower_lsp_server::ls_types::{
+    Hover, HoverContents, MarkupContent, MarkupKind, Position, Range,
+};
 
 /// Provides hover information for CRBasic symbols
 pub struct HoverProvider;

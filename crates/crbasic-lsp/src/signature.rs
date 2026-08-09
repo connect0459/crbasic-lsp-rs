@@ -3,7 +3,7 @@
 //! This module provides function signature information including parameter
 //! names, types, and documentation for built-in and user-defined functions.
 
-use tower_lsp::lsp_types::{
+use tower_lsp_server::ls_types::{
     Documentation, MarkupContent, MarkupKind, ParameterInformation, ParameterLabel, SignatureHelp,
     SignatureInformation,
 };

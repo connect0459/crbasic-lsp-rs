@@ -5,7 +5,7 @@
 
 use crbasic_parser::ast::{Program, Statement};
 use crbasic_parser::lexer::token::Position;
-use tower_lsp::lsp_types::{DocumentSymbol, Range, SymbolKind};
+use tower_lsp_server::ls_types::{DocumentSymbol, Range, SymbolKind};
 
 /// Extracts document symbols from a parsed program
 ///
@@ -158,8 +158,8 @@ fn span_to_range(span: crbasic_parser::lexer::token::Span) -> Range {
 }
 
 /// Converts parser Position (1-indexed) to LSP Position (0-indexed)
-fn position_to_lsp(pos: Position) -> tower_lsp::lsp_types::Position {
-    tower_lsp::lsp_types::Position {
+fn position_to_lsp(pos: Position) -> tower_lsp_server::ls_types::Position {
+    tower_lsp_server::ls_types::Position {
         line: pos.line.saturating_sub(1) as u32,
         character: pos.column.saturating_sub(1) as u32,
     }

@@ -4,7 +4,7 @@
 //! built-in functions, and user-defined symbols.
 
 use crbasic_parser::ast::{Program, Statement};
-use tower_lsp::lsp_types::{
+use tower_lsp_server::ls_types::{
     CompletionItem, CompletionItemKind, Documentation, InsertTextFormat, MarkupContent, MarkupKind,
 };
 

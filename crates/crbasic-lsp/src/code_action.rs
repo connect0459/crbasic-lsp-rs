@@ -11,8 +11,8 @@ use crate::references::ReferencesProvider;
 use crbasic_parser::lexer::token::{Span, Token};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tower_lsp::lsp_types::{
-    CodeAction, CodeActionKind, CodeActionOrCommand, Diagnostic, Position, Range, TextEdit, Url,
+use tower_lsp_server::ls_types::{
+    CodeAction, CodeActionKind, CodeActionOrCommand, Diagnostic, Position, Range, TextEdit, Uri,
     WorkspaceEdit,
 };
 
@@ -45,7 +45,7 @@ impl CodeActionProvider {
     pub fn get_code_actions(
         tokens: &[Token],
         diagnostics: &[Diagnostic],
-        uri: &Url,
+        uri: &Uri,
     ) -> Vec<CodeActionOrCommand> {
         diagnostics
             .iter()
@@ -58,7 +58,7 @@ impl CodeActionProvider {
     fn truncate_variable_name_action(
         tokens: &[Token],
         diagnostic: &Diagnostic,
-        uri: &Url,
+        uri: &Uri,
     ) -> Option<CodeActionOrCommand> {
         let data: TruncateVariableNameData =
             serde_json::from_value(diagnostic.data.clone()?).ok()?;
@@ -152,8 +152,8 @@ mod tests {
         }
     }
 
-    fn test_uri() -> Url {
-        Url::parse("file:///test.cr1").expect("Valid URL")
+    fn test_uri() -> Uri {
+        "file:///test.cr1".parse::<Uri>().expect("Valid URL")
     }
 
     mod get_code_actions {

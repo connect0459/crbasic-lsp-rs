@@ -11,7 +11,7 @@ use crate::signature::SignatureProvider;
 use crbasic_parser::ast::{Expression, Program, Statement};
 use crbasic_parser::lexer::token::Position as ParserPosition;
 use std::collections::HashMap;
-use tower_lsp::lsp_types::{InlayHint, InlayHintKind, InlayHintLabel, Position, Range};
+use tower_lsp_server::ls_types::{InlayHint, InlayHintKind, InlayHintLabel, Position, Range};
 
 /// Provides Inlay Hint functionality
 pub struct InlayHintProvider;
