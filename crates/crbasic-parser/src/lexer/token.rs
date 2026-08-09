@@ -101,6 +101,10 @@ pub enum TokenKind<'a> {
     GreaterThanOrEqual,
     /// Not equal (<>)
     NotEqual,
+    /// Bit-shift left (<<)
+    LeftShift,
+    /// Bit-shift right (>>)
+    RightShift,
 
     /// Left parenthesis (
     LeftParen,

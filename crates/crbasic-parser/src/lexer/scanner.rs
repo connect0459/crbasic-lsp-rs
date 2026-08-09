@@ -257,6 +257,9 @@ impl<'a> Scanner<'a> {
                 } else if self.peek() == '=' {
                     self.advance();
                     TokenKind::LessThanOrEqual
+                } else if self.peek() == '<' {
+                    self.advance();
+                    TokenKind::LeftShift
                 } else {
                     TokenKind::LessThan
                 };
@@ -272,6 +275,9 @@ impl<'a> Scanner<'a> {
                 let kind = if self.peek() == '=' {
                     self.advance();
                     TokenKind::GreaterThanOrEqual
+                } else if self.peek() == '>' {
+                    self.advance();
+                    TokenKind::RightShift
                 } else {
                     TokenKind::GreaterThan
                 };
@@ -1140,6 +1146,21 @@ mod tests {
             assert_eq!(operator_tokens[0].kind, TokenKind::NotEqual);
             assert_eq!(operator_tokens[1].kind, TokenKind::LessThanOrEqual);
             assert_eq!(operator_tokens[2].kind, TokenKind::GreaterThanOrEqual);
+        }
+
+        #[test]
+        fn recognizes_bit_shift_operators() {
+            let mut scanner = Scanner::new("<< >>");
+            let tokens = scanner.scan_tokens();
+
+            let operator_tokens: Vec<&Token> = tokens
+                .iter()
+                .filter(|t| !matches!(t.kind, TokenKind::Eof))
+                .collect();
+
+            assert_eq!(operator_tokens.len(), 2);
+            assert_eq!(operator_tokens[0].kind, TokenKind::LeftShift);
+            assert_eq!(operator_tokens[1].kind, TokenKind::RightShift);
         }
     }
 

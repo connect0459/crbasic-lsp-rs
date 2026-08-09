@@ -357,6 +357,11 @@ pub enum BinaryOperator {
     /// Greater than or equal operator (>=)
     GreaterThanOrEqual,
 
+    /// Bit-shift left operator (<<)
+    LeftShift,
+    /// Bit-shift right operator (>>)
+    RightShift,
+
     /// Logical AND operator
     And,
     /// Logical OR operator

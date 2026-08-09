@@ -1563,7 +1563,7 @@ impl<'a> Parser<'a> {
 
     /// Parses comparison expressions (=, <>, <, >, <=, >=)
     fn parse_comparison(&mut self) -> Result<Expression, ParseError> {
-        let mut left = self.parse_additive()?;
+        let mut left = self.parse_shift()?;
 
         loop {
             let operator = match &self.peek().kind {
@@ -1573,6 +1573,33 @@ impl<'a> Parser<'a> {
                 TokenKind::GreaterThan => crate::ast::BinaryOperator::GreaterThan,
                 TokenKind::LessThanOrEqual => crate::ast::BinaryOperator::LessThanOrEqual,
                 TokenKind::GreaterThanOrEqual => crate::ast::BinaryOperator::GreaterThanOrEqual,
+                _ => break,
+            };
+
+            self.advance();
+
+            let right = self.parse_shift()?;
+
+            let span = crate::lexer::token::Span::new(left.span().start, right.span().end);
+            left = Expression::BinaryOp {
+                left: Box::new(left),
+                operator,
+                right: Box::new(right),
+                span,
+            };
+        }
+
+        Ok(left)
+    }
+
+    /// Parses bit-shift expressions (<<, >>)
+    fn parse_shift(&mut self) -> Result<Expression, ParseError> {
+        let mut left = self.parse_additive()?;
+
+        loop {
+            let operator = match &self.peek().kind {
+                TokenKind::LeftShift => crate::ast::BinaryOperator::LeftShift,
+                TokenKind::RightShift => crate::ast::BinaryOperator::RightShift,
                 _ => break,
             };
 
@@ -2515,6 +2542,86 @@ mod tests {
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            }
+        }
+    }
+
+    mod bit_shift_operations {
+        use super::*;
+        use crate::ast::BinaryOperator;
+
+        #[test]
+        fn parses_left_shift() {
+            let mut scanner = Scanner::new("x << 2");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                match &arguments[0] {
+                    Expression::BinaryOp { operator, .. } => {
+                        assert_eq!(*operator, BinaryOperator::LeftShift);
+                    }
+                    _ => panic!("Expected binary operation"),
+                }
+            }
+        }
+
+        #[test]
+        fn parses_right_shift() {
+            let mut scanner = Scanner::new("x >> 2");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                match &arguments[0] {
+                    Expression::BinaryOp { operator, .. } => {
+                        assert_eq!(*operator, BinaryOperator::RightShift);
+                    }
+                    _ => panic!("Expected binary operation"),
+                }
+            }
+        }
+
+        #[test]
+        fn shift_binds_tighter_than_comparison_but_looser_than_addition() {
+            // x + 1 << 2 = 5 should parse as ((x + 1) << 2) = 5
+            let source = "x + 1 << 2 = 5".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                if let Expression::BinaryOp { left, operator, .. } = expression {
+                    assert_eq!(*operator, BinaryOperator::Equal);
+
+                    if let Expression::BinaryOp { left, operator, .. } = &**left {
+                        assert_eq!(*operator, BinaryOperator::LeftShift);
+
+                        if let Expression::BinaryOp { operator, .. } = &**left {
+                            assert_eq!(*operator, BinaryOperator::Add);
+                        } else {
+                            panic!("Expected addition inside the shift's left operand");
+                        }
+                    } else {
+                        panic!("Expected a left shift inside the equality's left operand");
+                    }
+                } else {
+                    panic!("Expected binary operation");
+                }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
     }
