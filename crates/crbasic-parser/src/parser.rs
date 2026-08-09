@@ -8,7 +8,14 @@ use crate::lexer::token::{Token, TokenKind};
 /// The `condition`, `then_branch`, and `else_branch` parsed from an `If` or
 /// chained `ElseIf` clause, before the enclosing `Statement::IfStatement` is
 /// built around them.
-type IfClause = (Expression, Vec<Statement>, Option<Vec<Statement>>);
+/// The fourth element is `true` when the clause used the single-line
+/// `If condition Then statement[: statement...]` form, which has no `EndIf`
+/// to close (the outermost `If`'s `EndIf` is implied at the end of the line).
+type IfClause = (Expression, Vec<Statement>, Option<Vec<Statement>>, bool);
+
+/// Same shape as `IfClause` minus the single-line flag: `#If`/`#IfDef`
+/// preprocessor conditionals have no single-line form.
+type PreprocessorClause = (Expression, Vec<Statement>, Option<Vec<Statement>>);
 
 /// Parser for CRBasic source code
 pub struct Parser<'a> {
@@ -40,7 +47,10 @@ impl<'a> Parser<'a> {
         let mut statements = Vec::new();
 
         while !self.is_at_end() {
-            if matches!(self.peek().kind, TokenKind::Newline | TokenKind::Comment(_)) {
+            if matches!(
+                self.peek().kind,
+                TokenKind::Newline | TokenKind::Comment(_) | TokenKind::Colon
+            ) {
                 self.advance();
                 continue;
             }
@@ -750,6 +760,11 @@ impl<'a> Parser<'a> {
     /// each chained `ElseIf`. `ElseIf` desugars into a nested `IfStatement`
     /// held in `else_branch`, so only the outermost `If` ever consumes the
     /// closing `EndIf` -- this helper never looks for one.
+    ///
+    /// When no newline immediately follows `Then`, this is the single-line
+    /// form (`If condition Then statement[: statement...] [Else statement[:
+    /// statement...]]`), which has its `EndIf` implied at the end of the
+    /// line rather than written out; see `IfClause`'s docs.
     fn parse_if_clause(&mut self) -> Result<IfClause, ParseError> {
         let condition = self.parse_expression()?;
 
@@ -761,9 +776,24 @@ impl<'a> Parser<'a> {
         }
         self.advance();
 
-        if matches!(self.peek().kind, TokenKind::Newline) {
-            self.advance();
+        if !matches!(self.peek().kind, TokenKind::Newline) {
+            let then_branch = self.parse_colon_separated_statements()?;
+
+            let else_branch = if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Else")
+            {
+                self.advance();
+                Some(self.parse_colon_separated_statements()?)
+            } else {
+                None
+            };
+
+            if matches!(self.peek().kind, TokenKind::Newline) {
+                self.advance();
+            }
+
+            return Ok((condition, then_branch, else_branch, true));
         }
+        self.advance();
 
         let mut then_branch = Vec::new();
         self.skip_whitespace_and_comments();
@@ -778,7 +808,7 @@ impl<'a> Parser<'a> {
 
         let else_branch = if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "ElseIf") {
             let elseif_start = self.advance().span.start;
-            let (elseif_condition, elseif_then, elseif_else) = self.parse_if_clause()?;
+            let (elseif_condition, elseif_then, elseif_else, _) = self.parse_if_clause()?;
             let span = crate::lexer::token::Span::new(elseif_start, self.peek().span.start);
 
             Some(vec![Statement::IfStatement {
@@ -808,29 +838,54 @@ impl<'a> Parser<'a> {
             None
         };
 
-        Ok((condition, then_branch, else_branch))
+        Ok((condition, then_branch, else_branch, false))
+    }
+
+    /// Parses one or more statements separated by `:` on a single line,
+    /// stopping as soon as a statement isn't followed by another `:`.
+    fn parse_colon_separated_statements(&mut self) -> Result<Vec<Statement>, ParseError> {
+        let mut statements = vec![self.parse_statement()?];
+
+        while matches!(self.peek().kind, TokenKind::Colon) {
+            self.advance();
+            statements.push(self.parse_statement()?);
+        }
+
+        Ok(statements)
     }
 
     /// Parses an If statement
     /// Syntax: If condition Then statements [ElseIf condition Then statements]... [Else statements] EndIf
+    /// or the single-line form: If condition Then statement[: statement...] [Else statement[: statement...]]
     fn parse_if_statement(&mut self) -> Result<Statement, ParseError> {
         let if_token = self.advance();
         let start_span = if_token.span;
 
-        let (condition, then_branch, else_branch) = self.parse_if_clause()?;
+        let (condition, then_branch, else_branch, is_single_line) = self.parse_if_clause()?;
 
-        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndIf") {
-            return Err(ParseError {
-                message: "Expected 'EndIf' to close If statement".to_string(),
-                span: self.peek().span,
-            });
-        }
-        let endif_token = self.advance();
-        let end_span = endif_token.span;
+        let end_span = if is_single_line {
+            else_branch
+                .as_ref()
+                .and_then(|stmts| stmts.last())
+                .or_else(|| then_branch.last())
+                .map(|stmt| stmt.span())
+                .unwrap_or(start_span)
+        } else {
+            if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndIf") {
+                return Err(ParseError {
+                    message: "Expected 'EndIf' to close If statement".to_string(),
+                    span: self.peek().span,
+                });
+            }
+            let endif_token = self.advance();
+            let endif_span = endif_token.span;
 
-        if matches!(self.peek().kind, TokenKind::Newline) {
-            self.advance();
-        }
+            if matches!(self.peek().kind, TokenKind::Newline) {
+                self.advance();
+            }
+
+            endif_span
+        };
 
         let span = crate::lexer::token::Span::new(start_span.start, end_span.end);
 
@@ -895,7 +950,7 @@ impl<'a> Parser<'a> {
     /// `Then` is optional and the terminator keywords are the `#`-prefixed
     /// forms; kept separate rather than parameterizing `parse_if_clause`
     /// since those two differences run through the whole function body.
-    fn parse_preprocessor_clause(&mut self) -> Result<IfClause, ParseError> {
+    fn parse_preprocessor_clause(&mut self) -> Result<PreprocessorClause, ParseError> {
         let condition = self.parse_expression()?;
 
         if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Then") {
@@ -1722,10 +1777,12 @@ impl<'a> Parser<'a> {
         matches!(self.peek().kind, TokenKind::Eof)
     }
 
-    /// Skips any newlines and comments
+    /// Skips any newlines, comments, and `:` statement separators between statements
     fn skip_whitespace_and_comments(&mut self) {
-        while matches!(self.peek().kind, TokenKind::Newline | TokenKind::Comment(_))
-            && !self.is_at_end()
+        while matches!(
+            self.peek().kind,
+            TokenKind::Newline | TokenKind::Comment(_) | TokenKind::Colon
+        ) && !self.is_at_end()
         {
             self.advance();
         }
@@ -3847,6 +3904,132 @@ mod tests {
                 }
             } else {
                 panic!("Expected if statement");
+            }
+        }
+
+        #[test]
+        fn parses_single_line_if_then_without_endif() {
+            let source = "If x = 5 Then y = 1".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::IfStatement {
+                then_branch,
+                else_branch,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(then_branch.len(), 1);
+                assert!(matches!(then_branch[0], Statement::Assignment { .. }));
+                assert!(else_branch.is_none());
+            } else {
+                panic!("Expected if statement, got {:?}", program.statements[0]);
+            }
+        }
+
+        #[test]
+        fn parses_single_line_if_with_colon_separated_statements() {
+            let source = "If x = 5 Then y = 1 : z = 2".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::IfStatement { then_branch, .. } = &program.statements[0] {
+                assert_eq!(then_branch.len(), 2);
+            } else {
+                panic!("Expected if statement, got {:?}", program.statements[0]);
+            }
+        }
+
+        #[test]
+        fn parses_single_line_if_then_else() {
+            let source = "If x = 5 Then y = 1 Else y = 2".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::IfStatement {
+                then_branch,
+                else_branch,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(then_branch.len(), 1);
+                let else_stmts = else_branch.as_ref().expect("Expected an Else branch");
+                assert_eq!(else_stmts.len(), 1);
+            } else {
+                panic!("Expected if statement, got {:?}", program.statements[0]);
+            }
+        }
+
+        #[test]
+        fn single_line_if_does_not_consume_following_line() {
+            let source = "If x = 5 Then y = 1\nz = 2".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 2);
+
+            assert!(matches!(
+                program.statements[0],
+                Statement::IfStatement { .. }
+            ));
+            assert!(matches!(
+                program.statements[1],
+                Statement::Assignment { .. }
+            ));
+        }
+    }
+
+    mod colon_statement_separator {
+        use super::*;
+
+        #[test]
+        fn parses_colon_separated_statements_on_one_line() {
+            let source = "x = 1 : y = 2".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 2);
+
+            assert!(matches!(
+                program.statements[0],
+                Statement::Assignment { .. }
+            ));
+            assert!(matches!(
+                program.statements[1],
+                Statement::Assignment { .. }
+            ));
+        }
+
+        #[test]
+        fn parses_colon_separated_statements_inside_a_for_loop_body() {
+            let source = "For i = 1 To 10\n  x = i : y = i * 2\nNext".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ForLoop { body, .. } = &program.statements[0] {
+                assert_eq!(body.len(), 2);
+            } else {
+                panic!("Expected for loop, got {:?}", program.statements[0]);
             }
         }
     }

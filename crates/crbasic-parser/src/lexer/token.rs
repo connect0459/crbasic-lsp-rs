@@ -93,6 +93,8 @@ pub enum TokenKind<'a> {
     RightBracket,
     /// Comma ,
     Comma,
+    /// Statement separator (:), allowing multiple statements on one line
+    Colon,
 
     /// Line continuation (space + underscore at end of line)
     LineContinuation,
