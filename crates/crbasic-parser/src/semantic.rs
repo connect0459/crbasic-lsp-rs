@@ -72,6 +72,34 @@ pub enum ErrorSeverity {
     Warning,
 }
 
+/// Machine-readable classification of a [`SemanticError`]
+///
+/// Lets consumers (e.g. the LSP layer's code action provider) branch on the
+/// kind of diagnostic without parsing the human-readable `message` string.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SemanticErrorKind {
+    /// Variable name exceeds the model's maximum allowed length
+    MaxLengthExceeded {
+        /// The offending variable name
+        variable_name: String,
+        /// The model's maximum allowed length
+        max_length: usize,
+    },
+    /// Variable name exceeds the model's recommended length
+    RecommendedLengthExceeded {
+        /// The offending variable name
+        variable_name: String,
+        /// The model's recommended length
+        recommended_length: usize,
+    },
+    /// Variable name collides with another after CR200X's 12-character
+    /// output-table truncation
+    TruncationCollision {
+        /// The offending variable name
+        variable_name: String,
+    },
+}
+
 /// Semantic error information
 #[derive(Debug, Clone, PartialEq)]
 pub struct SemanticError {
@@ -81,6 +109,8 @@ pub struct SemanticError {
     pub span: Span,
     /// The severity level (Error or Warning)
     pub severity: ErrorSeverity,
+    /// Machine-readable classification of this error
+    pub kind: SemanticErrorKind,
 }
 
 /// Semantic analyzer for CRBasic programs
@@ -255,6 +285,10 @@ impl SemanticAnalyzer {
                 ),
                 span,
                 severity: ErrorSeverity::Error,
+                kind: SemanticErrorKind::MaxLengthExceeded {
+                    variable_name: name.to_string(),
+                    max_length: profile.max_variable_length,
+                },
             });
         }
 
@@ -268,6 +302,10 @@ impl SemanticAnalyzer {
                 ),
                 span,
                 severity: ErrorSeverity::Warning,
+                kind: SemanticErrorKind::RecommendedLengthExceeded {
+                    variable_name: name.to_string(),
+                    recommended_length,
+                },
             });
         }
 
@@ -306,6 +344,9 @@ impl SemanticAnalyzer {
                             ),
                             span: symbol.declaration_span,
                             severity: ErrorSeverity::Error,
+                            kind: SemanticErrorKind::TruncationCollision {
+                                variable_name: symbol.name.clone(),
+                            },
                         });
                     }
                 }
@@ -534,6 +575,13 @@ mod tests {
             assert_eq!(errors.len(), 2); // Error for > 16 chars + warning for > 12 chars
             assert!(errors[0].message.contains("exceeds maximum length of 16"));
             assert_eq!(errors[0].severity, ErrorSeverity::Error);
+            assert_eq!(
+                errors[0].kind,
+                SemanticErrorKind::MaxLengthExceeded {
+                    variable_name: long_name.to_string(),
+                    max_length: 16,
+                }
+            );
         }
 
         #[test]
@@ -561,6 +609,13 @@ mod tests {
                     .contains("exceeds recommended length of 12")
             );
             assert_eq!(errors[0].severity, ErrorSeverity::Warning);
+            assert_eq!(
+                errors[0].kind,
+                SemanticErrorKind::RecommendedLengthExceeded {
+                    variable_name: medium_name.to_string(),
+                    recommended_length: 12,
+                }
+            );
         }
 
         #[test]
@@ -584,6 +639,13 @@ mod tests {
             assert_eq!(errors.len(), 2); // Error for > 39 chars + warning for > 35 chars
             assert!(errors[0].message.contains("exceeds maximum length of 39"));
             assert_eq!(errors[0].severity, ErrorSeverity::Error);
+            assert_eq!(
+                errors[0].kind,
+                SemanticErrorKind::MaxLengthExceeded {
+                    variable_name: long_name.to_string(),
+                    max_length: 39,
+                }
+            );
         }
 
         #[test]
@@ -611,6 +673,13 @@ mod tests {
                     .contains("exceeds recommended length of 35")
             );
             assert_eq!(errors[0].severity, ErrorSeverity::Warning);
+            assert_eq!(
+                errors[0].kind,
+                SemanticErrorKind::RecommendedLengthExceeded {
+                    variable_name: medium_name.to_string(),
+                    recommended_length: 35,
+                }
+            );
         }
     }
 
@@ -656,6 +725,11 @@ mod tests {
                 .collect();
             assert_eq!(collision_errors.len(), 2);
             assert_eq!(collision_errors[0].severity, ErrorSeverity::Error);
+            assert!(
+                collision_errors
+                    .iter()
+                    .all(|e| matches!(&e.kind, SemanticErrorKind::TruncationCollision { .. }))
+            );
         }
 
         #[test]

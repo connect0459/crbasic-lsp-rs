@@ -443,7 +443,7 @@ impl LanguageServer for CRBasicLanguageServer {
 mod tests {
     use super::*;
     use crbasic_parser::lexer::token::Span;
-    use crbasic_parser::semantic::ErrorSeverity;
+    use crbasic_parser::semantic::{ErrorSeverity, SemanticErrorKind};
 
     #[test]
     fn converts_error_severity_to_diagnostic_severity() {
@@ -451,6 +451,9 @@ mod tests {
             message: "Test error".to_string(),
             span: Span::new(Position::new(1, 1), Position::new(1, 10)),
             severity: ErrorSeverity::Error,
+            kind: SemanticErrorKind::TruncationCollision {
+                variable_name: "Test".to_string(),
+            },
         };
 
         let diagnostics = CRBasicLanguageServer::semantic_errors_to_diagnostics(&[error]);
@@ -466,6 +469,9 @@ mod tests {
             message: "Test warning".to_string(),
             span: Span::new(Position::new(1, 1), Position::new(1, 10)),
             severity: ErrorSeverity::Warning,
+            kind: SemanticErrorKind::TruncationCollision {
+                variable_name: "Test".to_string(),
+            },
         };
 
         let diagnostics = CRBasicLanguageServer::semantic_errors_to_diagnostics(&[error]);
