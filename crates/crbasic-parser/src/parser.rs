@@ -1708,11 +1708,13 @@ impl<'a> Parser<'a> {
         Ok(left)
     }
 
-    /// Parses unary expressions (-, NOT)
+    /// Parses unary expressions (-, NOT, @, !)
     fn parse_unary(&mut self) -> Result<Expression, ParseError> {
         let operator = match &self.peek().kind {
             TokenKind::Minus => Some(crate::ast::UnaryOperator::Negate),
             TokenKind::Keyword(kw) if *kw == "NOT" => Some(crate::ast::UnaryOperator::Not),
+            TokenKind::At => Some(crate::ast::UnaryOperator::AddressOf),
+            TokenKind::Bang => Some(crate::ast::UnaryOperator::Dereference),
             _ => None,
         };
 
@@ -2896,6 +2898,60 @@ mod tests {
                     }
                     _ => panic!("Expected unary operation"),
                 }
+            }
+        }
+
+        #[test]
+        fn parses_address_of_operator() {
+            let source = "Ptr = @MyVariable".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Assignment { value, .. } = &program.statements[0] {
+                if let Expression::UnaryOp {
+                    operator, operand, ..
+                } = value
+                {
+                    assert_eq!(*operator, UnaryOperator::AddressOf);
+                    assert!(
+                        matches!(&**operand, Expression::Identifier { name, .. } if name == "MyVariable")
+                    );
+                } else {
+                    panic!("Expected unary operation, got {value:?}");
+                }
+            } else {
+                panic!("Expected assignment statement");
+            }
+        }
+
+        #[test]
+        fn parses_dereference_operator() {
+            let source = "MyVariable = !Ptr".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Assignment { value, .. } = &program.statements[0] {
+                if let Expression::UnaryOp {
+                    operator, operand, ..
+                } = value
+                {
+                    assert_eq!(*operator, UnaryOperator::Dereference);
+                    assert!(
+                        matches!(&**operand, Expression::Identifier { name, .. } if name == "Ptr")
+                    );
+                } else {
+                    panic!("Expected unary operation, got {value:?}");
+                }
+            } else {
+                panic!("Expected assignment statement");
             }
         }
     }

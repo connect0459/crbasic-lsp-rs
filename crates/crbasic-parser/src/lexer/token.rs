@@ -118,6 +118,10 @@ pub enum TokenKind<'a> {
     Comma,
     /// Statement separator (:), allowing multiple statements on one line
     Colon,
+    /// Address-of pointer operator (@)
+    At,
+    /// Dereference pointer operator (!)
+    Bang,
 
     /// Line continuation (space + underscore at end of line)
     LineContinuation,

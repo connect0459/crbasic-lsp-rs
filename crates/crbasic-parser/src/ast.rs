@@ -377,6 +377,10 @@ pub enum UnaryOperator {
     Negate,
     /// Logical NOT operator
     Not,
+    /// Address-of pointer operator (@)
+    AddressOf,
+    /// Dereference pointer operator (!)
+    Dereference,
 }
 
 impl Program {

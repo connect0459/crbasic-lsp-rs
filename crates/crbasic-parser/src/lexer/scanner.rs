@@ -319,6 +319,16 @@ impl<'a> Scanner<'a> {
                 let span = Span::new(start_pos, end_pos);
                 Some(Token::new(TokenKind::Colon, ":", span))
             }
+            '@' => {
+                let end_pos = Position::new(self.line, self.column);
+                let span = Span::new(start_pos, end_pos);
+                Some(Token::new(TokenKind::At, "@", span))
+            }
+            '!' => {
+                let end_pos = Position::new(self.line, self.column);
+                let span = Span::new(start_pos, end_pos);
+                Some(Token::new(TokenKind::Bang, "!", span))
+            }
             '\n' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
@@ -1085,6 +1095,18 @@ mod tests {
 
             assert_eq!(tokens[0].kind, TokenKind::Backslash);
             assert_eq!(tokens[1].kind, TokenKind::Eof);
+        }
+
+        #[test]
+        fn recognizes_pointer_operators() {
+            let mut scanner = Scanner::new("@!");
+            let tokens = scanner.scan_tokens();
+
+            assert_eq!(tokens.len(), 3);
+
+            assert_eq!(tokens[0].kind, TokenKind::At);
+            assert_eq!(tokens[1].kind, TokenKind::Bang);
+            assert_eq!(tokens[2].kind, TokenKind::Eof);
         }
 
         #[test]
