@@ -913,6 +913,116 @@ mod code_lens {
     }
 }
 
+mod call_hierarchy {
+    use super::*;
+
+    async fn open_program_with_a_caller_and_callee(
+        service: &LspService<CRBasicLanguageServer>,
+        uri: &Url,
+    ) {
+        service
+            .inner()
+            .did_open(DidOpenTextDocumentParams {
+                text_document: TextDocumentItem {
+                    uri: uri.clone(),
+                    language_id: "crbasic".to_string(),
+                    version: 1,
+                    text:
+                        "BeginProg\nSub Caller\nCalc()\nEndSub\nFunction Calc\nEndFunction\nEndProg"
+                            .to_string(),
+                },
+            })
+            .await;
+    }
+
+    #[tokio::test]
+    async fn prepares_incoming_and_outgoing_calls_for_a_function() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+        open_program_with_a_caller_and_callee(&service, &uri).await;
+
+        let prepare_params = CallHierarchyPrepareParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 4,
+                    character: 9,
+                }, // "Calc" in "Function Calc"
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        };
+
+        let prepare_result = service.inner().prepare_call_hierarchy(prepare_params).await;
+        assert!(prepare_result.is_ok(), "Prepare should succeed");
+        let items = prepare_result
+            .expect("Should be Ok")
+            .expect("Should resolve an item");
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].name, "Calc");
+
+        let incoming_result = service
+            .inner()
+            .incoming_calls(CallHierarchyIncomingCallsParams {
+                item: items[0].clone(),
+                work_done_progress_params: WorkDoneProgressParams::default(),
+                partial_result_params: PartialResultParams::default(),
+            })
+            .await;
+        assert!(incoming_result.is_ok(), "Incoming calls should succeed");
+        let incoming = incoming_result
+            .expect("Should be Ok")
+            .expect("Should return incoming calls");
+        assert_eq!(incoming.len(), 1);
+        assert_eq!(incoming[0].from.name, "Caller");
+
+        let outgoing_result = service
+            .inner()
+            .outgoing_calls(CallHierarchyOutgoingCallsParams {
+                item: incoming[0].from.clone(),
+                work_done_progress_params: WorkDoneProgressParams::default(),
+                partial_result_params: PartialResultParams::default(),
+            })
+            .await;
+        assert!(outgoing_result.is_ok(), "Outgoing calls should succeed");
+        let outgoing = outgoing_result
+            .expect("Should be Ok")
+            .expect("Should return outgoing calls");
+        assert_eq!(outgoing.len(), 1);
+        assert_eq!(outgoing[0].to.name, "Calc");
+    }
+
+    #[tokio::test]
+    async fn returns_none_when_the_cursor_is_not_on_a_callable_symbol() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nPublic Temp\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let prepare_params = CallHierarchyPrepareParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 1,
+                    character: 7,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        };
+
+        let result = service.inner().prepare_call_hierarchy(prepare_params).await;
+        assert!(result.is_ok(), "Prepare should succeed");
+        assert!(result.expect("Should be Ok").is_none());
+    }
+}
+
 mod document_symbols {
     use super::*;
 

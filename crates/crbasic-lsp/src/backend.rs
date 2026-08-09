@@ -2,6 +2,7 @@
 //!
 //! This module implements the Language Server Protocol backend using tower-lsp.
 
+use crate::call_hierarchy::CallHierarchyProvider;
 use crate::code_action::{CodeActionProvider, TruncateVariableNameData};
 use crate::code_lens::CodeLensProvider;
 use crate::completion::CompletionProvider;
@@ -220,6 +221,7 @@ impl LanguageServer for CRBasicLanguageServer {
                 code_lens_provider: Some(CodeLensOptions {
                     resolve_provider: Some(false),
                 }),
+                call_hierarchy_provider: Some(CallHierarchyServerCapability::Simple(true)),
                 rename_provider: Some(tower_lsp::lsp_types::OneOf::Right(RenameOptions {
                     prepare_provider: Some(true),
                     work_done_progress_options: Default::default(),
@@ -354,6 +356,53 @@ impl LanguageServer for CRBasicLanguageServer {
         }
 
         Ok(None)
+    }
+
+    async fn prepare_call_hierarchy(
+        &self,
+        params: CallHierarchyPrepareParams,
+    ) -> Result<Option<Vec<CallHierarchyItem>>> {
+        let uri = params.text_document_position_params.text_document.uri;
+        let position = params.text_document_position_params.position;
+
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri)
+            && let Some(ast) = &doc.ast
+        {
+            let mut scanner = Scanner::new(&doc.text);
+            let tokens = scanner.scan_tokens();
+
+            if let Some(item) = CallHierarchyProvider::prepare(&tokens, ast, &uri, position) {
+                return Ok(Some(vec![item]));
+            }
+        }
+
+        Ok(None)
+    }
+
+    async fn incoming_calls(
+        &self,
+        params: CallHierarchyIncomingCallsParams,
+    ) -> Result<Option<Vec<CallHierarchyIncomingCall>>> {
+        let manager = self.document_manager.read().await;
+
+        Ok(Some(CallHierarchyProvider::incoming_calls(
+            &params.item,
+            manager.analyzed_documents(),
+        )))
+    }
+
+    async fn outgoing_calls(
+        &self,
+        params: CallHierarchyOutgoingCallsParams,
+    ) -> Result<Option<Vec<CallHierarchyOutgoingCall>>> {
+        let manager = self.document_manager.read().await;
+
+        Ok(Some(CallHierarchyProvider::outgoing_calls(
+            &params.item,
+            manager.analyzed_documents(),
+        )))
     }
 
     async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
