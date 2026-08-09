@@ -763,8 +763,32 @@ complete; none of these were previously tracked anywhere in this file.
       precedence in VSCode once the server is running, the same
       TextMate-first/LSP-refines relationship ADR-002 established for
       syntax highlighting
-  - Still not implemented: `workspaceSymbolProvider`, `inlayHintProvider`,
-    `codeLensProvider`, `callHierarchyProvider`
+  - [x] `workspaceSymbolProvider` ✅ Resolved
+    - Added `WorkspaceSymbolProvider` (`crates/crbasic-lsp/src/workspace_symbol.rs`):
+      reuses the existing `textDocument/documentSymbol` extraction
+      (`symbols::extract_document_symbols`) across every open document,
+      flattening each document's nested symbol tree into flat
+      `SymbolInformation` entries and attaching that document's URI, rather
+      than re-walking the AST with new logic
+      - Matching is a case-insensitive substring check against `query`; an
+        empty query returns every symbol, matching the common "list all
+        symbols" convention
+      - **Scope note**: search only covers currently *open* documents, not
+        every file in the project on disk -- this server has no workspace
+        file-indexing infrastructure, only `DocumentManager`'s in-memory
+        map of documents the client has opened. A full-project index would
+        need a new file-walking/background-indexing layer, out of scope
+        here
+    - Added `DocumentManager::analyzed_documents()`
+      (`crates/crbasic-lsp/src/document.rs`) to iterate every open
+      document's URI and cached AST, needed to feed the cross-document
+      search
+    - Wired into `backend.rs`: `workspace_symbol_provider` capability plus
+      the `workspace/symbol` handler
+    - 2 unit tests (`document.rs`) + 7 unit tests (`workspace_symbol.rs`) +
+      2 integration tests (`crates/crbasic-lsp/tests/lsp_integration.rs`)
+  - Still not implemented: `inlayHintProvider`, `codeLensProvider`,
+    `callHierarchyProvider`
   - Diagnostics also never populate `related_information` (hardcoded to
     `None` in both places `backend.rs` builds a `Diagnostic`)
 - [ ] Rust test coverage measurement in CI
