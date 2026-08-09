@@ -400,6 +400,26 @@ impl CompletionProvider {
             Self::create_keyword_completion("ElseIf", "Additional conditional branch"),
             Self::create_keyword_completion("EndIf", "Terminates If block"),
             Self::create_keyword_snippet(
+                "#If",
+                "#If ${1:condition}\n\t$0\n#EndIf",
+                "Compile-time conditional block",
+            ),
+            Self::create_keyword_completion(
+                "#ElseIf",
+                "Additional compile-time conditional branch",
+            ),
+            Self::create_keyword_completion("#Else", "Alternative compile-time branch"),
+            Self::create_keyword_completion("#EndIf", "Terminates a #If/#IfDef block"),
+            Self::create_keyword_snippet(
+                "#IfDef",
+                "#IfDef ${1:ConstName} Then\n\t$0\n#EndIf",
+                "Compile-time check for a declared Const",
+            ),
+            Self::create_keyword_completion(
+                "#UnDef",
+                "Un-declares a Const so it can be redeclared",
+            ),
+            Self::create_keyword_snippet(
                 "For",
                 "For ${1:i} = ${2:1} To ${3:10}\n\t$0\nNext ${1:i}",
                 "Counter-based loop",

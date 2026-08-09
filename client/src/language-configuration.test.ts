@@ -55,6 +55,11 @@ describe("language-configuration.json indentationRules", () => {
       "Case 1",
       "If x > 5 Then",
       "  If x > 5 Then",
+      "#If LoggerType = GRANITE6",
+      "#If Add107 Then",
+      "#IfDef FINAL Then",
+      "#ElseIf LoggerType = CR1000",
+      "#Else",
     ])("matches block-opening line: %s", (line) => {
       expect(increase.test(line)).toBe(true);
     });
@@ -84,6 +89,9 @@ describe("language-configuration.json indentationRules", () => {
       "ElseIf x > 5 Then",
       "Case 1",
       "Case Else",
+      "#EndIf",
+      "#ElseIf LoggerType = CR1000",
+      "#Else",
     ])("matches block-closing line: %s", (line) => {
       expect(decrease.test(line)).toBe(true);
     });

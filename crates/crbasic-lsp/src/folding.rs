@@ -52,6 +52,12 @@ impl FoldingRangeProvider {
                     else_branch,
                     span,
                     ..
+                }
+                | Statement::PreprocessorConditional {
+                    then_branch,
+                    else_branch,
+                    span,
+                    ..
                 } => {
                     Self::push_range(ranges, span.start, span.end);
                     Self::collect_from_statements(then_branch, ranges);

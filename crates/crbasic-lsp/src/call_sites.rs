@@ -65,6 +65,12 @@ fn walk_statements<'a>(
                 then_branch,
                 else_branch,
                 ..
+            }
+            | Statement::PreprocessorConditional {
+                condition,
+                then_branch,
+                else_branch,
+                ..
             } => {
                 walk_expression(condition, enclosing, sites);
                 walk_statements(then_branch, enclosing, sites);

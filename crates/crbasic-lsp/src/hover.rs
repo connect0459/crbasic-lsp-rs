@@ -130,6 +130,22 @@ impl HoverProvider {
             ),
             "elseif" => Some("**ElseIf**\n\nAdditional conditional branch in If statement."),
             "endif" => Some("**EndIf**\n\nTerminates an If block."),
+            "#if" => Some(
+                "**#If**\n\nCompile-time conditional. Includes the following code only when the condition holds -- compared against `LoggerType` or a `Const`.\n\n```crbasic\n#If LoggerType = GRANITE6\n  ' statements\n#EndIf\n```",
+            ),
+            "#elseif" => {
+                Some("**#ElseIf**\n\nAdditional compile-time conditional branch, following `#If`.")
+            }
+            "#else" => {
+                Some("**#Else**\n\nAlternative compile-time branch, following `#If`/`#IfDef`.")
+            }
+            "#endif" => Some("**#EndIf**\n\nTerminates a `#If`/`#IfDef` block."),
+            "#ifdef" => Some(
+                "**#IfDef**\n\nCompile-time check for whether a `Const` has already been declared.\n\n```crbasic\nConst FINAL = 1\n#IfDef FINAL Then\n  Public Testing\n#EndIf\n```",
+            ),
+            "#undef" => Some(
+                "**#UnDef**\n\nUn-declares a `Const` so it can be redeclared -- typically used with `Include` to stitch together library files that each define their own same-named constants.",
+            ),
             "for" => Some(
                 "**For**\n\nLoop statement with counter.\n\n```crbasic\nFor i = 1 To 10 Step 1\n  ' statements\nNext i\n```",
             ),

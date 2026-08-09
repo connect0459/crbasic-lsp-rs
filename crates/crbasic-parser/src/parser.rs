@@ -128,9 +128,16 @@ impl<'a> Parser<'a> {
                 || kw == "EndProg"
                 || kw == "DataTable"
                 || kw == "EndTable"
-                || kw == "NextScan")
+                || kw == "NextScan"
+                || kw == "#UnDef")
         {
             return self.parse_program_structure();
+        }
+
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
+            && (kw == "#If" || kw == "#IfDef")
+        {
+            return self.parse_preprocessor_conditional();
         }
 
         if let &TokenKind::Keyword(kw) = &self.peek().kind
@@ -485,6 +492,8 @@ impl<'a> Parser<'a> {
                 self.advance();
 
                 Some(args)
+            } else if keyword == "#UnDef" {
+                Some(vec![self.parse_expression()?])
             } else {
                 None
             };
@@ -594,6 +603,117 @@ impl<'a> Parser<'a> {
             else_branch,
             span,
         })
+    }
+
+    /// Parses a preprocessor conditional block
+    /// Syntax: (`#If`|`#IfDef`) condition [Then] statements
+    ///         [`#ElseIf` condition [Then] statements]...
+    ///         [`#Else` statements]
+    ///         `#EndIf`
+    ///
+    /// Structural only: the condition is never evaluated (see
+    /// `Statement::PreprocessorConditional`'s docs for why), so both
+    /// branches are always kept. `Then` is optional here, unlike runtime
+    /// `If`, matching Campbell Scientific's own examples.
+    fn parse_preprocessor_conditional(&mut self) -> Result<Statement, ParseError> {
+        let directive_token = self.advance();
+        let start_span = directive_token.span;
+        let directive = if let &TokenKind::Keyword(kw) = &directive_token.kind {
+            kw.trim_start_matches('#').to_string()
+        } else {
+            return Err(ParseError {
+                message: "Expected a preprocessor directive keyword".to_string(),
+                span: start_span,
+            });
+        };
+
+        let (condition, then_branch, else_branch) = self.parse_preprocessor_clause()?;
+
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "#EndIf") {
+            return Err(ParseError {
+                message: "Expected '#EndIf' to close preprocessor conditional".to_string(),
+                span: self.peek().span,
+            });
+        }
+        let endif_token = self.advance();
+        let end_span = endif_token.span;
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        let span = crate::lexer::token::Span::new(start_span.start, end_span.end);
+
+        Ok(Statement::PreprocessorConditional {
+            directive,
+            condition,
+            then_branch,
+            else_branch,
+            span,
+        })
+    }
+
+    /// Parses the `condition [Then] statements` portion shared by `#If`/
+    /// `#IfDef` and each chained `#ElseIf`. Mirrors `parse_if_clause`, but
+    /// `Then` is optional and the terminator keywords are the `#`-prefixed
+    /// forms; kept separate rather than parameterizing `parse_if_clause`
+    /// since those two differences run through the whole function body.
+    fn parse_preprocessor_clause(&mut self) -> Result<IfClause, ParseError> {
+        let condition = self.parse_expression()?;
+
+        if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Then") {
+            self.advance();
+        }
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        let mut then_branch = Vec::new();
+        self.skip_whitespace_and_comments();
+        while !matches!(
+            self.peek().kind,
+            TokenKind::Keyword(kw) if kw == "#Else" || kw == "#ElseIf" || kw == "#EndIf"
+        ) && !self.is_at_end()
+        {
+            then_branch.push(self.parse_statement()?);
+            self.skip_whitespace_and_comments();
+        }
+
+        let else_branch = if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "#ElseIf") {
+            let elseif_start = self.advance().span.start;
+            let (elseif_condition, elseif_then, elseif_else) = self.parse_preprocessor_clause()?;
+            let span = crate::lexer::token::Span::new(elseif_start, self.peek().span.start);
+
+            Some(vec![Statement::PreprocessorConditional {
+                directive: "If".to_string(),
+                condition: elseif_condition,
+                then_branch: elseif_then,
+                else_branch: elseif_else,
+                span,
+            }])
+        } else if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "#Else") {
+            self.advance();
+
+            if matches!(self.peek().kind, TokenKind::Newline) {
+                self.advance();
+            }
+
+            let mut else_stmts = Vec::new();
+            self.skip_whitespace_and_comments();
+            while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "#EndIf")
+                && !self.is_at_end()
+            {
+                else_stmts.push(self.parse_statement()?);
+                self.skip_whitespace_and_comments();
+            }
+
+            Some(else_stmts)
+        } else {
+            None
+        };
+
+        Ok((condition, then_branch, else_branch))
     }
 
     /// Parses a For loop statement
@@ -1376,6 +1496,7 @@ impl Statement {
             Statement::VarDeclaration { span, .. } => *span,
             Statement::Assignment { span, .. } => *span,
             Statement::IfStatement { span, .. } => *span,
+            Statement::PreprocessorConditional { span, .. } => *span,
             Statement::ForLoop { span, .. } => *span,
             Statement::DoLoop { span, .. } => *span,
             Statement::FunctionCall { span, .. } => *span,
@@ -3473,6 +3594,164 @@ mod tests {
                 }
             } else {
                 panic!("Expected if statement");
+            }
+        }
+    }
+
+    mod control_flow_preprocessor {
+        use super::*;
+
+        #[test]
+        fn parses_hash_if_without_then_keyword() {
+            // Unlike runtime `If`, `#If`'s `Then` is optional per Campbell
+            // Scientific's own conditional-compilation examples.
+            let source = "#If LoggerType = GRANITE6\n  y = 1\n#EndIf".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::PreprocessorConditional {
+                directive,
+                then_branch,
+                else_branch,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(directive, "If");
+                assert_eq!(then_branch.len(), 1);
+                assert!(else_branch.is_none());
+            } else {
+                panic!("Expected a preprocessor conditional statement");
+            }
+        }
+
+        #[test]
+        fn parses_hash_if_with_then_keyword() {
+            let source = "#If Add107 Then\n  y = 1\n#EndIf".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::PreprocessorConditional {
+                directive,
+                then_branch,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(directive, "If");
+                assert_eq!(then_branch.len(), 1);
+            } else {
+                panic!("Expected a preprocessor conditional statement");
+            }
+        }
+
+        #[test]
+        fn parses_hash_if_elseif_else_endif_chain() {
+            let source =
+                "#If a Then\n  x = 1\n#ElseIf b Then\n  x = 2\n#Else\n  x = 3\n#EndIf".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::PreprocessorConditional { else_branch, .. } = &program.statements[0] {
+                let elseif_branch = else_branch.as_ref().expect("Expected an ElseIf branch");
+
+                if let Statement::PreprocessorConditional {
+                    directive: elseif_directive,
+                    else_branch: final_else_branch,
+                    ..
+                } = &elseif_branch[0]
+                {
+                    assert_eq!(elseif_directive, "If");
+
+                    let final_else = final_else_branch
+                        .as_ref()
+                        .expect("Expected a final Else branch");
+                    assert_eq!(final_else.len(), 1);
+                } else {
+                    panic!("Expected #ElseIf to desugar to a nested preprocessor conditional");
+                }
+            } else {
+                panic!("Expected a preprocessor conditional statement");
+            }
+        }
+
+        #[test]
+        fn parses_hash_ifdef_else_endif() {
+            let source = "#IfDef FINAL Then\n  Public Testing\n#Else\n  Public Not_Testing\n#EndIf"
+                .to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::PreprocessorConditional {
+                directive,
+                condition,
+                then_branch,
+                else_branch,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(directive, "IfDef");
+                assert!(
+                    matches!(condition, Expression::Identifier { name, .. } if name == "FINAL")
+                );
+                assert_eq!(then_branch.len(), 1);
+                assert!(else_branch.is_some());
+            } else {
+                panic!("Expected a preprocessor conditional statement");
+            }
+        }
+
+        #[test]
+        fn hash_if_requires_hash_endif_to_close() {
+            let source = "#If a Then\n  x = 1".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let result = parser.parse();
+
+            assert!(
+                result.is_err(),
+                "#If without a closing #EndIf should be a parse error"
+            );
+        }
+
+        #[test]
+        fn parses_hash_undef() {
+            let source = "#UnDef Section".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ProgramStructure {
+                keyword, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "#UnDef");
+                let args = arguments.as_ref().expect("Expected an argument");
+                assert_eq!(args.len(), 1);
+                assert!(
+                    matches!(&args[0], Expression::Identifier { name, .. } if name == "Section")
+                );
+            } else {
+                panic!("Expected a program structure statement for #UnDef");
             }
         }
     }

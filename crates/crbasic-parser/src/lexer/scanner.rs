@@ -122,6 +122,24 @@ impl<'a> Scanner<'a> {
 
                 Some(Token::new(kind, identifier, span))
             }
+            // Preprocessor directives (#If, #ElseIf, #Else, #EndIf, #IfDef,
+            // #UnDef) are lexed as a single `#`-prefixed keyword token
+            // rather than a separate `#` punctuation token followed by a
+            // plain keyword -- `#` isn't meaningful in CRBasic on its own.
+            '#' => {
+                self.scan_identifier();
+                let end_pos = Position::new(self.line, self.column);
+                let span = Span::new(start_pos, end_pos);
+                let lexeme = &self.source[start_index..self.current];
+
+                let kind = if let Some(canonical_keyword) = lookup_keyword(lexeme) {
+                    TokenKind::Keyword(canonical_keyword)
+                } else {
+                    TokenKind::Identifier(lexeme)
+                };
+
+                Some(Token::new(kind, lexeme, span))
+            }
             '+' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
@@ -905,6 +923,46 @@ mod tests {
                     assert_eq!(*name, "publicVar", "Should be identifier, not keyword");
                 }
                 _ => panic!("Expected Identifier token, got {:?}", tokens[0].kind),
+            }
+        }
+
+        #[test]
+        fn recognizes_preprocessor_directive_keywords() {
+            let test_cases = vec![
+                ("#If", "#If"),
+                ("#if", "#If"),
+                ("#IF", "#If"),
+                ("#ElseIf", "#ElseIf"),
+                ("#Else", "#Else"),
+                ("#EndIf", "#EndIf"),
+                ("#IfDef", "#IfDef"),
+                ("#UnDef", "#UnDef"),
+            ];
+
+            for (input, expected) in test_cases {
+                let mut scanner = Scanner::new(input);
+                let tokens = scanner.scan_tokens();
+
+                assert_eq!(
+                    tokens.len(),
+                    2,
+                    "Input '{}' should produce keyword token and EOF",
+                    input
+                );
+
+                match &tokens[0].kind {
+                    TokenKind::Keyword(keyword) => {
+                        assert_eq!(
+                            *keyword, expected,
+                            "Input '{}' should normalize to '{}'",
+                            input, expected
+                        );
+                    }
+                    _ => panic!(
+                        "Expected Keyword token for '{}', got {:?}",
+                        input, tokens[0].kind
+                    ),
+                }
             }
         }
     }

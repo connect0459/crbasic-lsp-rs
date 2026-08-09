@@ -77,6 +77,30 @@ pub enum Statement {
         span: Span,
     },
 
+    /// Preprocessor conditional block: `#If`/`#IfDef` ... [`#ElseIf` ...]
+    /// ... [`#Else` ...] `#EndIf`
+    ///
+    /// Parsed structurally only -- the condition is never evaluated, the
+    /// same way a runtime `IfStatement`'s condition is never evaluated.
+    /// Kept as its own variant rather than reusing `IfStatement` because it
+    /// is a genuinely different construct (compile-time conditional
+    /// compilation, not a runtime branch), and unlike `If`, its `Then`
+    /// keyword is optional.
+    PreprocessorConditional {
+        /// Which directive introduced this block: `"If"` or `"IfDef"`
+        directive: String,
+        /// The condition expression for `#If`, or the `Const` name being
+        /// checked for `#IfDef`
+        condition: Expression,
+        /// Statements included when the condition holds
+        then_branch: Vec<Statement>,
+        /// Optional statements for `#Else`, or a single nested
+        /// `PreprocessorConditional` for a chained `#ElseIf`
+        else_branch: Option<Vec<Statement>>,
+        /// The source code span
+        span: Span,
+    },
+
     /// For-Next loop
     ForLoop {
         /// The loop variable name

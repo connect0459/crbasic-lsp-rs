@@ -31,6 +31,9 @@
       "include": "#numbers"
     },
     {
+      "include": "#preprocessor-keywords"
+    },
+    {
       "include": "#control-keywords"
     },
     {
@@ -89,6 +92,10 @@
           "match": "\\b\\d+\\b"
         }
       ]
+    },
+    "preprocessor-keywords": {
+      "name": "keyword.control.preprocessor.crbasic",
+      "match": "(?i)(#If|#ElseIf|#Else|#EndIf|#IfDef|#UnDef)\\b"
     },
     "control-keywords": {
       "name": "keyword.control.crbasic",

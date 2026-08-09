@@ -45,7 +45,14 @@ function byCategory(entries) {
 }
 
 function alternation(names) {
-  return `(?i)\\b(${names.join("|")})\\b`;
+  // `\b` needs a word-char/non-word-char transition on both sides, but `#`
+  // is itself a non-word char -- a leading `\b` right before e.g. `#If`
+  // would never match (whitespace/line-start before `#` is non-word on
+  // both sides). Preprocessor directive names are the only entries that
+  // start with `#`, so drop the leading boundary just for them; the
+  // trailing `\b` still works since directive names end in a word char.
+  const leadingBoundary = names[0].startsWith("#") ? "" : "\\b";
+  return `(?i)${leadingBoundary}(${names.join("|")})\\b`;
 }
 
 function generateRustSource(keywords) {
@@ -100,6 +107,7 @@ function generateGrammar(keywords) {
       { include: "#line-continuation" },
       { include: "#strings" },
       { include: "#numbers" },
+      { include: "#preprocessor-keywords" },
       { include: "#control-keywords" },
       { include: "#declaration-keywords" },
       { include: "#structure-keywords" },
@@ -141,6 +149,10 @@ function generateGrammar(keywords) {
             match: "\\b\\d+\\b",
           },
         ],
+      },
+      "preprocessor-keywords": {
+        name: "keyword.control.preprocessor.crbasic",
+        match: alternation(kw.get("preprocessor")),
       },
       "control-keywords": {
         name: "keyword.control.crbasic",

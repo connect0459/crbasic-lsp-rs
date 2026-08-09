@@ -101,6 +101,11 @@ impl DefinitionProvider {
                 then_branch,
                 else_branch,
                 ..
+            }
+            | Statement::PreprocessorConditional {
+                then_branch,
+                else_branch,
+                ..
             } => {
                 for stmt in then_branch {
                     Self::extract_from_statement(stmt, definitions);

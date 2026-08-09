@@ -97,7 +97,7 @@ crbasic-lsp-rs/
   - Identifies keywords, identifiers, literals
 - **Parser**: Builds Abstract Syntax Tree (AST)
   - Parses program structure (declarations, data tables, execution blocks)
-  - Handles control flow structures (If/Then/Else, For/Next, Do/Loop, While/Wend)
+  - Handles control flow structures (If/Then/ElseIf/Else, For/Next, Do/Loop, While/Wend, preprocessor #If/#ElseIf/#Else/#EndIf/#IfDef/#UnDef)
   - Parses function/subroutine definitions
 - **AST**: Type-safe representation of program structure
 
@@ -356,7 +356,7 @@ All commits are validated by pre-commit hooks:
 
 - ✅ All CRBasic keywords and operators
 - ✅ Variable declarations (Public, Dim, Const) with comma-separated syntax
-- ✅ Control flow (If/Then/Else, For/Next, Do/Loop, While/Wend)
+- ✅ Control flow (If/Then/ElseIf/Else, For/Next, Do/Loop, While/Wend); preprocessor directives (#If/#ElseIf/#Else/#EndIf/#IfDef/#UnDef, parsed structurally, not evaluated)
 - ✅ Function and Subroutine definitions
 - ✅ Array access and multi-dimensional arrays
 - ✅ Binary and unary operations with correct precedence
