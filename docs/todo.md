@@ -608,6 +608,148 @@ Not flagged as gaps (verified during the same comparison):
   Windows-only wrappers (text paste, shelling out to a hardcoded
   `PC400.exe` path) -- not worth porting.
 
+### Reference Implementation & Official Docs Comparison, Round 2 (2026-08-09)
+
+Found while re-surveying the two reference extensions and Campbell
+Scientific's own docs (help.campbellsci.com) for gaps not caught by the
+first comparison round above. Each finding below was verified against
+help.campbellsci.com directly, not just the reference grammars.
+
+- [x] `Select`/`Case`/`EndSelect`/`ExitFor`/`ExitDo` advertised via
+  completion/hover but unparseable (bug) ✅ Resolved
+  - Same "advertised via completion/hover, silently broken in the
+    parser" bug class as the already-resolved `Mod` and `ElseIf` gaps
+    -- a third, unfixed instance. Confirmed via repro before fixing
+    (e.g. `Unexpected token: Keyword("Select")`).
+  - `Select Case`'s real grammar (verified against
+    [help.campbellsci.com's Select Case page](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/selectcase.htm))
+    supports a comma-separated `ExpressionList` per `Case` clause:
+    plain values, `Expression To Expression` ranges, and `Is
+    comparison-operator Expression` comparisons, optionally chained
+    with `And`/`Or` (e.g. `Case Is >= 0 And Is <= 11.25`, from the
+    docs' own wind-direction example). There is no `ExitSelect`
+    statement in the real language (see below).
+  - New `Statement::SelectCase`, `CaseClause`, and `CaseCondition` AST
+    types (`crates/crbasic-parser/src/ast.rs`) capture this without a
+    hacky implicit-operand expression node --
+    `CaseCondition::Compare`/`Logical` store the operator and
+    right-hand expression directly. Every downstream consumer that
+    already walks `If`/`For`/`Do` bodies (call site collection,
+    semantic tokens, definitions, semantic analysis, folding) gained a
+    matching `SelectCase` arm; `symbols.rs`/`completion.rs`'s
+    user-defined-symbol extraction deliberately did not, since neither
+    already recurses into `If`/`For`/`Do` bodies either
+  - 7 new parser tests (`control_flow_select_case`) + 2 new parser
+    tests (`control_flow_exit_statements`) added Red-first
+- [x] `Return`, `ExitFunction`, and `Exit Sub` entirely unsupported ✅ Resolved
+  - Real, documented CRBasic constructs
+    ([Function/EndFunction](https://help.campbellsci.com/crbasic/landing/Content/Instructions/functionendfunction.htm),
+    [Sub/Exit Sub/EndSub](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/subexitsubendsub.htm))
+    with zero keyword, parser, completion, or hover coverage at all --
+    not previously tracked anywhere in this file.
+  - `Return(expression)` is parsed with its documented required
+    parentheses. `ExitFunction` is one word, but Campbell Scientific's
+    own syntax diagram spells the `Sub` equivalent as two separate
+    keyword tokens (`Exit Sub`), confirmed via two independent fetches
+    of the official page -- `Exit` alone is a parse error unless
+    followed by `Sub`, matching the real, asymmetric grammar
+  - 5 new parser tests (`control_flow_return_and_exits`) added
+    Red-first; 1 new end-to-end test (`semantic.rs`) confirms a
+    program combining Select Case, ExitFor, Return, ExitFunction, and
+    Exit Sub together produces zero semantic errors
+- [x] `ExitSelect`, `Continue`, `Break`, `GoTo` are fabricated -- not
+  real CRBasic keywords ✅ Resolved
+  - Present in `keywords.json`/`completion.rs`/`hover.rs` with real
+    completion/hover text, but corroborated by neither reference
+    grammar nor Campbell Scientific's own docs. The real CRBasic
+    exit/jump vocabulary is `ExitFor`/`ExitDo`/`ExitScan`/
+    `ContinueScan`/`ExitFunction`/`Exit Sub`, with no generic
+    `Continue`/`Break`/`GoTo`, and `Select Case` has no exit statement
+    of its own at all
+  - Advertising nonexistent syntax to users of an open-source tool is
+    misleading, so removed rather than "fixed" -- confirmed with the
+    user before removing, since this changes previously-offered
+    completion candidates
+- [x] `Next`'s optional trailing counter list (`Next [counter [,
+  counter]...]`, e.g. `Next i`) silently corrupted the surrounding
+  statement list (bug) ✅ Resolved
+  - Found as a side effect of writing an `ExitFor` test: `Next i`
+    leaked `i` into the enclosing statement list as a bogus
+    `Expression::Identifier` statement, since `parse_for_loop` only
+    ever consumed the bare `Next` keyword. Every pre-existing `For`
+    loop test used bare `Next`, so this went undetected despite `Next
+    <counter>` being a far more common idiom in real CRBasic than the
+    bare form
+  - Fixed by optionally consuming a comma-separated identifier list
+    after `Next`, purely cosmetically (not cross-checked against the
+    loop variable, matching how CRBasic itself does not require the
+    name to match)
+  - 2 new regression tests (`parses_next_with_counter_variable`,
+    `parses_next_with_comma_separated_counter_list`) added Red-first
+- [x] `client/language-configuration.json`'s `folding.markers` missing
+  `\b` word boundaries (bug) ✅ Resolved
+  - Found while writing a folding test for the `Select Case` addition
+    below: `indentationRules`' patterns already added `\b` word
+    boundaries specifically to keep `Next` from matching `NextScan`
+    (see the `While`/`Wend` entry above), but the same fix was never
+    applied to `folding.markers` -- "NextScan" matched the `end`
+    marker's bare `Next` alternative, and by the same flaw a line like
+    `DoWork(x)` or `SubTotal = 1` would falsely match the `start`
+    marker's bare `Do`/`Sub` alternatives. No tests existed for
+    `folding.markers` before this, so the bug was previously invisible
+  - Fixed by adding `\b` to every alternative in both patterns; also
+    added `Select Case`/`EndSelect` to `folding.markers` (previously
+    only in `indentationRules`), consistent with how `Case` stays out
+    of both marker patterns for the same reason `Else`/`ElseIf` do --
+    they're branches, not their own foldable region
+  - New `folding.markers` describe block
+    (`client/src/language-configuration.test.ts`) covering every
+    start/end alternative plus false-positive guards for the exit/
+    return keywords and the word-boundary bug class
+- [ ] Single-line `If condition Then statement[: statement...]` (no
+  `EndIf`) is unparseable ⏸️ Found, not fixed this round
+  - Found while writing an end-to-end test for the constructs above;
+    confirmed real and confirmed via repro:
+    `If x = 5 Then y = 1` fails with `Expected 'EndIf' to close If
+    statement`, since `parse_if_clause` unconditionally requires a
+    closing `EndIf`/`Else`/`ElseIf`
+  - Confirmed via Campbell Scientific's own
+    [If...Then...Else page](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/ifthenelse.htm):
+    the single-line form's `EndIf` is implied at the end of the line,
+    and the docs' own example
+    (`If A > 10 Then A = A + 1 : B = B + A : C = C + B {EndIf}`) shows
+    it combined with a second, compounding gap -- `:` as a
+    statement separator on one line -- which this lexer/parser has no
+    support for either (`:` isn't even a recognized token today)
+  - Not fixed this round: genuinely separate parsing feature from the
+    Select Case/Exit/Return work above (needs both a new
+    `:`-statement-separator lexer/parser rule and a way for
+    `parse_if_clause` to recognize "no block keywords, no `EndIf`" as
+    a valid single-statement-list terminator instead of an error) --
+    deferred to a future session rather than scope-crept into this one
+
+Not flagged as gaps (verified during the same comparison):
+
+- `Include` statement: confirmed real (pulls in an external source
+  file via a device-path prefix, e.g. `Include "cpu:Sensor_PT500_Lib.crb"`)
+  but remains a deferred, separate gap per the existing framing in the
+  Preprocessor directive support entry above -- structural parsing
+  would be low effort, but resolving/indexing the included file's
+  symbols needs cross-file infrastructure this LSP explicitly doesn't
+  have yet (same open-documents-only scope note as
+  `workspaceSymbolProvider`/`callHierarchyProvider`)
+- `keywords.json`'s `builtinFunctions` list (126 entries) is far short
+  of the CS-employee-maintained grammar's ~420 unique names -- whole
+  categories are absent (GOES/ARGOS satellite telemetry, DNP,
+  CDM_*/SDM* peripheral modules, CSAT3/LI7200/LI7700 sensors, PakBus
+  networking, custom-menu instructions). This is a content-volume
+  scope decision (each needs real per-parameter completion snippets
+  and hover prose authored, not a mechanical list sync), not a bug --
+  flagged here for future prioritization rather than acted on now,
+  consistent with the already-deferred "~35 highlighted-but-not-
+  completed functions" note in the Keyword/instruction list
+  unification entry above
+
 ### Packaging Gap (discovered while designing the release workflow)
 
 - [x] Multi-platform `.vsix` packaging ✅ Resolved
