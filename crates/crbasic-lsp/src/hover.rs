@@ -142,7 +142,10 @@ impl HoverProvider {
                 "**Do**\n\nLoop statement.\n\n```crbasic\nDo While condition\n  ' statements\nLoop\n```",
             ),
             "loop" => Some("**Loop**\n\nTerminates a Do block."),
-            "while" => Some("**While**\n\nLoop condition. Can be used with Do or Loop."),
+            "while" => Some(
+                "**While**\n\nLoop condition. Used with `Do`/`Loop`, or as the start of a standalone `While`/`Wend` loop.\n\n```crbasic\nWhile condition\n  ' statements\nWend\n```",
+            ),
+            "wend" => Some("**Wend**\n\nTerminates a While loop."),
             "exitfor" => Some("**ExitFor**\n\nImmediately exits a For loop."),
             "exitdo" => Some("**ExitDo**\n\nImmediately exits a Do loop."),
             "continue" => Some("**Continue**\n\nSkips to the next iteration of the current loop."),

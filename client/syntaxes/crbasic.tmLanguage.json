@@ -92,7 +92,7 @@
     },
     "control-keywords": {
       "name": "keyword.control.crbasic",
-      "match": "(?i)\\b(If|Then|Else|ElseIf|EndIf|For|To|Step|Next|Do|Loop|While|ExitFor|ExitDo|Case|Is|Select|EndSelect|ExitSelect|Continue|Break|GoTo)\\b"
+      "match": "(?i)\\b(If|Then|Else|ElseIf|EndIf|For|To|Step|Next|Do|Loop|While|Wend|ExitFor|ExitDo|Case|Is|Select|EndSelect|ExitSelect|Continue|Break|GoTo)\\b"
     },
     "declaration-keywords": {
       "name": "storage.type.crbasic",

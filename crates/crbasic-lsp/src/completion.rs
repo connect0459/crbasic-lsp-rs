@@ -415,6 +415,7 @@ impl CompletionProvider {
             Self::create_keyword_snippet("Do", "Do\n\t$0\nLoop While ${1:condition}", "Do loop"),
             Self::create_keyword_completion("Loop", "Terminates Do block"),
             Self::create_keyword_completion("While", "Loop condition"),
+            Self::create_keyword_completion("Wend", "Terminates a While loop"),
             Self::create_keyword_completion("ExitFor", "Exit For loop immediately"),
             Self::create_keyword_completion("ExitDo", "Exit Do loop immediately"),
             Self::create_keyword_completion("Continue", "Skip to the next loop iteration"),

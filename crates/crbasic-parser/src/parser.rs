@@ -101,6 +101,12 @@ impl<'a> Parser<'a> {
         }
 
         if let &TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "While"
+        {
+            return self.parse_while_loop();
+        }
+
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && kw == "Function"
         {
             return self.parse_function_definition();
@@ -712,6 +718,56 @@ impl<'a> Parser<'a> {
         Ok(Statement::DoLoop {
             condition,
             condition_at_start,
+            body,
+            span,
+        })
+    }
+
+    /// Parses a While-Wend loop statement
+    /// Syntax: While condition ... Wend
+    ///
+    /// Represented as a `Statement::DoLoop` with `condition_at_start: true`,
+    /// the same AST shape as `Do While condition ... Loop` -- CRBasic
+    /// documents them as equivalent looping constructs, so every downstream
+    /// consumer (folding, semantic tokens, definitions, ...) already
+    /// handles this correctly with no further changes.
+    fn parse_while_loop(&mut self) -> Result<Statement, ParseError> {
+        let while_token = self.advance();
+        let start_span = while_token.span;
+
+        let condition = Some(self.parse_expression()?);
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        let mut body = Vec::new();
+        self.skip_whitespace_and_comments();
+        while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Wend")
+            && !self.is_at_end()
+        {
+            body.push(self.parse_statement()?);
+            self.skip_whitespace_and_comments();
+        }
+
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Wend") {
+            return Err(ParseError {
+                message: "Expected 'Wend' to close While loop".to_string(),
+                span: self.peek().span,
+            });
+        }
+        let wend_token = self.advance();
+        let end_span = wend_token.span;
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        let span = crate::lexer::token::Span::new(start_span.start, end_span.end);
+
+        Ok(Statement::DoLoop {
+            condition,
+            condition_at_start: true,
             body,
             span,
         })
@@ -3523,6 +3579,61 @@ mod tests {
             } else {
                 panic!("Expected do loop statement");
             }
+        }
+    }
+
+    mod control_flow_while_wend {
+        use super::*;
+
+        #[test]
+        fn parses_while_wend_loop_with_condition() {
+            let source = "While x < 10\n  x = x + 1\nWend".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::DoLoop {
+                condition,
+                condition_at_start,
+                body,
+                ..
+            } = &program.statements[0]
+            {
+                assert!(condition.is_some());
+
+                if let Some(Expression::BinaryOp { .. }) = condition {
+                } else {
+                    panic!("Expected condition to be a comparison");
+                }
+
+                assert!(
+                    *condition_at_start,
+                    "While/Wend's condition is always checked at the start"
+                );
+
+                assert_eq!(body.len(), 1);
+                assert!(matches!(body[0], Statement::Assignment { .. }));
+            } else {
+                panic!("Expected a do-loop statement for While/Wend");
+            }
+        }
+
+        #[test]
+        fn while_loop_requires_wend_to_close() {
+            let source = "While x < 10\n  x = x + 1".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let result = parser.parse();
+
+            assert!(
+                result.is_err(),
+                "While without a closing Wend should be a parse error"
+            );
         }
     }
 
