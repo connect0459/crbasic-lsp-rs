@@ -9,6 +9,7 @@ pub mod completion;
 pub mod definition;
 pub mod document;
 pub mod document_highlight;
+pub mod folding;
 pub mod hover;
 pub mod references;
 pub mod rename;

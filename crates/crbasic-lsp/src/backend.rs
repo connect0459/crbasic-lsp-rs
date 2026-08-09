@@ -7,6 +7,7 @@ use crate::completion::CompletionProvider;
 use crate::definition::DefinitionProvider;
 use crate::document::DocumentManager;
 use crate::document_highlight::DocumentHighlightProvider;
+use crate::folding::FoldingRangeProvider;
 use crate::hover::HoverProvider;
 use crate::references::ReferencesProvider;
 use crate::rename::RenameProvider;
@@ -210,6 +211,7 @@ impl LanguageServer for CRBasicLanguageServer {
                         ..Default::default()
                     },
                 )),
+                folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
                 rename_provider: Some(tower_lsp::lsp_types::OneOf::Right(RenameOptions {
                     prepare_provider: Some(true),
                     work_done_progress_options: Default::default(),
@@ -288,6 +290,19 @@ impl LanguageServer for CRBasicLanguageServer {
         {
             let symbols = symbols::extract_document_symbols(ast);
             return Ok(Some(DocumentSymbolResponse::Nested(symbols)));
+        }
+
+        Ok(None)
+    }
+
+    async fn folding_range(&self, params: FoldingRangeParams) -> Result<Option<Vec<FoldingRange>>> {
+        let uri = params.text_document.uri;
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri)
+            && let Some(ast) = &doc.ast
+        {
+            return Ok(Some(FoldingRangeProvider::get_folding_ranges(ast)));
         }
 
         Ok(None)

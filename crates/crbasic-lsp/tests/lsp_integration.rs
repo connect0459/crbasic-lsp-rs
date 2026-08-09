@@ -664,6 +664,63 @@ mod code_action {
     }
 }
 
+mod folding_range {
+    use super::*;
+
+    #[tokio::test]
+    async fn folds_program_structure_and_block_statements() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\n\
+                       If 1 > 0 Then\n\
+                       For i = 1 To 10\n\
+                       Next\n\
+                       EndIf\n\
+                       EndProg"
+                    .to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let folding_params = FoldingRangeParams {
+            text_document: TextDocumentIdentifier { uri: uri.clone() },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        };
+
+        let result = service.inner().folding_range(folding_params).await;
+        assert!(result.is_ok(), "Folding range should succeed");
+
+        let ranges = result
+            .expect("Should be Ok")
+            .expect("Should return folding ranges");
+        // BeginProg/EndProg (lines 0-5), If/EndIf (lines 1-4), For/Next (lines 2-3)
+        assert_eq!(ranges.len(), 3);
+    }
+
+    #[tokio::test]
+    async fn returns_none_for_a_document_without_a_parsed_ast() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let folding_params = FoldingRangeParams {
+            text_document: TextDocumentIdentifier { uri: uri.clone() },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        };
+
+        let result = service.inner().folding_range(folding_params).await;
+        assert!(result.is_ok(), "Folding range should succeed");
+        assert_eq!(result.expect("Should be Ok"), None);
+    }
+}
+
 mod document_symbols {
     use super::*;
 
