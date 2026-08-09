@@ -713,8 +713,32 @@ complete; none of these were previously tracked anywhere in this file.
         `textDocument/documentHighlight` handler
       - 5 unit tests (`document_highlight.rs`) + 2 integration tests
         (`crates/crbasic-lsp/tests/lsp_integration.rs`)
-  - Still not implemented: `codeActionProvider` (quick fixes for
-    diagnostics), `foldingRangeProvider`, `workspaceSymbolProvider`,
+  - [x] `codeActionProvider` (quick fixes for diagnostics) ✅ Resolved
+    - Added `SemanticErrorKind` (`crates/crbasic-parser/src/semantic.rs`):
+      a structured classification alongside each `SemanticError`'s free-text
+      `message`, so downstream consumers don't have to parse prose to tell
+      which validation rule fired. Re-exported from the crate root
+    - Added `CodeActionProvider` and `TruncateVariableNameData`
+      (`crates/crbasic-lsp/src/code_action.rs`): offers a "truncate this
+      variable name" quick fix for `MaxLengthExceeded` and
+      `RecommendedLengthExceeded` diagnostics, reusing
+      `ReferencesProvider::find_all_references` to rename every occurrence
+      in one `WorkspaceEdit`
+      - `TruncationCollision` diagnostics intentionally get no quick fix --
+        truncating one side of a collision to an arbitrary shorter name has
+        no guaranteed-correct outcome
+      - The fix data (`variableName`, `targetLength`) is computed once, at
+        diagnostic-publish time, and round-tripped through the standard LSP
+        `Diagnostic::data`/`codeAction` `context.diagnostics` mechanism
+        (`CRBasicLanguageServer::code_action_data` in `backend.rs`) instead
+        of being re-derived from the diagnostic's message text
+      - Wired into `backend.rs`: `code_action_provider` capability
+        (scoped to `CodeActionKind::QUICKFIX`) plus the
+        `textDocument/codeAction` handler
+      - 8 unit tests (`code_action.rs`) + 3 unit tests covering the
+        `data`/`code` embedding (`backend.rs`) + 2 integration tests
+        (`crates/crbasic-lsp/tests/lsp_integration.rs`)
+  - Still not implemented: `foldingRangeProvider`, `workspaceSymbolProvider`,
     `inlayHintProvider`, `codeLensProvider`, `callHierarchyProvider`
   - Diagnostics also never populate `related_information` (hardcoded to
     `None` in both places `backend.rs` builds a `Diagnostic`)
