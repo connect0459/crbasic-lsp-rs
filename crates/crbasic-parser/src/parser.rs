@@ -5,6 +5,11 @@
 use crate::ast::{Expression, Program, Statement};
 use crate::lexer::token::{Token, TokenKind};
 
+/// The `condition`, `then_branch`, and `else_branch` parsed from an `If` or
+/// chained `ElseIf` clause, before the enclosing `Statement::IfStatement` is
+/// built around them.
+type IfClause = (Expression, Vec<Statement>, Option<Vec<Statement>>);
+
 /// Parser for CRBasic source code
 pub struct Parser<'a> {
     tokens: Vec<Token<'a>>,
@@ -495,12 +500,11 @@ impl<'a> Parser<'a> {
         })
     }
 
-    /// Parses an If statement
-    /// Syntax: If condition Then statements [Else statements] EndIf
-    fn parse_if_statement(&mut self) -> Result<Statement, ParseError> {
-        let if_token = self.advance();
-        let start_span = if_token.span;
-
+    /// Parses the `condition Then statements` portion shared by `If` and
+    /// each chained `ElseIf`. `ElseIf` desugars into a nested `IfStatement`
+    /// held in `else_branch`, so only the outermost `If` ever consumes the
+    /// closing `EndIf` -- this helper never looks for one.
+    fn parse_if_clause(&mut self) -> Result<IfClause, ParseError> {
         let condition = self.parse_expression()?;
 
         if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Then") {
@@ -519,14 +523,25 @@ impl<'a> Parser<'a> {
         self.skip_whitespace_and_comments();
         while !matches!(
             self.peek().kind,
-            TokenKind::Keyword(kw) if kw == "Else" || kw == "EndIf"
+            TokenKind::Keyword(kw) if kw == "Else" || kw == "ElseIf" || kw == "EndIf"
         ) && !self.is_at_end()
         {
             then_branch.push(self.parse_statement()?);
             self.skip_whitespace_and_comments();
         }
 
-        let else_branch = if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Else") {
+        let else_branch = if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "ElseIf") {
+            let elseif_start = self.advance().span.start;
+            let (elseif_condition, elseif_then, elseif_else) = self.parse_if_clause()?;
+            let span = crate::lexer::token::Span::new(elseif_start, self.peek().span.start);
+
+            Some(vec![Statement::IfStatement {
+                condition: elseif_condition,
+                then_branch: elseif_then,
+                else_branch: elseif_else,
+                span,
+            }])
+        } else if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Else") {
             self.advance();
 
             if matches!(self.peek().kind, TokenKind::Newline) {
@@ -546,6 +561,17 @@ impl<'a> Parser<'a> {
         } else {
             None
         };
+
+        Ok((condition, then_branch, else_branch))
+    }
+
+    /// Parses an If statement
+    /// Syntax: If condition Then statements [ElseIf condition Then statements]... [Else statements] EndIf
+    fn parse_if_statement(&mut self) -> Result<Statement, ParseError> {
+        let if_token = self.advance();
+        let start_span = if_token.span;
+
+        let (condition, then_branch, else_branch) = self.parse_if_clause()?;
 
         if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndIf") {
             return Err(ParseError {
@@ -3339,6 +3365,111 @@ mod tests {
                 if let Some(else_stmts) = else_branch {
                     assert_eq!(else_stmts.len(), 1);
                     assert!(matches!(else_stmts[0], Statement::Assignment { .. }));
+                }
+            } else {
+                panic!("Expected if statement");
+            }
+        }
+
+        #[test]
+        fn parses_if_elseif_endif() {
+            let source = "If x > 5 Then\n  y = 1\nElseIf x > 2 Then\n  y = 2\nEndIf".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::IfStatement {
+                then_branch,
+                else_branch,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(then_branch.len(), 1);
+
+                let else_stmts = else_branch.as_ref().expect("Expected an ElseIf branch");
+                assert_eq!(else_stmts.len(), 1);
+
+                if let Statement::IfStatement {
+                    condition: elseif_condition,
+                    then_branch: elseif_then,
+                    else_branch: elseif_else,
+                    ..
+                } = &else_stmts[0]
+                {
+                    assert!(matches!(elseif_condition, Expression::BinaryOp { .. }));
+                    assert_eq!(elseif_then.len(), 1);
+                    assert!(elseif_else.is_none());
+                } else {
+                    panic!("Expected ElseIf to desugar to a nested if statement");
+                }
+            } else {
+                panic!("Expected if statement");
+            }
+        }
+
+        #[test]
+        fn parses_if_elseif_else_endif() {
+            let source =
+                "If a Then\n  x = 1\nElseIf b Then\n  x = 2\nElse\n  x = 3\nEndIf".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::IfStatement { else_branch, .. } = &program.statements[0] {
+                let else_stmts = else_branch.as_ref().expect("Expected an ElseIf branch");
+
+                if let Statement::IfStatement {
+                    then_branch: elseif_then,
+                    else_branch: elseif_else,
+                    ..
+                } = &else_stmts[0]
+                {
+                    assert_eq!(elseif_then.len(), 1);
+
+                    let final_else = elseif_else.as_ref().expect("Expected a final Else branch");
+                    assert_eq!(final_else.len(), 1);
+                    assert!(matches!(final_else[0], Statement::Assignment { .. }));
+                } else {
+                    panic!("Expected ElseIf to desugar to a nested if statement");
+                }
+            } else {
+                panic!("Expected if statement");
+            }
+        }
+
+        #[test]
+        fn parses_multiple_chained_elseif_branches() {
+            let source =
+                "If a Then\n  x = 1\nElseIf b Then\n  x = 2\nElseIf c Then\n  x = 3\nEndIf"
+                    .to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::IfStatement { else_branch, .. } = &program.statements[0] {
+                let first_elseif = else_branch.as_ref().expect("Expected first ElseIf branch");
+
+                if let Statement::IfStatement {
+                    else_branch: second_else_branch,
+                    ..
+                } = &first_elseif[0]
+                {
+                    let second_elseif = second_else_branch
+                        .as_ref()
+                        .expect("Expected second ElseIf branch");
+
+                    assert!(matches!(second_elseif[0], Statement::IfStatement { .. }));
+                } else {
+                    panic!("Expected first ElseIf to desugar to a nested if statement");
                 }
             } else {
                 panic!("Expected if statement");
