@@ -3,63 +3,19 @@
 //! This module provides the main lexical analysis functionality.
 
 use super::token::{Position, Span, Token, TokenKind};
-
-/// CRBasic keywords paired with their canonical (PascalCase, or upper-case
-/// for logical operators) spelling, checked case-insensitively so that
-/// `BeginProg`/`BEGINPROG`/`beginprog` all resolve to the same keyword.
-const KEYWORDS: &[(&str, &str)] = &[
-    ("if", "If"),
-    ("then", "Then"),
-    ("else", "Else"),
-    ("elseif", "ElseIf"),
-    ("endif", "EndIf"),
-    ("for", "For"),
-    ("to", "To"),
-    ("step", "Step"),
-    ("next", "Next"),
-    ("nextscan", "NextScan"),
-    ("do", "Do"),
-    ("loop", "Loop"),
-    ("while", "While"),
-    ("exitfor", "ExitFor"),
-    ("exitdo", "ExitDo"),
-    ("case", "Case"),
-    ("is", "Is"),
-    ("select", "Select"),
-    ("exitselect", "ExitSelect"),
-    ("continue", "Continue"),
-    ("break", "Break"),
-    ("goto", "GoTo"),
-    ("public", "Public"),
-    ("dim", "Dim"),
-    ("const", "Const"),
-    ("alias", "Alias"),
-    ("as", "As"),
-    ("units", "Units"),
-    ("beginprog", "BeginProg"),
-    ("endprog", "EndProg"),
-    ("datatable", "DataTable"),
-    ("endtable", "EndTable"),
-    ("function", "Function"),
-    ("endfunction", "EndFunction"),
-    ("sub", "Sub"),
-    ("endsub", "EndSub"),
-    ("and", "AND"),
-    ("or", "OR"),
-    ("not", "NOT"),
-    ("xor", "XOR"),
-    ("mod", "MOD"),
-    ("true", "True"),
-    ("false", "False"),
-];
+use crate::keywords::LANGUAGE_KEYWORDS;
 
 /// Looks up the canonical spelling of a CRBasic keyword, case-insensitively,
 /// without allocating (avoids a `to_lowercase()` temporary per identifier).
+///
+/// Keyword names come from `LANGUAGE_KEYWORDS`, generated from
+/// `crates/crbasic-parser/keywords.json` (see `crate::keywords`) — the same
+/// source that drives the VSCode extension's TextMate grammar.
 fn lookup_keyword(word: &str) -> Option<&'static str> {
-    KEYWORDS
+    LANGUAGE_KEYWORDS
         .iter()
-        .find(|(candidate, _)| candidate.eq_ignore_ascii_case(word))
-        .map(|(_, canonical)| *canonical)
+        .find(|(name, _)| name.eq_ignore_ascii_case(word))
+        .map(|(name, _)| *name)
 }
 
 /// Scanner for tokenizing CRBasic source code
@@ -873,6 +829,41 @@ mod tests {
                 ("NextScan", "NextScan"),
                 ("nextscan", "NextScan"),
                 ("NEXTSCAN", "NextScan"),
+            ];
+
+            for (input, expected) in test_cases {
+                let mut scanner = Scanner::new(input);
+                let tokens = scanner.scan_tokens();
+
+                assert_eq!(
+                    tokens.len(),
+                    2,
+                    "Input '{}' should produce keyword token and EOF",
+                    input
+                );
+
+                match &tokens[0].kind {
+                    TokenKind::Keyword(keyword) => {
+                        assert_eq!(
+                            *keyword, expected,
+                            "Input '{}' should normalize to '{}'",
+                            input, expected
+                        );
+                    }
+                    _ => panic!(
+                        "Expected Keyword token for '{}', got {:?}",
+                        input, tokens[0].kind
+                    ),
+                }
+            }
+        }
+
+        #[test]
+        fn recognizes_endselect_keyword() {
+            let test_cases = vec![
+                ("EndSelect", "EndSelect"),
+                ("endselect", "EndSelect"),
+                ("ENDSELECT", "EndSelect"),
             ];
 
             for (input, expected) in test_cases {
