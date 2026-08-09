@@ -767,7 +767,7 @@ Not flagged as gaps (verified during the same comparison):
     against or test
   - Revisit once a concrete integration target (specific CS tool +
     interface) is identified
-- [ ] Preprocessor directive support (`#If`/`#ElseIf`/`#Else`/`#EndIf`/`#IfDef`/`#UnDef`)
+- [x] Preprocessor directive support (`#If`/`#ElseIf`/`#Else`/`#EndIf`/`#IfDef`/`#UnDef`) ✅ Resolved
   - Found in the same external reference comparison as above: both
     reference grammars list these as conditional-compilation directives;
     this project's lexer/parser have no handling for `#`-prefixed tokens
@@ -811,6 +811,35 @@ Not flagged as gaps (verified during the same comparison):
   - `Include` (referenced by `#UnDef`'s real use case) is also entirely
     unsupported by this project -- separate, related gap, not addressed
     here
+  - Implemented: lexer treats `#` as starting a single `#`-prefixed
+    keyword token (`crates/crbasic-parser/src/lexer/scanner.rs`);
+    `keywords.json` gained a new `preprocessor` category, and the codegen
+    script's `alternation()` helper drops the leading `\b` it normally
+    uses, since `\b` can't match on either side of a non-word character
+    like `#`
+  - New `Statement::PreprocessorConditional` AST variant (kept distinct
+    from `IfStatement` since it's a genuinely different, compile-time
+    construct with an optional `Then`); `#ElseIf` desugars into a nested
+    `PreprocessorConditional` in `else_branch`, mirroring the `ElseIf` fix;
+    `#UnDef` reuses `ProgramStructure`
+  - Every statement-walking consumer (folding, semantic tokens, semantic
+    analysis, definitions, call sites) gained a matching arm so
+    declarations/calls nested inside a preprocessor block stay visible to
+    those features instead of silently disappearing
+  - `client/language-configuration.json`'s indentation and folding rules
+    extended to recognize the new directives the same way `If`/`EndIf`
+    already are, with matching Vitest cases added
+  - New tests: 1 lexer test (`recognizes_preprocessor_directive_keywords`)
+    - 6 parser tests (`parses_hash_if_without_then_keyword`,
+    `parses_hash_if_with_then_keyword`,
+    `parses_hash_if_elseif_else_endif_chain`, `parses_hash_ifdef_else_endif`,
+    `hash_if_requires_hash_endif_to_close`, `parses_hash_undef`) added
+    Red-first; full Rust (`build`/`test`/`clippy`/`fmt`) and client
+    (`lint`/`format:check`/`test`) gates pass
+  - Manually verified end-to-end (lex -> parse -> semantic analyze) with a
+    combined repro exercising `#If`/`#ElseIf`/`#Else`/`#EndIf`, `#IfDef`,
+    `#UnDef`, `Mod`, `While`/`Wend`, and `ElseIf` together: zero semantic
+    errors, confirming these fixes compose correctly
 - [ ] Data type completions/hover after `As` (e.g. `Public x As <cursor>`)
   - Found in the same comparison: `Public x As IEEE4` already parses
     correctly today (the type annotation is captured as a generic
