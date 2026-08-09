@@ -689,13 +689,47 @@ complete; none of these were previously tracked anywhere in this file.
     capability plus the `textDocument/semanticTokens/full` handler
   - 12 unit tests (`semantic_tokens.rs`) + 1 integration test
     (`crates/crbasic-lsp/tests/lsp_integration.rs`)
-- [ ] Keyword/instruction list unification (`keywords.json` + codegen)
-  - ADR-002 called for a shared source of truth
-    (`crates/crbasic-lsp/src/keywords.rs` + `scripts/generate-grammar.js`)
-    to avoid duplicating keyword/builtin-function lists between
+- [x] Keyword/instruction list unification (`keywords.json` + codegen) ✅ Resolved
+  - ADR-002 called for a shared source of truth to avoid duplicating
+    keyword/builtin-function lists between
     `client/syntaxes/crbasic.tmLanguage.json` and
     `crates/crbasic-lsp/src/completion.rs::get_builtin_function_completions`;
-    never built, so the two lists have since diverged independently
+    the two lists had already diverged independently (confirmed drift, see
+    below) since it was never built
+  - Added `crates/crbasic-parser/keywords.json` as the single source of
+    truth (name + category, for both language keywords and built-in
+    functions) and `scripts/generate-grammar.js`, which generates
+    `crates/crbasic-parser/src/keywords_generated.rs` (re-exported as
+    `crbasic_parser::{LANGUAGE_KEYWORDS, BUILTIN_FUNCTIONS}`) and the full
+    `client/syntaxes/crbasic.tmLanguage.json` from it, with a `--check`
+    flag wired into `just verify` and the CI `client` job
+  - `crates/crbasic-parser/src/lexer/scanner.rs`'s hand-written keyword
+    table is now sourced from `LANGUAGE_KEYWORDS` instead of maintaining
+    its own copy -- same zero-allocation `eq_ignore_ascii_case` lookup,
+    just generated instead of hand-written
+  - `completion.rs`/`hover.rs` keep their hand-authored snippets/prose
+    (deliberately not mechanically generated), but gained completeness
+    tests against `LANGUAGE_KEYWORDS`/`BUILTIN_FUNCTIONS` (TDD red→green);
+    `signature.rs` gained a matching casing-drift test. This surfaced and
+    fixed real, pre-existing gaps: `Continue`/`Break`/`Is`/`GoTo`/
+    `EndSelect` were missing from both completion and hover; `NextScan`
+    was miscategorized as a built-in function completion instead of a
+    keyword (removed the duplicate); `client/syntaxes/crbasic.tmLanguage.json`
+    had phantom `Exit`/`Until` entries that don't exist in the parser, and
+    listed `AND|OR|NOT|XOR|TRUE|FALSE` in two different repository groups
+    (now only in the hand-written `operators` section, which also gained a
+    `True`/`False` literal pattern so they don't lose highlighting)
+  - `DataInterval` moved from the (incorrect) `DataTable`/`EndTable`
+    keyword group into the built-in-function `data` category -- it isn't
+    a scanner.rs keyword, just a plain instruction identifier
+  - Deliberately **not** attempted: expanding
+    `completion.rs::get_builtin_function_completions` to full parity with
+    `BUILTIN_FUNCTIONS` (~35 highlighted-but-not-completed functions, e.g.
+    `Battery`, `Resistance`, `Histogram`, `Chr`, `SetStatus` -- each needs
+    real per-parameter snippets/docs authored, a separate content effort,
+    not a list-unification one); `hover.rs`'s and `signature.rs`'s prose
+    content otherwise untouched beyond the small keyword-gap fix above and
+    the new drift-detection tests
 - [x] Additional standard LSP providers not yet implemented ✅ Resolved
   (all sub-items below complete)
   - [x] `documentHighlightProvider` ✅ Resolved
