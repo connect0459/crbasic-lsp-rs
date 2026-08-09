@@ -558,6 +558,7 @@ impl CompletionProvider {
             Self::create_keyword_completion("NOT", "Logical NOT operator"),
             Self::create_keyword_completion("XOR", "Logical XOR operator"),
             Self::create_keyword_completion("MOD", "Modulo operator"),
+            Self::create_keyword_completion("IMP", "Logical implication operator"),
             Self::create_keyword_completion("True", "Boolean true (-1)"),
             Self::create_keyword_completion("False", "Boolean false (0)"),
         ]

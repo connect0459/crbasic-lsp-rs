@@ -253,6 +253,9 @@ impl HoverProvider {
                 "**XOR**\n\nLogical XOR operator. Returns true if exactly one operand is true.",
             ),
             "mod" => Some("**MOD**\n\nModulo operator. Returns the remainder of integer division."),
+            "imp" => Some(
+                "**IMP**\n\nLogical implication operator. `A IMP B` is equivalent to `(NOT A) OR B`.",
+            ),
 
             "true" => Some("**True**\n\nBoolean literal representing true (-1 in CRBasic)."),
             "false" => Some("**False**\n\nBoolean literal representing false (0 in CRBasic)."),

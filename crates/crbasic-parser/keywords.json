@@ -51,6 +51,7 @@
     { "name": "NOT", "category": "logical" },
     { "name": "XOR", "category": "logical" },
     { "name": "MOD", "category": "logical" },
+    { "name": "IMP", "category": "logical" },
     { "name": "True", "category": "logical" },
     { "name": "False", "category": "logical" }
   ],

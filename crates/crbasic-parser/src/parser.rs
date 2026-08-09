@@ -1494,7 +1494,33 @@ impl<'a> Parser<'a> {
 
     /// Parses an expression
     fn parse_expression(&mut self) -> Result<Expression, ParseError> {
-        self.parse_logical_or()
+        self.parse_logical_imp()
+    }
+
+    /// Parses logical IMP (implication) expressions -- the loosest-binding
+    /// logical operator, per the common BASIC-family convention
+    fn parse_logical_imp(&mut self) -> Result<Expression, ParseError> {
+        let mut left = self.parse_logical_or()?;
+
+        loop {
+            if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if *kw == "IMP") {
+                break;
+            }
+
+            self.advance();
+
+            let right = self.parse_logical_or()?;
+
+            let span = crate::lexer::token::Span::new(left.span().start, right.span().end);
+            left = Expression::BinaryOp {
+                left: Box::new(left),
+                operator: crate::ast::BinaryOperator::Implication,
+                right: Box::new(right),
+                span,
+            };
+        }
+
+        Ok(left)
     }
 
     /// Parses logical OR expressions
@@ -2771,6 +2797,62 @@ mod tests {
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            }
+        }
+
+        #[test]
+        fn parses_imp_operation() {
+            let source = "x IMP y".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::BinaryOp { operator, .. } => {
+                        assert_eq!(*operator, BinaryOperator::Implication);
+                    }
+                    _ => panic!("Expected binary operation"),
+                }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn imp_has_lower_precedence_than_or() {
+            // x OR y IMP z should parse as (x OR y) IMP z, not x OR (y IMP z)
+            let source = "x OR y IMP z".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                if let Expression::BinaryOp { left, operator, .. } = expression {
+                    assert_eq!(*operator, BinaryOperator::Implication);
+
+                    if let Expression::BinaryOp { operator, .. } = &**left {
+                        assert_eq!(*operator, BinaryOperator::Or);
+                    } else {
+                        panic!("Expected OR for left operand");
+                    }
+                } else {
+                    panic!("Expected binary operation");
+                }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
     }

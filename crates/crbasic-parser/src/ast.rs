@@ -368,6 +368,8 @@ pub enum BinaryOperator {
     Or,
     /// Logical XOR operator
     Xor,
+    /// Logical implication operator (IMP)
+    Implication,
 }
 
 /// Unary operators
