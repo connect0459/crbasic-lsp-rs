@@ -67,19 +67,42 @@ impl HoverProvider {
 
     /// Returns hover information for a token
     fn get_hover_for_token(token: &Token) -> Option<Hover> {
-        match &token.kind {
-            TokenKind::Keyword(kw) => {
-                let description = Self::get_keyword_description(kw)?;
-                let range = Self::token_to_lsp_range(token);
+        let description = match &token.kind {
+            TokenKind::Keyword(kw) => Self::get_keyword_description(kw),
+            // Data type names (Float, Long, ...) are lexed as plain
+            // identifiers, not keywords -- reclassifying them as keywords
+            // would break `Public x As Float` parsing (see
+            // `data_type_completions` in `completion.rs` for why). Hover
+            // still needs to recognize them, scoped to exactly this known
+            // set so ordinary variable identifiers keep returning `None`.
+            TokenKind::Identifier(name) => Self::get_data_type_description(name),
+            _ => None,
+        }?;
+        let range = Self::token_to_lsp_range(token);
 
-                Some(Hover {
-                    contents: HoverContents::Markup(MarkupContent {
-                        kind: MarkupKind::Markdown,
-                        value: description.to_string(),
-                    }),
-                    range: Some(range),
-                })
-            }
+        Some(Hover {
+            contents: HoverContents::Markup(MarkupContent {
+                kind: MarkupKind::Markdown,
+                value: description.to_string(),
+            }),
+            range: Some(range),
+        })
+    }
+
+    /// Returns the description for a data type name valid after `As`, or
+    /// `None` if `name` isn't one of them (e.g. an ordinary variable name)
+    fn get_data_type_description(name: &str) -> Option<&'static str> {
+        match name.to_lowercase().as_str() {
+            "float" => Some(
+                "**Float**\n\nSingle-precision floating point number. The default type if `As` is omitted.",
+            ),
+            "double" => Some(
+                "**Double**\n\nDouble-precision floating point number. Reduces error accumulation in calculations.",
+            ),
+            "long" => Some("**Long**\n\n32-bit signed integer."),
+            "boolean" => Some("**Boolean**\n\nStores `True` (-1) or `False` (0)."),
+            "string" => Some("**String**\n\nNull-terminated array of characters."),
+            "uint1" => Some("**UINT1**\n\n8-bit unsigned integer."),
             _ => None,
         }
     }
@@ -469,6 +492,27 @@ mod tests {
 
             // Identifiers don't have hover info yet
             assert!(hover.is_none());
+        }
+
+        #[test]
+        fn returns_hover_for_data_type_after_as() {
+            // "As Float": A(0)s(1) (2)F(3) -- character 3 is the start of "Float"
+            let tokens = tokenize("As Float");
+            let position = Position {
+                line: 0,
+                character: 3,
+            };
+
+            let hover = HoverProvider::get_hover_at_position(&tokens, position);
+
+            assert!(hover.is_some());
+            let hover = hover.expect("hover should be Some");
+            match hover.contents {
+                HoverContents::Markup(markup) => {
+                    assert!(markup.value.contains("**Float**"));
+                }
+                _ => panic!("Expected MarkupContent"),
+            }
         }
 
         #[test]

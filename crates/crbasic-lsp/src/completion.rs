@@ -380,12 +380,39 @@ impl CompletionProvider {
         let mut items = Self::get_keyword_completions();
         items.extend(Self::get_builtin_function_completions());
         items.extend(Self::get_pattern_snippet_completions());
+        items.extend(Self::data_type_completions());
 
         if let Some(ast) = ast {
             items.extend(Self::get_user_defined_completions(ast));
         }
 
         items
+    }
+
+    /// Returns completion items for the data types valid after `As` in a
+    /// `Public`/`Dim` declaration.
+    ///
+    /// Per Campbell Scientific's own "Data Types" documentation, exactly
+    /// these six are valid there (`Float` is the default if `As` is
+    /// omitted) -- distinct from the larger output-processing type set
+    /// (`FP2`, `IEEE4`, `IEEE8`, `UINT2`, `UINT4`, `Bool8`, `NSEC`, ...)
+    /// that's only valid as a `Sample()`/`Average()`-style instruction
+    /// argument, a different position this project doesn't offer type
+    /// completions for.
+    ///
+    /// These aren't part of `LANGUAGE_KEYWORDS`: the parser reads a type
+    /// annotation as a plain identifier (`Public x As Float` already
+    /// parses correctly today), and reclassifying them as lexer keywords
+    /// would break that.
+    fn data_type_completions() -> Vec<CompletionItem> {
+        vec![
+            Self::create_keyword_completion("Float", "Single-precision floating point (default)"),
+            Self::create_keyword_completion("Double", "Double-precision floating point"),
+            Self::create_keyword_completion("Long", "32-bit signed integer"),
+            Self::create_keyword_completion("Boolean", "True (-1) or False (0)"),
+            Self::create_keyword_completion("String", "Null-terminated array of characters"),
+            Self::create_keyword_completion("UINT1", "8-bit unsigned integer"),
+        ]
     }
 
     fn control_flow_keywords() -> Vec<CompletionItem> {
@@ -654,6 +681,45 @@ mod tests {
                 "Missing completion items for language keywords: {:?}",
                 missing
             );
+        }
+    }
+
+    mod data_type_completions {
+        use super::*;
+
+        #[test]
+        fn returns_data_type_completions() {
+            let completions = CompletionProvider::data_type_completions();
+
+            assert!(!completions.is_empty());
+        }
+
+        #[test]
+        fn includes_every_type_valid_after_as() {
+            let completions = CompletionProvider::data_type_completions();
+            let labels: Vec<&str> = completions.iter().map(|c| c.label.as_str()).collect();
+
+            // Per Campbell Scientific's own "Data Types" documentation,
+            // these six are valid after `As` in a Public/Dim declaration --
+            // distinct from the larger output-processing type set (FP2,
+            // IEEE4, IEEE8, UINT2, UINT4, Bool8, NSEC, ...) that's only
+            // valid as a Sample()/Average()-style instruction argument.
+            for expected in ["Float", "Double", "Long", "Boolean", "String", "UINT1"] {
+                assert!(
+                    labels.contains(&expected),
+                    "Missing data type completion: {}",
+                    expected
+                );
+            }
+        }
+
+        #[test]
+        fn data_types_have_correct_kind() {
+            let completions = CompletionProvider::data_type_completions();
+
+            for completion in &completions {
+                assert_eq!(completion.kind, Some(CompletionItemKind::KEYWORD));
+            }
         }
     }
 
@@ -948,6 +1014,7 @@ mod tests {
 
             assert!(labels.contains(&"Scan"));
             assert!(labels.contains(&"Abs"));
+            assert!(labels.contains(&"Float"));
         }
 
         #[test]
