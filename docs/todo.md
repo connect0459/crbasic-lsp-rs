@@ -893,11 +893,22 @@ complete; none of these were previously tracked anywhere in this file.
     reliable enough to gate CI on. The stated 75% branch target remains
     unverified
   - `just coverage` is also wired into `just verify`
-- [ ] Dependency review: `tower-lsp` and `thiserror`
+- [ ] Dependency review: `tower-lsp`
   - `tower-lsp = "0.20"` is the last release of the upstream crate; a
     maintained fork (`tower-lsp-f`, currently 0.26.0) exists -- needs a
     deliberate stay-vs-migrate decision rather than silent drift, since
     this touches [ADR-001](./adrs/adr-001-rust-wasm-lsp-architecture.md)
-  - `thiserror` is pinned to `1.0`; `2.0.20` is current -- likely a
-    low-risk mechanical major-version bump, worth doing independently of
-    the `tower-lsp` question
+- [x] Dependency review: `thiserror` ✅ Resolved
+  - Audited every crate for `thiserror::Error` usage before attempting the
+    assumed `1.0`→`2.0.20` version bump: none exists anywhere in the
+    workspace. All error types (`ParseError`, `SemanticErrorKind`, etc.)
+    are plain hand-written structs/enums, not `thiserror`-derived
+  - Removed the unused dependency from the workspace `Cargo.toml` and both
+    `crbasic-parser`/`crbasic-lsp` crate manifests instead of bumping a
+    version nothing calls
+  - Verified: `cargo build --workspace`, `cargo test --workspace` (201 +
+    32 + 143 + 3 + 4 + 27 + 18 + 1 = 429 lib/integration tests, all
+    passing; the pre-existing local-only doctest linker failure is
+    unrelated, see Phase 8 CI/CD note above), `cargo fmt --all --check`,
+    and `cargo clippy --all-targets --all-features -- -D warnings` all
+    pass
