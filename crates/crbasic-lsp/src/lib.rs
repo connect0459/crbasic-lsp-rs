@@ -5,6 +5,7 @@
 
 pub mod backend;
 pub mod code_action;
+pub mod code_lens;
 pub mod completion;
 pub mod definition;
 pub mod document;

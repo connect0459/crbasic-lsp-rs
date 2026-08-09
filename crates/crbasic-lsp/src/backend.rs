@@ -3,6 +3,7 @@
 //! This module implements the Language Server Protocol backend using tower-lsp.
 
 use crate::code_action::{CodeActionProvider, TruncateVariableNameData};
+use crate::code_lens::CodeLensProvider;
 use crate::completion::CompletionProvider;
 use crate::definition::DefinitionProvider;
 use crate::document::DocumentManager;
@@ -216,6 +217,9 @@ impl LanguageServer for CRBasicLanguageServer {
                 folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
                 workspace_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 inlay_hint_provider: Some(OneOf::Left(true)),
+                code_lens_provider: Some(CodeLensOptions {
+                    resolve_provider: Some(false),
+                }),
                 rename_provider: Some(tower_lsp::lsp_types::OneOf::Right(RenameOptions {
                     prepare_provider: Some(true),
                     work_done_progress_options: Default::default(),
@@ -331,6 +335,22 @@ impl LanguageServer for CRBasicLanguageServer {
             && let Some(ast) = &doc.ast
         {
             return Ok(Some(InlayHintProvider::get_inlay_hints(ast, params.range)));
+        }
+
+        Ok(None)
+    }
+
+    async fn code_lens(&self, params: CodeLensParams) -> Result<Option<Vec<CodeLens>>> {
+        let uri = params.text_document.uri;
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri)
+            && let Some(ast) = &doc.ast
+        {
+            let mut scanner = Scanner::new(&doc.text);
+            let tokens = scanner.scan_tokens();
+
+            return Ok(Some(CodeLensProvider::get_code_lenses(ast, &tokens, &uri)));
         }
 
         Ok(None)

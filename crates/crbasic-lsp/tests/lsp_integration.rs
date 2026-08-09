@@ -863,6 +863,56 @@ mod inlay_hint {
     }
 }
 
+mod code_lens {
+    use super::*;
+
+    #[tokio::test]
+    async fn shows_a_reference_count_lens_for_a_declared_variable() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nPublic Temp\nTemp = 5\nTemp = Temp + 1\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let lens_params = CodeLensParams {
+            text_document: TextDocumentIdentifier { uri: uri.clone() },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        };
+
+        let result = service.inner().code_lens(lens_params).await;
+        assert!(result.is_ok(), "Code lens should succeed");
+
+        let lenses = result.expect("Should be Ok").expect("Should return lenses");
+        assert_eq!(lenses.len(), 1);
+        let command = lenses[0].command.as_ref().expect("Should have a command");
+        assert_eq!(command.title, "3 references"); // Temp = 5, Temp = Temp + 1 (twice)
+    }
+
+    #[tokio::test]
+    async fn returns_none_for_a_document_without_a_parsed_ast() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let lens_params = CodeLensParams {
+            text_document: TextDocumentIdentifier { uri: uri.clone() },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        };
+
+        let result = service.inner().code_lens(lens_params).await;
+        assert!(result.is_ok(), "Code lens should succeed");
+        assert!(result.expect("Should be Ok").is_none());
+    }
+}
+
 mod document_symbols {
     use super::*;
 
