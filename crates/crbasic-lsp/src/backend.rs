@@ -69,7 +69,6 @@ impl CRBasicLanguageServer {
                     crbasic_parser::semantic::ErrorSeverity::Warning => DiagnosticSeverity::WARNING,
                 };
 
-                // Convert parser Position to LSP Position (0-indexed)
                 let start_pos = error.span.start;
                 let end_pos = error.span.end;
 
@@ -104,9 +103,7 @@ impl CRBasicLanguageServer {
         let mut manager = self.document_manager.write().await;
 
         if let Some(doc) = manager.get_mut(&uri) {
-            // Run analysis
             if let Err(e) = doc.analyze() {
-                // Parse error - publish as diagnostic
                 let diagnostic = Diagnostic {
                     range: Range {
                         start: tower_lsp::lsp_types::Position {
@@ -134,7 +131,6 @@ impl CRBasicLanguageServer {
                 return;
             }
 
-            // Publish semantic diagnostics
             let diagnostics = Self::semantic_errors_to_diagnostics(doc.errors());
             self.client
                 .publish_diagnostics(uri, diagnostics, None)
@@ -198,7 +194,6 @@ impl LanguageServer for CRBasicLanguageServer {
             manager.open(uri.clone(), text, version);
         }
 
-        // Analyze and publish diagnostics
         self.analyze_and_publish_diagnostics(uri).await;
     }
 
@@ -213,7 +208,6 @@ impl LanguageServer for CRBasicLanguageServer {
                 manager.update(&uri, change.text.clone(), version);
             }
 
-            // Analyze and publish diagnostics
             self.analyze_and_publish_diagnostics(uri).await;
         }
     }
@@ -248,11 +242,9 @@ impl LanguageServer for CRBasicLanguageServer {
         let manager = self.document_manager.read().await;
 
         if let Some(doc) = manager.get(&uri) {
-            // Tokenize the document
             let mut scanner = Scanner::new(&doc.text);
             let tokens = scanner.scan_tokens();
 
-            // Get hover information at position
             return Ok(HoverProvider::get_hover_at_position(&tokens, position));
         }
 
@@ -264,7 +256,6 @@ impl LanguageServer for CRBasicLanguageServer {
 
         let manager = self.document_manager.read().await;
 
-        // Get AST if available for user-defined completions
         let ast = manager.get(&uri).and_then(|doc| doc.ast.as_ref());
 
         let items = CompletionProvider::get_all_completions(ast);
@@ -279,7 +270,6 @@ impl LanguageServer for CRBasicLanguageServer {
         let manager = self.document_manager.read().await;
 
         if let Some(doc) = manager.get(&uri) {
-            // Calculate cursor offset from position
             let lines: Vec<&str> = doc.text.lines().collect();
             let mut offset = 0usize;
 
@@ -291,7 +281,6 @@ impl LanguageServer for CRBasicLanguageServer {
                 offset += line.len() + 1; // +1 for newline
             }
 
-            // Extract function name and count parameters
             if let Some(func_name) = SignatureProvider::extract_function_name(&doc.text, offset) {
                 let active_param =
                     SignatureProvider::count_parameters_before_cursor(&doc.text, offset);
@@ -315,15 +304,12 @@ impl LanguageServer for CRBasicLanguageServer {
         let manager = self.document_manager.read().await;
 
         if let Some(doc) = manager.get(&uri) {
-            // Tokenize the document
             let mut scanner = Scanner::new(&doc.text);
             let tokens = scanner.scan_tokens();
 
-            // Extract definitions from AST
             if let Some(ast) = &doc.ast {
                 let definitions = DefinitionProvider::extract_definitions(ast);
 
-                // Get definition location
                 if let Some(location) =
                     DefinitionProvider::get_definition(&tokens, position, &definitions, uri)
                 {
@@ -343,11 +329,9 @@ impl LanguageServer for CRBasicLanguageServer {
         let manager = self.document_manager.read().await;
 
         if let Some(doc) = manager.get(&uri) {
-            // Tokenize the document
             let mut scanner = Scanner::new(&doc.text);
             let tokens = scanner.scan_tokens();
 
-            // Find all references
             return Ok(ReferencesProvider::get_references(
                 &tokens,
                 position,
@@ -369,7 +353,6 @@ impl LanguageServer for CRBasicLanguageServer {
         let manager = self.document_manager.read().await;
 
         if let Some(doc) = manager.get(&uri) {
-            // Tokenize the document
             let mut scanner = Scanner::new(&doc.text);
             let tokens = scanner.scan_tokens();
 
@@ -389,7 +372,6 @@ impl LanguageServer for CRBasicLanguageServer {
         let manager = self.document_manager.read().await;
 
         if let Some(doc) = manager.get(&uri) {
-            // Tokenize the document
             let mut scanner = Scanner::new(&doc.text);
             let tokens = scanner.scan_tokens();
 
@@ -450,7 +432,6 @@ mod tests {
 
     #[test]
     fn handles_zero_position_gracefully() {
-        // Edge case: Position at (1, 1) should convert to (0, 0)
         let parser_pos = Position::new(1, 1);
         let lsp_pos = CRBasicLanguageServer::position_to_lsp(parser_pos);
 

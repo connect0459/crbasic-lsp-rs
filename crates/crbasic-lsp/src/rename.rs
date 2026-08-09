@@ -223,10 +223,10 @@ mod tests {
         #[test]
         fn renames_all_occurrences_of_symbol() {
             let tokens = vec![
-                create_identifier_token("Temp_C", 1, 8),    // Declaration
-                create_identifier_token("Temp_C", 3, 1),    // Reference 1
-                create_identifier_token("Humidity", 3, 10), // Unrelated identifier
-                create_identifier_token("Temp_C", 5, 10),   // Reference 2
+                create_identifier_token("Temp_C", 1, 8),
+                create_identifier_token("Temp_C", 3, 1),
+                create_identifier_token("Humidity", 3, 10),
+                create_identifier_token("Temp_C", 5, 10),
             ];
             let position = Position {
                 line: 0,

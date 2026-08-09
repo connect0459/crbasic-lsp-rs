@@ -62,7 +62,6 @@ impl Document {
     pub fn update(&mut self, text: String, version: i32) {
         self.text = text;
         self.version = version;
-        // Clear cached data
         self.ast = None;
         self.semantic_errors.clear();
     }
@@ -76,21 +75,17 @@ impl Document {
     /// * `Ok(())` - Parse and analysis succeeded
     /// * `Err(String)` - Parse error message
     pub fn analyze(&mut self) -> Result<(), String> {
-        // Tokenize
         let mut scanner = crbasic_parser::lexer::Scanner::new(&self.text);
         let tokens = scanner.scan_tokens();
 
-        // Parse
         let mut parser = Parser::new(tokens);
         let program = parser
             .parse()
             .map_err(|e| format!("Parse error: {:?}", e))?;
 
-        // Semantic analysis
         let mut analyzer = SemanticAnalyzer::new(self.model);
         let errors = analyzer.analyze(&program);
 
-        // Cache results
         self.ast = Some(program);
         self.semantic_errors = errors;
 
@@ -220,11 +215,9 @@ mod tests {
             let uri = create_test_uri("cr6");
             let mut doc = Document::new(uri, "Public Temp_C".to_string(), 1);
 
-            // Analyze to populate cache
             doc.analyze().expect("Analysis should succeed");
             assert!(doc.ast.is_some());
 
-            // Update should clear cache
             doc.update("Public Humidity".to_string(), 2);
             assert!(doc.ast.is_none());
             assert!(doc.semantic_errors.is_empty());
@@ -241,7 +234,6 @@ mod tests {
 
             doc.analyze().expect("Analysis should succeed");
 
-            // Should have error for exceeding 16 chars
             assert!(!doc.errors().is_empty());
             assert!(
                 doc.errors()
@@ -261,8 +253,7 @@ mod tests {
 
             doc.analyze().expect("Analysis should succeed");
 
-            // Should have collision errors
-            assert!(doc.errors().len() >= 2); // At least 2 collision errors
+            assert!(doc.errors().len() >= 2);
             assert!(doc.errors().iter().any(|e| e.message.contains("collision")));
         }
     }

@@ -46,7 +46,6 @@ impl HoverProvider {
             let end = &token.span.end;
 
             // Token spans use half-open interval [start, end)
-            // Check if position is within token span
             if line < start.line || line > end.line {
                 return false;
             }
@@ -119,9 +118,7 @@ impl HoverProvider {
 
     /// Returns the description for a keyword
     fn get_keyword_description(keyword: &str) -> Option<&'static str> {
-        // Case-insensitive lookup
         match keyword.to_lowercase().as_str() {
-            // Control flow
             "if" => Some(
                 "**If**\n\nConditional statement. Executes code block if condition is true.\n\n```crbasic\nIf condition Then\n  ' statements\nEndIf\n```",
             ),
@@ -153,7 +150,6 @@ impl HoverProvider {
             "exitselect" => Some("**ExitSelect**\n\nImmediately exits a Select block."),
             "goto" => Some("**GoTo**\n\nUnconditional jump to a labeled line. Use sparingly."),
 
-            // Declarations
             "public" => Some(
                 "**Public**\n\nDeclares a public (global) variable that can be monitored and logged.\n\n```crbasic\nPublic Temp_C As Float\n```",
             ),
@@ -169,7 +165,6 @@ impl HoverProvider {
             ),
             "units" => Some("**Units**\n\nSpecifies the engineering units for a variable."),
 
-            // Program structure
             "beginprog" => {
                 Some("**BeginProg**\n\nMarks the start of the main program execution block.")
             }
@@ -179,7 +174,6 @@ impl HoverProvider {
             ),
             "endtable" => Some("**EndTable**\n\nTerminates a DataTable block."),
 
-            // Functions
             "function" => Some(
                 "**Function**\n\nDefines a user-defined function that returns a value.\n\n```crbasic\nFunction MyFunc(param As Float) As Float\n  MyFunc = param * 2\nEndFunction\n```",
             ),
@@ -189,7 +183,6 @@ impl HoverProvider {
             ),
             "endsub" => Some("**EndSub**\n\nTerminates a Sub block."),
 
-            // Logical operators
             "and" => {
                 Some("**AND**\n\nLogical AND operator. Returns true if both operands are true.")
             }
@@ -200,7 +193,6 @@ impl HoverProvider {
             ),
             "mod" => Some("**MOD**\n\nModulo operator. Returns the remainder of integer division."),
 
-            // Boolean literals
             "true" => Some("**True**\n\nBoolean literal representing true (-1 in CRBasic)."),
             "false" => Some("**False**\n\nBoolean literal representing false (0 in CRBasic)."),
 
@@ -250,7 +242,6 @@ mod tests {
             assert!(hover_mixed.is_some());
         }
 
-        // Table-driven tests for keyword categories
         mod control_flow_keywords {
             use super::*;
 
@@ -390,8 +381,6 @@ mod tests {
 
         #[test]
         fn returns_hover_for_keyword_at_position() {
-            // Source: "If x Then"
-            // Position of "If" is (0, 0) to (0, 1) in LSP (0-indexed)
             let tokens = tokenize("If x Then");
             let position = Position {
                 line: 0,
@@ -408,14 +397,11 @@ mod tests {
                 }
                 _ => panic!("Expected MarkupContent"),
             }
-            // Should have range set
             assert!(hover.range.is_some());
         }
 
         #[test]
         fn returns_hover_within_keyword() {
-            // Source: "If x Then"
-            // Position at second character of "If" (character 1, which is 'f')
             // Token span is [0,0) to [0,2) in LSP (0-indexed), so character 1 is inside
             let tokens = tokenize("If x Then");
             let position = Position {
@@ -430,8 +416,6 @@ mod tests {
 
         #[test]
         fn returns_none_for_identifier() {
-            // Source: "If x Then"
-            // Position at "x" (character 3)
             let tokens = tokenize("If x Then");
             let position = Position {
                 line: 0,
@@ -446,8 +430,6 @@ mod tests {
 
         #[test]
         fn returns_none_for_whitespace() {
-            // Source: "If x Then"
-            // Position in whitespace (character 2)
             let tokens = tokenize("If x Then");
             let position = Position {
                 line: 0,
@@ -461,7 +443,6 @@ mod tests {
 
         #[test]
         fn returns_hover_for_keyword_on_second_line() {
-            // Source: "Public x\nIf y Then"
             // Position of "If" on line 2 (line 1 in 0-indexed)
             let tokens = tokenize("Public x\nIf y Then");
             let position = Position {
@@ -483,8 +464,6 @@ mod tests {
 
         #[test]
         fn hover_range_matches_token_position() {
-            // Source: "  If x Then"
-            // "If" starts at column 2 (0-indexed)
             let tokens = tokenize("  If x Then");
             let position = Position {
                 line: 0,
@@ -497,8 +476,6 @@ mod tests {
             let hover = hover.expect("hover should be Some");
             let range = hover.range.expect("range should be set");
 
-            // "If" should span from column 2 to column 4 (0-indexed, half-open interval)
-            // "If" is 2 characters, so end.character = start.character + 2 = 4
             assert_eq!(range.start.line, 0);
             assert_eq!(range.start.character, 2);
             assert_eq!(range.end.line, 0);

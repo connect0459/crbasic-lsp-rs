@@ -52,9 +52,7 @@ impl SignatureProvider {
 
     /// Returns signature information for a function by name
     pub fn get_function_signature(function_name: &str) -> Option<FunctionSignature> {
-        // Case-insensitive lookup
         match function_name.to_lowercase().as_str() {
-            // Scan and timing functions
             "scan" => Some(FunctionSignature {
                 name: "Scan".to_string(),
                 documentation: "Initiates a measurement scan at specified intervals.".to_string(),
@@ -183,7 +181,6 @@ impl SignatureProvider {
                 ],
             }),
 
-            // Measurement functions
             "pulsecount" => Some(FunctionSignature {
                 name: "PulseCount".to_string(),
                 documentation: "Measures pulse count from a sensor.".to_string(),
@@ -305,7 +302,6 @@ impl SignatureProvider {
                 ],
             }),
 
-            // Communication functions
             "serialopen" => Some(FunctionSignature {
                 name: "SerialOpen".to_string(),
                 documentation: "Opens a serial communication port.".to_string(),
@@ -387,7 +383,6 @@ impl SignatureProvider {
                 ],
             }),
 
-            // Math functions
             "abs" => Some(FunctionSignature {
                 name: "Abs".to_string(),
                 documentation: "Returns the absolute value of a number.".to_string(),
@@ -463,7 +458,6 @@ impl SignatureProvider {
                 ],
             }),
 
-            // String functions
             "len" => Some(FunctionSignature {
                 name: "Len".to_string(),
                 documentation: "Returns the length of a string.".to_string(),
@@ -572,7 +566,6 @@ impl SignatureProvider {
                 ],
             }),
 
-            // Time functions
             "timer" => Some(FunctionSignature {
                 name: "Timer".to_string(),
                 documentation: "Returns elapsed time from a timer.".to_string(),
@@ -641,7 +634,6 @@ impl SignatureProvider {
                 ],
             }),
 
-            // DataTable instruction
             "datatable" => Some(FunctionSignature {
                 name: "DataTable".to_string(),
                 documentation: "Defines a data table for storing measurements.".to_string(),
@@ -668,11 +660,9 @@ impl SignatureProvider {
 
     /// Converts internal signature to LSP SignatureInformation
     fn to_signature_information(sig: &FunctionSignature) -> SignatureInformation {
-        // Build the label with parameters
         let param_names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
         let label = format!("{}({})", sig.name, param_names.join(", "));
 
-        // Build parameter information
         let parameters: Vec<ParameterInformation> = sig
             .parameters
             .iter()
@@ -700,7 +690,6 @@ impl SignatureProvider {
     pub fn count_parameters_before_cursor(text: &str, cursor_offset: usize) -> u32 {
         let text_before_cursor = &text[..cursor_offset.min(text.len())];
 
-        // Find the opening parenthesis
         let mut paren_depth = 0;
         let mut comma_count = 0u32;
         let mut in_string = false;
@@ -730,7 +719,6 @@ impl SignatureProvider {
     pub fn extract_function_name(text: &str, cursor_offset: usize) -> Option<String> {
         let text_before_cursor = &text[..cursor_offset.min(text.len())];
 
-        // Find the opening parenthesis
         let mut paren_depth = 0;
         let mut in_string = false;
         let mut paren_pos = None;
@@ -753,7 +741,6 @@ impl SignatureProvider {
 
         let paren_pos = paren_pos?;
 
-        // Extract the function name (identifier before the parenthesis)
         let before_paren = &text_before_cursor[..paren_pos];
         let name_start = before_paren
             .rfind(|c: char| !c.is_alphanumeric() && c != '_')

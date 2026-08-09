@@ -78,7 +78,6 @@ impl DefinitionProvider {
                         span: *span,
                     },
                 );
-                // Also extract definitions from function body
                 for stmt in body {
                     Self::extract_from_statement(stmt, definitions);
                 }
@@ -94,7 +93,6 @@ impl DefinitionProvider {
                         span: *span,
                     },
                 );
-                // Also extract definitions from subroutine body
                 for stmt in body {
                     Self::extract_from_statement(stmt, definitions);
                 }
@@ -135,7 +133,6 @@ impl DefinitionProvider {
         let column = position.character as usize + 1;
 
         tokens.iter().find_map(|token| {
-            // Only match Identifier tokens
             let TokenKind::Identifier(_) = &token.kind else {
                 return None;
             };
@@ -436,7 +433,7 @@ mod tests {
         #[test]
         fn returns_none_when_not_on_identifier() {
             let (_, definitions, uri) = setup_test();
-            let tokens = vec![]; // Empty tokens
+            let tokens = vec![];
             let position = Position {
                 line: 4,
                 character: 10,

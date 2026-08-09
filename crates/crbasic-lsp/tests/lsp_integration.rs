@@ -22,7 +22,6 @@ mod document_synchronization {
 
     #[tokio::test]
     async fn opens_and_tracks_document() {
-        // RED: This test will fail until we implement the integration test helper
         let (service, _socket) = create_test_server().await;
         let uri = test_uri("test.CR6");
 
@@ -44,7 +43,6 @@ mod document_synchronization {
         let (service, _socket) = create_test_server().await;
         let uri = test_uri("test.CR6");
 
-        // Open document
         let open_params = DidOpenTextDocumentParams {
             text_document: TextDocumentItem {
                 uri: uri.clone(),
@@ -55,7 +53,6 @@ mod document_synchronization {
         };
         service.inner().did_open(open_params).await;
 
-        // Update document
         let change_params = DidChangeTextDocumentParams {
             text_document: VersionedTextDocumentIdentifier {
                 uri: uri.clone(),
@@ -76,7 +73,6 @@ mod document_synchronization {
         let (service, _socket) = create_test_server().await;
         let uri = test_uri("test.CR6");
 
-        // Open document
         let open_params = DidOpenTextDocumentParams {
             text_document: TextDocumentItem {
                 uri: uri.clone(),
@@ -87,7 +83,6 @@ mod document_synchronization {
         };
         service.inner().did_open(open_params).await;
 
-        // Close document
         let close_params = DidCloseTextDocumentParams {
             text_document: TextDocumentIdentifier { uri: uri.clone() },
         };
@@ -160,7 +155,6 @@ mod completion {
         let (service, _socket) = create_test_server().await;
         let uri = test_uri("test.CR6");
 
-        // Open document
         let open_params = DidOpenTextDocumentParams {
             text_document: TextDocumentItem {
                 uri: uri.clone(),
@@ -171,7 +165,6 @@ mod completion {
         };
         service.inner().did_open(open_params).await;
 
-        // Request completion
         let completion_params = CompletionParams {
             text_document_position: TextDocumentPositionParams {
                 text_document: TextDocumentIdentifier { uri: uri.clone() },
@@ -188,7 +181,6 @@ mod completion {
         let result = service.inner().completion(completion_params).await;
         assert!(result.is_ok(), "Completion should succeed");
 
-        // Verify that keywords are present in the completion list
         if let Ok(Some(CompletionResponse::Array(items))) = result {
             let has_public = items.iter().any(|item| item.label == "Public");
             let has_if = items.iter().any(|item| item.label == "If");
@@ -231,7 +223,6 @@ mod completion {
         let result = service.inner().completion(completion_params).await;
         assert!(result.is_ok(), "Completion should succeed");
 
-        // Verify that user-defined variable 'Temp' is present
         if let Ok(Some(CompletionResponse::Array(items))) = result {
             let has_temp = items.iter().any(|item| item.label == "Temp");
             assert!(has_temp, "Should include user-defined variable 'Temp'");
@@ -271,7 +262,6 @@ mod completion {
         let result = service.inner().completion(completion_params).await;
         assert!(result.is_ok(), "Completion should succeed");
 
-        // Verify that multi-statement pattern snippets are present
         if let Ok(Some(CompletionResponse::Array(items))) = result {
             let has_scan_loop = items.iter().any(|item| item.label == "ScanLoop");
             let has_new_program = items.iter().any(|item| item.label == "NewProgram");
@@ -309,7 +299,7 @@ mod hover {
                 text_document: TextDocumentIdentifier { uri: uri.clone() },
                 position: Position {
                     line: 0,
-                    character: 0, // "BeginProg"
+                    character: 0,
                 },
             },
             work_done_progress_params: WorkDoneProgressParams::default(),
@@ -318,7 +308,6 @@ mod hover {
         let result = service.inner().hover(hover_params).await;
         assert!(result.is_ok(), "Hover should succeed");
 
-        // Verify that hover content is returned for BeginProg
         if let Ok(Some(hover)) = result {
             match hover.contents {
                 HoverContents::Markup(markup) => {
@@ -373,7 +362,7 @@ mod signature_help {
                 text_document: TextDocumentIdentifier { uri: uri.clone() },
                 position: Position {
                     line: 1,
-                    character: 5, // After "Scan("
+                    character: 5,
                 },
             },
             work_done_progress_params: WorkDoneProgressParams::default(),
@@ -382,7 +371,6 @@ mod signature_help {
         let result = service.inner().signature_help(sig_params).await;
         assert!(result.is_ok(), "Signature help should succeed");
 
-        // Verify that signature for Scan is returned
         if let Ok(Some(sig_help)) = result {
             assert!(
                 !sig_help.signatures.is_empty(),
@@ -422,7 +410,7 @@ mod goto_definition {
                 text_document: TextDocumentIdentifier { uri: uri.clone() },
                 position: Position {
                     line: 2,
-                    character: 0, // "Temp" in assignment
+                    character: 0,
                 },
             },
             work_done_progress_params: WorkDoneProgressParams::default(),
@@ -432,7 +420,6 @@ mod goto_definition {
         let result = service.inner().goto_definition(def_params).await;
         assert!(result.is_ok(), "Go to definition should succeed");
 
-        // Verify that definition points to line 1 (Public Temp declaration)
         if let Ok(Some(GotoDefinitionResponse::Scalar(location))) = result {
             assert_eq!(location.uri, uri, "Definition should be in the same file");
             assert_eq!(
@@ -468,7 +455,7 @@ mod find_references {
                 text_document: TextDocumentIdentifier { uri: uri.clone() },
                 position: Position {
                     line: 1,
-                    character: 7, // "Temp" in declaration
+                    character: 7,
                 },
             },
             work_done_progress_params: WorkDoneProgressParams::default(),
@@ -481,8 +468,6 @@ mod find_references {
         let result = service.inner().references(ref_params).await;
         assert!(result.is_ok(), "Find references should succeed");
 
-        // Verify that multiple references are found
-        // Expected: declaration (line 1), assignment (line 2), and two uses in line 3
         if let Ok(Some(locations)) = result {
             assert!(
                 locations.len() >= 3,
@@ -522,17 +507,13 @@ mod document_symbols {
         let result = service.inner().document_symbol(symbol_params).await;
         assert!(result.is_ok(), "Document symbols should succeed");
 
-        // Verify that program structure symbols are extracted
         if let Ok(Some(DocumentSymbolResponse::Nested(symbols))) = result {
-            // Check for BeginProg
             let has_begin_prog = symbols.iter().any(|s| s.name == "BeginProg");
             assert!(has_begin_prog, "Should include BeginProg symbol");
 
-            // Check for variable declaration
             let has_temp = symbols.iter().any(|s| s.name == "Temp");
             assert!(has_temp, "Should include Temp variable symbol");
 
-            // Check for DataTable
             let has_data_table = symbols.iter().any(|s| s.name.contains("Test"));
             assert!(has_data_table, "Should include DataTable symbol");
         } else {
@@ -564,7 +545,7 @@ mod rename {
                 text_document: TextDocumentIdentifier { uri: uri.clone() },
                 position: Position {
                     line: 1,
-                    character: 7, // "Temp" in declaration
+                    character: 7,
                 },
             },
             new_name: "Temperature".to_string(),
@@ -580,7 +561,6 @@ mod rename {
         let changes = edit.changes.expect("Should contain changes");
         let edits = changes.get(&uri).expect("Should have edits for the URI");
 
-        // Expected: declaration (line 1), assignment (line 2), and two uses in line 3
         assert!(
             edits.len() >= 3,
             "Should rename at least 3 occurrences of Temp (found {})",

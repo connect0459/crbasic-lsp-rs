@@ -16,15 +16,10 @@ impl CompletionProvider {
     pub fn get_keyword_completions() -> Vec<CompletionItem> {
         let mut items = Vec::new();
 
-        // Control flow keywords
         items.extend(Self::control_flow_keywords());
-        // Declaration keywords
         items.extend(Self::declaration_keywords());
-        // Program structure keywords
         items.extend(Self::program_structure_keywords());
-        // Function definition keywords
         items.extend(Self::function_definition_keywords());
-        // Logical operators
         items.extend(Self::logical_operator_keywords());
 
         items
@@ -33,7 +28,6 @@ impl CompletionProvider {
     /// Returns built-in function completion items
     pub fn get_builtin_function_completions() -> Vec<CompletionItem> {
         vec![
-            // Scan and timing functions
             Self::create_function_completion(
                 "Scan",
                 "Scan(${1:Interval}, ${2:Units}, ${3:BufferOption}, ${4:Count})",
@@ -54,7 +48,6 @@ impl CompletionProvider {
                 "EndSequence",
                 "Ends a slow sequence scan block.",
             ),
-            // Data table functions
             Self::create_function_completion(
                 "CallTable",
                 "CallTable(${1:TableName})",
@@ -90,7 +83,6 @@ impl CompletionProvider {
                 "StdDev(${1:Reps}, ${2:Source}, ${3:DataType}, ${4:DisableVar})",
                 "Calculates and stores the standard deviation.",
             ),
-            // Measurement functions
             Self::create_function_completion(
                 "PulseCount",
                 "PulseCount(${1:Dest}, ${2:Reps}, ${3:PChan}, ${4:PConfig}, ${5:POption}, ${6:Mult}, ${7:Offset})",
@@ -126,7 +118,6 @@ impl CompletionProvider {
                 "TCDiff(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:DiffChan}, ${5:TCType}, ${6:TRef}, ${7:RevDiff}, ${8:SettlingTime}, ${9:Integ}, ${10:Mult}, ${11:Offset})",
                 "Measures thermocouple temperature (differential).",
             ),
-            // Communication functions
             Self::create_function_completion(
                 "SerialOpen",
                 "SerialOpen(${1:ComPort}, ${2:BaudRate}, ${3:Format}, ${4:TXDelay}, ${5:BufferSize})",
@@ -147,7 +138,6 @@ impl CompletionProvider {
                 "SerialOut(${1:ComPort}, ${2:OutString}, ${3:WaitString}, ${4:NumberTries}, ${5:TimeOut})",
                 "Sends data to a serial port.",
             ),
-            // Math functions
             Self::create_function_completion(
                 "Abs",
                 "Abs(${1:Value})",
@@ -200,7 +190,6 @@ impl CompletionProvider {
                 "Round(${1:Value}, ${2:NumDigits})",
                 "Rounds to specified decimal places.",
             ),
-            // String functions
             Self::create_function_completion(
                 "Len",
                 "Len(${1:String})",
@@ -266,7 +255,6 @@ impl CompletionProvider {
                 "FormatFloat(${1:Value}, ${2:FormatString})",
                 "Formats a float as a string.",
             ),
-            // Time functions
             Self::create_function_completion(
                 "Timer",
                 "Timer(${1:TimerNumber}, ${2:Units}, ${3:TimerOption})",
@@ -287,7 +275,6 @@ impl CompletionProvider {
                 "RealTime(${1:Dest})",
                 "Returns the current real-time clock values.",
             ),
-            // Control functions
             Self::create_function_completion(
                 "Delay",
                 "Delay(${1:Duration}, ${2:Units})",
@@ -405,8 +392,6 @@ impl CompletionProvider {
 
         items
     }
-
-    // Helper functions for creating completion items
 
     fn control_flow_keywords() -> Vec<CompletionItem> {
         vec![
@@ -898,12 +883,10 @@ mod tests {
         fn combines_all_completion_sources() {
             let completions = CompletionProvider::get_all_completions(None);
 
-            // Should have keywords
             let labels: Vec<&str> = completions.iter().map(|c| c.label.as_str()).collect();
             assert!(labels.contains(&"If"));
             assert!(labels.contains(&"Public"));
 
-            // Should have built-in functions
             assert!(labels.contains(&"Scan"));
             assert!(labels.contains(&"Abs"));
         }

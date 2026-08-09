@@ -34,9 +34,7 @@ fn extract_symbol(statement: &Statement) -> Option<DocumentSymbol> {
             arguments,
             span,
         } => {
-            // BeginProg, EndProg, DataTable, EndTable, etc.
             let name = if keyword == "DataTable" {
-                // Extract table name from arguments if available
                 if let Some(args) = arguments {
                     if !args.is_empty() {
                         format!("DataTable({})", format_args(args))
@@ -253,15 +251,12 @@ mod tests {
 
         assert_eq!(symbols.len(), 3);
 
-        // Public variable
         assert_eq!(symbols[0].name, "Temp_C");
         assert_eq!(symbols[0].kind, SymbolKind::VARIABLE);
 
-        // Dim variable
         assert_eq!(symbols[1].name, "i");
         assert_eq!(symbols[1].kind, SymbolKind::VARIABLE);
 
-        // Const
         assert_eq!(symbols[2].name, "PI");
         assert_eq!(symbols[2].kind, SymbolKind::CONSTANT);
     }
@@ -283,7 +278,6 @@ mod tests {
         assert_eq!(symbols.len(), 1);
         assert_eq!(symbols[0].name, "MyFunc()");
 
-        // Check for nested symbol
         assert!(symbols[0].children.is_some());
         let children = symbols[0].children.as_ref().expect("Should have children");
         assert_eq!(children.len(), 1);

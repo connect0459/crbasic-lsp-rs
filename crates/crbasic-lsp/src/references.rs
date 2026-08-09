@@ -23,7 +23,6 @@ impl ReferencesProvider {
         let column = position.character as usize + 1;
 
         tokens.iter().find_map(|token| {
-            // Only match Identifier tokens
             let TokenKind::Identifier(_) = &token.kind else {
                 return None;
             };
@@ -200,9 +199,9 @@ mod tests {
 
         fn setup_test() -> (Vec<Token<'static>>, Url) {
             let tokens = vec![
-                create_identifier_token("Temp_C", 1, 8),  // Declaration
-                create_identifier_token("Temp_C", 3, 1),  // Reference 1
-                create_identifier_token("Temp_C", 5, 10), // Reference 2
+                create_identifier_token("Temp_C", 1, 8),
+                create_identifier_token("Temp_C", 3, 1),
+                create_identifier_token("Temp_C", 5, 10),
             ];
             let uri = Url::parse("file:///test.cr1").expect("Valid URL");
             (tokens, uri)
@@ -226,7 +225,7 @@ mod tests {
         #[test]
         fn returns_none_when_not_on_identifier() {
             let (_, uri) = setup_test();
-            let tokens = vec![]; // Empty tokens
+            let tokens = vec![];
             let position = Position {
                 line: 0,
                 character: 0,
