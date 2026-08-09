@@ -672,15 +672,23 @@
 Found while auditing the codebase for further work once Phases 1-8 were
 complete; none of these were previously tracked anywhere in this file.
 
-- [ ] LSP Semantic Tokens (`textDocument/semanticTokens`) 🚧 In Progress
-  - Documented as deferred future work in
-    [ADR-002](./adrs/adr-002-textmate-grammar-first.md) (the "TextMate
-    Grammar + LSP Semantic Tokens" hybrid) but never implemented;
-    `initialize()` in `crates/crbasic-lsp/src/backend.rs` registers no
-    `semantic_tokens_provider`
-  - Goal: distinguish variable declarations from references, highlight
-    `Public` variables differently from `Dim`, and mark user-defined
-    functions/subroutines distinctly from built-ins
+- [x] LSP Semantic Tokens (`textDocument/semanticTokens`) ✅ Resolved
+  - Added `SemanticTokensProvider` (`crates/crbasic-lsp/src/semantic_tokens.rs`):
+    walks the AST to record where each `Public`/`Dim`/`Const` variable and
+    `Function`/`Sub` is declared, then classifies every matching identifier
+    token in the document as `variable` or `function`, with `declaration`,
+    `readonly` (Const), and `global` (Public) modifiers
+  - The declaring occurrence is identified by the first identifier token
+    matching a symbol's name on its declaration's source line, rather than
+    tracking a separate span per name -- CRBasic requires declaration
+    before use, so this holds for every real program
+  - Deliberately out of scope: function/subroutine parameters and `For`
+    loop variables (no per-name span exists for either in the AST) --
+    these fall back to the existing TextMate highlighting
+  - Wired into `crates/crbasic-lsp/src/backend.rs`: `semantic_tokens_provider`
+    capability plus the `textDocument/semanticTokens/full` handler
+  - 12 unit tests (`semantic_tokens.rs`) + 1 integration test
+    (`crates/crbasic-lsp/tests/lsp_integration.rs`)
 - [ ] Keyword/instruction list unification (`keywords.json` + codegen)
   - ADR-002 called for a shared source of truth
     (`crates/crbasic-lsp/src/keywords.rs` + `scripts/generate-grammar.js`)
