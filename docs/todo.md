@@ -933,6 +933,147 @@ Not flagged as gaps (verified during the same comparison):
 - `Include` (see Round 2's already-deferred entry above): no new
   information surfaced this round.
 
+### Reference Implementation & Official Docs Comparison, Round 4 (2026-08-09)
+
+Found during a fourth comparison round, prompted by re-surveying
+`.connect0459/ref-repos/` and help.campbellsci.com specifically for gaps
+Rounds 1-3 missed (control-flow bugs, editor-level folding/indentation,
+and a lexer categorization bug), rather than operators/keywords already
+swept. Each finding verified against an official docs page plus either a
+real parse repro or a source-code read, not just a reference grammar.
+
+- [x] `Scan`/`SubScan`/`SlowSequence` blocks had zero folding or
+  indentation support ✅ Resolved
+  - `Scan...NextScan` is the single most common block in a CRBasic
+    program (the main measurement loop), yet `client/language-configuration.json`
+    and `crates/crbasic-lsp/src/folding.rs` had no handling for it at
+    all -- every other block construct (`If`, `For`, `Do`, `Function`,
+    `Sub`, `Select Case`, `DataTable`, `ConstTable`, `BeginProg`, `#If`,
+    even the rarer `SlowSequence`/`EndSequence`) already did
+  - Fixing `SlowSequence`/`EndSequence` surfaced a deeper, previously
+    unnoticed bug: both were miscategorized in `keywords.json` as
+    `builtinFunctions` instead of `languageKeywords`, so the lexer's
+    `lookup_keyword` (which only checks `LANGUAGE_KEYWORDS`) never
+    tokenized them as keywords at all -- confirmed via a throwaway
+    token dump that `SlowSequence`/`EndSequence` lexed as plain
+    `Identifier`s, parsing as inert expression statements invisible to
+    `parse_program_structure`, completion's keyword list, and hover.
+    They're bare block markers with no arguments (like `BeginProg`/
+    `DataTable`), not parenthesized calls (like `Scan`/`SubScan`), so
+    moved to `languageKeywords` and wired into `parse_program_structure`
+  - Added `Scan\s*\(`/`SubScan\s*\(` to `increaseIndentPattern`/
+    `folding.markers` start, and `NextScan\b`/`NextSubScan\b` to
+    `decreaseIndentPattern`/`folding.markers` end (word-boundary-safe
+    against `ContinueScan`, matching the Round 2 `\b` fix); `SlowSequence`/
+    `EndSequence` added to `folding.markers` (already present in
+    `indentationRules` for `SlowSequence`, but `EndSequence` was missing
+    even there)
+    - `folding.rs` now pairs `Scan`/`NextScan` and `SubScan`/`NextSubScan`
+      the same way it already pairs `BeginProg`/`EndProg` and
+      `DataTable`/`EndTable`, keyed off `Statement::FunctionCall`'s name
+      for the openers since `Scan(...)`/`SubScan(...)` take parenthesized
+      arguments
+  - 4 new folding tests, 1 new parser test, and 21 new Vitest cases
+    (indentation + folding.markers, including false-positive guards for
+    `ContinueScan` and a bare `ScanValue = 5` assignment) added Red-first
+- [x] `Do Until condition ... Loop` / `Do ... Loop Until condition`
+  silently corrupted the statement list (bug) ✅ Resolved
+  - Confirmed at [Do...Loop](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/doloop.htm):
+    `Until` is a documented alternative to `While` at either position,
+    but `Until` wasn't a registered keyword at all -- `parse_do_loop`
+    only ever checked for `While`. Repro confirmed before fixing: `Do
+    Until x > 10 ... Loop` parsed **without error** but wrongly, leaking
+    `Until`/`x > 10` into the loop body as bogus statements and silently
+    becoming an unconditional loop
+  - Desugars to the same `DoLoop` shape as `While`, with the condition
+    wrapped in a logical `Not` (`Do Until cond` behaves like `Do While
+    Not cond`), rather than adding a new AST field -- every downstream
+    consumer already handles `DoLoop` generically
+  - 4 new parser tests added Red-first
+- [x] `Call SubName(args)` silently corrupted the statement list (bug)
+  ✅ Resolved
+  - Confirmed at Campbell Scientific's own
+    [Sub/Exit Sub/EndSub](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/subexitsubendsub.htm)
+    page (`Call ConvertCtoF(TC(I), TC_F(I))`), but `Call` wasn't
+    registered -- it split into a bogus `Identifier("Call")` expression
+    statement followed by the real function call
+  - `Call` is purely an optional prefix, so `parse_call_statement` just
+    consumes the keyword and delegates to the existing call-expression
+    path. A pre-existing test used `"Call"` as an arbitrary function
+    name to test boolean-literal arguments (incidental to its actual
+    intent); renamed to `"Invoke"` since it collided with the new keyword
+  - 1 new parser test added Red-first
+- [x] `Alias`/`Units` statements advertised via completion/hover but
+  unparseable (bug) ✅ Resolved
+  - Same "advertised via completion/hover, silently broken in the
+    parser" bug class as the already-resolved `Mod`/`ElseIf`/`Select
+    Case` gaps -- a fourth, unfixed instance. Confirmed real at
+    [Alias](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/alias.htm)
+    (including the multi-name form,
+    `Alias Array = FrontRoom, BedRoom, GreatRoom(4), Laundry`) and
+    [Units](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/units.htm);
+    `parse_statement` had no branch for either, so both were hard parse
+    errors
+  - New `Statement::Alias`/`Statement::Units` AST variants. Both sides
+    of each statement are parsed via `parse_primary` rather than
+    `parse_expression`, since CRBasic's parenthesized subscript form
+    (`TCTemp(1)`) already parses as an ordinary `Expression::FunctionCall`
+    at that level, and stopping there avoids `=` being misread as the
+    comparison operator it is everywhere else. `call_sites.rs` (shared by
+    inlay hints and call hierarchy) deliberately skips both statements'
+    operands, since they're names, not real calls, even when
+    subscript-shaped
+  - 5 new parser tests added Red-first
+- [x] Fixed-length string declarations (`As String * N`) unparseable
+  ✅ Resolved
+  - Confirmed at [Dim](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/dim.htm)
+    (default size 24, minimum 4; `Public` supports the same syntax as
+    `Dim`). The declaration parser only ever looked for `=`/newline
+    after the type identifier, so `* 30` failed with "Unexpected token:
+    Star"
+  - Added an optional `type_size` field to `VarDeclaration`, parsed via
+    `parse_primary` for the same `=`-ambiguity reason as `Alias`/`Units`
+    above. Every other `VarDeclaration` construction site across the
+    workspace (test fixtures in `semantic.rs` and the LSP provider
+    tests) updated with the new field
+  - 3 new parser tests added Red-first
+- [x] `ContinueScan` keyword never implemented ✅ Resolved
+  - Confirmed at the [Scan, NextScan](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/scannextscan.htm)
+    page -- and already cited in this project's own Round 2 entry (as
+    part of the real exit/jump vocabulary justifying the fabricated
+    `Continue`/`Break`/`GoTo` removal) but never itself registered.
+    Lexed as a bare, unrecognized identifier with no completion, hover,
+    or parser support
+  - Parses the same way as the already-supported `ExitFor`/`ExitDo`: a
+    bare keyword handled by `parse_program_structure`
+  - 1 new parser test added Red-first
+- [x] `SubScan`/`NextSubScan` nested-scan block entirely unregistered
+  ✅ Resolved
+  - Confirmed at [SubScan, NextSubScan](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/subscannextsubscan.htm)
+    (nests inside the main `Scan` for faster analog measurement or
+    AM16/32 multiplexer control); both reference tmLanguage grammars
+    list it, but this project had no coverage at all -- it only
+    "parsed" by accident, as an unrecognized identifier/function call
+  - Mirrors the existing `Scan`/`NextScan` split: `SubScan` is a
+    `builtinFunctions` entry (parenthesized arguments, ordinary
+    `FunctionCall` parsing already handles it), `NextSubScan` is a
+    `languageKeywords` entry handled by `parse_program_structure`
+  - 1 new parser test added Red-first
+
+Not flagged as gaps (verified during the same comparison):
+
+- `Debug`/`DebugBreak`, `ArrayIndex`, `StationName`/`Status`,
+  `LoggerType`, `ReadOnly`, `RunProgram`, bare `End` each appear in only
+  **one** of the two reference tmLanguage files, not both -- per this
+  project's own corroboration bar (established in Round 1), not
+  escalated to findings without independent confirmation.
+- No separate `Aliases`/`EndAliases` block construct exists in the
+  official docs distinct from the single `Alias` statement -- the
+  multi-name comma form is part of the same instruction, not a separate
+  block.
+- Multi-dimensional array declarations (`Dim arr(3,4)`) already parse
+  correctly.
+
 ### Packaging Gap (discovered while designing the release workflow)
 
 - [x] Multi-platform `.vsix` packaging ✅ Resolved
