@@ -706,8 +706,8 @@ help.campbellsci.com directly, not just the reference grammars.
     (`client/src/language-configuration.test.ts`) covering every
     start/end alternative plus false-positive guards for the exit/
     return keywords and the word-boundary bug class
-- [ ] Single-line `If condition Then statement[: statement...]` (no
-  `EndIf`) is unparseable ⏸️ Found, not fixed this round
+- [x] Single-line `If condition Then statement[: statement...]` (no
+  `EndIf`) is unparseable ✅ Resolved
   - Found while writing an end-to-end test for the constructs above;
     confirmed real and confirmed via repro:
     `If x = 5 Then y = 1` fails with `Expected 'EndIf' to close If
@@ -719,14 +719,32 @@ help.campbellsci.com directly, not just the reference grammars.
     and the docs' own example
     (`If A > 10 Then A = A + 1 : B = B + A : C = C + B {EndIf}`) shows
     it combined with a second, compounding gap -- `:` as a
-    statement separator on one line -- which this lexer/parser has no
-    support for either (`:` isn't even a recognized token today)
-  - Not fixed this round: genuinely separate parsing feature from the
-    Select Case/Exit/Return work above (needs both a new
-    `:`-statement-separator lexer/parser rule and a way for
-    `parse_if_clause` to recognize "no block keywords, no `EndIf`" as
-    a valid single-statement-list terminator instead of an error) --
-    deferred to a future session rather than scope-crept into this one
+    statement separator on one line -- which this lexer/parser had no
+    support for either (`:` wasn't even a recognized token)
+  - Re-verified against [CRBasic Program Structure](https://help.campbellsci.com/crbasic/cr1000x/Content/Info/crbasicprogramstructure.htm)
+    that `:` is a **general** multi-statement-per-line separator, not
+    an `If`-only special case -- so the fix targets the shared
+    statement-list loop, not `If` specifically
+  - Added a `Colon` token to the lexer; `skip_whitespace_and_comments`
+    (used between statements in the program body and every block body
+    -- `For`, `Do`, `Function`, `Sub`, etc.) now skips it the same way
+    it already skips `Newline`/`Comment`, so `x = 1 : y = 2` works
+    uniformly everywhere a statement list is parsed, not just at the
+    top level
+  - `parse_if_clause` now detects the single-line form by checking
+    whether a newline immediately follows `Then`; if not, it parses a
+    colon-separated statement list (via new `parse_colon_separated_statements`)
+    for `then_branch`, an optional same-line `Else` clause, and returns
+    without expecting `EndIf`. `IfClause`'s tuple gained a `bool` flag
+    so `parse_if_statement` knows whether to skip the `EndIf` check;
+    `#If`/`#IfDef` preprocessor conditionals (which have no single-line
+    form) got their own `PreprocessorClause` type instead of sharing
+    `IfClause`, since they diverged
+  - 6 new parser tests (single-line `If` with/without `Else`, with
+    colon-separated statements, confirming it doesn't swallow the
+    following line, plus 2 general colon-separator tests covering the
+    program body and a `For` loop body) added Red-first; full
+    workspace `build`/`test`/`clippy`/`fmt` gate passes
 
 Not flagged as gaps (verified during the same comparison):
 
@@ -749,6 +767,171 @@ Not flagged as gaps (verified during the same comparison):
   consistent with the already-deferred "~35 highlighted-but-not-
   completed functions" note in the Keyword/instruction list
   unification entry above
+
+### Reference Implementation & Official Docs Comparison, Round 3 (2026-08-09)
+
+Found during a third comparison round, this time auditing operators
+specifically (not covered by Rounds 1-2) against Campbell Scientific's
+canonical [Operators](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/operators1.htm)
+page, plus a keywords.json/parser.rs sweep for other constructs absent
+from both reference grammars' coverage. Ordered by real-world frequency.
+
+- [x] `&` string concatenation operator not implemented ✅ Resolved
+  - No `Ampersand` token existed in the lexer. Confirmed real and
+    distinct from `+` at
+    [concatenation.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/concatenation.htm)
+    and the master Operators page ("String" category lists both `+`
+    and `&`). High frequency: string-building (table names, filenames,
+    log messages) is extremely common in real CRBasic programs.
+  - Added the `Ampersand` token to the lexer and
+    `BinaryOperator::Concatenate` to the AST, parsed in
+    `parse_additive` at the same precedence tier as `+`/`-` (both are
+    grouped under the docs' "String" operator category)
+  - 2 new lexer/parser tests (`recognizes_string_concatenation_operator`,
+    `parses_string_concatenation`,
+    `concatenation_has_same_precedence_as_addition`) added Red-first;
+    full workspace `build`/`test`/`clippy`/`fmt` gate passes
+- [x] Compound assignment operators (`+=`, `-=`, `*=`, `/=`, `^=`,
+  `&=`) not implemented ✅ Resolved (`\=` deferred to the `\` entry below)
+  - The scanner only ever emitted bare `Plus`/`Minus`/`Star`/`Slash`/
+    `Caret`, never checking for a trailing `=`. Confirmed at
+    [compoundoperators.htm](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/compoundoperators.htm)
+    and the master Operators page. Common shorthand in
+    accumulator/counter code.
+  - Desugars to a plain `Statement::Assignment` whose value is a
+    `BinaryOp` reading the same target (`x += y` becomes `x = x + y`),
+    rather than a new AST variant -- every downstream consumer already
+    handles `Assignment` generically. Works for both plain identifiers
+    and array elements (`Data[0] += 1`)
+  - `\=` deferred to land together with the `\` integer-division entry
+    below, since both need the same new `Backslash` token
+  - 1 new lexer test (`recognizes_compound_assignment_operators`) + 2
+    new parser tests (`desugars_compound_assignment_operators_to_assignment_with_binary_op`,
+    `desugars_compound_assignment_to_array_element`) added Red-first;
+    full workspace `build`/`test`/`clippy`/`fmt` gate passes
+- [x] `\` integer-division operator not implemented ✅ Resolved
+  - Not in the lexer at all (the only existing `\` handling was inside
+    string-literal escapes, unrelated). Confirmed on the master
+    Operators page (Arithmetic category, distinct from `/`).
+  - Added `Backslash`/`BackslashEqual` tokens and
+    `BinaryOperator::IntegerDivide`, parsed in `parse_multiplicative`
+    at the same precedence tier as `*`/`/`; `\=` slots into the
+    compound-assignment desugaring added above
+  - 1 new lexer test (`recognizes_integer_division_operator`, plus
+    `\=` added to the compound-assignment lexer test) + 3 new parser
+    tests (`parses_integer_division`,
+    `integer_division_has_same_precedence_as_multiplication_and_division`,
+    plus a `\=` case added to the compound-assignment desugaring test)
+    added Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate
+    passes
+- [x] `<<` / `>>` bit-shift operators not implemented ✅ Resolved
+  - The lexer's `<`/`>` cases only checked for a trailing `=`
+    (-> `<=`/`>=`), and `<` also checked for `>` (-> `<>`); a doubled
+    `<<`/`>>` would lex as two separate tokens and fail to parse.
+    Confirmed at
+    [bitshiftoperators.htm](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/bitshiftoperators.htm),
+    used for bit-level protocol/status-word parsing on `Long`-typed
+    variables.
+  - Added `LeftShift`/`RightShift` tokens and matching `BinaryOperator`
+    variants, parsed via a new `parse_shift` precedence tier between
+    comparison and additive (binds tighter than `<`/`>`/`=`, looser
+    than `+`/`-`/`&`) -- the common C-family convention, since
+    Campbell Scientific's docs don't specify shift precedence relative
+    to other operator categories
+  - 1 new lexer test (`recognizes_bit_shift_operators`) + 3 new parser
+    tests (`parses_left_shift`, `parses_right_shift`,
+    `shift_binds_tighter_than_comparison_but_looser_than_addition`)
+    added Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate
+    passes
+- [x] `ConstTable`/`EndConstTable` declaration block not implemented
+  ✅ Resolved
+  - Not in `keywords.json`, no parser rule. Confirmed at
+    [consttableendconsttable.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/consttableendconsttable.htm):
+    a documented, moderately common pattern letting field techs edit
+    constants and recompile without touching the constant's use
+    sites.
+  - Added to `keywords.json` under a new `consttable` category, wired
+    into `generate-grammar.js`'s TextMate output alongside the
+    existing `datatable` one; reused `DataTable`'s parenthesized
+    argument parsing in `parse_program_structure` since
+    `ConstTable(Name, Enabled)` takes the same shape. `Const`
+    declarations inside the block parse as ordinary flat statements,
+    matching how `DataTable`'s body already works
+  - Added matching completion snippets, hover text, folding-range
+    pairing (a new stack alongside the existing
+    `BeginProg`/`DataTable` ones in `folding.rs`), and
+    indentation/folding-marker regexes with Vitest coverage, so the
+    new block gets the same editor support as `DataTable`/`EndTable`
+  - 3 new parser tests (`parses_const_table_with_arguments`,
+    `parses_end_const_table_statement`,
+    `parses_complete_const_table_structure`) + 1 new folding test
+    (`pairs_const_table_with_the_matching_end_const_table`) + 88
+    Vitest cases (existing suite extended) added Red-first; full
+    workspace `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass
+- [x] `Optional` parameter modifier in `Function`/`Sub` parameter
+  lists not implemented ✅ Resolved
+  - `parse_function_definition`/`parse_subroutine_definition` only
+    accepted bare identifiers in the parameter list; `Optional` wasn't
+    even a keyword. Confirmed at
+    [optional.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/optional.htm).
+    Lower-moderate frequency.
+  - Added `Optional` to `keywords.json` (`declaration` category) and
+    taught both parameter-parsing loops to skip a leading `Optional`
+    keyword before the parameter name. Parameters stay a plain
+    `Vec<String>` as before -- this project doesn't track
+    per-parameter types or other modifiers either, so adding metadata
+    just for `Optional` would be inconsistent with the existing shape
+  - 2 new parser tests (`parses_function_with_an_optional_parameter`,
+    `parses_subroutine_with_an_optional_parameter`) added Red-first;
+    full workspace `build`/`test`/`clippy`/`fmt` gate passes
+- [x] `@`/`!` pointer operators not implemented ✅ Resolved (operator
+  forms only)
+  - The master Operators page has a "Pointer" category listing both.
+    Distinct from the previously-dismissed VB6-lookalike operators
+    (see below) -- CRBasic genuinely added pointer support via
+    `@`/`!`. Low frequency.
+  - Confirmed via the linked
+    [pointer-variable docs page](https://help.campbellsci.com/crbasic/cr1000x/Content/Info/pointervariable.htm):
+    `@` is a prefix "address of" operator (`Ptr = @MyVariable`) and
+    `!` is a prefix dereference operator (`MyVariable = !Ptr`)
+  - Added `At`/`Bang` tokens and
+    `UnaryOperator::AddressOf`/`Dereference`, parsed in `parse_unary`
+    alongside the existing `-`/`NOT` prefix operators
+  - Deliberately scoped to the operator forms only -- the docs also
+    show `!` as a **suffix** on type names in pointer declarations
+    (`Dim ptr as long!`) and indexed/cast dereference forms
+    (`!Pointer(X)`, `!(FLOAT!)(p+1)`); those are a separate, more
+    involved declaration-syntax extension not covered here
+  - 1 new lexer test (`recognizes_pointer_operators`) + 2 new parser
+    tests (`parses_address_of_operator`, `parses_dereference_operator`)
+    added Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate
+    passes
+- [x] `Imp` logical operator not implemented ✅ Resolved
+  - Round 1 grouped `Eqv`/`Imp`/`IntDv` together as "unconfirmed,
+    resembles a copy-pasted VB6 operator list, not acted on." The
+    master Operators page's Logical category confirms `IMP`
+    (implication) is genuinely documented CRBasic. `Eqv` and `IntDv`
+    still do **not** appear anywhere on that page, so the original
+    skepticism about those two stands -- only `Imp` was reconsidered
+    here. Low frequency.
+  - Added `IMP` to `keywords.json` and `BinaryOperator::Implication`,
+    parsed via a new `parse_logical_imp` tier below the existing
+    OR/XOR/AND chain -- the loosest-binding logical operator, per the
+    common BASIC-family convention (Campbell Scientific's docs don't
+    state precedence explicitly). Added matching completion/hover
+    entries
+  - 2 new parser tests (`parses_imp_operation`,
+    `imp_has_lower_precedence_than_or`) added Red-first; full workspace
+    `build`/`test`/`clippy`/`fmt` gate passes
+
+Not flagged as gaps (verified during the same comparison):
+
+- `Case Else`, `<>`/`NotEqual`, `^`/`Caret`, and all `As`-clause data
+  types (`Float`/`Boolean`/`UINT1`/etc.) were checked against the
+  master Operators page and are already correctly implemented.
+- `Include` (see Round 2's already-deferred entry above): no new
+  information surfaced this round.
 
 ### Packaging Gap (discovered while designing the release workflow)
 
