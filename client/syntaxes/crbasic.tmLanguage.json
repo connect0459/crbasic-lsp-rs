@@ -116,6 +116,10 @@
           "match": "(?i)\\b(DataTable|EndTable)\\b"
         },
         {
+          "name": "keyword.control.consttable.crbasic",
+          "match": "(?i)\\b(ConstTable|EndConstTable)\\b"
+        },
+        {
           "name": "keyword.control.function.crbasic",
           "match": "(?i)\\b(Function|EndFunction|Return|ExitFunction|Sub|EndSub|Exit)\\b"
         },

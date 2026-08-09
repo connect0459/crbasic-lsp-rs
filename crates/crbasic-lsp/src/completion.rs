@@ -521,6 +521,12 @@ impl CompletionProvider {
                 "Define data storage table",
             ),
             Self::create_keyword_completion("EndTable", "Terminates DataTable block"),
+            Self::create_keyword_snippet(
+                "ConstTable",
+                "ConstTable(${1:TableName}, ${2:Enabled})\n\tConst $0\nEndConstTable",
+                "Define a block of editable constants",
+            ),
+            Self::create_keyword_completion("EndConstTable", "Terminates ConstTable block"),
         ]
     }
 
@@ -644,6 +650,8 @@ mod tests {
             assert!(labels.contains(&"EndProg"));
             assert!(labels.contains(&"DataTable"));
             assert!(labels.contains(&"EndTable"));
+            assert!(labels.contains(&"ConstTable"));
+            assert!(labels.contains(&"EndConstTable"));
         }
 
         #[test]

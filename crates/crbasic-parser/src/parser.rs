@@ -150,6 +150,8 @@ impl<'a> Parser<'a> {
                 || kw == "EndProg"
                 || kw == "DataTable"
                 || kw == "EndTable"
+                || kw == "ConstTable"
+                || kw == "EndConstTable"
                 || kw == "NextScan"
                 || kw == "#UnDef"
                 || kw == "ExitFor"
@@ -570,54 +572,55 @@ impl<'a> Parser<'a> {
             });
         };
 
-        let arguments =
-            if keyword == "DataTable" && matches!(self.peek().kind, TokenKind::LeftParen) {
-                self.advance();
+        let arguments = if (keyword == "DataTable" || keyword == "ConstTable")
+            && matches!(self.peek().kind, TokenKind::LeftParen)
+        {
+            self.advance();
 
-                let mut args = Vec::new();
+            let mut args = Vec::new();
 
-                while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
-                    args.push(self.parse_expression()?);
+            while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
+                args.push(self.parse_expression()?);
 
-                    if matches!(self.peek().kind, TokenKind::Comma) {
-                        self.advance();
-                    }
+                if matches!(self.peek().kind, TokenKind::Comma) {
+                    self.advance();
                 }
+            }
 
-                if !matches!(self.peek().kind, TokenKind::RightParen) {
-                    return Err(ParseError {
-                        message: "Expected ')' after DataTable arguments".to_string(),
-                        span: self.peek().span,
-                    });
-                }
-                self.advance();
+            if !matches!(self.peek().kind, TokenKind::RightParen) {
+                return Err(ParseError {
+                    message: format!("Expected ')' after {keyword} arguments"),
+                    span: self.peek().span,
+                });
+            }
+            self.advance();
 
-                Some(args)
-            } else if keyword == "#UnDef" {
-                Some(vec![self.parse_expression()?])
-            } else if keyword == "Return" {
-                if !matches!(self.peek().kind, TokenKind::LeftParen) {
-                    return Err(ParseError {
-                        message: "Expected '(' after 'Return'".to_string(),
-                        span: self.peek().span,
-                    });
-                }
-                self.advance();
+            Some(args)
+        } else if keyword == "#UnDef" {
+            Some(vec![self.parse_expression()?])
+        } else if keyword == "Return" {
+            if !matches!(self.peek().kind, TokenKind::LeftParen) {
+                return Err(ParseError {
+                    message: "Expected '(' after 'Return'".to_string(),
+                    span: self.peek().span,
+                });
+            }
+            self.advance();
 
-                let value = self.parse_expression()?;
+            let value = self.parse_expression()?;
 
-                if !matches!(self.peek().kind, TokenKind::RightParen) {
-                    return Err(ParseError {
-                        message: "Expected ')' after Return expression".to_string(),
-                        span: self.peek().span,
-                    });
-                }
-                self.advance();
+            if !matches!(self.peek().kind, TokenKind::RightParen) {
+                return Err(ParseError {
+                    message: "Expected ')' after Return expression".to_string(),
+                    span: self.peek().span,
+                });
+            }
+            self.advance();
 
-                Some(vec![value])
-            } else {
-                None
-            };
+            Some(vec![value])
+        } else {
+            None
+        };
 
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
@@ -4103,6 +4106,77 @@ mod tests {
                     program.statements[0]
                 );
             }
+        }
+
+        #[test]
+        fn parses_const_table_with_arguments() {
+            let source = "ConstTable(NewConstTable, 0)".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ProgramStructure {
+                keyword, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "ConstTable");
+                assert!(arguments.is_some(), "ConstTable should have arguments");
+                if let Some(args) = arguments {
+                    assert_eq!(args.len(), 2);
+                }
+            } else {
+                panic!("Expected ConstTable statement");
+            }
+        }
+
+        #[test]
+        fn parses_end_const_table_statement() {
+            let mut scanner = Scanner::new("EndConstTable");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ProgramStructure {
+                keyword, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(keyword, "EndConstTable");
+                assert!(
+                    arguments.is_none(),
+                    "EndConstTable should have no arguments"
+                );
+            } else {
+                panic!("Expected EndConstTable statement");
+            }
+        }
+
+        #[test]
+        fn parses_complete_const_table_structure() {
+            let source = "ConstTable(NewConstTable, 0)\n  Const A = 1\nEndConstTable".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+
+            assert!(matches!(
+                program.statements[0],
+                Statement::ProgramStructure { ref keyword, .. } if keyword == "ConstTable"
+            ));
+            assert!(matches!(
+                program.statements[1],
+                Statement::VarDeclaration { .. }
+            ));
+            assert!(matches!(
+                program.statements[2],
+                Statement::ProgramStructure { ref keyword, .. } if keyword == "EndConstTable"
+            ));
         }
     }
 

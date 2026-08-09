@@ -36,6 +36,8 @@
     { "name": "EndProg", "category": "program" },
     { "name": "DataTable", "category": "datatable" },
     { "name": "EndTable", "category": "datatable" },
+    { "name": "ConstTable", "category": "consttable" },
+    { "name": "EndConstTable", "category": "consttable" },
     { "name": "Function", "category": "function" },
     { "name": "EndFunction", "category": "function" },
     { "name": "Return", "category": "function" },

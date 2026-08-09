@@ -50,6 +50,7 @@ describe("language-configuration.json indentationRules", () => {
     test.each([
       "BeginProg",
       "DataTable(Test, 1, -1)",
+      "ConstTable(NewConstTable, 0)",
       "Sub MySub(x)",
       "Function MyFunc(x)",
       "For i = 1 To 10",
@@ -84,6 +85,7 @@ describe("language-configuration.json indentationRules", () => {
     test.each([
       "EndProg",
       "EndTable",
+      "EndConstTable",
       "EndSub",
       "EndFunction",
       "EndSequence",
@@ -122,6 +124,7 @@ describe("language-configuration.json folding.markers", () => {
     test.each([
       "BeginProg",
       "DataTable(Test, 1, -1)",
+      "ConstTable(NewConstTable, 0)",
       "Sub MySub(x)",
       "Function MyFunc(x)",
       "If x > 5 Then",
@@ -155,6 +158,7 @@ describe("language-configuration.json folding.markers", () => {
     test.each([
       "EndProg",
       "EndTable",
+      "EndConstTable",
       "EndSub",
       "EndFunction",
       "EndIf",

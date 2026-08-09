@@ -220,6 +220,10 @@ impl HoverProvider {
                 "**DataTable**\n\nDefines a data table for storing measurements.\n\n```crbasic\nDataTable(TableName, TriggerCondition, Size)\n  ' output instructions\nEndTable\n```",
             ),
             "endtable" => Some("**EndTable**\n\nTerminates a DataTable block."),
+            "consttable" => Some(
+                "**ConstTable**\n\nDefines a block of constants that field technicians can edit and recompile without touching the constants' use sites.\n\n```crbasic\nConstTable(TableName, Enabled)\n  Const A = 1\nEndConstTable\n```",
+            ),
+            "endconsttable" => Some("**EndConstTable**\n\nTerminates a ConstTable block."),
 
             "function" => Some(
                 "**Function**\n\nDefines a user-defined function that returns a value.\n\n```crbasic\nFunction MyFunc(param As Float) As Float\n  MyFunc = param * 2\nEndFunction\n```",
@@ -356,7 +360,14 @@ mod tests {
 
             #[test]
             fn all_program_structure_keywords_have_hover_info() {
-                let keywords = ["BeginProg", "EndProg", "DataTable", "EndTable"];
+                let keywords = [
+                    "BeginProg",
+                    "EndProg",
+                    "DataTable",
+                    "EndTable",
+                    "ConstTable",
+                    "EndConstTable",
+                ];
 
                 for keyword in keywords {
                     let hover = HoverProvider::get_keyword_hover(keyword);

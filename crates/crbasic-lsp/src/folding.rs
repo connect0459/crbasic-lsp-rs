@@ -2,9 +2,10 @@
 //!
 //! Block statements (`If`/`For`/`Do`/`Function`/`Sub`) already carry a span
 //! covering their closing keyword, so each becomes one folding range
-//! directly. `BeginProg`/`EndProg` and `DataTable`/`EndTable` are parsed as
-//! independent flat statements rather than a single spanning one, so this
-//! module pairs them back up itself.
+//! directly. `BeginProg`/`EndProg`, `DataTable`/`EndTable`, and
+//! `ConstTable`/`EndConstTable` are parsed as independent flat statements
+//! rather than a single spanning one, so this module pairs them back up
+//! itself.
 
 use crbasic_parser::ast::{Program, Statement};
 use crbasic_parser::lexer::token::Position;
@@ -25,16 +26,19 @@ impl FoldingRangeProvider {
     }
 
     /// Walks a statement list, recursing into block bodies and pairing up
-    /// the flat `BeginProg`/`EndProg` and `DataTable`/`EndTable` markers
+    /// the flat `BeginProg`/`EndProg`, `DataTable`/`EndTable`, and
+    /// `ConstTable`/`EndConstTable` markers
     fn collect_from_statements(statements: &[Statement], ranges: &mut Vec<FoldingRange>) {
         let mut begin_prog_stack: Vec<Position> = Vec::new();
         let mut data_table_stack: Vec<Position> = Vec::new();
+        let mut const_table_stack: Vec<Position> = Vec::new();
 
         for statement in statements {
             match statement {
                 Statement::ProgramStructure { keyword, span, .. } => match keyword.as_str() {
                     "BeginProg" => begin_prog_stack.push(span.start),
                     "DataTable" => data_table_stack.push(span.start),
+                    "ConstTable" => const_table_stack.push(span.start),
                     "EndProg" => {
                         if let Some(start) = begin_prog_stack.pop() {
                             Self::push_range(ranges, start, span.end);
@@ -42,6 +46,11 @@ impl FoldingRangeProvider {
                     }
                     "EndTable" => {
                         if let Some(start) = data_table_stack.pop() {
+                            Self::push_range(ranges, start, span.end);
+                        }
+                    }
+                    "EndConstTable" => {
+                        if let Some(start) = const_table_stack.pop() {
                             Self::push_range(ranges, start, span.end);
                         }
                     }
@@ -244,6 +253,20 @@ mod tests {
             let program = program(vec![
                 program_structure("DataTable", 2),
                 program_structure("EndTable", 8),
+            ]);
+
+            let ranges = FoldingRangeProvider::get_folding_ranges(&program);
+
+            assert_eq!(ranges.len(), 1);
+            assert_eq!(ranges[0].start_line, 1);
+            assert_eq!(ranges[0].end_line, 7);
+        }
+
+        #[test]
+        fn pairs_const_table_with_the_matching_end_const_table() {
+            let program = program(vec![
+                program_structure("ConstTable", 2),
+                program_structure("EndConstTable", 8),
             ]);
 
             let ranges = FoldingRangeProvider::get_folding_ranges(&program);

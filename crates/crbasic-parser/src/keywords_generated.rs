@@ -39,6 +39,8 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("EndProg", "program"),
     ("DataTable", "datatable"),
     ("EndTable", "datatable"),
+    ("ConstTable", "consttable"),
+    ("EndConstTable", "consttable"),
     ("Function", "function"),
     ("EndFunction", "function"),
     ("Return", "function"),
