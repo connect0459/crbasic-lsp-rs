@@ -4,6 +4,7 @@
   "description": "Language support for CRBasic (Campbell Scientific data logger programming language)",
   "version": "0.1.0",
   "publisher": "connect0459",
+  "icon": "images/icon.png",
   "license": "MIT",
   "repository": {
     "type": "git",
