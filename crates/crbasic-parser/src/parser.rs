@@ -152,6 +152,18 @@ impl<'a> Parser<'a> {
         }
 
         if let &TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "Alias"
+        {
+            return self.parse_alias_statement();
+        }
+
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "Units"
+        {
+            return self.parse_units_statement();
+        }
+
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "BeginProg"
                 || kw == "EndProg"
                 || kw == "DataTable"
@@ -714,6 +726,84 @@ impl<'a> Parser<'a> {
         Ok(Statement::FunctionCall {
             name,
             arguments,
+            span: crate::lexer::token::Span::new(start, end),
+        })
+    }
+
+    /// Parses an `Alias` statement.
+    /// Syntax: `Alias VariableName = AliasName [, AliasName...]`
+    ///
+    /// Both `VariableName` and each `AliasName` are parsed via
+    /// `parse_primary` rather than `parse_expression`: CRBasic's real
+    /// parenthesized subscript syntax (`TCTemp(1)`) already parses as an
+    /// ordinary `Expression::FunctionCall` at that level, and stopping
+    /// there (instead of the full expression grammar) avoids `=` being
+    /// misread as the comparison operator it is everywhere else.
+    fn parse_alias_statement(&mut self) -> Result<Statement, ParseError> {
+        let alias_token = self.advance();
+        let start = alias_token.span.start;
+
+        let variable = self.parse_primary()?;
+
+        if !matches!(self.peek().kind, TokenKind::Equal) {
+            return Err(ParseError {
+                message: "Expected '=' after Alias variable name".to_string(),
+                span: self.peek().span,
+            });
+        }
+        self.advance();
+
+        let mut names = vec![self.parse_primary()?];
+        while matches!(self.peek().kind, TokenKind::Comma) {
+            self.advance();
+            names.push(self.parse_primary()?);
+        }
+
+        let end = names
+            .last()
+            .expect("names always has at least one entry")
+            .span()
+            .end;
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        Ok(Statement::Alias {
+            variable,
+            names,
+            span: crate::lexer::token::Span::new(start, end),
+        })
+    }
+
+    /// Parses a `Units` statement.
+    /// Syntax: `Units VariableName = UnitLabel` or `Units VariableName() = UnitLabel`
+    ///
+    /// See `parse_alias_statement` for why both sides use `parse_primary`.
+    fn parse_units_statement(&mut self) -> Result<Statement, ParseError> {
+        let units_token = self.advance();
+        let start = units_token.span.start;
+
+        let variable = self.parse_primary()?;
+
+        if !matches!(self.peek().kind, TokenKind::Equal) {
+            return Err(ParseError {
+                message: "Expected '=' after Units variable name".to_string(),
+                span: self.peek().span,
+            });
+        }
+        self.advance();
+
+        let unit = self.parse_primary()?;
+        let end = unit.span().end;
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        Ok(Statement::Units {
+            variable,
+            unit,
             span: crate::lexer::token::Span::new(start, end),
         })
     }
@@ -2022,6 +2112,8 @@ impl Statement {
             Statement::FunctionDefinition { span, .. } => *span,
             Statement::SubroutineDefinition { span, .. } => *span,
             Statement::SelectCase { span, .. } => *span,
+            Statement::Alias { span, .. } => *span,
+            Statement::Units { span, .. } => *span,
         }
     }
 }
@@ -4074,6 +4166,127 @@ mod tests {
                         expected_name, program.statements[i]
                     );
                 }
+            }
+        }
+    }
+
+    mod alias_and_units_statements {
+        use super::*;
+
+        #[test]
+        fn parses_alias_of_a_plain_identifier() {
+            let mut scanner = Scanner::new("Alias TCTemp = CoolantT");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Alias {
+                variable, names, ..
+            } = &program.statements[0]
+            {
+                assert!(
+                    matches!(variable, Expression::Identifier { name, .. } if name == "TCTemp")
+                );
+                assert_eq!(names.len(), 1);
+                assert!(
+                    matches!(&names[0], Expression::Identifier { name, .. } if name == "CoolantT")
+                );
+            } else {
+                panic!("Expected Alias statement, got {:?}", program.statements[0]);
+            }
+        }
+
+        #[test]
+        fn parses_alias_of_an_indexed_array_element() {
+            let mut scanner = Scanner::new("Alias TCTemp(1) = CoolantT(5)");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Alias {
+                variable, names, ..
+            } = &program.statements[0]
+            {
+                assert!(matches!(
+                    variable,
+                    Expression::FunctionCall { name, arguments, .. }
+                        if name == "TCTemp" && arguments.len() == 1
+                ));
+                assert_eq!(names.len(), 1);
+                assert!(matches!(
+                    &names[0],
+                    Expression::FunctionCall { name, arguments, .. }
+                        if name == "CoolantT" && arguments.len() == 1
+                ));
+            } else {
+                panic!("Expected Alias statement, got {:?}", program.statements[0]);
+            }
+        }
+
+        #[test]
+        fn parses_alias_with_multiple_comma_separated_names() {
+            let mut scanner =
+                Scanner::new("Alias Array = FrontRoom, BedRoom, GreatRoom(4), Laundry");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Alias { names, .. } = &program.statements[0] {
+                assert_eq!(names.len(), 4);
+                assert!(
+                    matches!(&names[0], Expression::Identifier { name, .. } if name == "FrontRoom")
+                );
+                assert!(matches!(
+                    &names[2],
+                    Expression::FunctionCall { name, .. } if name == "GreatRoom"
+                ));
+            } else {
+                panic!("Expected Alias statement, got {:?}", program.statements[0]);
+            }
+        }
+
+        #[test]
+        fn parses_units_of_a_plain_variable() {
+            let mut scanner = Scanner::new("Units Batt_volt = Volts");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Units { variable, unit, .. } = &program.statements[0] {
+                assert!(
+                    matches!(variable, Expression::Identifier { name, .. } if name == "Batt_volt")
+                );
+                assert!(matches!(unit, Expression::Identifier { name, .. } if name == "Volts"));
+            } else {
+                panic!("Expected Units statement, got {:?}", program.statements[0]);
+            }
+        }
+
+        #[test]
+        fn parses_units_applied_to_every_array_element() {
+            let mut scanner = Scanner::new("Units Rain_mm() = mm");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Units { variable, .. } = &program.statements[0] {
+                assert!(matches!(
+                    variable,
+                    Expression::FunctionCall { name, arguments, .. }
+                        if name == "Rain_mm" && arguments.is_empty()
+                ));
+            } else {
+                panic!("Expected Units statement, got {:?}", program.statements[0]);
             }
         }
     }

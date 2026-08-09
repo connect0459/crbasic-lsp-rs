@@ -146,6 +146,10 @@ fn walk_statements<'a>(
                     walk_statements(else_stmts, enclosing, sites);
                 }
             }
+            // `Alias`/`Units` operands are always plain or subscripted
+            // names, never real calls, even when a subscript happens to
+            // parse as `Expression::FunctionCall` (e.g. `TCTemp(1)`).
+            Statement::Alias { .. } | Statement::Units { .. } => {}
         }
     }
 }

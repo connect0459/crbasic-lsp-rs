@@ -194,6 +194,34 @@ pub enum Statement {
         /// The source code span
         span: Span,
     },
+
+    /// `Alias` statement: gives one or more alternate names to a variable.
+    /// Syntax: `Alias VariableName = AliasName [, AliasName...]`
+    ///
+    /// Either side may use CRBasic's parenthesized subscript form
+    /// (`TCTemp(1)`, `Array()`), which this project's grammar already
+    /// represents as an ordinary `Expression::FunctionCall` -- so `variable`
+    /// and each entry in `names` are plain expressions rather than a new
+    /// indexed-name type.
+    Alias {
+        /// The variable being aliased
+        variable: Expression,
+        /// One or more alias names, in source order
+        names: Vec<Expression>,
+        /// The source code span
+        span: Span,
+    },
+
+    /// `Units` statement: assigns an engineering-units label to a variable.
+    /// Syntax: `Units VariableName = UnitLabel` or `Units VariableName() = UnitLabel`
+    Units {
+        /// The variable being labeled
+        variable: Expression,
+        /// The unit label
+        unit: Expression,
+        /// The source code span
+        span: Span,
+    },
 }
 
 /// A single `Case` clause within a `Select Case` statement
