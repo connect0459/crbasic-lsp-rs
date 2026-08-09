@@ -122,22 +122,17 @@ pub fn parse(source: &str) -> String {
 /// JSON string containing AnalysisResult with parse result and diagnostics
 #[wasm_bindgen]
 pub fn analyze(source: &str, file_path: &str) -> String {
-    // Tokenize the source
     let mut scanner = Scanner::new(source);
     let tokens = scanner.scan_tokens();
 
-    // Parse the source
     let mut parser = Parser::new(tokens);
     let analysis_result = match parser.parse() {
         Ok(program) => {
-            // Detect model from file extension
             let model = detect_model_from_path(file_path);
 
-            // Run semantic analysis
             let mut analyzer = SemanticAnalyzer::new(model);
             let errors = analyzer.analyze(&program);
 
-            // Convert to diagnostics
             let diagnostics: Vec<Diagnostic> = errors
                 .iter()
                 .map(|e| Diagnostic {
@@ -219,10 +214,8 @@ mod tests {
             let tokens: Vec<serde_json::Value> =
                 serde_json::from_str(&result).expect("Result should be valid JSON array");
 
-            // Should have: Keyword(Public), Identifier(x), Eof
             assert!(tokens.len() >= 2, "Should have at least 2 tokens");
 
-            // First token should be Public keyword
             assert_eq!(
                 tokens[0]["kind"]["Keyword"].as_str(),
                 Some("Public"),
@@ -236,7 +229,6 @@ mod tests {
             let tokens: Vec<serde_json::Value> =
                 serde_json::from_str(&result).expect("Result should be valid JSON array");
 
-            // Should have at least EOF token
             assert!(!tokens.is_empty(), "Should have at least EOF token");
         }
     }
@@ -257,7 +249,7 @@ mod tests {
 
         #[test]
         fn returns_error_for_invalid_program() {
-            let result = parse("If Then"); // Invalid: missing condition
+            let result = parse("If Then");
             let parsed: ParseResult =
                 serde_json::from_str(&result).expect("Result should be valid ParseResult JSON");
 
@@ -314,7 +306,6 @@ mod tests {
 
             assert!(parsed.parse_result.success, "Parse should succeed");
 
-            // Should have error for name > 16 chars
             let errors: Vec<_> = parsed
                 .diagnostics
                 .iter()
@@ -334,7 +325,6 @@ mod tests {
 
             assert!(parsed.parse_result.success, "Parse should succeed");
 
-            // Should have warning for name > 12 chars
             let warnings: Vec<_> = parsed
                 .diagnostics
                 .iter()
@@ -414,7 +404,6 @@ mod tests {
         fn returns_package_version() {
             let ver = version();
             assert!(!ver.is_empty(), "Version should not be empty");
-            // Version should match Cargo.toml version pattern
             assert!(
                 ver.contains('.'),
                 "Version should be in semver format (e.g., 0.1.0)"
