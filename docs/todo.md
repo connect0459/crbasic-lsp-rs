@@ -507,6 +507,56 @@
 - [x] NextScan as a statement (parser support) ✅ Resolved
 - [x] Tab-indented statements handling ✅ Resolved (lexer already skips tabs correctly)
 
+### Reference Implementation Comparison (2026-08-09)
+
+Found while comparing this project against a couple of external,
+TextMate-only CRBasic syntax-highlighting extensions (one maintained by a
+Campbell Scientific employee), consulted locally as reference material but
+not part of this repository. Both gaps below were confirmed by actually
+parsing a minimal repro, not just by reading the reference grammars.
+
+- [ ] `Mod` operator not implemented in the parser (bug)
+  - `Mod` is registered in `keywords.json` under the `logical` category, so
+    it appears in completion and hover as if it were usable, but the
+    parser's binary-operator grammar has no case for it at all -- `x = 10
+    Mod 3` fails with `Unexpected token: Keyword("MOD")`. Confirmed via a
+    throwaway `cargo run --example` repro (not committed).
+  - Both reference extensions list `MOD` as an operator alongside
+    `AND`/`OR`/`XOR`, corroborating that this is a real CRBasic operator,
+    not a keyword that should be removed.
+- [ ] `While ... Wend` loop construct not supported
+  - `While` is only recognized as part of `Do While ... Loop`; the
+    standalone `While <condition> ... Wend` loop (a distinct CRBasic
+    construct) is unparseable, and `Wend` isn't even a recognized keyword.
+    Confirmed via repro: `Unexpected token: Keyword("While")`.
+  - Both reference extensions independently list `While`/`Wend` as a loop
+    construct; `docs/researches/research-001-crbasic-for-vscode.md` §5.2
+    enumerates For/Next, Do/While, Do/Until, and Loop but omits While/Wend
+    entirely -- an oversight in the original research, not a deliberate
+    exclusion.
+  - Implementing this will also need `client/language-configuration.json`
+    updates (`indentationRules`, `folding.markers`) to recognize
+    `While`/`Wend`, matching how `Do`/`Loop` are already covered there.
+
+Not flagged as gaps (verified during the same comparison):
+
+- `.dld` file extension: already registered in `client/package.json` and
+  `keywords.json`; `DataloggerModel::from_extension` correctly returns
+  `Unknown` for it since `.dld` is a generic, model-agnostic program file
+  per `research-001` -- applying model-specific validation to it would be
+  incorrect, not a missing feature.
+- Both reference extensions' language-configuration files set
+  `lineComment: "//"`, which is wrong for CRBasic (real comments use `'`);
+  this project's `client/language-configuration.json` already uses `'`
+  correctly and should not be changed to match.
+- `Eqv`/`Imp`/`IntDv` operators appear in one reference extension's
+  operator list, but with no corroboration from Campbell Scientific's own
+  docs and a strong resemblance to a copy-pasted VB6 operator list -- not
+  acted on without independent verification.
+- One reference extension's file-import/PC400-launch commands are thin,
+  Windows-only wrappers (text paste, shelling out to a hardcoded
+  `PC400.exe` path) -- not worth porting.
+
 ### Packaging Gap (discovered while designing the release workflow)
 
 - [x] Multi-platform `.vsix` packaging ✅ Resolved
@@ -666,6 +716,30 @@
     against or test
   - Revisit once a concrete integration target (specific CS tool +
     interface) is identified
+- [ ] Preprocessor directive support (`#If`/`#ElseIf`/`#Else`/`#EndIf`/`#IfDef`/`#UnDef`)
+  - Found in the same external reference comparison as above: both
+    reference grammars list these as conditional-compilation directives;
+    this project's lexer/parser have no handling for `#`-prefixed tokens
+    at all. Confirmed via repro: `#If 1` mis-lexes as plain `If` (the `#`
+    is silently dropped), producing `Expected 'Then' after If condition`
+  - Larger in scope than the `Mod`/`While`-`Wend` gaps above: needs a new
+    lexer token kind for `#`-prefixed directives and conditional-inclusion
+    semantics in the parser (deciding which branch's tokens even become
+    AST nodes), not just a new keyword/grammar rule
+  - Revisit with a dedicated design pass rather than bundling into the
+    `Mod`/`While`-`Wend` fixes
+- [ ] Data type completions/hover after `As` (e.g. `Public x As <cursor>`)
+  - Found in the same comparison: `Public x As IEEE4` already parses
+    correctly today (the type annotation is captured as a generic
+    identifier, not validated against a fixed list), so this is a
+    completion/hover gap, not a parser gap
+  - Reference grammars document a fixed CRBasic data type set (`Float`,
+    `Double`, `Long`, `Boolean`, `String`, `FP2`, `IEEE4`, `IEEE8`,
+    `UINT1`, `UINT2`, `UINT4`, `Bool8`, `NSEC`); one reference extension's
+    snippets use a `${2|Float,Long,Boolean,String|}` choice placeholder
+    for `Public`/`Const` as a UX precedent worth following
+  - Small in scope relative to the two items above; a reasonable follow-up
+    once the parser-level gaps are fixed
 
 ### Codebase Survey Candidates (2026-08-09)
 
