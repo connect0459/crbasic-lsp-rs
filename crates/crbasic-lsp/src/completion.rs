@@ -476,6 +476,10 @@ impl CompletionProvider {
             Self::create_keyword_completion("Is", "Comparison operator in a Case clause"),
             Self::create_keyword_completion("EndSelect", "Terminates Select block"),
             Self::create_keyword_completion("NextScan", "Terminates a Scan loop"),
+            Self::create_keyword_completion(
+                "ContinueScan",
+                "Jumps to NextScan, skipping the rest of the scan body",
+            ),
             Self::create_keyword_completion("Return", "Returns a value from a Function"),
             Self::create_keyword_completion("ExitFunction", "Exit Function immediately"),
             Self::create_keyword_completion(

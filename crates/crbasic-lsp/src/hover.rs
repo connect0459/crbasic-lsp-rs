@@ -199,6 +199,9 @@ impl HoverProvider {
             ),
             "endselect" => Some("**EndSelect**\n\nTerminates a Select block."),
             "nextscan" => Some("**NextScan**\n\nMarks the end of a Scan loop."),
+            "continuescan" => Some(
+                "**ContinueScan**\n\nJumps to `NextScan`, skipping the remaining instructions in the current scan.",
+            ),
 
             "public" => Some(
                 "**Public**\n\nDeclares a public (global) variable that can be monitored and logged.\n\n```crbasic\nPublic Temp_C As Float\n```",

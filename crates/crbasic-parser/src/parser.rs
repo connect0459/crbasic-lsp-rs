@@ -171,6 +171,7 @@ impl<'a> Parser<'a> {
                 || kw == "ConstTable"
                 || kw == "EndConstTable"
                 || kw == "NextScan"
+                || kw == "ContinueScan"
                 || kw == "#UnDef"
                 || kw == "ExitFor"
                 || kw == "ExitDo"
@@ -5796,6 +5797,21 @@ mod tests {
             } else {
                 panic!("Expected a do-loop statement");
             }
+        }
+
+        #[test]
+        fn parses_continuescan_inside_scan_loop() {
+            let source = "Scan(1, Sec, 0, 0)\n  ContinueScan\nNextScan".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[1],
+                Statement::ProgramStructure { keyword, .. } if keyword == "ContinueScan"
+            ));
         }
     }
 

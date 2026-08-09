@@ -27,6 +27,7 @@
     { "name": "#IfDef", "category": "preprocessor" },
     { "name": "#UnDef", "category": "preprocessor" },
     { "name": "NextScan", "category": "scan" },
+    { "name": "ContinueScan", "category": "scan" },
     { "name": "Public", "category": "declaration" },
     { "name": "Dim", "category": "declaration" },
     { "name": "Const", "category": "declaration" },

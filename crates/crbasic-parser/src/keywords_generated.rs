@@ -30,6 +30,7 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("#IfDef", "preprocessor"),
     ("#UnDef", "preprocessor"),
     ("NextScan", "scan"),
+    ("ContinueScan", "scan"),
     ("Public", "declaration"),
     ("Dim", "declaration"),
     ("Const", "declaration"),
