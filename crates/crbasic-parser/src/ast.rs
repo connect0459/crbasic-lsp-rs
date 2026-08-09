@@ -49,6 +49,9 @@ pub enum Statement {
         array_dimensions: Option<Vec<Expression>>,
         /// Optional type annotation (e.g., "Float", "String")
         type_annotation: Option<String>,
+        /// Optional fixed size for a `String` type annotation
+        /// (e.g., the `30` in `As String * 30`)
+        type_size: Option<Expression>,
         /// Optional initializer expression (required for Const, optional for Public/Dim)
         initializer: Option<Expression>,
         /// The source code span

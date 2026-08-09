@@ -97,6 +97,7 @@ mod tests {
             name: name.to_string(),
             array_dimensions: None,
             type_annotation: None,
+            type_size: None,
             initializer: None,
             span: span(1, 1, 1, 10),
         }

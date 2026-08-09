@@ -452,6 +452,19 @@ impl<'a> Parser<'a> {
             None
         };
 
+        // Fixed-length string size (`As String * 30`). Parsed via
+        // `parse_primary` rather than `parse_expression`, since the size is
+        // always a plain literal and `parse_expression` would otherwise
+        // read a following `= initializer` as an equality comparison.
+        let type_size = if matches!(self.peek().kind, TokenKind::Star) {
+            self.advance();
+            let size_expr = self.parse_primary()?;
+            end_span = size_expr.span();
+            Some(size_expr)
+        } else {
+            None
+        };
+
         let initializer = if matches!(self.peek().kind, TokenKind::Equal) {
             self.advance();
 
@@ -470,6 +483,7 @@ impl<'a> Parser<'a> {
             name,
             array_dimensions,
             type_annotation,
+            type_size,
             initializer,
             span,
         })
@@ -561,6 +575,19 @@ impl<'a> Parser<'a> {
             None
         };
 
+        // Fixed-length string size (`As String * 30`). Parsed via
+        // `parse_primary` rather than `parse_expression`, since the size is
+        // always a plain literal and `parse_expression` would otherwise
+        // read a following `= initializer` as an equality comparison.
+        let type_size = if matches!(self.peek().kind, TokenKind::Star) {
+            self.advance();
+            let size_expr = self.parse_primary()?;
+            end_span = size_expr.span();
+            Some(size_expr)
+        } else {
+            None
+        };
+
         let initializer = if matches!(self.peek().kind, TokenKind::Equal) {
             self.advance();
 
@@ -583,6 +610,7 @@ impl<'a> Parser<'a> {
             name,
             array_dimensions,
             type_annotation,
+            type_size,
             initializer,
             span,
         })
@@ -4166,6 +4194,81 @@ mod tests {
                         expected_name, program.statements[i]
                     );
                 }
+            }
+        }
+
+        #[test]
+        fn parses_fixed_length_string_declaration() {
+            let mut scanner = Scanner::new("Dim StringVar As String * 30");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::VarDeclaration {
+                type_annotation,
+                type_size,
+                ..
+            } = &program.statements[0]
+            {
+                assert_eq!(type_annotation.as_deref(), Some("String"));
+                match type_size {
+                    Some(Expression::IntegerLiteral { value, .. }) => assert_eq!(*value, 30),
+                    other => panic!("Expected a size of 30, got {:?}", other),
+                }
+            } else {
+                panic!(
+                    "Expected variable declaration, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_fixed_length_string_declaration_with_initializer() {
+            let mut scanner = Scanner::new("Dim StringVar As String * 30 = \"Test String\"");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::VarDeclaration {
+                type_size,
+                initializer,
+                ..
+            } = &program.statements[0]
+            {
+                assert!(type_size.is_some());
+                assert!(matches!(
+                    initializer,
+                    Some(Expression::StringLiteral { .. })
+                ));
+            } else {
+                panic!(
+                    "Expected variable declaration, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn string_declaration_without_size_leaves_type_size_none() {
+            let mut scanner = Scanner::new("Dim StringVar As String");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::VarDeclaration { type_size, .. } = &program.statements[0] {
+                assert!(type_size.is_none());
+            } else {
+                panic!(
+                    "Expected variable declaration, got {:?}",
+                    program.statements[0]
+                );
             }
         }
     }
