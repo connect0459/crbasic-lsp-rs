@@ -515,15 +515,22 @@ Campbell Scientific employee), consulted locally as reference material but
 not part of this repository. Both gaps below were confirmed by actually
 parsing a minimal repro, not just by reading the reference grammars.
 
-- [ ] `Mod` operator not implemented in the parser (bug)
-  - `Mod` is registered in `keywords.json` under the `logical` category, so
-    it appears in completion and hover as if it were usable, but the
-    parser's binary-operator grammar has no case for it at all -- `x = 10
-    Mod 3` fails with `Unexpected token: Keyword("MOD")`. Confirmed via a
-    throwaway `cargo run --example` repro (not committed).
+- [x] `Mod` operator not implemented in the parser (bug) ✅ Resolved
+  - `Mod` was registered in `keywords.json` under the `logical` category,
+    so it appeared in completion and hover as if it were usable, but the
+    parser's binary-operator grammar had no case for it at all -- `x = 10
+    Mod 3` failed with `Unexpected token: Keyword("MOD")`. Confirmed via a
+    throwaway `cargo run --example` repro (not committed) before fixing.
   - Both reference extensions list `MOD` as an operator alongside
     `AND`/`OR`/`XOR`, corroborating that this is a real CRBasic operator,
     not a keyword that should be removed.
+  - Fixed in `parse_multiplicative` (`crates/crbasic-parser/src/parser.rs`):
+    `Mod` is now matched at the same precedence as `*`/`/`, the common
+    convention across BASIC dialects; `BinaryOperator::Modulo` already
+    existed in the AST but was never constructed anywhere until this fix.
+  - 2 new tests (`parses_modulo`,
+    `modulo_has_same_precedence_as_multiplication_and_division`) added
+    Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate passes.
 - [ ] `While ... Wend` loop construct not supported
   - `While` is only recognized as part of `Do While ... Loop`; the
     standalone `While <condition> ... Wend` loop (a distinct CRBasic
