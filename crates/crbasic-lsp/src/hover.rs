@@ -202,6 +202,7 @@ impl HoverProvider {
             "continuescan" => Some(
                 "**ContinueScan**\n\nJumps to `NextScan`, skipping the remaining instructions in the current scan.",
             ),
+            "nextsubscan" => Some("**NextSubScan**\n\nMarks the end of a SubScan block."),
 
             "public" => Some(
                 "**Public**\n\nDeclares a public (global) variable that can be monitored and logged.\n\n```crbasic\nPublic Temp_C As Float\n```",

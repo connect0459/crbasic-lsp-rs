@@ -34,6 +34,11 @@ impl CompletionProvider {
                 "Initiates a measurement scan at specified intervals.",
             ),
             Self::create_function_completion(
+                "SubScan",
+                "SubScan(${1:SubInterval}, ${2:Units}, ${3:Count})",
+                "Begins a nested sub-scan for faster measurement or multiplexer control.",
+            ),
+            Self::create_function_completion(
                 "SlowSequence",
                 "SlowSequence",
                 "Begins a slow sequence scan block.",
@@ -480,6 +485,7 @@ impl CompletionProvider {
                 "ContinueScan",
                 "Jumps to NextScan, skipping the rest of the scan body",
             ),
+            Self::create_keyword_completion("NextSubScan", "Terminates a SubScan block"),
             Self::create_keyword_completion("Return", "Returns a value from a Function"),
             Self::create_keyword_completion("ExitFunction", "Exit Function immediately"),
             Self::create_keyword_completion(

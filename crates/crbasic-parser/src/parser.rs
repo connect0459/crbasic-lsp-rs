@@ -172,6 +172,7 @@ impl<'a> Parser<'a> {
                 || kw == "EndConstTable"
                 || kw == "NextScan"
                 || kw == "ContinueScan"
+                || kw == "NextSubScan"
                 || kw == "#UnDef"
                 || kw == "ExitFor"
                 || kw == "ExitDo"
@@ -4661,6 +4662,29 @@ mod tests {
                     program.statements[0]
                 );
             }
+        }
+
+        #[test]
+        fn parses_subscan_nextsubscan_block() {
+            let source =
+                "SubScan(0.1, Sec, 5)\n  PulseCount(P, 1, 1, 1, 0, 1, 0)\nNextSubScan".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+
+            assert!(matches!(
+                &program.statements[0],
+                Statement::FunctionCall { name, arguments, .. }
+                    if name == "SubScan" && arguments.len() == 3
+            ));
+            assert!(matches!(
+                &program.statements[2],
+                Statement::ProgramStructure { keyword, arguments, .. }
+                    if keyword == "NextSubScan" && arguments.is_none()
+            ));
         }
 
         #[test]
