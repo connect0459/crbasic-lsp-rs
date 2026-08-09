@@ -465,8 +465,6 @@ impl CompletionProvider {
             Self::create_keyword_completion("Wend", "Terminates a While loop"),
             Self::create_keyword_completion("ExitFor", "Exit For loop immediately"),
             Self::create_keyword_completion("ExitDo", "Exit Do loop immediately"),
-            Self::create_keyword_completion("Continue", "Skip to the next loop iteration"),
-            Self::create_keyword_completion("Break", "Exit the current loop immediately"),
             Self::create_keyword_snippet(
                 "Select Case",
                 "Select Case ${1:expression}\n\tCase ${2:value}\n\t\t$0\n\tCase Else\n\t\t\nEndSelect",
@@ -476,9 +474,13 @@ impl CompletionProvider {
             Self::create_keyword_completion("Case", "Branch in Select statement"),
             Self::create_keyword_completion("Is", "Comparison operator in a Case clause"),
             Self::create_keyword_completion("EndSelect", "Terminates Select block"),
-            Self::create_keyword_completion("ExitSelect", "Exit Select block immediately"),
-            Self::create_keyword_completion("GoTo", "Unconditional jump (use sparingly)"),
             Self::create_keyword_completion("NextScan", "Terminates a Scan loop"),
+            Self::create_keyword_completion("Return", "Returns a value from a Function"),
+            Self::create_keyword_completion("ExitFunction", "Exit Function immediately"),
+            Self::create_keyword_completion(
+                "Exit",
+                "Used with Sub to exit a Subroutine (Exit Sub)",
+            ),
         ]
     }
 

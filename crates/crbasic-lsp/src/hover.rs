@@ -187,8 +187,6 @@ impl HoverProvider {
             "wend" => Some("**Wend**\n\nTerminates a While loop."),
             "exitfor" => Some("**ExitFor**\n\nImmediately exits a For loop."),
             "exitdo" => Some("**ExitDo**\n\nImmediately exits a Do loop."),
-            "continue" => Some("**Continue**\n\nSkips to the next iteration of the current loop."),
-            "break" => Some("**Break**\n\nImmediately exits the current loop."),
             "select" => Some(
                 "**Select**\n\nMulti-way branch statement.\n\n```crbasic\nSelect Case expression\n  Case value1\n    ' statements\n  Case Else\n    ' default\nEndSelect\n```",
             ),
@@ -197,8 +195,6 @@ impl HoverProvider {
                 "**Is**\n\nUsed with a comparison operator in a Case clause (e.g. `Case Is > 10`).",
             ),
             "endselect" => Some("**EndSelect**\n\nTerminates a Select block."),
-            "exitselect" => Some("**ExitSelect**\n\nImmediately exits a Select block."),
-            "goto" => Some("**GoTo**\n\nUnconditional jump to a labeled line. Use sparingly."),
             "nextscan" => Some("**NextScan**\n\nMarks the end of a Scan loop."),
 
             "public" => Some(
@@ -229,10 +225,17 @@ impl HoverProvider {
                 "**Function**\n\nDefines a user-defined function that returns a value.\n\n```crbasic\nFunction MyFunc(param As Float) As Float\n  MyFunc = param * 2\nEndFunction\n```",
             ),
             "endfunction" => Some("**EndFunction**\n\nTerminates a Function block."),
+            "return" => Some(
+                "**Return**\n\nReturns a value from a Function and exits it immediately.\n\n```crbasic\nReturn(expression)\n```",
+            ),
+            "exitfunction" => Some("**ExitFunction**\n\nExits a Function immediately."),
             "sub" => Some(
                 "**Sub**\n\nDefines a subroutine (procedure without return value).\n\n```crbasic\nSub MySub(ByRef param As Float)\n  param = param * 2\nEndSub\n```",
             ),
             "endsub" => Some("**EndSub**\n\nTerminates a Sub block."),
+            "exit" => {
+                Some("**Exit**\n\nUsed with `Sub` to exit a Subroutine immediately: `Exit Sub`.")
+            }
 
             "and" => {
                 Some("**AND**\n\nLogical AND operator. Returns true if both operands are true.")
@@ -315,8 +318,8 @@ mod tests {
                     "ExitDo",
                     "Select",
                     "Case",
-                    "ExitSelect",
-                    "GoTo",
+                    "Is",
+                    "EndSelect",
                 ];
 
                 for keyword in keywords {
