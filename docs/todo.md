@@ -507,6 +507,35 @@
 - [x] NextScan as a statement (parser support) ✅ Resolved
 - [x] Tab-indented statements handling ✅ Resolved (lexer already skips tabs correctly)
 
+### Parser Limitations (discovered while designing preprocessor directive support, 2026-08-09)
+
+- [ ] `ElseIf` not implemented in `If`/`EndIf` parsing (bug)
+  - `parse_if_statement` (`crates/crbasic-parser/src/parser.rs`) only stops
+    its `then_branch` loop at `Else` or `EndIf`; there is no `"ElseIf"`
+    case anywhere in the parser. `ElseIf` is registered in `keywords.json`
+    and has completion/hover/language-configuration coverage, so it reads
+    as supported, but a real `If ... ElseIf ... EndIf` program fails to
+    parse. Confirmed via repro:
+
+    ```crbasic
+    If x = 1 Then
+      x = 2
+    ElseIf x = 3 Then
+      x = 4
+    EndIf
+    ```
+
+    fails with `Unexpected token: Keyword("ElseIf")`.
+  - Same bug class as the resolved `Mod` gap above (advertised via
+    completion/hover, silently broken in the parser) but likely higher
+    real-world impact, since `If`/`ElseIf`/`EndIf` chains are far more
+    common in CRBasic programs than the `Mod` operator.
+  - Found while researching preprocessor directive support below: `#If`'s
+    real semantics (confirmed against Campbell Scientific's own docs, see
+    below) require the same `#ElseIf` chaining logic, so this needs
+    deciding first rather than duplicating an `ElseIf`-chaining
+    implementation independently for the `#`-prefixed form.
+
 ### Reference Implementation Comparison (2026-08-09)
 
 Found while comparing this project against a couple of external,
@@ -743,12 +772,45 @@ Not flagged as gaps (verified during the same comparison):
     this project's lexer/parser have no handling for `#`-prefixed tokens
     at all. Confirmed via repro: `#If 1` mis-lexes as plain `If` (the `#`
     is silently dropped), producing `Expected 'Then' after If condition`
-  - Larger in scope than the `Mod`/`While`-`Wend` gaps above: needs a new
-    lexer token kind for `#`-prefixed directives and conditional-inclusion
-    semantics in the parser (deciding which branch's tokens even become
-    AST nodes), not just a new keyword/grammar rule
-  - Revisit with a dedicated design pass rather than bundling into the
-    `Mod`/`While`-`Wend` fixes
+  - Real semantics confirmed against Campbell Scientific's own
+    [Conditional Compilation](https://help.campbellsci.com/crbasic/landing/Content/Info/conditionalcompilation.htm)
+    docs (not just the two reference extensions, which only listed the
+    directive names):
+    - `#If`'s condition is either a `LoggerType` comparison (`#If
+      LoggerType = GRANITE6`, against specific model names like CR1000,
+      CR1000X, CR3000, CR800, CR300, CR6, CR5000, CR9000X, GRANITE6/9/10)
+      or a `Const`-based boolean/equality check (`#If Add107 Then`, `#If
+      Section = "Section_PT500_Settings"`) -- ordinary expression syntax,
+      reusing the same `parse_expression` grammar as runtime `If`
+    - `#IfDef <ConstName> [Then]` checks whether a `Const` of that name
+      was already declared; `Then` appears optional in the official
+      examples (unlike runtime `If`, which requires it)
+    - `#UnDef <ConstName>` un-declares a `Const` so it can be redeclared,
+      used together with `Include` (itself unsupported, see below) to
+      stitch together library files that each define their own same-named
+      constants
+    - Official examples show the *same* `Const` name deliberately declared
+      differently in each mutually-exclusive `#If`/`#Else` branch
+  - Decided scope: parse structurally only, without evaluating conditions
+    or selecting a branch -- consistent with how runtime `If` is already
+    handled (both branches always walked, condition never evaluated).
+    Precisely evaluating `LoggerType` isn't reliably possible without
+    guessing: this project only tracks the coarse `DataloggerModel`
+    grouping (CR200X/CR6/GRANITE) from file extension, not the specific
+    model names `LoggerType` compares against
+  - Checked whether "keep both branches unconditionally" would cause false
+    duplicate-declaration diagnostics for the official `Const`-in-both-
+    branches idiom above: it would not, since `semantic.rs` has no
+    duplicate-declaration check at all today (`self.symbols` is a plain
+    `HashMap` that silently overwrites on re-insertion) -- de-risks this
+    design choice
+  - Blocked on the `ElseIf` bug above: `#ElseIf` needs the same chaining
+    logic runtime `ElseIf` is missing today; fixing `ElseIf` first avoids
+    a second, duplicate implementation of the same chaining logic for the
+    `#`-prefixed form
+  - `Include` (referenced by `#UnDef`'s real use case) is also entirely
+    unsupported by this project -- separate, related gap, not addressed
+    here
 - [ ] Data type completions/hover after `As` (e.g. `Public x As <cursor>`)
   - Found in the same comparison: `Public x As IEEE4` already parses
     correctly today (the type annotation is captured as a generic
