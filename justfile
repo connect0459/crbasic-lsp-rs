@@ -12,6 +12,11 @@ test-crate crate:
 test-rust:
     cargo test --workspace
 
+# Branch coverage needs a nightly toolchain and crashed locally with this
+# host's cargo-llvm-cov, so only line/function coverage is gated here.
+coverage:
+    cargo llvm-cov --workspace --fail-under-lines 80 --fail-under-functions 90
+
 # Run TypeScript tests
 test-client:
     cd client && npm test -- --run
@@ -25,6 +30,7 @@ verify:
     cargo fmt --all --check
     cargo clippy --all-targets --all-features -- -D warnings
     just test-rust
+    just coverage
     cd client && npm run lint
     cd client && npm run format:check
     just test-client

@@ -53,6 +53,14 @@ jobs:
       - name: Set up Rust
         if: steps.filter.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
         uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+        with:
+          components: llvm-tools
+
+      - name: Install cargo-llvm-cov
+        if: steps.filter.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
+        uses: taiki-e/install-action@7f4eb899022d8fe70b20c4f3de697aa85c309026 # v2.85.11
+        with:
+          tool: cargo-llvm-cov
 
       - name: Check formatting
         if: steps.filter.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
@@ -68,6 +76,14 @@ jobs:
         if: steps.filter.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
         shell: bash
         run: cargo test --workspace
+
+      # Branch coverage needs a nightly toolchain and crashed locally with
+      # this host's cargo-llvm-cov, so only line/function coverage is gated
+      # here.
+      - name: Check test coverage
+        if: steps.filter.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: cargo llvm-cov --workspace --fail-under-lines 80 --fail-under-functions 90
 
       - name: Skip CI checks (no relevant changes)
         if: steps.filter.outputs.code != 'true' && github.event_name != 'workflow_dispatch'
