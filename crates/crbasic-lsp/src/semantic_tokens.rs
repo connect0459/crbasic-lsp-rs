@@ -193,6 +193,20 @@ impl SemanticTokensProvider {
                     Self::collect_from_statement(stmt, table);
                 }
             }
+            Statement::SelectCase {
+                cases, else_branch, ..
+            } => {
+                for case in cases {
+                    for stmt in &case.body {
+                        Self::collect_from_statement(stmt, table);
+                    }
+                }
+                if let Some(else_stmts) = else_branch {
+                    for stmt in else_stmts {
+                        Self::collect_from_statement(stmt, table);
+                    }
+                }
+            }
             _ => {}
         }
     }

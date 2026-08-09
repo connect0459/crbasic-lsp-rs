@@ -72,6 +72,21 @@ impl FoldingRangeProvider {
                     Self::push_range(ranges, span.start, span.end);
                     Self::collect_from_statements(body, ranges);
                 }
+                Statement::SelectCase {
+                    cases,
+                    else_branch,
+                    span,
+                    ..
+                } => {
+                    Self::push_range(ranges, span.start, span.end);
+                    for case in cases {
+                        Self::push_range(ranges, case.span.start, case.span.end);
+                        Self::collect_from_statements(&case.body, ranges);
+                    }
+                    if let Some(else_stmts) = else_branch {
+                        Self::collect_from_statements(else_stmts, ranges);
+                    }
+                }
                 _ => {}
             }
         }

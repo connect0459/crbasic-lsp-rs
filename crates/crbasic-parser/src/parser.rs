@@ -124,12 +124,28 @@ impl<'a> Parser<'a> {
         }
 
         if let &TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "Select"
+        {
+            return self.parse_select_case();
+        }
+
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "Exit"
+        {
+            return self.parse_exit_sub();
+        }
+
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "BeginProg"
                 || kw == "EndProg"
                 || kw == "DataTable"
                 || kw == "EndTable"
                 || kw == "NextScan"
-                || kw == "#UnDef")
+                || kw == "#UnDef"
+                || kw == "ExitFor"
+                || kw == "ExitDo"
+                || kw == "ExitFunction"
+                || kw == "Return")
         {
             return self.parse_program_structure();
         }
@@ -494,6 +510,26 @@ impl<'a> Parser<'a> {
                 Some(args)
             } else if keyword == "#UnDef" {
                 Some(vec![self.parse_expression()?])
+            } else if keyword == "Return" {
+                if !matches!(self.peek().kind, TokenKind::LeftParen) {
+                    return Err(ParseError {
+                        message: "Expected '(' after 'Return'".to_string(),
+                        span: self.peek().span,
+                    });
+                }
+                self.advance();
+
+                let value = self.parse_expression()?;
+
+                if !matches!(self.peek().kind, TokenKind::RightParen) {
+                    return Err(ParseError {
+                        message: "Expected ')' after Return expression".to_string(),
+                        span: self.peek().span,
+                    });
+                }
+                self.advance();
+
+                Some(vec![value])
             } else {
                 None
             };
@@ -507,6 +543,207 @@ impl<'a> Parser<'a> {
             arguments,
             span,
         })
+    }
+
+    /// Parses `Exit Sub` -- unlike every other CRBasic exit keyword
+    /// (`ExitFor`, `ExitDo`, `ExitFunction`), Campbell Scientific's own
+    /// syntax diagrams spell this one as two separate keyword tokens rather
+    /// than a single compound word, so `Exit` alone must look ahead for a
+    /// following `Sub` rather than being self-contained like the others.
+    fn parse_exit_sub(&mut self) -> Result<Statement, ParseError> {
+        let exit_token = self.advance();
+        let start_span = exit_token.span;
+
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Sub") {
+            return Err(ParseError {
+                message: "Expected 'Sub' after 'Exit'".to_string(),
+                span: self.peek().span,
+            });
+        }
+        let sub_token = self.advance();
+        let span = crate::lexer::token::Span::new(start_span.start, sub_token.span.end);
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        Ok(Statement::ProgramStructure {
+            keyword: "ExitSub".to_string(),
+            arguments: None,
+            span,
+        })
+    }
+
+    /// Parses a `Select Case` statement.
+    /// Syntax: `Select Case TestExpression`
+    ///         `Case ExpressionList` `[statementblock]` ...
+    ///         `[Case Else` `[statementblock]]`
+    ///         `EndSelect`
+    fn parse_select_case(&mut self) -> Result<Statement, ParseError> {
+        let select_token = self.advance();
+        let start_span = select_token.span;
+
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Case") {
+            return Err(ParseError {
+                message: "Expected 'Case' after 'Select'".to_string(),
+                span: self.peek().span,
+            });
+        }
+        self.advance();
+
+        let test_expression = self.parse_expression()?;
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+        self.skip_whitespace_and_comments();
+
+        let mut cases = Vec::new();
+        let mut else_branch = None;
+
+        while matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Case") {
+            let case_start = self.advance().span;
+
+            if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Else") {
+                self.advance();
+
+                if matches!(self.peek().kind, TokenKind::Newline) {
+                    self.advance();
+                }
+
+                let mut stmts = Vec::new();
+                self.skip_whitespace_and_comments();
+                while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndSelect")
+                    && !self.is_at_end()
+                {
+                    stmts.push(self.parse_statement()?);
+                    self.skip_whitespace_and_comments();
+                }
+
+                else_branch = Some(stmts);
+                break;
+            }
+
+            let mut conditions = vec![self.parse_case_condition()?];
+            while matches!(self.peek().kind, TokenKind::Comma) {
+                self.advance();
+                conditions.push(self.parse_case_condition()?);
+            }
+
+            if matches!(self.peek().kind, TokenKind::Newline) {
+                self.advance();
+            }
+
+            let mut body = Vec::new();
+            self.skip_whitespace_and_comments();
+            while !matches!(
+                self.peek().kind,
+                TokenKind::Keyword(kw) if kw == "Case" || kw == "EndSelect"
+            ) && !self.is_at_end()
+            {
+                body.push(self.parse_statement()?);
+                self.skip_whitespace_and_comments();
+            }
+
+            let case_end = body
+                .last()
+                .map(|stmt| stmt.span().end)
+                .unwrap_or(case_start.end);
+            let case_span = crate::lexer::token::Span::new(case_start.start, case_end);
+
+            cases.push(crate::ast::CaseClause {
+                conditions,
+                body,
+                span: case_span,
+            });
+            self.skip_whitespace_and_comments();
+        }
+
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndSelect") {
+            return Err(ParseError {
+                message: "Expected 'EndSelect' to close Select Case statement".to_string(),
+                span: self.peek().span,
+            });
+        }
+        let end_span = self.advance().span;
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        let span = crate::lexer::token::Span::new(start_span.start, end_span.end);
+
+        Ok(Statement::SelectCase {
+            test_expression,
+            cases,
+            else_branch,
+            span,
+        })
+    }
+
+    /// Parses one comma-separated item of a `Case` clause's `ExpressionList`,
+    /// including `And`/`Or`-chained `Is` comparisons (e.g.
+    /// `Case Is >= 0 And Is <= 11.25`).
+    fn parse_case_condition(&mut self) -> Result<crate::ast::CaseCondition, ParseError> {
+        let mut left = self.parse_case_condition_term()?;
+
+        loop {
+            let operator = match &self.peek().kind {
+                TokenKind::Keyword(kw) if *kw == "AND" => crate::ast::BinaryOperator::And,
+                TokenKind::Keyword(kw) if *kw == "OR" => crate::ast::BinaryOperator::Or,
+                _ => break,
+            };
+            self.advance();
+
+            let right = self.parse_case_condition_term()?;
+            left = crate::ast::CaseCondition::Logical {
+                operator,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
+        }
+
+        Ok(left)
+    }
+
+    /// Parses a single `Case` condition term: either `Is comparison-operator
+    /// Expression`, or a plain value/range (`Expression [To Expression]`).
+    fn parse_case_condition_term(&mut self) -> Result<crate::ast::CaseCondition, ParseError> {
+        if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Is") {
+            self.advance();
+
+            let operator = match &self.peek().kind {
+                TokenKind::Equal => crate::ast::BinaryOperator::Equal,
+                TokenKind::NotEqual => crate::ast::BinaryOperator::NotEqual,
+                TokenKind::LessThan => crate::ast::BinaryOperator::LessThan,
+                TokenKind::GreaterThan => crate::ast::BinaryOperator::GreaterThan,
+                TokenKind::LessThanOrEqual => crate::ast::BinaryOperator::LessThanOrEqual,
+                TokenKind::GreaterThanOrEqual => crate::ast::BinaryOperator::GreaterThanOrEqual,
+                _ => {
+                    return Err(ParseError {
+                        message: "Expected a comparison operator after 'Is'".to_string(),
+                        span: self.peek().span,
+                    });
+                }
+            };
+            self.advance();
+
+            let expression = self.parse_additive()?;
+            return Ok(crate::ast::CaseCondition::Compare {
+                operator,
+                expression,
+            });
+        }
+
+        let expression = self.parse_additive()?;
+
+        if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "To") {
+            self.advance();
+            let end = self.parse_additive()?;
+            Ok(crate::ast::CaseCondition::Range(expression, end))
+        } else {
+            Ok(crate::ast::CaseCondition::Value(expression))
+        }
     }
 
     /// Parses the `condition Then statements` portion shared by `If` and
@@ -783,7 +1020,22 @@ impl<'a> Parser<'a> {
             });
         }
         let next_token = self.advance();
-        let end_span = next_token.span;
+        let mut end_span = next_token.span;
+
+        // Optional counter list per the official syntax
+        // (`Next [counter [, counter][, ...]]`) -- e.g. `Next i` or
+        // `Next i, j` for nested loops. Purely cosmetic; not cross-checked
+        // against `variable`.
+        if matches!(self.peek().kind, TokenKind::Identifier(_)) {
+            end_span = self.advance().span;
+
+            while matches!(self.peek().kind, TokenKind::Comma) {
+                self.advance();
+                if matches!(self.peek().kind, TokenKind::Identifier(_)) {
+                    end_span = self.advance().span;
+                }
+            }
+        }
 
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
@@ -1504,6 +1756,7 @@ impl Statement {
             Statement::ProgramStructure { span, .. } => *span,
             Statement::FunctionDefinition { span, .. } => *span,
             Statement::SubroutineDefinition { span, .. } => *span,
+            Statement::SelectCase { span, .. } => *span,
         }
     }
 }
@@ -3794,6 +4047,36 @@ mod tests {
         }
 
         #[test]
+        fn parses_next_with_counter_variable() {
+            // Per the official syntax (`Next [counter [, counter][, ...]]`),
+            // naming the counter after `Next` is optional and purely
+            // cosmetic -- it must not leak into the surrounding statement
+            // list as its own identifier expression.
+            let source = "For i = 1 To 10\n  x = x + 1\nNext i".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+        }
+
+        #[test]
+        fn parses_next_with_comma_separated_counter_list() {
+            let source = "For i = 1 To 10\n  x = x + 1\nNext i, j".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(
+                program.statements.len(),
+                1,
+                "Next i, j should not leak extra statements"
+            );
+        }
+
+        #[test]
         fn parses_for_loop_with_step() {
             let source = "For i = 0 To 100 Step 10\n  Scan(i, Temp_C, 0)\nNext".to_string();
             let mut scanner = Scanner::new(&source);
@@ -4047,6 +4330,205 @@ mod tests {
         }
     }
 
+    mod control_flow_select_case {
+        use super::*;
+        use crate::ast::CaseCondition;
+
+        #[test]
+        fn parses_select_case_with_single_value_and_case_else() {
+            let source =
+                "Select Case x\nCase 1\n  y = 1\nCase Else\n  y = 0\nEndSelect".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::SelectCase {
+                test_expression,
+                cases,
+                else_branch,
+                ..
+            } = &program.statements[0]
+            {
+                assert!(matches!(test_expression, Expression::Identifier { .. }));
+                assert_eq!(cases.len(), 1);
+                assert_eq!(cases[0].conditions.len(), 1);
+                assert!(matches!(cases[0].conditions[0], CaseCondition::Value(_)));
+                assert_eq!(cases[0].body.len(), 1);
+
+                let else_stmts = else_branch.as_ref().expect("Expected a Case Else branch");
+                assert_eq!(else_stmts.len(), 1);
+            } else {
+                panic!("Expected a select-case statement");
+            }
+        }
+
+        #[test]
+        fn parses_case_with_comma_separated_values() {
+            let source = "Select Case x\nCase 1, 2, 3\n  y = 1\nEndSelect".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::SelectCase { cases, .. } = &program.statements[0] {
+                assert_eq!(cases[0].conditions.len(), 3);
+                assert!(
+                    cases[0]
+                        .conditions
+                        .iter()
+                        .all(|c| matches!(c, CaseCondition::Value(_)))
+                );
+            } else {
+                panic!("Expected a select-case statement");
+            }
+        }
+
+        #[test]
+        fn parses_case_with_range() {
+            let source = "Select Case x\nCase 1 To 20\n  y = 1\nEndSelect".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::SelectCase { cases, .. } = &program.statements[0] {
+                assert_eq!(cases[0].conditions.len(), 1);
+                assert!(matches!(cases[0].conditions[0], CaseCondition::Range(_, _)));
+            } else {
+                panic!("Expected a select-case statement");
+            }
+        }
+
+        #[test]
+        fn parses_case_is_comparison() {
+            let source = "Select Case x\nCase Is > 99\n  y = 1\nEndSelect".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::SelectCase { cases, .. } = &program.statements[0] {
+                assert_eq!(cases[0].conditions.len(), 1);
+                assert!(matches!(
+                    cases[0].conditions[0],
+                    CaseCondition::Compare {
+                        operator: crate::ast::BinaryOperator::GreaterThan,
+                        ..
+                    }
+                ));
+            } else {
+                panic!("Expected a select-case statement");
+            }
+        }
+
+        #[test]
+        fn parses_case_is_chained_with_and() {
+            let source =
+                "Select Case x\nCase Is >= 0 And Is <= 11.25\n  y = 1\nEndSelect".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::SelectCase { cases, .. } = &program.statements[0] {
+                assert_eq!(cases[0].conditions.len(), 1);
+                assert!(matches!(
+                    cases[0].conditions[0],
+                    CaseCondition::Logical {
+                        operator: crate::ast::BinaryOperator::And,
+                        ..
+                    }
+                ));
+            } else {
+                panic!("Expected a select-case statement");
+            }
+        }
+
+        #[test]
+        fn select_case_requires_endselect_to_close() {
+            let source = "Select Case x\nCase 1\n  y = 1".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let result = parser.parse();
+
+            assert!(
+                result.is_err(),
+                "Select Case without a closing EndSelect should be a parse error"
+            );
+        }
+
+        #[test]
+        fn parses_multiple_case_clauses() {
+            let source = "Select Case x\nCase 1\n  y = 1\nCase 2\n  y = 2\nEndSelect".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::SelectCase { cases, .. } = &program.statements[0] {
+                assert_eq!(cases.len(), 2);
+            } else {
+                panic!("Expected a select-case statement");
+            }
+        }
+    }
+
+    mod control_flow_exit_statements {
+        use super::*;
+
+        #[test]
+        fn parses_exitfor_inside_for_loop() {
+            let source = "For i = 1 To 10\n  ExitFor\nNext i".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ForLoop { body, .. } = &program.statements[0] {
+                assert_eq!(body.len(), 1);
+                assert!(matches!(
+                    &body[0],
+                    Statement::ProgramStructure { keyword, .. } if keyword == "ExitFor"
+                ));
+            } else {
+                panic!("Expected a for-loop statement");
+            }
+        }
+
+        #[test]
+        fn parses_exitdo_inside_do_loop() {
+            let source = "Do While x < 10\n  ExitDo\nLoop".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::DoLoop { body, .. } = &program.statements[0] {
+                assert_eq!(body.len(), 1);
+                assert!(matches!(
+                    &body[0],
+                    Statement::ProgramStructure { keyword, .. } if keyword == "ExitDo"
+                ));
+            } else {
+                panic!("Expected a do-loop statement");
+            }
+        }
+    }
+
     mod function_subroutine_definitions {
         use super::*;
 
@@ -4159,6 +4641,110 @@ mod tests {
             } else {
                 panic!("Expected subroutine definition");
             }
+        }
+    }
+
+    mod control_flow_return_and_exits {
+        use super::*;
+
+        #[test]
+        fn parses_return_with_expression_inside_function() {
+            let source = "Function GetValue\n  Return(42)\nEndFunction".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::FunctionDefinition { body, .. } = &program.statements[0] {
+                assert_eq!(body.len(), 1);
+                if let Statement::ProgramStructure {
+                    keyword, arguments, ..
+                } = &body[0]
+                {
+                    assert_eq!(keyword, "Return");
+                    let args = arguments.as_ref().expect("Return should carry an argument");
+                    assert_eq!(args.len(), 1);
+                    assert!(matches!(
+                        args[0],
+                        Expression::IntegerLiteral { value: 42, .. }
+                    ));
+                } else {
+                    panic!("Expected a Return statement");
+                }
+            } else {
+                panic!("Expected function definition");
+            }
+        }
+
+        #[test]
+        fn return_requires_parenthesized_expression() {
+            let source = "Function GetValue\n  Return 42\nEndFunction".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let result = parser.parse();
+
+            assert!(
+                result.is_err(),
+                "Return without parentheses should be a parse error"
+            );
+        }
+
+        #[test]
+        fn parses_exitfunction_inside_function() {
+            let source = "Function GetValue\n  ExitFunction\nEndFunction".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::FunctionDefinition { body, .. } = &program.statements[0] {
+                assert_eq!(body.len(), 1);
+                assert!(matches!(
+                    &body[0],
+                    Statement::ProgramStructure { keyword, .. } if keyword == "ExitFunction"
+                ));
+            } else {
+                panic!("Expected function definition");
+            }
+        }
+
+        #[test]
+        fn parses_exit_sub_inside_subroutine() {
+            let source = "Sub DoWork\n  Exit Sub\nEndSub".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::SubroutineDefinition { body, .. } = &program.statements[0] {
+                assert_eq!(body.len(), 1);
+                assert!(matches!(
+                    &body[0],
+                    Statement::ProgramStructure { keyword, .. } if keyword == "ExitSub"
+                ));
+            } else {
+                panic!("Expected subroutine definition");
+            }
+        }
+
+        #[test]
+        fn exit_requires_sub_keyword() {
+            let source = "Sub DoWork\n  Exit\nEndSub".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let result = parser.parse();
+
+            assert!(
+                result.is_err(),
+                "Bare 'Exit' without 'Sub' should be a parse error"
+            );
         }
     }
 

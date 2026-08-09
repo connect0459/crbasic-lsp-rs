@@ -121,6 +121,20 @@ impl DefinitionProvider {
                     Self::extract_from_statement(stmt, definitions);
                 }
             }
+            Statement::SelectCase {
+                cases, else_branch, ..
+            } => {
+                for case in cases {
+                    for stmt in &case.body {
+                        Self::extract_from_statement(stmt, definitions);
+                    }
+                }
+                if let Some(else_stmts) = else_branch {
+                    for stmt in else_stmts {
+                        Self::extract_from_statement(stmt, definitions);
+                    }
+                }
+            }
             _ => {}
         }
     }

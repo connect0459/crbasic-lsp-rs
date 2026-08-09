@@ -6,7 +6,7 @@
 //! arguments) and the call hierarchy provider (incoming calls need to
 //! attribute each call to its enclosing callable).
 
-use crbasic_parser::ast::{AssignmentTarget, Expression, Statement};
+use crbasic_parser::ast::{AssignmentTarget, CaseCondition, Expression, Statement};
 use crbasic_parser::lexer::token::Span;
 
 /// A single function call found while walking a statement list
@@ -129,6 +129,42 @@ fn walk_statements<'a>(
             | Statement::SubroutineDefinition { name, body, .. } => {
                 walk_statements(body, Some(name.as_str()), sites);
             }
+            Statement::SelectCase {
+                test_expression,
+                cases,
+                else_branch,
+                ..
+            } => {
+                walk_expression(test_expression, enclosing, sites);
+                for case in cases {
+                    for condition in &case.conditions {
+                        walk_case_condition(condition, enclosing, sites);
+                    }
+                    walk_statements(&case.body, enclosing, sites);
+                }
+                if let Some(else_stmts) = else_branch {
+                    walk_statements(else_stmts, enclosing, sites);
+                }
+            }
+        }
+    }
+}
+
+fn walk_case_condition<'a>(
+    condition: &'a CaseCondition,
+    enclosing: Option<&'a str>,
+    sites: &mut Vec<CallSite<'a>>,
+) {
+    match condition {
+        CaseCondition::Value(expr) => walk_expression(expr, enclosing, sites),
+        CaseCondition::Range(start, end) => {
+            walk_expression(start, enclosing, sites);
+            walk_expression(end, enclosing, sites);
+        }
+        CaseCondition::Compare { expression, .. } => walk_expression(expression, enclosing, sites),
+        CaseCondition::Logical { left, right, .. } => {
+            walk_case_condition(left, enclosing, sites);
+            walk_case_condition(right, enclosing, sites);
         }
     }
 }

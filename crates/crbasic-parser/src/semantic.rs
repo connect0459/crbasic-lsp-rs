@@ -260,6 +260,20 @@ impl SemanticAnalyzer {
                     self.analyze_statement(stmt);
                 }
             }
+            Statement::SelectCase {
+                cases, else_branch, ..
+            } => {
+                for case in cases {
+                    for stmt in &case.body {
+                        self.analyze_statement(stmt);
+                    }
+                }
+                if let Some(else_stmts) = else_branch {
+                    for stmt in else_stmts {
+                        self.analyze_statement(stmt);
+                    }
+                }
+            }
             _ => {
                 // Other statements don't need semantic analysis yet
             }
@@ -805,6 +819,71 @@ mod tests {
                 .filter(|e| e.message.contains("collision"))
                 .collect();
             assert_eq!(collision_errors.len(), 0);
+        }
+    }
+
+    mod real_world_construct_combinations {
+        use super::*;
+        use crate::lexer::Scanner;
+        use crate::parser::Parser;
+
+        #[test]
+        fn select_case_return_exitfunction_and_exit_sub_produce_no_semantic_errors() {
+            let source = "\
+BeginProg
+  Public Category As Long
+  Public Total As Float
+
+  Select Case Category
+    Case 1, 2
+      Total = 1
+    Case 3 To 10
+      Total = 2
+    Case Is > 10
+      Total = 3
+    Case Else
+      Total = 0
+  EndSelect
+
+  For i = 1 To 10
+    If i = 5 Then
+      ExitFor
+    EndIf
+  Next i
+
+  CallFunction(Category)
+  CallSub(Category)
+EndProg
+
+Function CallFunction(x)
+  If x < 0 Then
+    ExitFunction
+  EndIf
+  Return(x * 2)
+EndFunction
+
+Sub CallSub(x)
+  If x < 0 Then
+    Exit Sub
+  EndIf
+  Total = x
+EndSub"
+                .to_string();
+
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+            let program = parser.parse().expect("Should parse successfully");
+
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+            let errors = analyzer.analyze(&program);
+
+            assert_eq!(
+                errors,
+                vec![],
+                "Expected zero semantic errors for a program combining \
+                 Select Case, ExitFor, Return, ExitFunction, and Exit Sub"
+            );
         }
     }
 }

@@ -129,6 +129,18 @@ pub enum Statement {
         span: Span,
     },
 
+    /// `Select Case` multi-way branch statement
+    SelectCase {
+        /// The expression each `Case` clause's conditions are tested against
+        test_expression: Expression,
+        /// The `Case` clauses, in source order
+        cases: Vec<CaseClause>,
+        /// Optional `Case Else` body
+        else_branch: Option<Vec<Statement>>,
+        /// The source code span
+        span: Span,
+    },
+
     /// Function call as statement
     FunctionCall {
         /// The function name
@@ -181,6 +193,48 @@ pub enum Statement {
         body: Vec<Statement>,
         /// The source code span
         span: Span,
+    },
+}
+
+/// A single `Case` clause within a `Select Case` statement
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CaseClause {
+    /// The comma-separated conditions in this clause's `ExpressionList`
+    pub conditions: Vec<CaseCondition>,
+    /// The statements to execute when this clause matches
+    pub body: Vec<Statement>,
+    /// The source code span
+    pub span: Span,
+}
+
+/// A single condition within a `Case` clause's `ExpressionList`, per
+/// Campbell Scientific's `Select Case` syntax
+/// (<https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/selectcase.htm>)
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum CaseCondition {
+    /// A plain value tested for equality against the `Select Case` test
+    /// expression (e.g. `Case 99`)
+    Value(Expression),
+    /// An inclusive range (e.g. `Case 1 To 20`)
+    Range(Expression, Expression),
+    /// `Is comparison-operator Expression` (e.g. `Case Is > 99`), tested
+    /// against the `Select Case` test expression
+    Compare {
+        /// The comparison operator (always one of the six comparison
+        /// variants of `BinaryOperator`)
+        operator: BinaryOperator,
+        /// The expression to compare the test expression against
+        expression: Expression,
+    },
+    /// `And`/`Or`-combined conditions, for chained `Is` forms
+    /// (e.g. `Case Is >= 0 And Is <= 11.25`)
+    Logical {
+        /// The logical operator (always `And` or `Or`)
+        operator: BinaryOperator,
+        /// The left-hand condition
+        left: Box<CaseCondition>,
+        /// The right-hand condition
+        right: Box<CaseCondition>,
     },
 }
 
