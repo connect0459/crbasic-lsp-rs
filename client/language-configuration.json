@@ -28,8 +28,8 @@
   },
   "folding": {
     "markers": {
-      "start": "^\\s*(BeginProg|DataTable|Sub|Function|If|For|Do|While|#If|#IfDef)",
-      "end": "^\\s*(EndProg|EndTable|EndSub|EndFunction|EndIf|Next|Loop|Wend|#EndIf)"
+      "start": "^\\s*(BeginProg\\b|DataTable\\b|Sub\\b|Function\\b|If\\b|For\\b|Do\\b|While\\b|Select\\s+Case\\b|#If\\b|#IfDef\\b)",
+      "end": "^\\s*(EndProg\\b|EndTable\\b|EndSub\\b|EndFunction\\b|EndIf\\b|Next\\b|Loop\\b|Wend\\b|EndSelect\\b|#EndIf\\b)"
     }
   }
 }

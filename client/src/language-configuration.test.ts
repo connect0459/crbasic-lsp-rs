@@ -16,10 +16,18 @@ interface IndentPattern {
   flags: string;
 }
 
+interface FoldingMarkers {
+  start: string;
+  end: string;
+}
+
 interface LanguageConfiguration {
   indentationRules: {
     increaseIndentPattern: IndentPattern;
     decreaseIndentPattern: IndentPattern;
+  };
+  folding: {
+    markers: FoldingMarkers;
   };
 }
 
@@ -102,5 +110,74 @@ describe("language-configuration.json indentationRules", () => {
         expect(decrease.test(line)).toBe(false);
       }
     );
+  });
+});
+
+describe("language-configuration.json folding.markers", () => {
+  const config = loadConfig();
+  const start = new RegExp(config.folding.markers.start);
+  const end = new RegExp(config.folding.markers.end);
+
+  describe("start", () => {
+    test.each([
+      "BeginProg",
+      "DataTable(Test, 1, -1)",
+      "Sub MySub(x)",
+      "Function MyFunc(x)",
+      "If x > 5 Then",
+      "For i = 1 To 10",
+      "Do",
+      "While x < 10",
+      "Select Case x",
+      "#If LoggerType = GRANITE6",
+      "#IfDef FINAL Then",
+    ])("matches block-opening line: %s", (line) => {
+      expect(start.test(line)).toBe(true);
+    });
+
+    test.each([
+      "ExitFor",
+      "ExitDo",
+      "ExitFunction",
+      "Exit Sub",
+      "Return(x)",
+      "NextScan",
+      "DoWork(x)",
+      "ForecastValue = 1",
+      "IfCondition = True",
+      "SubTotal = 1",
+    ])("does not match non-block-opening line: %s", (line) => {
+      expect(start.test(line)).toBe(false);
+    });
+  });
+
+  describe("end", () => {
+    test.each([
+      "EndProg",
+      "EndTable",
+      "EndSub",
+      "EndFunction",
+      "EndIf",
+      "Next",
+      "Next i",
+      "Loop",
+      "Wend",
+      "EndSelect",
+      "#EndIf",
+    ])("matches block-closing line: %s", (line) => {
+      expect(end.test(line)).toBe(true);
+    });
+
+    test.each([
+      "ExitFor",
+      "ExitDo",
+      "ExitFunction",
+      "Exit Sub",
+      "Return(x)",
+      "NextScan",
+      "Loopback = 1",
+    ])("does not match non-block-closing line: %s", (line) => {
+      expect(end.test(line)).toBe(false);
+    });
   });
 });
