@@ -68,6 +68,8 @@ pub enum TokenKind<'a> {
     Star,
     /// Division operator (/)
     Slash,
+    /// Integer division operator (\)
+    Backslash,
     /// Power operator (^)
     Caret,
     /// String concatenation operator (&)
@@ -81,6 +83,8 @@ pub enum TokenKind<'a> {
     StarEqual,
     /// Compound divide-assign (/=)
     SlashEqual,
+    /// Compound integer-divide-assign (\=)
+    BackslashEqual,
     /// Compound power-assign (^=)
     CaretEqual,
     /// Compound concatenate-assign (&=)

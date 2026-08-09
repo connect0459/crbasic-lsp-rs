@@ -308,6 +308,7 @@ impl<'a> Parser<'a> {
             TokenKind::MinusEqual => Some(BinaryOperator::Subtract),
             TokenKind::StarEqual => Some(BinaryOperator::Multiply),
             TokenKind::SlashEqual => Some(BinaryOperator::Divide),
+            TokenKind::BackslashEqual => Some(BinaryOperator::IntegerDivide),
             TokenKind::CaretEqual => Some(BinaryOperator::Power),
             TokenKind::AmpersandEqual => Some(BinaryOperator::Concatenate),
             _ => None,
@@ -1619,7 +1620,7 @@ impl<'a> Parser<'a> {
         Ok(left)
     }
 
-    /// Parses multiplicative expressions (*, /, Mod)
+    /// Parses multiplicative expressions (*, /, \, Mod)
     fn parse_multiplicative(&mut self) -> Result<Expression, ParseError> {
         let mut left = self.parse_power()?;
 
@@ -1627,6 +1628,7 @@ impl<'a> Parser<'a> {
             let operator = match &self.peek().kind {
                 TokenKind::Star => crate::ast::BinaryOperator::Multiply,
                 TokenKind::Slash => crate::ast::BinaryOperator::Divide,
+                TokenKind::Backslash => crate::ast::BinaryOperator::IntegerDivide,
                 TokenKind::Keyword(kw) if *kw == "MOD" => crate::ast::BinaryOperator::Modulo,
                 _ => break,
             };
@@ -2185,6 +2187,57 @@ mod tests {
                 match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::Modulo);
+                    }
+                    _ => panic!("Expected binary operation"),
+                }
+            } else {
+                panic!("Expected expression statement");
+            }
+        }
+
+        #[test]
+        fn parses_integer_division() {
+            let source = r"10 \ 3".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::BinaryOp { operator, .. } => {
+                        assert_eq!(*operator, BinaryOperator::IntegerDivide);
+                    }
+                    _ => panic!("Expected binary operation"),
+                }
+            } else {
+                panic!("Expected expression statement");
+            }
+        }
+
+        #[test]
+        fn integer_division_has_same_precedence_as_multiplication_and_division() {
+            // 10 \ 3 * 2 should parse as (10 \ 3) * 2, left-to-right
+            let source = r"10 \ 3 * 2".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::BinaryOp { left, operator, .. } => {
+                        assert_eq!(*operator, BinaryOperator::Multiply);
+
+                        if let Expression::BinaryOp { operator, .. } = &**left {
+                            assert_eq!(*operator, BinaryOperator::IntegerDivide);
+                        } else {
+                            panic!("Expected integer division for left operand");
+                        }
                     }
                     _ => panic!("Expected binary operation"),
                 }
@@ -3292,6 +3345,7 @@ mod tests {
                 ("x -= 1", BinaryOperator::Subtract),
                 ("x *= 2", BinaryOperator::Multiply),
                 ("x /= 2", BinaryOperator::Divide),
+                (r"x \= 2", BinaryOperator::IntegerDivide),
                 ("x ^= 2", BinaryOperator::Power),
                 ("x &= \"a\"", BinaryOperator::Concatenate),
             ];

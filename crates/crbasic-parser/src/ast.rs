@@ -335,6 +335,8 @@ pub enum BinaryOperator {
     Multiply,
     /// Division operator (/)
     Divide,
+    /// Integer division operator (\)
+    IntegerDivide,
     /// Power operator (^)
     Power,
     /// Modulo operator (MOD)

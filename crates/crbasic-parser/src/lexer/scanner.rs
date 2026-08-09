@@ -200,6 +200,21 @@ impl<'a> Scanner<'a> {
                     span,
                 ))
             }
+            '\\' => {
+                let kind = if self.peek() == '=' {
+                    self.advance();
+                    TokenKind::BackslashEqual
+                } else {
+                    TokenKind::Backslash
+                };
+                let end_pos = Position::new(self.line, self.column);
+                let span = Span::new(start_pos, end_pos);
+                Some(Token::new(
+                    kind,
+                    &self.source[start_index..self.current],
+                    span,
+                ))
+            }
             '^' => {
                 let kind = if self.peek() == '=' {
                     self.advance();
@@ -1056,6 +1071,17 @@ mod tests {
         }
 
         #[test]
+        fn recognizes_integer_division_operator() {
+            let mut scanner = Scanner::new(r"\");
+            let tokens = scanner.scan_tokens();
+
+            assert_eq!(tokens.len(), 2);
+
+            assert_eq!(tokens[0].kind, TokenKind::Backslash);
+            assert_eq!(tokens[1].kind, TokenKind::Eof);
+        }
+
+        #[test]
         fn recognizes_string_concatenation_operator() {
             let mut scanner = Scanner::new("&");
             let tokens = scanner.scan_tokens();
@@ -1068,7 +1094,7 @@ mod tests {
 
         #[test]
         fn recognizes_compound_assignment_operators() {
-            let mut scanner = Scanner::new("+= -= *= /= ^= &=");
+            let mut scanner = Scanner::new(r"+= -= *= /= \= ^= &=");
             let tokens = scanner.scan_tokens();
 
             let operator_tokens: Vec<&Token> = tokens
@@ -1076,13 +1102,14 @@ mod tests {
                 .filter(|t| !matches!(t.kind, TokenKind::Eof))
                 .collect();
 
-            assert_eq!(operator_tokens.len(), 6);
+            assert_eq!(operator_tokens.len(), 7);
             assert_eq!(operator_tokens[0].kind, TokenKind::PlusEqual);
             assert_eq!(operator_tokens[1].kind, TokenKind::MinusEqual);
             assert_eq!(operator_tokens[2].kind, TokenKind::StarEqual);
             assert_eq!(operator_tokens[3].kind, TokenKind::SlashEqual);
-            assert_eq!(operator_tokens[4].kind, TokenKind::CaretEqual);
-            assert_eq!(operator_tokens[5].kind, TokenKind::AmpersandEqual);
+            assert_eq!(operator_tokens[4].kind, TokenKind::BackslashEqual);
+            assert_eq!(operator_tokens[5].kind, TokenKind::CaretEqual);
+            assert_eq!(operator_tokens[6].kind, TokenKind::AmpersandEqual);
         }
 
         #[test]
