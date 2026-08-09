@@ -787,8 +787,31 @@ complete; none of these were previously tracked anywhere in this file.
       the `workspace/symbol` handler
     - 2 unit tests (`document.rs`) + 7 unit tests (`workspace_symbol.rs`) +
       2 integration tests (`crates/crbasic-lsp/tests/lsp_integration.rs`)
-  - Still not implemented: `inlayHintProvider`, `codeLensProvider`,
-    `callHierarchyProvider`
+  - [x] `inlayHintProvider` ✅ Resolved
+    - Added `InlayHintProvider` (`crates/crbasic-lsp/src/inlay_hint.rs`):
+      shows each recognized function's parameter name inline before its
+      argument at a call site (e.g. `Scan(Interval:1, Units:Sec, ...)`)
+      - Built-in parameter names are reused from
+        `SignatureProvider::get_function_signature` (the same database
+        signature help already uses) rather than a second hardcoded list;
+        user-defined `Function`/`Sub` parameter names are read straight
+        from their AST declaration
+      - Call sites are collected by walking the full statement *and*
+        expression tree (assignment values, conditions, loop bounds,
+        nested call arguments, array indices), not just top-level call
+        statements, so `x = Sqrt(y)` gets a hint the same as a bare
+        `Scan(...)` statement
+      - Arguments past the last known parameter are silently dropped
+        (`Iterator::zip` truncates to the shorter side) rather than
+        guessed at
+      - Hints are filtered to the `range` the client requested, per the
+        `textDocument/inlayHint` spec (editors typically request only the
+        visible viewport)
+    - Wired into `backend.rs`: `inlay_hint_provider` capability plus the
+      `textDocument/inlayHint` handler
+    - 9 unit tests (`inlay_hint.rs`) + 2 integration tests
+      (`crates/crbasic-lsp/tests/lsp_integration.rs`)
+  - Still not implemented: `codeLensProvider`, `callHierarchyProvider`
   - Diagnostics also never populate `related_information` (hardcoded to
     `None` in both places `backend.rs` builds a `Diagnostic`)
 - [ ] Rust test coverage measurement in CI
