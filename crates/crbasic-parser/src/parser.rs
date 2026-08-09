@@ -317,6 +317,18 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Wraps an expression in a logical `Not`, used to desugar `Until` into
+    /// the `While`-shaped `DoLoop` condition (`Do Until cond` behaves the
+    /// same as `Do While Not cond`).
+    fn negate(expression: Expression) -> Expression {
+        let span = expression.span();
+        Expression::UnaryOp {
+            operator: crate::ast::UnaryOperator::Not,
+            operand: Box::new(expression),
+            span,
+        }
+    }
+
     /// Rebuilds an `AssignmentTarget` as the equivalent read `Expression`,
     /// needed to desugar `x += y` into `x = x + y` (the left operand reads
     /// the same variable/array element the assignment writes to).
@@ -1202,6 +1214,10 @@ impl<'a> Parser<'a> {
             self.advance();
             condition_at_start = true;
             condition = Some(self.parse_expression()?);
+        } else if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Until") {
+            self.advance();
+            condition_at_start = true;
+            condition = Some(Self::negate(self.parse_expression()?));
         }
 
         if matches!(self.peek().kind, TokenKind::Newline) {
@@ -1225,17 +1241,22 @@ impl<'a> Parser<'a> {
         }
         self.advance();
 
-        if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "While") {
+        if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "While" || kw == "Until") {
             if condition_at_start {
                 return Err(ParseError {
-                    message: "Cannot have While condition both at start and end of Do-Loop"
-                        .to_string(),
+                    message: "Cannot have a condition both at start and end of Do-Loop".to_string(),
                     span: self.peek().span,
                 });
             }
 
+            let is_until = matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Until");
             self.advance();
-            condition = Some(self.parse_expression()?);
+            let parsed = self.parse_expression()?;
+            condition = Some(if is_until {
+                Self::negate(parsed)
+            } else {
+                parsed
+            });
         }
 
         let end_span = self.peek().span;
@@ -4934,6 +4955,7 @@ mod tests {
 
     mod control_flow_do_loop {
         use super::*;
+        use crate::ast::UnaryOperator;
 
         #[test]
         fn parses_do_while_loop_with_condition_at_start() {
@@ -5041,6 +5063,98 @@ mod tests {
             } else {
                 panic!("Expected do loop statement");
             }
+        }
+
+        #[test]
+        fn parses_do_until_loop_with_condition_at_start() {
+            let source = "Do Until x >= 10\n  x = x + 1\nLoop".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::DoLoop {
+                condition,
+                condition_at_start,
+                body,
+                ..
+            } = &program.statements[0]
+            {
+                assert!(
+                    *condition_at_start,
+                    "Condition should be at start for Do Until"
+                );
+
+                match condition {
+                    Some(Expression::UnaryOp {
+                        operator: UnaryOperator::Not,
+                        ..
+                    }) => {}
+                    other => {
+                        panic!("Expected Do Until to desugar to Not(condition), got {other:?}")
+                    }
+                }
+
+                assert_eq!(body.len(), 1);
+                assert!(matches!(body[0], Statement::Assignment { .. }));
+            } else {
+                panic!("Expected do loop statement");
+            }
+        }
+
+        #[test]
+        fn parses_do_loop_with_until_condition_at_end() {
+            let source = "Do\n  x = x + 1\nLoop Until x >= 10".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::DoLoop {
+                condition,
+                condition_at_start,
+                body,
+                ..
+            } = &program.statements[0]
+            {
+                assert!(
+                    !*condition_at_start,
+                    "Condition should be at end for Loop Until"
+                );
+
+                match condition {
+                    Some(Expression::UnaryOp {
+                        operator: UnaryOperator::Not,
+                        ..
+                    }) => {}
+                    other => {
+                        panic!("Expected Loop Until to desugar to Not(condition), got {other:?}")
+                    }
+                }
+
+                assert_eq!(body.len(), 1);
+                assert!(matches!(body[0], Statement::Assignment { .. }));
+            } else {
+                panic!("Expected do loop statement");
+            }
+        }
+
+        #[test]
+        fn do_loop_rejects_while_and_until_combined() {
+            let source = "Do While x < 10\n  x = x + 1\nLoop Until x >= 10".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let result = parser.parse();
+            assert!(
+                result.is_err(),
+                "A condition at both start and end should be rejected"
+            );
         }
     }
 

@@ -13,6 +13,7 @@
     { "name": "Loop", "category": "control" },
     { "name": "While", "category": "control" },
     { "name": "Wend", "category": "control" },
+    { "name": "Until", "category": "control" },
     { "name": "ExitFor", "category": "control" },
     { "name": "ExitDo", "category": "control" },
     { "name": "Case", "category": "control" },
