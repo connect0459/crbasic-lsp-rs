@@ -666,3 +666,45 @@
     against or test
   - Revisit once a concrete integration target (specific CS tool +
     interface) is identified
+
+### Codebase Survey Candidates (2026-08-09)
+
+Found while auditing the codebase for further work once Phases 1-8 were
+complete; none of these were previously tracked anywhere in this file.
+
+- [ ] LSP Semantic Tokens (`textDocument/semanticTokens`) 🚧 In Progress
+  - Documented as deferred future work in
+    [ADR-002](./adrs/adr-002-textmate-grammar-first.md) (the "TextMate
+    Grammar + LSP Semantic Tokens" hybrid) but never implemented;
+    `initialize()` in `crates/crbasic-lsp/src/backend.rs` registers no
+    `semantic_tokens_provider`
+  - Goal: distinguish variable declarations from references, highlight
+    `Public` variables differently from `Dim`, and mark user-defined
+    functions/subroutines distinctly from built-ins
+- [ ] Keyword/instruction list unification (`keywords.json` + codegen)
+  - ADR-002 called for a shared source of truth
+    (`crates/crbasic-lsp/src/keywords.rs` + `scripts/generate-grammar.js`)
+    to avoid duplicating keyword/builtin-function lists between
+    `client/syntaxes/crbasic.tmLanguage.json` and
+    `crates/crbasic-lsp/src/completion.rs::get_builtin_function_completions`;
+    never built, so the two lists have since diverged independently
+- [ ] Additional standard LSP providers not yet implemented
+  - `codeActionProvider` (quick fixes for diagnostics), `foldingRangeProvider`,
+    `workspaceSymbolProvider`, `inlayHintProvider`, `codeLensProvider`,
+    `documentHighlightProvider`, `callHierarchyProvider`
+  - Diagnostics also never populate `related_information` (hardcoded to
+    `None` in both places `backend.rs` builds a `Diagnostic`)
+- [ ] Rust test coverage measurement in CI
+  - This file states coverage targets (80% line / 75% branch / 90%
+    function) but no `cargo-tarpaulin`/`cargo-llvm-cov` step exists
+    anywhere in `.github/workflows/`, so the stated numbers are currently
+    unverified against the actual Rust test suite (the TypeScript side at
+    least has `vitest --coverage` wired up locally, though not in CI either)
+- [ ] Dependency review: `tower-lsp` and `thiserror`
+  - `tower-lsp = "0.20"` is the last release of the upstream crate; a
+    maintained fork (`tower-lsp-f`, currently 0.26.0) exists -- needs a
+    deliberate stay-vs-migrate decision rather than silent drift, since
+    this touches [ADR-001](./adrs/adr-001-rust-wasm-lsp-architecture.md)
+  - `thiserror` is pinned to `1.0`; `2.0.20` is current -- likely a
+    low-risk mechanical major-version bump, worth doing independently of
+    the `tower-lsp` question
