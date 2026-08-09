@@ -16,6 +16,7 @@ pub mod rename;
 pub mod semantic_tokens;
 pub mod signature;
 pub mod symbols;
+pub mod workspace_symbol;
 
 pub use backend::CRBasicLanguageServer;
 pub use document::DocumentManager;

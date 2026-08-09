@@ -176,6 +176,18 @@ impl DocumentManager {
     pub fn get_mut(&mut self, uri: &Url) -> Option<&mut Document> {
         self.documents.get_mut(uri)
     }
+
+    /// Iterates over every open document that has a cached AST
+    ///
+    /// Used for workspace-wide queries (e.g. `workspace/symbol`) that need
+    /// to search across every currently open document rather than one.
+    /// Documents that haven't been analyzed yet (or whose last analysis
+    /// failed to parse) are skipped, since they have no AST to search.
+    pub fn analyzed_documents(&self) -> impl Iterator<Item = (&Url, &Program)> {
+        self.documents
+            .values()
+            .filter_map(|doc| doc.ast.as_ref().map(|ast| (&doc.uri, ast)))
+    }
 }
 
 #[cfg(test)]
@@ -305,6 +317,42 @@ mod tests {
             let uri = create_test_uri("nonexistent");
 
             assert!(manager.get(&uri).is_none());
+        }
+
+        #[test]
+        fn analyzed_documents_includes_every_analyzed_document() {
+            let mut manager = DocumentManager::new();
+            let uri_a = create_test_uri("a");
+            let uri_b = create_test_uri("b");
+
+            manager.open(uri_a.clone(), "Public Temp_C".to_string(), 1);
+            manager.open(uri_b.clone(), "Public Humidity".to_string(), 1);
+            manager
+                .get_mut(&uri_a)
+                .expect("Document should exist")
+                .analyze()
+                .expect("Analysis should succeed");
+            manager
+                .get_mut(&uri_b)
+                .expect("Document should exist")
+                .analyze()
+                .expect("Analysis should succeed");
+
+            let uris: Vec<&Url> = manager.analyzed_documents().map(|(uri, _)| uri).collect();
+
+            assert_eq!(uris.len(), 2);
+            assert!(uris.contains(&&uri_a));
+            assert!(uris.contains(&&uri_b));
+        }
+
+        #[test]
+        fn analyzed_documents_skips_documents_without_a_cached_ast() {
+            let mut manager = DocumentManager::new();
+            let uri = create_test_uri("test");
+
+            manager.open(uri, "Public Temp_C".to_string(), 1); // Never analyzed
+
+            assert_eq!(manager.analyzed_documents().count(), 0);
         }
     }
 }

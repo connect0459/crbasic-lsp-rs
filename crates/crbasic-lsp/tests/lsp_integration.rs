@@ -721,6 +721,91 @@ mod folding_range {
     }
 }
 
+mod workspace_symbol {
+    use super::*;
+
+    #[tokio::test]
+    async fn finds_matching_symbols_across_open_documents() {
+        let (service, _socket) = create_test_server().await;
+        let uri_a = test_uri("a.CR6");
+        let uri_b = test_uri("b.CR6");
+
+        service
+            .inner()
+            .did_open(DidOpenTextDocumentParams {
+                text_document: TextDocumentItem {
+                    uri: uri_a.clone(),
+                    language_id: "crbasic".to_string(),
+                    version: 1,
+                    text: "BeginProg\nPublic Temp_C\nEndProg".to_string(),
+                },
+            })
+            .await;
+        service
+            .inner()
+            .did_open(DidOpenTextDocumentParams {
+                text_document: TextDocumentItem {
+                    uri: uri_b.clone(),
+                    language_id: "crbasic".to_string(),
+                    version: 1,
+                    text: "BeginProg\nPublic Temp_F\nEndProg".to_string(),
+                },
+            })
+            .await;
+
+        let result = service
+            .inner()
+            .symbol(WorkspaceSymbolParams {
+                query: "Temp".to_string(),
+                work_done_progress_params: WorkDoneProgressParams::default(),
+                partial_result_params: PartialResultParams::default(),
+            })
+            .await;
+        assert!(result.is_ok(), "Workspace symbol search should succeed");
+
+        let symbols = result
+            .expect("Should be Ok")
+            .expect("Should return symbols");
+        assert_eq!(symbols.len(), 2);
+        let uris: Vec<&Url> = symbols.iter().map(|s| &s.location.uri).collect();
+        assert!(uris.contains(&&uri_a));
+        assert!(uris.contains(&&uri_b));
+    }
+
+    #[tokio::test]
+    async fn excludes_symbols_from_documents_that_do_not_match() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        service
+            .inner()
+            .did_open(DidOpenTextDocumentParams {
+                text_document: TextDocumentItem {
+                    uri: uri.clone(),
+                    language_id: "crbasic".to_string(),
+                    version: 1,
+                    text: "BeginProg\nPublic Temp_C\nEndProg".to_string(),
+                },
+            })
+            .await;
+
+        let result = service
+            .inner()
+            .symbol(WorkspaceSymbolParams {
+                query: "Humidity".to_string(),
+                work_done_progress_params: WorkDoneProgressParams::default(),
+                partial_result_params: PartialResultParams::default(),
+            })
+            .await;
+        assert!(result.is_ok(), "Workspace symbol search should succeed");
+
+        let symbols = result
+            .expect("Should be Ok")
+            .expect("Should return an empty list");
+        assert!(symbols.is_empty());
+    }
+}
+
 mod document_symbols {
     use super::*;
 

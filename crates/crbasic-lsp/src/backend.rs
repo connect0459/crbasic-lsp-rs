@@ -14,6 +14,7 @@ use crate::rename::RenameProvider;
 use crate::semantic_tokens::SemanticTokensProvider;
 use crate::signature::SignatureProvider;
 use crate::symbols;
+use crate::workspace_symbol::WorkspaceSymbolProvider;
 use crbasic_parser::SemanticError;
 use crbasic_parser::lexer::Scanner;
 use crbasic_parser::lexer::token::Position;
@@ -212,6 +213,7 @@ impl LanguageServer for CRBasicLanguageServer {
                     },
                 )),
                 folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
+                workspace_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 rename_provider: Some(tower_lsp::lsp_types::OneOf::Right(RenameOptions {
                     prepare_provider: Some(true),
                     work_done_progress_options: Default::default(),
@@ -306,6 +308,17 @@ impl LanguageServer for CRBasicLanguageServer {
         }
 
         Ok(None)
+    }
+
+    async fn symbol(
+        &self,
+        params: WorkspaceSymbolParams,
+    ) -> Result<Option<Vec<SymbolInformation>>> {
+        let manager = self.document_manager.read().await;
+
+        let results = WorkspaceSymbolProvider::search(manager.analyzed_documents(), &params.query);
+
+        Ok(Some(results))
     }
 
     async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
