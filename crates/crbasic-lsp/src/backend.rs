@@ -5,6 +5,7 @@
 use crate::completion::CompletionProvider;
 use crate::definition::DefinitionProvider;
 use crate::document::DocumentManager;
+use crate::document_highlight::DocumentHighlightProvider;
 use crate::hover::HoverProvider;
 use crate::references::ReferencesProvider;
 use crate::rename::RenameProvider;
@@ -161,6 +162,7 @@ impl LanguageServer for CRBasicLanguageServer {
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
                 definition_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 references_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
+                document_highlight_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 document_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 rename_provider: Some(tower_lsp::lsp_types::OneOf::Right(RenameOptions {
                     prepare_provider: Some(true),
@@ -347,6 +349,27 @@ impl LanguageServer for CRBasicLanguageServer {
                 position,
                 uri,
                 include_declaration,
+            ));
+        }
+
+        Ok(None)
+    }
+
+    async fn document_highlight(
+        &self,
+        params: DocumentHighlightParams,
+    ) -> Result<Option<Vec<DocumentHighlight>>> {
+        let uri = params.text_document_position_params.text_document.uri;
+        let position = params.text_document_position_params.position;
+
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri) {
+            let mut scanner = Scanner::new(&doc.text);
+            let tokens = scanner.scan_tokens();
+
+            return Ok(DocumentHighlightProvider::get_document_highlights(
+                &tokens, position,
             ));
         }
 

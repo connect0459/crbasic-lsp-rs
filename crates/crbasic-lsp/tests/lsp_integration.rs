@@ -480,6 +480,87 @@ mod find_references {
     }
 }
 
+mod document_highlight {
+    use super::*;
+
+    #[tokio::test]
+    async fn highlights_all_occurrences_of_a_variable() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nPublic Temp\nTemp = 5\nTemp = Temp + 1\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let highlight_params = DocumentHighlightParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 1,
+                    character: 7,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        };
+
+        let result = service.inner().document_highlight(highlight_params).await;
+        assert!(result.is_ok(), "Document highlight should succeed");
+
+        if let Ok(Some(highlights)) = result {
+            assert!(
+                highlights.len() >= 3,
+                "Should highlight at least 3 occurrences of Temp (found {})",
+                highlights.len()
+            );
+        } else {
+            panic!("Expected document highlight result");
+        }
+    }
+
+    #[tokio::test]
+    async fn returns_none_when_cursor_is_not_on_an_identifier() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let highlight_params = DocumentHighlightParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 0,
+                    character: 0,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        };
+
+        let result = service.inner().document_highlight(highlight_params).await;
+        assert!(result.is_ok(), "Document highlight should succeed");
+        assert_eq!(
+            result.expect("Should be Ok"),
+            None,
+            "Should not highlight anything on the BeginProg keyword"
+        );
+    }
+}
+
 mod document_symbols {
     use super::*;
 
