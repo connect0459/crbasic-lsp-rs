@@ -246,6 +246,9 @@ impl HoverProvider {
             "exit" => {
                 Some("**Exit**\n\nUsed with `Sub` to exit a Subroutine immediately: `Exit Sub`.")
             }
+            "call" => Some(
+                "**Call**\n\nInvokes a subroutine. Optional -- `Call MySub(x, y)` behaves the same as `MySub(x, y)`.\n\n```crbasic\nCall MySub(x, y)\n```",
+            ),
 
             "and" => {
                 Some("**AND**\n\nLogical AND operator. Returns true if both operands are true.")

@@ -146,6 +146,12 @@ impl<'a> Parser<'a> {
         }
 
         if let &TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "Call"
+        {
+            return self.parse_call_statement();
+        }
+
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "BeginProg"
                 || kw == "EndProg"
                 || kw == "DataTable"
@@ -671,6 +677,44 @@ impl<'a> Parser<'a> {
             keyword: "ExitSub".to_string(),
             arguments: None,
             span,
+        })
+    }
+
+    /// Parses a `Call` statement.
+    /// Syntax: `Call SubName(arguments)`
+    ///
+    /// `Call` is purely a documented, optional prefix for invoking a
+    /// subroutine -- `Call ConvertCtoF(TC(I), TC_F(I))` behaves identically
+    /// to a bare `ConvertCtoF(TC(I), TC_F(I))` call statement, so this just
+    /// consumes the keyword and delegates to the same call-parsing path.
+    fn parse_call_statement(&mut self) -> Result<Statement, ParseError> {
+        let call_token = self.advance();
+        let start = call_token.span.start;
+
+        let expr = self.parse_expression()?;
+
+        let (name, arguments, end) = match expr {
+            Expression::FunctionCall {
+                name,
+                arguments,
+                span,
+            } => (name, arguments, span.end),
+            other => {
+                return Err(ParseError {
+                    message: "Expected a subroutine call after 'Call'".to_string(),
+                    span: other.span(),
+                });
+            }
+        };
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        Ok(Statement::FunctionCall {
+            name,
+            arguments,
+            span: crate::lexer::token::Span::new(start, end),
         })
     }
 
@@ -2116,7 +2160,7 @@ mod tests {
 
         #[test]
         fn parses_boolean_in_function_call() {
-            let mut scanner = Scanner::new("Call(True, False)");
+            let mut scanner = Scanner::new("Invoke(True, False)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -4079,6 +4123,33 @@ mod tests {
             {
                 assert_eq!(name, "TimeIntoInterval");
                 assert_eq!(arguments.len(), 0);
+            } else {
+                panic!(
+                    "Expected function call statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_call_statement_as_a_plain_function_call() {
+            let mut scanner = Scanner::new("Call ConvertCtoF(TC, TC_F)");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(
+                program.statements.len(),
+                1,
+                "'Call' must not leak a separate bogus statement"
+            );
+
+            if let Statement::FunctionCall {
+                name, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "ConvertCtoF");
+                assert_eq!(arguments.len(), 2);
             } else {
                 panic!(
                     "Expected function call statement, got {:?}",

@@ -47,6 +47,7 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("EndFunction", "function"),
     ("Return", "function"),
     ("ExitFunction", "function"),
+    ("Call", "function"),
     ("Sub", "function"),
     ("EndSub", "function"),
     ("Exit", "function"),

@@ -121,7 +121,7 @@
         },
         {
           "name": "keyword.control.function.crbasic",
-          "match": "(?i)\\b(Function|EndFunction|Return|ExitFunction|Sub|EndSub|Exit)\\b"
+          "match": "(?i)\\b(Function|EndFunction|Return|ExitFunction|Call|Sub|EndSub|Exit)\\b"
         },
         {
           "name": "keyword.control.scan.crbasic",

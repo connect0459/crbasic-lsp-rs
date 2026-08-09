@@ -482,6 +482,11 @@ impl CompletionProvider {
                 "Exit",
                 "Used with Sub to exit a Subroutine (Exit Sub)",
             ),
+            Self::create_keyword_snippet(
+                "Call",
+                "Call ${1:SubName}(${2:arguments})",
+                "Invokes a subroutine",
+            ),
         ]
     }
 
