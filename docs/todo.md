@@ -840,18 +840,35 @@ Not flagged as gaps (verified during the same comparison):
     combined repro exercising `#If`/`#ElseIf`/`#Else`/`#EndIf`, `#IfDef`,
     `#UnDef`, `Mod`, `While`/`Wend`, and `ElseIf` together: zero semantic
     errors, confirming these fixes compose correctly
-- [ ] Data type completions/hover after `As` (e.g. `Public x As <cursor>`)
+- [x] Data type completions/hover after `As` (e.g. `Public x As <cursor>`) ✅ Resolved
   - Found in the same comparison: `Public x As IEEE4` already parses
     correctly today (the type annotation is captured as a generic
-    identifier, not validated against a fixed list), so this is a
+    identifier, not validated against a fixed list), so this was a
     completion/hover gap, not a parser gap
-  - Reference grammars document a fixed CRBasic data type set (`Float`,
-    `Double`, `Long`, `Boolean`, `String`, `FP2`, `IEEE4`, `IEEE8`,
-    `UINT1`, `UINT2`, `UINT4`, `Bool8`, `NSEC`); one reference extension's
-    snippets use a `${2|Float,Long,Boolean,String|}` choice placeholder
-    for `Public`/`Const` as a UX precedent worth following
-  - Small in scope relative to the two items above; a reasonable follow-up
-    once the parser-level gaps are fixed
+  - The reference extensions' combined type list (`Float`, `Double`,
+    `Long`, `Boolean`, `String`, `FP2`, `IEEE4`, `IEEE8`, `UINT1`,
+    `UINT2`, `UINT4`, `Bool8`, `NSEC`) turned out to conflate two
+    different CRBasic concepts once checked against Campbell Scientific's
+    own ["Data Types"](https://help.campbellsci.com/crbasic/cr1000x/Content/Info/datatypes.htm)
+    documentation: only **six** (`Float` -- the default, `Double`, `Long`,
+    `Boolean`, `String`, `UINT1`) are valid after `As` in a `Public`/`Dim`
+    declaration; the rest (`FP2`, `IEEE4`, `IEEE8`, `UINT2`, `UINT4`,
+    `Bool8`, `NSEC`, ...) are a separate output-processing type set valid
+    only as a `Sample()`/`Average()`-style instruction argument, a
+    different position this doesn't cover
+  - Implemented as a new `data_type_completions()` category in
+    `crates/crbasic-lsp/src/completion.rs`, wired into
+    `get_all_completions`. Deliberately **not** added to
+    `LANGUAGE_KEYWORDS`: the parser reads a type annotation as a plain
+    identifier, and reclassifying these as lexer keywords would break
+    that existing parsing
+  - `hover.rs`'s token-based lookup (`get_hover_for_token`) now also
+    checks `TokenKind::Identifier` against this same six-name set, scoped
+    narrowly enough that ordinary variable identifiers still correctly
+    return no hover (verified: the pre-existing
+    `returns_none_for_identifier` test still passes unmodified)
+  - 4 new tests (3 completion + 1 hover) added Red-first; full workspace
+    `build`/`test`/`clippy`/`fmt` gate passes
 
 ### Codebase Survey Candidates (2026-08-09)
 
