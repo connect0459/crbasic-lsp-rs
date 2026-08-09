@@ -24,7 +24,6 @@ let client: LanguageClient | undefined;
  * @returns The path to the server executable
  */
 function getServerPath(context: vscode.ExtensionContext): string {
-  // Check for custom server path in settings
   const config = vscode.workspace.getConfiguration("crbasic");
   const customPath = config.get<string>("server.path");
 
@@ -32,7 +31,6 @@ function getServerPath(context: vscode.ExtensionContext): string {
     return customPath;
   }
 
-  // Default: bundled server in extension's server directory
   const serverName = process.platform === "win32" ? "crbasic-lsp.exe" : "crbasic-lsp";
   return path.join(context.extensionPath, "server", serverName);
 }
@@ -46,7 +44,6 @@ function getServerPath(context: vscode.ExtensionContext): string {
 function createLanguageClient(context: vscode.ExtensionContext): LanguageClient {
   const serverPath = getServerPath(context);
 
-  // Server options: run the LSP server binary
   const serverOptions: ServerOptions = {
     run: {
       command: serverPath,
@@ -58,11 +55,9 @@ function createLanguageClient(context: vscode.ExtensionContext): LanguageClient 
     },
   };
 
-  // Client options: specify which documents to sync
   const clientOptions: LanguageClientOptions = {
     documentSelector: [{ scheme: "file", language: "crbasic" }],
     synchronize: {
-      // Watch for changes to CRBasic files
       fileEvents: vscode.workspace.createFileSystemWatcher(
         "**/*.{cr1,cr1x,cr2,cr3,cr5,cr6,cr8,cr9,cr9x,c9x,cr300,crb,dld}"
       ),
@@ -118,7 +113,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   registerCommands(context);
 
   try {
-    // Create and start the language client
     client = createLanguageClient(context);
 
     // Start the client (this also starts the server)
@@ -129,7 +123,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const message = error instanceof Error ? error.message : String(error);
     console.error(`Failed to start CRBasic Language Server: ${message}`);
 
-    // Show error message to user
     void vscode.window.showErrorMessage(
       `CRBasic Language Server failed to start: ${message}. ` +
         "Please check that the server binary is installed correctly."
