@@ -806,6 +806,63 @@ mod workspace_symbol {
     }
 }
 
+mod inlay_hint {
+    use super::*;
+
+    #[tokio::test]
+    async fn shows_parameter_names_for_a_builtin_function_call() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nScan(1, Sec, 0)\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let hint_params = InlayHintParams {
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            text_document: TextDocumentIdentifier { uri: uri.clone() },
+            range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 10,
+                    character: 0,
+                },
+            },
+        };
+
+        let result = service.inner().inlay_hint(hint_params).await;
+        assert!(result.is_ok(), "Inlay hint should succeed");
+
+        let hints = result.expect("Should be Ok").expect("Should return hints");
+        assert_eq!(hints.len(), 3); // Scan(Interval, Units, BufferOption, Count) has 3 args here
+    }
+
+    #[tokio::test]
+    async fn returns_none_for_a_document_without_a_parsed_ast() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let hint_params = InlayHintParams {
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            text_document: TextDocumentIdentifier { uri: uri.clone() },
+            range: Range::default(),
+        };
+
+        let result = service.inner().inlay_hint(hint_params).await;
+        assert!(result.is_ok(), "Inlay hint should succeed");
+        assert!(result.expect("Should be Ok").is_none());
+    }
+}
+
 mod document_symbols {
     use super::*;
 

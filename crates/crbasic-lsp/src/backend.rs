@@ -9,6 +9,7 @@ use crate::document::DocumentManager;
 use crate::document_highlight::DocumentHighlightProvider;
 use crate::folding::FoldingRangeProvider;
 use crate::hover::HoverProvider;
+use crate::inlay_hint::InlayHintProvider;
 use crate::references::ReferencesProvider;
 use crate::rename::RenameProvider;
 use crate::semantic_tokens::SemanticTokensProvider;
@@ -214,6 +215,7 @@ impl LanguageServer for CRBasicLanguageServer {
                 )),
                 folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
                 workspace_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
+                inlay_hint_provider: Some(OneOf::Left(true)),
                 rename_provider: Some(tower_lsp::lsp_types::OneOf::Right(RenameOptions {
                     prepare_provider: Some(true),
                     work_done_progress_options: Default::default(),
@@ -319,6 +321,19 @@ impl LanguageServer for CRBasicLanguageServer {
         let results = WorkspaceSymbolProvider::search(manager.analyzed_documents(), &params.query);
 
         Ok(Some(results))
+    }
+
+    async fn inlay_hint(&self, params: InlayHintParams) -> Result<Option<Vec<InlayHint>>> {
+        let uri = params.text_document.uri;
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri)
+            && let Some(ast) = &doc.ast
+        {
+            return Ok(Some(InlayHintProvider::get_inlay_hints(ast, params.range)));
+        }
+
+        Ok(None)
     }
 
     async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {

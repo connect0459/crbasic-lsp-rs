@@ -11,6 +11,7 @@ pub mod document;
 pub mod document_highlight;
 pub mod folding;
 pub mod hover;
+pub mod inlay_hint;
 pub mod references;
 pub mod rename;
 pub mod semantic_tokens;
