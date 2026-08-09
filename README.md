@@ -1,4 +1,4 @@
-# CRBasic LSP for Visual Studio Code
+# crbasic-lsp-rs
 
 A Visual Studio Code extension providing comprehensive language support for CRBasic, the programming language used in Campbell Scientific data loggers.
 
