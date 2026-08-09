@@ -531,19 +531,33 @@ parsing a minimal repro, not just by reading the reference grammars.
   - 2 new tests (`parses_modulo`,
     `modulo_has_same_precedence_as_multiplication_and_division`) added
     Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate passes.
-- [ ] `While ... Wend` loop construct not supported
-  - `While` is only recognized as part of `Do While ... Loop`; the
+- [x] `While ... Wend` loop construct not supported ✅ Resolved
+  - `While` was only recognized as part of `Do While ... Loop`; the
     standalone `While <condition> ... Wend` loop (a distinct CRBasic
-    construct) is unparseable, and `Wend` isn't even a recognized keyword.
-    Confirmed via repro: `Unexpected token: Keyword("While")`.
+    construct) was unparseable, and `Wend` wasn't even a recognized
+    keyword. Confirmed via repro before fixing:
+    `Unexpected token: Keyword("While")`.
   - Both reference extensions independently list `While`/`Wend` as a loop
     construct; `docs/researches/research-001-crbasic-for-vscode.md` §5.2
     enumerates For/Next, Do/While, Do/Until, and Loop but omits While/Wend
     entirely -- an oversight in the original research, not a deliberate
     exclusion.
-  - Implementing this will also need `client/language-configuration.json`
-    updates (`indentationRules`, `folding.markers`) to recognize
-    `While`/`Wend`, matching how `Do`/`Loop` are already covered there.
+  - Parses to the same `Statement::DoLoop` AST shape as
+    `Do While ... Loop` (`condition_at_start: true`) rather than a new
+    variant, since CRBasic documents them as equivalent constructs --
+    folding, semantic tokens, definitions, and call-sites all already
+    handle `DoLoop` generically, so none needed changes
+  - Added `Wend` to `keywords.json` and regenerated the grammar files;
+    added matching completion/hover coverage (required to keep the
+    existing `every_language_keyword_has_a_completion_item` /
+    `every_language_keyword_has_hover_info` completeness tests green)
+  - `client/language-configuration.json`'s `indentationRules` and
+    `folding.markers` updated to recognize `While`/`Wend` the same way
+    `Do`/`Loop` already are, with matching Vitest cases added
+  - 2 new parser tests (`parses_while_wend_loop_with_condition`,
+    `while_loop_requires_wend_to_close`) added Red-first; full
+    `build`/`test`/`clippy`/`fmt` (Rust) and `lint`/`format:check`/`test`
+    (client) gates pass
 
 Not flagged as gaps (verified during the same comparison):
 
