@@ -1035,7 +1035,7 @@ impl<'a> Parser<'a> {
         Ok(left)
     }
 
-    /// Parses multiplicative expressions (*, /)
+    /// Parses multiplicative expressions (*, /, Mod)
     fn parse_multiplicative(&mut self) -> Result<Expression, ParseError> {
         let mut left = self.parse_power()?;
 
@@ -1043,6 +1043,7 @@ impl<'a> Parser<'a> {
             let operator = match &self.peek().kind {
                 TokenKind::Star => crate::ast::BinaryOperator::Multiply,
                 TokenKind::Slash => crate::ast::BinaryOperator::Divide,
+                TokenKind::Keyword(kw) if *kw == "MOD" => crate::ast::BinaryOperator::Modulo,
                 _ => break,
             };
 
@@ -1580,6 +1581,55 @@ mod tests {
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            }
+        }
+
+        #[test]
+        fn parses_modulo() {
+            let mut scanner = Scanner::new("10 Mod 3");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::BinaryOp { operator, .. } => {
+                        assert_eq!(*operator, BinaryOperator::Modulo);
+                    }
+                    _ => panic!("Expected binary operation"),
+                }
+            } else {
+                panic!("Expected expression statement");
+            }
+        }
+
+        #[test]
+        fn modulo_has_same_precedence_as_multiplication_and_division() {
+            // 10 Mod 3 * 2 should parse as (10 Mod 3) * 2, left-to-right
+            let mut scanner = Scanner::new("10 Mod 3 * 2");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::BinaryOp { left, operator, .. } => {
+                        assert_eq!(*operator, BinaryOperator::Multiply);
+
+                        if let Expression::BinaryOp { operator, .. } = &**left {
+                            assert_eq!(*operator, BinaryOperator::Modulo);
+                        } else {
+                            panic!("Expected modulo for left operand");
+                        }
+                    }
+                    _ => panic!("Expected binary operation"),
+                }
+            } else {
+                panic!("Expected expression statement");
             }
         }
 
