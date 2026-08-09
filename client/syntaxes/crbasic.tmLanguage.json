@@ -125,7 +125,7 @@
         },
         {
           "name": "keyword.control.scan.crbasic",
-          "match": "(?i)\\b(Scan|SubScan|SlowSequence|EndSequence|NextScan|ContinueScan|NextSubScan)\\b"
+          "match": "(?i)\\b(Scan|SubScan|NextScan|ContinueScan|NextSubScan|SlowSequence|EndSequence)\\b"
         }
       ]
     },

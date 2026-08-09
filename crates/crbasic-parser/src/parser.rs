@@ -173,6 +173,8 @@ impl<'a> Parser<'a> {
                 || kw == "NextScan"
                 || kw == "ContinueScan"
                 || kw == "NextSubScan"
+                || kw == "SlowSequence"
+                || kw == "EndSequence"
                 || kw == "#UnDef"
                 || kw == "ExitFor"
                 || kw == "ExitDo"
@@ -4684,6 +4686,27 @@ mod tests {
                 &program.statements[2],
                 Statement::ProgramStructure { keyword, arguments, .. }
                     if keyword == "NextSubScan" && arguments.is_none()
+            ));
+        }
+
+        #[test]
+        fn parses_slowsequence_endsequence_block() {
+            let source = "SlowSequence\n  Scan(10, Sec, 0, 0)\n    PanelTemp(PTemp, 60)\n  NextScan\nEndSequence".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            assert!(matches!(
+                &program.statements[0],
+                Statement::ProgramStructure { keyword, arguments, .. }
+                    if keyword == "SlowSequence" && arguments.is_none()
+            ));
+            assert!(matches!(
+                program.statements.last().unwrap(),
+                Statement::ProgramStructure { keyword, arguments, .. }
+                    if keyword == "EndSequence" && arguments.is_none()
             ));
         }
 

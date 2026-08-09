@@ -203,6 +203,10 @@ impl HoverProvider {
                 "**ContinueScan**\n\nJumps to `NextScan`, skipping the remaining instructions in the current scan.",
             ),
             "nextsubscan" => Some("**NextSubScan**\n\nMarks the end of a SubScan block."),
+            "slowsequence" => Some(
+                "**SlowSequence**\n\nBegins a slow sequence scan block, for measurements at a slower rate than the main scan.\n\n```crbasic\nSlowSequence\n  Scan(...)\n    ' statements\n  NextScan\nEndSequence\n```",
+            ),
+            "endsequence" => Some("**EndSequence**\n\nTerminates a SlowSequence block."),
 
             "public" => Some(
                 "**Public**\n\nDeclares a public (global) variable that can be monitored and logged.\n\n```crbasic\nPublic Temp_C As Float\n```",

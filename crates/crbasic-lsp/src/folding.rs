@@ -26,12 +26,16 @@ impl FoldingRangeProvider {
     }
 
     /// Walks a statement list, recursing into block bodies and pairing up
-    /// the flat `BeginProg`/`EndProg`, `DataTable`/`EndTable`, and
-    /// `ConstTable`/`EndConstTable` markers
+    /// the flat `BeginProg`/`EndProg`, `DataTable`/`EndTable`,
+    /// `ConstTable`/`EndConstTable`, `Scan`/`NextScan`, `SubScan`/
+    /// `NextSubScan`, and `SlowSequence`/`EndSequence` markers
     fn collect_from_statements(statements: &[Statement], ranges: &mut Vec<FoldingRange>) {
         let mut begin_prog_stack: Vec<Position> = Vec::new();
         let mut data_table_stack: Vec<Position> = Vec::new();
         let mut const_table_stack: Vec<Position> = Vec::new();
+        let mut scan_stack: Vec<Position> = Vec::new();
+        let mut subscan_stack: Vec<Position> = Vec::new();
+        let mut slow_sequence_stack: Vec<Position> = Vec::new();
 
         for statement in statements {
             match statement {
@@ -39,6 +43,7 @@ impl FoldingRangeProvider {
                     "BeginProg" => begin_prog_stack.push(span.start),
                     "DataTable" => data_table_stack.push(span.start),
                     "ConstTable" => const_table_stack.push(span.start),
+                    "SlowSequence" => slow_sequence_stack.push(span.start),
                     "EndProg" => {
                         if let Some(start) = begin_prog_stack.pop() {
                             Self::push_range(ranges, start, span.end);
@@ -54,6 +59,26 @@ impl FoldingRangeProvider {
                             Self::push_range(ranges, start, span.end);
                         }
                     }
+                    "NextScan" => {
+                        if let Some(start) = scan_stack.pop() {
+                            Self::push_range(ranges, start, span.end);
+                        }
+                    }
+                    "NextSubScan" => {
+                        if let Some(start) = subscan_stack.pop() {
+                            Self::push_range(ranges, start, span.end);
+                        }
+                    }
+                    "EndSequence" => {
+                        if let Some(start) = slow_sequence_stack.pop() {
+                            Self::push_range(ranges, start, span.end);
+                        }
+                    }
+                    _ => {}
+                },
+                Statement::FunctionCall { name, span, .. } => match name.as_str() {
+                    "Scan" => scan_stack.push(span.start),
+                    "SubScan" => subscan_stack.push(span.start),
                     _ => {}
                 },
                 Statement::IfStatement {
@@ -146,6 +171,14 @@ mod tests {
             keyword: keyword.to_string(),
             arguments: None,
             span: span(line, 1, line, keyword.len() + 1),
+        }
+    }
+
+    fn function_call(name: &str, line: usize) -> Statement {
+        Statement::FunctionCall {
+            name: name.to_string(),
+            arguments: Vec::new(),
+            span: span(line, 1, line, name.len() + 1),
         }
     }
 
@@ -329,6 +362,64 @@ mod tests {
             let ranges = FoldingRangeProvider::get_folding_ranges(&program);
 
             assert_eq!(ranges.len(), 2);
+        }
+
+        #[test]
+        fn pairs_scan_with_the_matching_next_scan() {
+            let program = program(vec![
+                function_call("Scan", 1),
+                program_structure("NextScan", 5),
+            ]);
+
+            let ranges = FoldingRangeProvider::get_folding_ranges(&program);
+
+            assert_eq!(ranges.len(), 1);
+            assert_eq!(ranges[0].start_line, 0);
+            assert_eq!(ranges[0].end_line, 4);
+        }
+
+        #[test]
+        fn pairs_subscan_with_the_matching_next_subscan() {
+            let program = program(vec![
+                function_call("SubScan", 2),
+                program_structure("NextSubScan", 4),
+            ]);
+
+            let ranges = FoldingRangeProvider::get_folding_ranges(&program);
+
+            assert_eq!(ranges.len(), 1);
+            assert_eq!(ranges[0].start_line, 1);
+            assert_eq!(ranges[0].end_line, 3);
+        }
+
+        #[test]
+        fn pairs_slow_sequence_with_the_matching_end_sequence() {
+            let program = program(vec![
+                program_structure("SlowSequence", 1),
+                function_call("Scan", 2),
+                program_structure("NextScan", 8),
+                program_structure("EndSequence", 9),
+            ]);
+
+            let ranges = FoldingRangeProvider::get_folding_ranges(&program);
+
+            assert_eq!(ranges.len(), 2);
+            assert_eq!((ranges[0].start_line, ranges[0].end_line), (1, 7));
+            assert_eq!((ranges[1].start_line, ranges[1].end_line), (0, 8));
+        }
+
+        #[test]
+        fn does_not_confuse_a_bare_scan_reference_with_a_subscan_call() {
+            let program = program(vec![
+                function_call("SubScan", 1),
+                program_structure("NextSubScan", 3),
+                program_structure("NextScan", 4),
+            ]);
+
+            let ranges = FoldingRangeProvider::get_folding_ranges(&program);
+
+            assert_eq!(ranges.len(), 1, "an unmatched NextScan must not be paired");
+            assert_eq!((ranges[0].start_line, ranges[0].end_line), (0, 2));
         }
 
         #[test]

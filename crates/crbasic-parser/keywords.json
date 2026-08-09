@@ -29,6 +29,8 @@
     { "name": "NextScan", "category": "scan" },
     { "name": "ContinueScan", "category": "scan" },
     { "name": "NextSubScan", "category": "scan" },
+    { "name": "SlowSequence", "category": "scan" },
+    { "name": "EndSequence", "category": "scan" },
     { "name": "Public", "category": "declaration" },
     { "name": "Dim", "category": "declaration" },
     { "name": "Const", "category": "declaration" },
@@ -62,8 +64,6 @@
   "builtinFunctions": [
     { "name": "Scan", "category": "scan" },
     { "name": "SubScan", "category": "scan" },
-    { "name": "SlowSequence", "category": "scan" },
-    { "name": "EndSequence", "category": "scan" },
 
     { "name": "Battery", "category": "measurement" },
     { "name": "PanelTemp", "category": "measurement" },

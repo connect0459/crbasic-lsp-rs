@@ -32,6 +32,8 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("NextScan", "scan"),
     ("ContinueScan", "scan"),
     ("NextSubScan", "scan"),
+    ("SlowSequence", "scan"),
+    ("EndSequence", "scan"),
     ("Public", "declaration"),
     ("Dim", "declaration"),
     ("Const", "declaration"),
@@ -66,8 +68,6 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
 pub const BUILTIN_FUNCTIONS: &[(&str, &str)] = &[
     ("Scan", "scan"),
     ("SubScan", "scan"),
-    ("SlowSequence", "scan"),
-    ("EndSequence", "scan"),
     ("Battery", "measurement"),
     ("PanelTemp", "measurement"),
     ("Voltage", "measurement"),

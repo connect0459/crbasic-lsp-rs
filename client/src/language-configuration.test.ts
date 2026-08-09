@@ -57,6 +57,8 @@ describe("language-configuration.json indentationRules", () => {
       "Do",
       "Do While x < 10",
       "While x < 10",
+      "Scan(1, Sec, 0, 0)",
+      "SubScan(0.1, Sec, 5)",
       "SlowSequence",
       "Select Case x",
       "Else",
@@ -73,12 +75,17 @@ describe("language-configuration.json indentationRules", () => {
       expect(increase.test(line)).toBe(true);
     });
 
-    test.each(["If x > 5 Then y = 1", "x = 5", "CallTable(Status)", "NextScan"])(
-      "does not match non-block-opening line: %s",
-      (line) => {
-        expect(increase.test(line)).toBe(false);
-      }
-    );
+    test.each([
+      "If x > 5 Then y = 1",
+      "x = 5",
+      "CallTable(Status)",
+      "NextScan",
+      "NextSubScan",
+      "ContinueScan",
+      "ScanValue = 5",
+    ])("does not match non-block-opening line: %s", (line) => {
+      expect(increase.test(line)).toBe(false);
+    });
   });
 
   describe("decreaseIndentPattern", () => {
@@ -88,6 +95,8 @@ describe("language-configuration.json indentationRules", () => {
       "EndConstTable",
       "EndSub",
       "EndFunction",
+      "NextScan",
+      "NextSubScan",
       "EndSequence",
       "EndSelect",
       "EndIf",
@@ -106,12 +115,15 @@ describe("language-configuration.json indentationRules", () => {
       expect(decrease.test(line)).toBe(true);
     });
 
-    test.each(["NextScan", "x = 5", "CallTable(Status)"])(
-      "does not match non-block-closing line: %s",
-      (line) => {
-        expect(decrease.test(line)).toBe(false);
-      }
-    );
+    test.each([
+      "x = 5",
+      "CallTable(Status)",
+      "ContinueScan",
+      "Scan(1, Sec, 0, 0)",
+      "SubScan(0.1, Sec, 5)",
+    ])("does not match non-block-closing line: %s", (line) => {
+      expect(decrease.test(line)).toBe(false);
+    });
   });
 });
 
@@ -131,6 +143,9 @@ describe("language-configuration.json folding.markers", () => {
       "For i = 1 To 10",
       "Do",
       "While x < 10",
+      "Scan(1, Sec, 0, 0)",
+      "SubScan(0.1, Sec, 5)",
+      "SlowSequence",
       "Select Case x",
       "#If LoggerType = GRANITE6",
       "#IfDef FINAL Then",
@@ -145,10 +160,13 @@ describe("language-configuration.json folding.markers", () => {
       "Exit Sub",
       "Return(x)",
       "NextScan",
+      "NextSubScan",
+      "ContinueScan",
       "DoWork(x)",
       "ForecastValue = 1",
       "IfCondition = True",
       "SubTotal = 1",
+      "ScanValue = 5",
     ])("does not match non-block-opening line: %s", (line) => {
       expect(start.test(line)).toBe(false);
     });
@@ -161,6 +179,9 @@ describe("language-configuration.json folding.markers", () => {
       "EndConstTable",
       "EndSub",
       "EndFunction",
+      "NextScan",
+      "NextSubScan",
+      "EndSequence",
       "EndIf",
       "Next",
       "Next i",
@@ -178,7 +199,9 @@ describe("language-configuration.json folding.markers", () => {
       "ExitFunction",
       "Exit Sub",
       "Return(x)",
-      "NextScan",
+      "ContinueScan",
+      "Scan(1, Sec, 0, 0)",
+      "SubScan(0.1, Sec, 5)",
       "Loopback = 1",
     ])("does not match non-block-closing line: %s", (line) => {
       expect(end.test(line)).toBe(false);

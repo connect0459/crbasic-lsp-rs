@@ -39,16 +39,6 @@ impl CompletionProvider {
                 "Begins a nested sub-scan for faster measurement or multiplexer control.",
             ),
             Self::create_function_completion(
-                "SlowSequence",
-                "SlowSequence",
-                "Begins a slow sequence scan block.",
-            ),
-            Self::create_function_completion(
-                "EndSequence",
-                "EndSequence",
-                "Ends a slow sequence scan block.",
-            ),
-            Self::create_function_completion(
                 "CallTable",
                 "CallTable(${1:TableName})",
                 "Calls a data table to process and store data.",
@@ -547,6 +537,12 @@ impl CompletionProvider {
                 "Define a block of editable constants",
             ),
             Self::create_keyword_completion("EndConstTable", "Terminates ConstTable block"),
+            Self::create_keyword_snippet(
+                "SlowSequence",
+                "SlowSequence\n\t$0\nEndSequence",
+                "Begins a slow sequence scan block",
+            ),
+            Self::create_keyword_completion("EndSequence", "Ends a slow sequence scan block"),
         ]
     }
 
