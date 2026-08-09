@@ -35,6 +35,7 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("Alias", "declaration"),
     ("As", "declaration"),
     ("Units", "declaration"),
+    ("Optional", "declaration"),
     ("BeginProg", "program"),
     ("EndProg", "program"),
     ("DataTable", "datatable"),

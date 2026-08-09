@@ -32,6 +32,7 @@
     { "name": "Alias", "category": "declaration" },
     { "name": "As", "category": "declaration" },
     { "name": "Units", "category": "declaration" },
+    { "name": "Optional", "category": "declaration" },
     { "name": "BeginProg", "category": "program" },
     { "name": "EndProg", "category": "program" },
     { "name": "DataTable", "category": "datatable" },

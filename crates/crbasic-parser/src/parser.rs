@@ -1305,7 +1305,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Parses a Function definition
-    /// Syntax: Function name[(param1, param2, ...)] ... EndFunction
+    /// Syntax: Function name[([Optional] param1, [Optional] param2, ...)] ... EndFunction
     fn parse_function_definition(&mut self) -> Result<Statement, ParseError> {
         let function_token = self.advance();
         let start_span = function_token.span;
@@ -1330,6 +1330,10 @@ impl<'a> Parser<'a> {
             let mut params = Vec::new();
 
             while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
+                if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Optional") {
+                    self.advance();
+                }
+
                 if let &TokenKind::Identifier(param_name) = &self.peek().kind {
                     params.push(param_name.to_string());
                     self.advance();
@@ -1395,7 +1399,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Parses a Subroutine definition
-    /// Syntax: Sub name[(param1, param2, ...)] ... EndSub
+    /// Syntax: Sub name[([Optional] param1, [Optional] param2, ...)] ... EndSub
     fn parse_subroutine_definition(&mut self) -> Result<Statement, ParseError> {
         let sub_token = self.advance();
         let start_span = sub_token.span;
@@ -1420,6 +1424,10 @@ impl<'a> Parser<'a> {
             let mut params = Vec::new();
 
             while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
+                if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Optional") {
+                    self.advance();
+                }
+
                 if let &TokenKind::Identifier(param_name) = &self.peek().kind {
                     params.push(param_name.to_string());
                     self.advance();
@@ -5261,6 +5269,43 @@ mod tests {
                 assert_eq!(body.len(), 2);
                 assert!(matches!(body[0], Statement::Assignment { .. }));
                 assert!(matches!(body[1], Statement::Assignment { .. }));
+            } else {
+                panic!("Expected subroutine definition");
+            }
+        }
+
+        #[test]
+        fn parses_function_with_an_optional_parameter() {
+            let source = "Function Scale(a, Optional b)\n  Scale = a\nEndFunction".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionDefinition { parameters, .. } = &program.statements[0] {
+                assert_eq!(parameters.len(), 2);
+                assert_eq!(parameters[0], "a");
+                assert_eq!(parameters[1], "b");
+            } else {
+                panic!("Expected function definition");
+            }
+        }
+
+        #[test]
+        fn parses_subroutine_with_an_optional_parameter() {
+            let source = "Sub Configure(Optional level)\n  x = 1\nEndSub".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::SubroutineDefinition { parameters, .. } = &program.statements[0] {
+                assert_eq!(parameters.len(), 1);
+                assert_eq!(parameters[0], "level");
             } else {
                 panic!("Expected subroutine definition");
             }

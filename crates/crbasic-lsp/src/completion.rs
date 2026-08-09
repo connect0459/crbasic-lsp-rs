@@ -504,6 +504,10 @@ impl CompletionProvider {
             Self::create_keyword_completion("Alias", "Define alternative variable name"),
             Self::create_keyword_completion("As", "Specify data type"),
             Self::create_keyword_completion("Units", "Specify engineering units"),
+            Self::create_keyword_completion(
+                "Optional",
+                "Mark a Function/Sub parameter as optional",
+            ),
         ]
     }
 
