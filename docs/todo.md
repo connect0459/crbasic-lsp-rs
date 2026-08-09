@@ -696,7 +696,8 @@ complete; none of these were previously tracked anywhere in this file.
     `client/syntaxes/crbasic.tmLanguage.json` and
     `crates/crbasic-lsp/src/completion.rs::get_builtin_function_completions`;
     never built, so the two lists have since diverged independently
-- [ ] Additional standard LSP providers not yet implemented
+- [x] Additional standard LSP providers not yet implemented ✅ Resolved
+  (all sub-items below complete)
   - [x] `documentHighlightProvider` ✅ Resolved
     - Added `DocumentHighlightProvider`
       (`crates/crbasic-lsp/src/document_highlight.rs`), reusing
@@ -834,7 +835,46 @@ complete; none of these were previously tracked anywhere in this file.
       handler
     - 9 unit tests (`code_lens.rs`) + 2 integration tests
       (`crates/crbasic-lsp/tests/lsp_integration.rs`)
-  - Still not implemented: `callHierarchyProvider`
+  - [x] `callHierarchyProvider` ✅ Resolved
+    - Added `crates/crbasic-lsp/src/call_sites.rs` first, as a planned
+      refactor separate from the feature commit: extracted the
+      "walk every statement/expression looking for function calls" logic
+      `inlay_hint.rs` already had into a shared `collect_call_sites`, adding
+      the one thing `inlay_hint.rs` didn't need -- tracking which named
+      `Function`/`Sub` (if any) each call is made from. `inlay_hint.rs` now
+      consumes the shared walker; its existing test suite passed unmodified,
+      confirming no behavior change
+    - Added `CallHierarchyProvider`
+      (`crates/crbasic-lsp/src/call_hierarchy.rs`) implementing all three
+      call hierarchy requests:
+      - `prepare`: resolves the identifier under the cursor (declaration or
+        reference) to its `Function`/`Sub` declaration via
+        `DefinitionProvider::extract_definitions`; returns `None` for
+        variables or non-identifier positions
+      - `incoming_calls`: walks every open document's call sites, keeping
+        only calls whose `enclosing` is `Some` (i.e. made from inside a
+        named `Function`/`Sub`), grouped per caller into one entry with all
+        of that caller's call-site ranges
+      - `outgoing_calls`: locates the target's own body (searching every
+        open document, since a call target isn't necessarily in the
+        document that asked), walks it for calls, and resolves each
+        distinct callee's declaration the same way -- callees that don't
+        resolve to a known user-defined `Function`/`Sub` (e.g. built-ins
+        like `Scan`) are skipped, since call hierarchy items need a
+        navigable declaration location that built-ins don't have
+      - **Scope note** (same as `workspaceSymbolProvider`): search covers
+        currently open documents only, not the whole project on disk
+      - **Design note**: a call made directly from the main program body
+        (inside `BeginProg`/`EndProg`, not inside any named `Function`/`Sub`)
+        has no enclosing callable symbol, so it's deliberately left out of
+        incoming calls rather than represented with an invented
+        "<module>"-style node -- matches how call hierarchy is
+        conventionally defined as edges between named callable symbols
+    - Wired into `backend.rs`: `call_hierarchy_provider` capability plus
+      the `textDocument/prepareCallHierarchy`, `callHierarchy/incomingCalls`,
+      and `callHierarchy/outgoingCalls` handlers
+    - 7 unit tests (`call_sites.rs`) + 13 unit tests (`call_hierarchy.rs`) +
+      2 integration tests (`crates/crbasic-lsp/tests/lsp_integration.rs`)
   - Diagnostics also never populate `related_information` (hardcoded to
     `None` in both places `backend.rs` builds a `Diagnostic`)
 - [ ] Rust test coverage measurement in CI
