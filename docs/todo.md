@@ -877,12 +877,22 @@ complete; none of these were previously tracked anywhere in this file.
       2 integration tests (`crates/crbasic-lsp/tests/lsp_integration.rs`)
   - Diagnostics also never populate `related_information` (hardcoded to
     `None` in both places `backend.rs` builds a `Diagnostic`)
-- [ ] Rust test coverage measurement in CI
-  - This file states coverage targets (80% line / 75% branch / 90%
-    function) but no `cargo-tarpaulin`/`cargo-llvm-cov` step exists
-    anywhere in `.github/workflows/`, so the stated numbers are currently
-    unverified against the actual Rust test suite (the TypeScript side at
-    least has `vitest --coverage` wired up locally, though not in CI either)
+- [x] Rust test coverage measurement in CI ✅ Resolved
+  - Added a `coverage` recipe (`justfile`) and a "Check test coverage" step
+    in `.github/workflows/ci.yml`'s `rust` job, both running
+    `cargo llvm-cov --workspace --fail-under-lines 80
+    --fail-under-functions 90` -- the line/function targets stated above
+    are now enforced, not just documented
+  - Measured at the time of adding this gate: 90.11% line / 98.20%
+    function, both already clear of the 80%/90% targets
+  - Branch coverage is deliberately not gated: `cargo-llvm-cov --branch`
+    requires a nightly toolchain (`-Z coverage-options=branch` is a
+    nightly-only rustc flag), and running it locally
+    (`cargo +nightly llvm-cov --workspace --branch`) segfaulted inside
+    LLVM's coverage-mapping code rather than producing a report -- not
+    reliable enough to gate CI on. The stated 75% branch target remains
+    unverified
+  - `just coverage` is also wired into `just verify`
 - [ ] Dependency review: `tower-lsp` and `thiserror`
   - `tower-lsp = "0.20"` is the last release of the upstream crate; a
     maintained fork (`tower-lsp-f`, currently 0.26.0) exists -- needs a
