@@ -2,6 +2,7 @@
 //!
 //! This module implements the Language Server Protocol backend using tower-lsp.
 
+use crate::code_action::{CodeActionProvider, TruncateVariableNameData};
 use crate::completion::CompletionProvider;
 use crate::definition::DefinitionProvider;
 use crate::document::DocumentManager;
@@ -15,6 +16,7 @@ use crate::symbols;
 use crbasic_parser::SemanticError;
 use crbasic_parser::lexer::Scanner;
 use crbasic_parser::lexer::token::Position;
+use crbasic_parser::semantic::SemanticErrorKind;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tower_lsp::jsonrpc::Result;
@@ -73,6 +75,7 @@ impl CRBasicLanguageServer {
 
                 let start_pos = error.span.start;
                 let end_pos = error.span.end;
+                let (code, data) = Self::code_action_data(&error.kind);
 
                 Diagnostic {
                     range: Range {
@@ -80,16 +83,53 @@ impl CRBasicLanguageServer {
                         end: Self::position_to_lsp(end_pos),
                     },
                     severity: Some(severity),
-                    code: None,
+                    code,
                     code_description: None,
                     source: Some("crbasic-lsp".to_string()),
                     message: error.message.clone(),
                     related_information: None,
                     tags: None,
-                    data: None,
+                    data,
                 }
             })
             .collect()
+    }
+
+    /// Builds the diagnostic `code` and `data` needed to offer a quick fix
+    /// for a semantic error, if one exists for its kind
+    ///
+    /// `data` round-trips through the client back to
+    /// [`code_action`](Self::code_action), so the quick fix never has to
+    /// re-derive what the analyzer already computed.
+    fn code_action_data(
+        kind: &SemanticErrorKind,
+    ) -> (Option<NumberOrString>, Option<serde_json::Value>) {
+        let (code, payload) = match kind {
+            SemanticErrorKind::MaxLengthExceeded {
+                variable_name,
+                max_length,
+            } => (
+                "truncate-variable-name",
+                TruncateVariableNameData {
+                    variable_name: variable_name.clone(),
+                    target_length: *max_length,
+                },
+            ),
+            SemanticErrorKind::RecommendedLengthExceeded {
+                variable_name,
+                recommended_length,
+            } => (
+                "truncate-variable-name",
+                TruncateVariableNameData {
+                    variable_name: variable_name.clone(),
+                    target_length: *recommended_length,
+                },
+            ),
+            SemanticErrorKind::TruncationCollision { .. } => return (None, None),
+        };
+
+        let data = serde_json::to_value(payload).ok();
+        (Some(NumberOrString::String(code.to_string())), data)
     }
 
     /// Converts parser Position (1-indexed) to LSP Position (0-indexed)
@@ -164,6 +204,12 @@ impl LanguageServer for CRBasicLanguageServer {
                 references_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 document_highlight_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
                 document_symbol_provider: Some(tower_lsp::lsp_types::OneOf::Left(true)),
+                code_action_provider: Some(CodeActionProviderCapability::Options(
+                    CodeActionOptions {
+                        code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
+                        ..Default::default()
+                    },
+                )),
                 rename_provider: Some(tower_lsp::lsp_types::OneOf::Right(RenameOptions {
                     prepare_provider: Some(true),
                     work_done_progress_options: Default::default(),
@@ -376,6 +422,25 @@ impl LanguageServer for CRBasicLanguageServer {
         Ok(None)
     }
 
+    async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
+        let uri = params.text_document.uri;
+        let diagnostics = params.context.diagnostics;
+
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri) {
+            let mut scanner = Scanner::new(&doc.text);
+            let tokens = scanner.scan_tokens();
+
+            let actions = CodeActionProvider::get_code_actions(&tokens, &diagnostics, &uri);
+            if !actions.is_empty() {
+                return Ok(Some(actions));
+            }
+        }
+
+        Ok(None)
+    }
+
     async fn prepare_rename(
         &self,
         params: TextDocumentPositionParams,
@@ -478,6 +543,69 @@ mod tests {
 
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(diagnostics[0].severity, Some(DiagnosticSeverity::WARNING));
+    }
+
+    #[test]
+    fn embeds_quick_fix_data_for_max_length_exceeded() {
+        let error = SemanticError {
+            message: "Test error".to_string(),
+            span: Span::new(Position::new(1, 1), Position::new(1, 10)),
+            severity: ErrorSeverity::Error,
+            kind: SemanticErrorKind::MaxLengthExceeded {
+                variable_name: "Temperature_Sensor_1".to_string(),
+                max_length: 16,
+            },
+        };
+
+        let diagnostics = CRBasicLanguageServer::semantic_errors_to_diagnostics(&[error]);
+
+        assert_eq!(
+            diagnostics[0].code,
+            Some(NumberOrString::String("truncate-variable-name".to_string()))
+        );
+        let data: TruncateVariableNameData =
+            serde_json::from_value(diagnostics[0].data.clone().expect("Should have data"))
+                .expect("Should deserialize");
+        assert_eq!(data.variable_name, "Temperature_Sensor_1");
+        assert_eq!(data.target_length, 16);
+    }
+
+    #[test]
+    fn embeds_quick_fix_data_for_recommended_length_exceeded() {
+        let error = SemanticError {
+            message: "Test warning".to_string(),
+            span: Span::new(Position::new(1, 1), Position::new(1, 10)),
+            severity: ErrorSeverity::Warning,
+            kind: SemanticErrorKind::RecommendedLengthExceeded {
+                variable_name: "Temperature_1".to_string(),
+                recommended_length: 12,
+            },
+        };
+
+        let diagnostics = CRBasicLanguageServer::semantic_errors_to_diagnostics(&[error]);
+
+        let data: TruncateVariableNameData =
+            serde_json::from_value(diagnostics[0].data.clone().expect("Should have data"))
+                .expect("Should deserialize");
+        assert_eq!(data.variable_name, "Temperature_1");
+        assert_eq!(data.target_length, 12);
+    }
+
+    #[test]
+    fn omits_quick_fix_data_for_truncation_collision() {
+        let error = SemanticError {
+            message: "Test error".to_string(),
+            span: Span::new(Position::new(1, 1), Position::new(1, 10)),
+            severity: ErrorSeverity::Error,
+            kind: SemanticErrorKind::TruncationCollision {
+                variable_name: "Temperature_S1".to_string(),
+            },
+        };
+
+        let diagnostics = CRBasicLanguageServer::semantic_errors_to_diagnostics(&[error]);
+
+        assert_eq!(diagnostics[0].code, None);
+        assert_eq!(diagnostics[0].data, None);
     }
 
     #[test]

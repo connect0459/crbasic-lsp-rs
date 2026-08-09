@@ -561,6 +561,109 @@ mod document_highlight {
     }
 }
 
+mod code_action {
+    use super::*;
+
+    #[tokio::test]
+    async fn offers_a_quick_fix_that_truncates_an_over_length_variable_name() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR1"); // CR200X model: 16 char max
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nPublic VeryLongVariableName\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        // Mirrors the data shape the server embeds when it first publishes
+        // this diagnostic (see backend::CRBasicLanguageServer::code_action_data)
+        let diagnostic = Diagnostic {
+            range: Range {
+                start: Position {
+                    line: 1,
+                    character: 7,
+                },
+                end: Position {
+                    line: 1,
+                    character: 27,
+                },
+            },
+            code: Some(NumberOrString::String("truncate-variable-name".to_string())),
+            data: Some(serde_json::json!({
+                "variableName": "VeryLongVariableName",
+                "targetLength": 16,
+            })),
+            ..Default::default()
+        };
+
+        let action_params = CodeActionParams {
+            text_document: TextDocumentIdentifier { uri: uri.clone() },
+            range: diagnostic.range,
+            context: CodeActionContext {
+                diagnostics: vec![diagnostic],
+                only: None,
+                trigger_kind: None,
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        };
+
+        let result = service.inner().code_action(action_params).await;
+        assert!(result.is_ok(), "Code action should succeed");
+
+        let actions = result
+            .expect("Should be Ok")
+            .expect("Should offer a quick fix");
+        assert_eq!(actions.len(), 1);
+
+        let CodeActionOrCommand::CodeAction(action) = &actions[0] else {
+            panic!("Expected a CodeAction");
+        };
+        let edit = action.edit.as_ref().expect("Should have a workspace edit");
+        let changes = edit.changes.as_ref().expect("Should have changes");
+        let edits = changes.get(&uri).expect("Should target the document");
+
+        assert_eq!(edits.len(), 1);
+        assert_eq!(edits[0].new_text, "VeryLongVariable");
+    }
+
+    #[tokio::test]
+    async fn returns_none_when_no_diagnostics_carry_quick_fix_data() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nPublic Temp\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let action_params = CodeActionParams {
+            text_document: TextDocumentIdentifier { uri: uri.clone() },
+            range: Range::default(),
+            context: CodeActionContext {
+                diagnostics: vec![],
+                only: None,
+                trigger_kind: None,
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        };
+
+        let result = service.inner().code_action(action_params).await;
+        assert!(result.is_ok(), "Code action should succeed");
+        assert_eq!(result.expect("Should be Ok"), None);
+    }
+}
+
 mod document_symbols {
     use super::*;
 
