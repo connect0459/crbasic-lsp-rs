@@ -781,6 +781,31 @@ mod tests {
         }
 
         #[test]
+        fn recognized_function_names_resolve_to_a_canonical_spelling() {
+            // Some names are documented aliases (e.g. "Sqrt" resolves to the
+            // canonical "Sqr"), so this doesn't require an exact match to the
+            // queried name -- only that whatever name comes back is itself a
+            // real, correctly-cased entry, catching typos/casing drift like
+            // "VoltSE" vs "VoltSe" without breaking intentional aliasing.
+            let unknown: Vec<String> = crbasic_parser::BUILTIN_FUNCTIONS
+                .iter()
+                .filter_map(|(name, _)| {
+                    let signature = SignatureProvider::get_function_signature(name)?;
+                    let is_known = crbasic_parser::BUILTIN_FUNCTIONS
+                        .iter()
+                        .any(|(known, _)| *known == signature.name);
+                    (!is_known).then(|| format!("{} -> {}", name, signature.name))
+                })
+                .collect();
+
+            assert!(
+                unknown.is_empty(),
+                "Signature resolved to a name not in BUILTIN_FUNCTIONS: {:?}",
+                unknown
+            );
+        }
+
+        #[test]
         fn is_case_insensitive() {
             let help_lower = SignatureProvider::get_signature_help("scan", 0);
             let help_upper = SignatureProvider::get_signature_help("SCAN", 0);

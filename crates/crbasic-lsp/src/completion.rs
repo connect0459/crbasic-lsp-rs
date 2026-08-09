@@ -34,11 +34,6 @@ impl CompletionProvider {
                 "Initiates a measurement scan at specified intervals.",
             ),
             Self::create_function_completion(
-                "NextScan",
-                "NextScan",
-                "Marks the end of a Scan loop.",
-            ),
-            Self::create_function_completion(
                 "SlowSequence",
                 "SlowSequence",
                 "Begins a slow sequence scan block.",
@@ -422,15 +417,20 @@ impl CompletionProvider {
             Self::create_keyword_completion("While", "Loop condition"),
             Self::create_keyword_completion("ExitFor", "Exit For loop immediately"),
             Self::create_keyword_completion("ExitDo", "Exit Do loop immediately"),
+            Self::create_keyword_completion("Continue", "Skip to the next loop iteration"),
+            Self::create_keyword_completion("Break", "Exit the current loop immediately"),
             Self::create_keyword_snippet(
                 "Select Case",
                 "Select Case ${1:expression}\n\tCase ${2:value}\n\t\t$0\n\tCase Else\n\t\t\nEndSelect",
                 "Multi-way branch statement",
             ),
+            Self::create_keyword_completion("Select", "Starts a Select Case block"),
             Self::create_keyword_completion("Case", "Branch in Select statement"),
+            Self::create_keyword_completion("Is", "Comparison operator in a Case clause"),
             Self::create_keyword_completion("EndSelect", "Terminates Select block"),
             Self::create_keyword_completion("ExitSelect", "Exit Select block immediately"),
             Self::create_keyword_completion("GoTo", "Unconditional jump (use sparingly)"),
+            Self::create_keyword_completion("NextScan", "Terminates a Scan loop"),
         ]
     }
 
@@ -616,6 +616,24 @@ mod tests {
                 assert_eq!(completion.kind, Some(CompletionItemKind::KEYWORD));
             }
         }
+
+        #[test]
+        fn every_language_keyword_has_a_completion_item() {
+            let completions = CompletionProvider::get_keyword_completions();
+            let labels: Vec<&str> = completions.iter().map(|c| c.label.as_str()).collect();
+
+            let missing: Vec<&str> = crbasic_parser::LANGUAGE_KEYWORDS
+                .iter()
+                .map(|(name, _)| *name)
+                .filter(|name| !labels.contains(name))
+                .collect();
+
+            assert!(
+                missing.is_empty(),
+                "Missing completion items for language keywords: {:?}",
+                missing
+            );
+        }
     }
 
     mod builtin_function_completions {
@@ -634,7 +652,6 @@ mod tests {
             let labels: Vec<&str> = completions.iter().map(|c| c.label.as_str()).collect();
 
             assert!(labels.contains(&"Scan"));
-            assert!(labels.contains(&"NextScan"));
         }
 
         #[test]
@@ -685,6 +702,27 @@ mod tests {
             for completion in &completions {
                 assert_eq!(completion.kind, Some(CompletionItemKind::FUNCTION));
             }
+        }
+
+        #[test]
+        fn every_builtin_function_completion_is_a_known_canonical_name() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            let unknown: Vec<&str> = completions
+                .iter()
+                .map(|c| c.label.as_str())
+                .filter(|label| {
+                    !crbasic_parser::BUILTIN_FUNCTIONS
+                        .iter()
+                        .any(|(name, _)| name == label)
+                })
+                .collect();
+
+            assert!(
+                unknown.is_empty(),
+                "Completion labels not found (or wrong casing) in BUILTIN_FUNCTIONS: {:?}",
+                unknown
+            );
         }
 
         #[test]

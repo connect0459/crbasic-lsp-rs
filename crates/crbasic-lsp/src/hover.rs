@@ -143,12 +143,19 @@ impl HoverProvider {
             "while" => Some("**While**\n\nLoop condition. Can be used with Do or Loop."),
             "exitfor" => Some("**ExitFor**\n\nImmediately exits a For loop."),
             "exitdo" => Some("**ExitDo**\n\nImmediately exits a Do loop."),
+            "continue" => Some("**Continue**\n\nSkips to the next iteration of the current loop."),
+            "break" => Some("**Break**\n\nImmediately exits the current loop."),
             "select" => Some(
                 "**Select**\n\nMulti-way branch statement.\n\n```crbasic\nSelect Case expression\n  Case value1\n    ' statements\n  Case Else\n    ' default\nEndSelect\n```",
             ),
             "case" => Some("**Case**\n\nSpecifies a branch in a Select statement."),
+            "is" => Some(
+                "**Is**\n\nUsed with a comparison operator in a Case clause (e.g. `Case Is > 10`).",
+            ),
+            "endselect" => Some("**EndSelect**\n\nTerminates a Select block."),
             "exitselect" => Some("**ExitSelect**\n\nImmediately exits a Select block."),
             "goto" => Some("**GoTo**\n\nUnconditional jump to a labeled line. Use sparingly."),
+            "nextscan" => Some("**NextScan**\n\nMarks the end of a Scan loop."),
 
             "public" => Some(
                 "**Public**\n\nDeclares a public (global) variable that can be monitored and logged.\n\n```crbasic\nPublic Temp_C As Float\n```",
@@ -367,6 +374,21 @@ mod tests {
                     );
                 }
             }
+        }
+
+        #[test]
+        fn every_language_keyword_has_hover_info() {
+            let missing: Vec<&str> = crbasic_parser::LANGUAGE_KEYWORDS
+                .iter()
+                .map(|(name, _)| *name)
+                .filter(|name| HoverProvider::get_keyword_hover(name).is_none())
+                .collect();
+
+            assert!(
+                missing.is_empty(),
+                "Missing hover info for language keywords: {:?}",
+                missing
+            );
         }
     }
 
