@@ -738,8 +738,33 @@ complete; none of these were previously tracked anywhere in this file.
       - 8 unit tests (`code_action.rs`) + 3 unit tests covering the
         `data`/`code` embedding (`backend.rs`) + 2 integration tests
         (`crates/crbasic-lsp/tests/lsp_integration.rs`)
-  - Still not implemented: `foldingRangeProvider`, `workspaceSymbolProvider`,
-    `inlayHintProvider`, `codeLensProvider`, `callHierarchyProvider`
+  - [x] `foldingRangeProvider` ✅ Resolved
+    - Added `FoldingRangeProvider` (`crates/crbasic-lsp/src/folding.rs`):
+      `If`/`For`/`Do`/`Function`/`Sub` statements already carry a span
+      through their closing keyword (`EndIf`/`Next`/`Loop`/`EndFunction`/
+      `EndSub`), so each maps directly to one folding range; the provider
+      recurses into `If`'s branches and each block's body to fold nested
+      statements too
+    - `BeginProg`/`EndProg` and `DataTable`/`EndTable` are parsed as
+      independent flat `ProgramStructure` statements rather than a single
+      spanning one (see `symbols.rs`'s document symbols, which has the same
+      shape), so the provider pairs them back up itself with one stack per
+      keyword pair; unmatched open/close markers are silently skipped
+      rather than treated as an error, since a mid-edit document is
+      expected to be transiently unbalanced
+    - Single-line ranges are dropped (nothing to fold)
+    - Wired into `backend.rs`: `folding_range_provider` capability plus the
+      `textDocument/foldingRange` handler
+    - 12 unit tests (`folding.rs`) + 2 integration tests
+      (`crates/crbasic-lsp/tests/lsp_integration.rs`)
+    - Note: `client/language-configuration.json` already has a
+      regex-based `folding.markers` fallback for editors/scenarios where
+      the LSP server isn't available; this AST-based provider takes
+      precedence in VSCode once the server is running, the same
+      TextMate-first/LSP-refines relationship ADR-002 established for
+      syntax highlighting
+  - Still not implemented: `workspaceSymbolProvider`, `inlayHintProvider`,
+    `codeLensProvider`, `callHierarchyProvider`
   - Diagnostics also never populate `related_information` (hardcoded to
     `None` in both places `backend.rs` builds a `Diagnostic`)
 - [ ] Rust test coverage measurement in CI
