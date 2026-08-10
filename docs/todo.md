@@ -2463,6 +2463,62 @@ Not flagged as gaps (verified during the same comparison):
   decision), not this round's narrower "internally cross-referenced but
   unregistered" bug class
 
+### Reference Implementation & Official Docs Comparison, Round 19 (2026-08-10)
+
+Found during a nineteenth comparison round, this time auditing angles not yet
+covered: whether every lexer/parser-supported syntax construct has matching
+`client/language-configuration.json` bracket-pairing config (Rounds 1-18 only
+ever diffed `indentationRules`/`folding.markers`/the `[`/`]` removal against
+this file, never audited it for a *missing* addition), a TextMate-grammar
+punctuation-scoping cross-check, and a fresh look for any AST expression
+variant not reached by the LSP-layer call-site/hint walkers introduced across
+prior rounds. Rounds 1-18 had already exhausted keyword/operator diffing
+against both reference grammars (TextMate-only extensions with no semantic
+layer of their own), so this round targeted editor-config completeness
+instead.
+
+- [x] `{`/`}` (brace-list array initializer syntax, added in Round 9) had no
+  `brackets`/`autoClosingPairs`/`surroundingPairs` entries in
+  `client/language-configuration.json` (bug) ✅ Resolved
+  - Round 9 added `LeftBrace`/`RightBrace` lexer tokens and
+    `Expression::ArrayLiteral` so `Public MyArray(3) = {3, 6, 9}` parses
+    correctly, but the editor-level bracket-pairing config was never
+    updated to match -- typing `{` didn't auto-insert its closing `}`, and
+    VSCode's bracket-matching/surround-selection features didn't recognize
+    the pair at all. The inverse of Round 13's "stale `[`/`]` bracket
+    support" finding (an addition that should have shipped alongside a
+    parser change, but didn't, rather than a removal that should have but
+    didn't happen)
+  - Added `["{", "}"]` to `brackets`/`surroundingPairs` and
+    `{ "open": "{", "close": "}" }` to `autoClosingPairs`
+  - Confirmed no matching gap in `client/syntaxes/crbasic.tmLanguage.json`:
+    neither `(`/`)` nor `{`/`}` are given their own TextMate punctuation
+    scope in this grammar (bracket-pair colorization and matching are
+    already handled entirely by `language-configuration.json`'s `brackets`
+    field), so no grammar change was needed for consistency
+  - Confirmed no matching gap in the LSP layer: `call_sites.rs` already
+    walks into `Expression::ArrayLiteral`'s elements (added alongside the
+    Round 9 fix), so nested function calls inside a brace-list initializer
+    already get inlay hints/call-hierarchy coverage
+  - 3 new Vitest cases (`client/src/language-configuration.test.ts`) added
+    Red-first; client `lint`/`format:check`/`test` gate passes
+
+Not flagged as gaps (verified during the same comparison):
+
+- Full re-audit of every `keywords.json` entry cross-referenced by another
+  entry's `hover.rs`/`completion.rs` prose (Round 18's bug class): no further
+  instance found beyond the Custom Menu family/`SetSetting` already fixed
+- `docs/researches/` contains only the already-fully-mined `research-001`;
+  `docs/sample-codes/`'s 10 fixture files are project-authored regression
+  fixtures (already exercised by `tests/sample_files.rs`), not an
+  independent real-world corpus, so re-running them was not expected to
+  (and did not) surface new gaps
+- File-extension-to-model mapping (`DataloggerModel::from_extension`)
+  cross-checked once more against `client/package.json`'s full `.cr1`/
+  `.cr1x`/`.cr2`/`.cr3`/`.cr5`/`.cr6`/`.cr8`/`.cr9`/`.cr9x`/`.c9x`/`.cr300`/
+  `.crb`/`.dld` extension list: every extension already has a matching,
+  tested `from_extension` arm; no gap since Round 11's fix
+
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
 Found while auditing `crbasic-lsp`'s diagnostic-publishing path for
