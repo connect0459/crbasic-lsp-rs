@@ -2389,6 +2389,80 @@ Not flagged as gaps (verified during the same comparison):
   `ArrayIndex`, `Status`, `StationName`, `NaN`, `EndStructureType`: all
   explicitly checked and already resolved/dismissed in Rounds 1-16
 
+### Reference Implementation & Official Docs Comparison, Round 18 (2026-08-10)
+
+Found while cross-checking `keywords.json` against this project's own
+`hover.rs`/`completion.rs` prose for instruction names mentioned in
+description text but never independently verified to be registered
+themselves -- an angle not covered by the keyword-name diffing Rounds 1-17
+used. Each finding verified directly against help.campbellsci.com before
+fixing.
+
+- [x] CRBasic Custom Menus instruction family (`DisplayMenu`, `SubMenu`,
+  `MenuItem`, `MenuPick`, `MenuRecompile`, `DisplayValue`, `DisplayLine`)
+  and `SetSetting` entirely absent from `keywords.json` (bug) ✅ Resolved
+  - Same "advertised via completion/hover, silently missing" bug class as
+    the already-resolved `Mod`/`ElseIf`/`Select Case` gaps, but one level
+    removed: this project's own `hover.rs` text for `EndMenu` says it
+    "Terminates a `DisplayMenu` block" and for `EndSubMenu` says it
+    terminates a "`SubMenu` block", and `ApplyAndRestartSequence`'s/
+    `ConstTable`'s hover and completion text both cite `SetSetting` as the
+    mechanism that triggers a restart -- yet none of `DisplayMenu`,
+    `SubMenu`, `MenuItem`, `MenuPick`, `MenuRecompile`, `DisplayValue`,
+    `DisplayLine`, or `SetSetting` were themselves present in
+    `keywords.json` at all, so a reader following the hover text's own
+    cross-references would find no syntax highlighting, completion, or
+    hover for the very instructions being described
+  - Confirmed real and independently verified via help.campbellsci.com for
+    each:
+    [displaymenuendmenu.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/displaymenuendmenu.htm)
+    (`DisplayMenu`/`SubMenu` nest, e.g. `DisplayMenu("DataView",-1) ...
+    SubMenu("PanelTemps") ... EndSubMenu ... EndMenu`),
+    [menuitem.htm](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/menuitem.htm),
+    [menupick.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/menupick.htm),
+    [menurecompile.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/menurecompile.htm),
+    [displayvalue.htm](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/displayvalue.htm),
+    [displayline.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/displayline.htm),
+    and `SetSetting` documented alongside the already-registered
+    `SetStatus` on the same
+    [setstatussetsetting.htm](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/setstatussetsetting.htm)
+    page
+  - Not a parser bug: all eight already parse correctly as ordinary
+    function-call syntax (confirmed by the pre-existing `DisplayMenu`/
+    `SubMenu`/`EndSubMenu`/`EndMenu` parser tests), since CRBasic's
+    function-call grammar doesn't require pre-registration -- only the
+    bare, parenthesis-less `EndMenu`/`EndSubMenu` closing keywords needed
+    that, and both were already registered. The actual gap was purely
+    `keywords.json`'s completion/highlighting/hover coverage
+  - Added the seven Custom Menu instructions under a new `menu`
+    `builtinFunctions` category (paralleling the existing `menu`
+    `languageKeywords` category `EndMenu`/`EndSubMenu` already use) and a
+    matching `support.function.menu.crbasic` TextMate section in
+    `scripts/generate-grammar.js`; `SetSetting` joins its documented
+    sibling `SetStatus` under the existing `time` category. Per this
+    project's standing content-volume decision (Round 2), no
+    `completion.rs`/`hover.rs`/`signature.rs` snippets were authored for
+    any of the eight -- consistent with how most `BUILTIN_FUNCTIONS`
+    entries already have no rich snippet
+  - 2 new tests
+    (`builtin_functions_include_custom_menu_entries`,
+    `builtin_functions_include_set_setting_entry`, `keywords.rs`) added
+    Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate and
+    client `lint`/`format:check`/`test` gate pass;
+    `node scripts/generate-grammar.js --check` confirms the regenerated
+    `keywords_generated.rs`/`crbasic.tmLanguage.json` are committed
+
+Not flagged as gaps (verified during the same comparison):
+
+- `SetSettings` (plural) and `SetSecurity`: real, documented CRBasic
+  instructions confirmed on the same official page family as
+  `SetSetting`/`SetStatus`, but neither is referenced by this project's
+  own hover/completion prose the way `SetSetting` was -- their absence
+  from `keywords.json` falls under the already-accepted, deliberately
+  deferred content-volume backlog (Round 2's ~420-vs-126 name-count
+  decision), not this round's narrower "internally cross-referenced but
+  unregistered" bug class
+
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
 Found while auditing `crbasic-lsp`'s diagnostic-publishing path for
