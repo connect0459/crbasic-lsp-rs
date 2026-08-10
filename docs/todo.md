@@ -1949,6 +1949,109 @@ Not flagged as gaps (verified during the same comparison):
   parameter *order*) was time-boxed out rather than padding this round --
   flagged for a future round
 
+### Reference Implementation & Official Docs Comparison, Round 13 (2026-08-10)
+
+Found during a thirteenth comparison round, targeting angles not yet
+systematically covered: a bare-vs-parenthesized re-audit of the full
+`builtinFunctions` list (the dominant bug class across Rounds 4-8, but
+never checked exhaustively in one pass), a `client/language-configuration.json`
+diff against both reference repos beyond `indentationRules`/`folding.markers`
+(the only two properties prior rounds ever touched), and a targeted
+parameter-order spot-check of `signature.rs`/`hover.rs` (time-boxed out of
+Round 12). Each finding verified against an official help.campbellsci.com
+page and a real parse repro before fixing.
+
+- [x] `CallTable` -- bare statement silently misparsed (bug) ✅ Resolved
+  - `keywords.json` registered `CallTable` as a parenthesized `builtinFunctions`
+    entry, but its real syntax is bare: confirmed at
+    [CallTable](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/calltable.htm)
+    (`Syntax: CallTable [Name]`, sole example `CallTable METDATA`, no
+    parentheses anywhere on the page). Same silent-corruption bug class as
+    the already-resolved `ContinueScan`/`Include`/`Data(0)=5` gaps, but on
+    the single most common data-table-invocation statement in the
+    language -- confirmed via repro that `CallTable Test` parsed **without
+    error** but wrongly, as two dead no-op statements instead of a real
+    table invocation. This project's own `docs/sample-codes/sample-cr6-series.CR6`
+    already used the real bare form and was silently mishandled by it
+  - Moved to `languageKeywords` (`datatable` category, alongside
+    `TableHide`/`OpenInterval`/`FillStop`); new `Statement::CallTable` AST
+    variant parsed the same way as `Alias`/`Units`/`ReadOnly` (bare
+    keyword + `parse_primary`-parsed operand). `call_sites.rs` skips its
+    operand for the same reason it already skips `Alias`/`Units`/`ReadOnly`
+    (a table name, not a real call)
+  - `completion.rs`'s builtin-function-style entry (and the three
+    multi-statement pattern snippets that used `CallTable(${5:TableName})`)
+    replaced with the real bare-keyword snippet; `signature.rs`'s
+    parenthesized signature entry removed (a bare keyword has no parameter
+    list to show); `hover.rs` gained a keyword-style entry
+  - 3 new parser tests (`calltable_statement` module) added Red-first;
+    full workspace `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass
+- [x] `Watch`/`Voltage` -- fabricated, not real CRBasic ✅ Resolved (removed)
+  - First exhaustive bare-vs-parenthesized re-check of the full
+    `builtinFunctions` list turned up two names with no official docs page
+    (both 404) and no presence in either local reference grammar. `git log
+    -S` traces both to the exact same pre-Round-1 hand-written
+    `tmLanguage.json` line that also contained `Sqrt`/`LCase`/`UCase`/
+    `TableName`/`IsNaN` -- the five fabrications Round 8's "first
+    systematic fabrication audit" explicitly removed -- but these two
+    survived that audit
+  - Neither had any completion, hover, or signature coverage, so removal
+    from `keywords.json` was the entire fix
+- [x] Stale `[`/`]` bracket support in `client/language-configuration.json`
+  (bug) ✅ Resolved
+  - `brackets`/`autoClosingPairs`/`surroundingPairs` still listed `[`/`]`,
+    but Round 12 removed CRBasic's fabricated bracket-array syntax from
+    the lexer/parser entirely -- confirmed via repro that `Data[0] = 5`
+    lexes today as `Identifier Integer Equal Integer` (the scanner's
+    unknown-character catch-all silently drops `[`/`]`) and parses to an
+    inert `0 = 5` comparison instead of an assignment or an error, the
+    exact bug Round 12 fixed for `(` still live for `[`. No prior round
+    had diffed these three properties against either reference repo (only
+    `indentationRules`/`folding.markers` were ever compared)
+  - Dropped `[`/`]` from all three arrays; added the first Vitest coverage
+    for them (`client/src/language-configuration.test.ts`), since none
+    existed before this fix
+
+Not flagged as gaps (verified during the same comparison):
+
+- Full bare-vs-parenthesized sweep of the current 119 `builtinFunctions`
+  entries (regex-filtered for Mode/Begin/End/Hide/Stop/Trigger/Break/
+  Reset-suffixed names, the pattern every prior bare-keyword miss shared,
+  plus a fresh official-docs re-fetch for `WorstCase`, `DataEvent`,
+  `EncryptExempt`, `Erase`, `Randomize`, `Broadcast`, `ClockReport`,
+  `NewFieldNames`, `ArrayLength`, `MoveBytes`, `CardOut`, `NewFile`,
+  `IIf`, `RealTime`, `PortSet`, `PulsePort`, `SetStatus`, `DataInterval`):
+  all confirmed genuinely always-parenthesized. `CallTable` above was the
+  only miscategorized entry remaining
+- `client/language-configuration.json`'s `comments` (no `blockComment` --
+  correct, confirmed no CRBasic block-comment syntax exists; both
+  reference repos' `/* */` block-comment entries are a copy-paste
+  artifact, same family as their already-dismissed `//` line-comment
+  error) and `wordPattern` (undefined here and in both references; VS
+  Code's built-in default already matches this project's real
+  `[A-Za-z_][A-Za-z0-9_]*` identifier grammar, confirmed by reading
+  `scan_identifier` directly) checked and found correct as-is
+  - the `"` autoClosingPair's `notIn: ["string"]` guard is also correct;
+    neither reference repo's erroneous `'`/`'` autoClosingPair (treating
+    the comment marker as a quote character) was copied here, and rightly
+    so
+- `signature.rs` parameter-order spot-check against official syntax
+  diagrams for `Scan`, `Sample`, `Average`, `Minimum`, `Maximum`,
+  `DataTable`, and `SerialOpen`: all match exactly. `WindVector`/
+  `TCDiff`/`Resistance`/`SDI12Recorder` have zero `signature.rs`/`hover.rs`
+  coverage at all -- already part of the Round 2 Codebase Survey
+  Candidates' named backlog (`Resistance` explicitly), not a new gap
+- Parser error recovery (Round 12's deferred design question): no new
+  official-docs-confirmed CRBasic mechanism found that categorically
+  worsens the already-flagged blast radius. `Include` (this LSP's only
+  real file-splitting primitive) remaining unresolved, combined with
+  Campbell's own example programs conventionally being single monolithic
+  files, corroborates that "whole file goes dark on one typo" is the
+  common case for real deployed programs -- not a new mechanism, just
+  supporting evidence that prioritizing this isn't premature. Left as a
+  scoping decision for a future round, not acted on here
+
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
 Found while auditing `crbasic-lsp`'s diagnostic-publishing path for
