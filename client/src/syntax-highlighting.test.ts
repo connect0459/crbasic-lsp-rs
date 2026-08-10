@@ -91,3 +91,44 @@ describe("crbasic.tmLanguage.json operator highlighting", () => {
     expect(isHighlightedAsOperator(text)).toBe(true);
   });
 });
+
+interface TmGrammarWithNumbers extends TmGrammar {
+  repository: TmGrammar["repository"] & {
+    numbers: { patterns: TmPattern[] };
+  };
+}
+
+function numberPatterns(): TmPattern[] {
+  return (loadGrammar() as TmGrammarWithNumbers).repository.numbers.patterns;
+}
+
+function isHighlightedAsNumber(text: string): boolean {
+  return numberPatterns().some((pattern) => {
+    const match = toRegExp(pattern.match).exec(text);
+    return match !== null && match.index === 0 && match[0].length === text.length;
+  });
+}
+
+describe("crbasic.tmLanguage.json numeric literal highlighting", () => {
+  test.each(["123", "3.14", "1.0e-5"])(
+    "highlights the already-covered %s numeric literal as one complete token",
+    (text) => {
+      expect(isHighlightedAsNumber(text)).toBe(true);
+    }
+  );
+
+  test.each([
+    ["&HFF", "hexadecimal literal"],
+    ["&hff", "lowercase hexadecimal literal"],
+    ["&B1010", "binary literal"],
+    ["&b1010", "lowercase binary literal"],
+  ])("highlights the %s (%s)", (text) => {
+    expect(isHighlightedAsNumber(text)).toBe(true);
+  });
+
+  test("does not swallow the concatenation operator when no digit follows (A&Bvar)", () => {
+    // `&B` without a following binary digit must stay the concatenation
+    // operator, matching the lexer's own fallback behavior.
+    expect(isHighlightedAsNumber("&Bvar")).toBe(false);
+  });
+});

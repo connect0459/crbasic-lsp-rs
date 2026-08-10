@@ -87,6 +87,14 @@
     "numbers": {
       "patterns": [
         {
+          "name": "constant.numeric.hex.crbasic",
+          "match": "(?i)&h[0-9a-f]+\\b"
+        },
+        {
+          "name": "constant.numeric.binary.crbasic",
+          "match": "(?i)&b[01]+\\b"
+        },
+        {
           "name": "constant.numeric.float.crbasic",
           "match": "\\b\\d+\\.\\d+([eE][+-]?\\d+)?\\b"
         },

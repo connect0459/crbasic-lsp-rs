@@ -142,6 +142,18 @@ function generateGrammar(keywords) {
       numbers: {
         patterns: [
           {
+            // Must precede the `&` operator pattern so `&HFF`/`&B1010`
+            // match as one literal instead of a bare concatenation operator
+            // followed by a plain identifier -- mirrors the lexer's own
+            // "prefix only counts with a digit immediately after" rule.
+            name: "constant.numeric.hex.crbasic",
+            match: "(?i)&h[0-9a-f]+\\b",
+          },
+          {
+            name: "constant.numeric.binary.crbasic",
+            match: "(?i)&b[01]+\\b",
+          },
+          {
             name: "constant.numeric.float.crbasic",
             match: "\\b\\d+\\.\\d+([eE][+-]?\\d+)?\\b",
           },
