@@ -2052,6 +2052,58 @@ Not flagged as gaps (verified during the same comparison):
   supporting evidence that prioritizing this isn't premature. Left as a
   scoping decision for a future round, not acted on here
 
+### Reference Implementation & Official Docs Comparison, Round 14 (2026-08-10)
+
+Found during a fourteenth comparison round, checking angles the prior
+thirteen rounds hadn't yet touched directly: both reference repos'
+`snippets/`, `package.json` `contributes` blocks (commands, keybindings,
+categories, language `extensions`), and `src/` implementation files (not
+just their grammars/language-configuration), plus a recheck of the
+Round 2/13-flagged `signature.rs`/`hover.rs` coverage gap. No new bug-class
+gap was found; this round's only change is a documentation correction.
+
+- Verified, not a gap: `crbasic-vscode-support`'s 11 snippets (`Public`,
+  `Const`, `DataTable`, `ForLoop`, `IfThenElse`, `Subroutine`, `CallTable`,
+  `ScanLoop`, `EndProgram`, `Variable`, `Comment`) are all single-statement
+  patterns already covered (in richer, multi-statement form for several)
+  by this project's existing keyword snippets and the `ScanLoop`/
+  `DataTableSample` pattern snippets from the Snippet library entry above
+- Verified, not a gap: both reference repos' `package.json` `contributes`
+  blocks checked line-by-line. `crbasic-vscode-support`'s `commands`/
+  `keybindings` (`extension.importCRB`, `extension.openPC400`) are the
+  same thin Windows-only PC400 wrappers Round 1 already declined to port.
+  Both repos' supported file `extensions` (`.cr1`/`.cr1x`/`.cr2`/`.cr3`/
+  `.cr300`/`.cr5`/`.cr6`/`.cr8`/`.cr9`/`.cr9x`/`.dld`/`.crb`, and the
+  smaller subset in `cr-basic-ms-vscode`) are already a strict subset of
+  `client/package.json`'s and `DataloggerModel::from_extension`'s
+  (`crates/crbasic-parser/src/semantic.rs`) coverage -- nothing missing.
+  `cr-basic-ms-vscode`'s `categories: ["Formatters", "Testing"]` has no
+  corresponding formatter/test-runner contribution anywhere in that
+  repo -- inaccurate marketplace metadata on their side, not a feature to
+  match
+- Verified, not a gap: `crbasic-vscode-support/src/extension.js` (its only
+  `src/` file) is entirely the same PC400/import command logic already
+  covered above; `cr-basic-ms-vscode` has no `src/` directory at all
+  (grammar-only extension)
+- Confirmed still open (not a new finding, re-verified against current
+  code): `WindVector`/`TCDiff`/`Resistance`/`SDI12Recorder` remain absent
+  from both `crates/crbasic-lsp/src/signature.rs` and `hover.rs` (`grep`
+  returns zero matches for all four in both files), and only 1 of the 116
+  `BUILTIN_FUNCTIONS` entries (`crates/crbasic-parser/keywords.json`) has a
+  real per-parameter completion snippet in
+  `completion.rs::get_builtin_function_completions` -- both exactly match
+  the scope already recorded in the Round 2 and Codebase Survey Candidates
+  backlog entries above, not acted on here since they're content-authoring
+  volume decisions, not bugs
+- Documentation correction (no code change): the Preprocessor directive
+  support entry above claimed `Include` was "entirely unsupported by this
+  project" -- true when that entry was written, but Round 8's `Include`
+  fix (this file, Reference Implementation & Official Docs Comparison,
+  Round 8) already resolved its structural parsing. Corrected in place;
+  cross-file resolution of the included file's symbols remains the actual
+  open gap, matching `workspaceSymbolProvider`/`callHierarchyProvider`'s
+  already-accepted open-documents-only scope boundary
+
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
 Found while auditing `crbasic-lsp`'s diagnostic-publishing path for
@@ -2290,9 +2342,10 @@ an LSP-layer bug rather than a parser-grammar gap.
   - No longer blocked: the `ElseIf` bug above is resolved, so `#ElseIf`
     can reuse the same recursive `parse_if_clause`-style chaining shape
     instead of needing its own implementation
-  - `Include` (referenced by `#UnDef`'s real use case) is also entirely
-    unsupported by this project -- separate, related gap, not addressed
-    here
+  - `Include` (referenced by `#UnDef`'s real use case) was unsupported by
+    this project at the time this entry was written -- separate, related
+    gap, not addressed here. Its structural parsing was later resolved in
+    Round 8 below; see Round 14's correction note
   - Implemented: lexer treats `#` as starting a single `#`-prefixed
     keyword token (`crates/crbasic-parser/src/lexer/scanner.rs`);
     `keywords.json` gained a new `preprocessor` category, and the codegen
