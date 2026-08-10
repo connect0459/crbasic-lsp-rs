@@ -69,13 +69,14 @@ impl HoverProvider {
     fn get_hover_for_token(token: &Token) -> Option<Hover> {
         let description = match &token.kind {
             TokenKind::Keyword(kw) => Self::get_keyword_description(kw),
-            // Data type names (Float, Long, ...) are lexed as plain
+            // Data type names (Float, Long, FP2, ...) are lexed as plain
             // identifiers, not keywords -- reclassifying them as keywords
             // would break `Public x As Float` parsing (see
             // `data_type_completions` in `completion.rs` for why). Hover
             // still needs to recognize them, scoped to exactly this known
             // set so ordinary variable identifiers keep returning `None`.
-            TokenKind::Identifier(name) => Self::get_data_type_description(name),
+            TokenKind::Identifier(name) => Self::get_data_type_description(name)
+                .or_else(|| Self::get_output_processing_data_type_description(name)),
             _ => None,
         }?;
         let range = Self::token_to_lsp_range(token);
@@ -103,6 +104,33 @@ impl HoverProvider {
             "boolean" => Some("**Boolean**\n\nStores `True` (-1) or `False` (0)."),
             "string" => Some("**String**\n\nNull-terminated array of characters."),
             "uint1" => Some("**UINT1**\n\n8-bit unsigned integer."),
+            _ => None,
+        }
+    }
+
+    /// Returns the description for a data type name valid only as a
+    /// `Sample()`/`Average()`-style instruction argument (final data
+    /// storage), or `None` if `name` isn't one of them.
+    ///
+    /// Distinct from `get_data_type_description`: per Campbell Scientific's
+    /// "Data Types" documentation, `Long`/`UINT1`/`Boolean`/`String` are
+    /// valid in both positions and already covered there, so they aren't
+    /// repeated here.
+    fn get_output_processing_data_type_description(name: &str) -> Option<&'static str> {
+        match name.to_lowercase().as_str() {
+            "fp2" => Some(
+                "**FP2**\n\nCampbell Scientific proprietary format; 3 or 4 significant digits (2 bytes).",
+            ),
+            "ieee4" => Some(
+                "**IEEE4**\n\nSingle-precision floating point number (4 bytes); same precision as `Float`.",
+            ),
+            "ieee8" => Some(
+                "**IEEE8**\n\nDouble-precision floating point number (8 bytes); same precision as `Double`.",
+            ),
+            "uint2" => Some("**UINT2**\n\n16-bit unsigned integer."),
+            "uint4" => Some("**UINT4**\n\n32-bit unsigned integer."),
+            "bool8" => Some("**Bool8**\n\nArray of eight 1-bit Boolean values packed into 1 byte."),
+            "nsec" => Some("**NSEC**\n\nNanosecond-resolution time stamp (8 bytes)."),
             _ => None,
         }
     }
@@ -612,6 +640,27 @@ mod tests {
             match hover.contents {
                 HoverContents::Markup(markup) => {
                     assert!(markup.value.contains("**Float**"));
+                }
+                _ => panic!("Expected MarkupContent"),
+            }
+        }
+
+        #[test]
+        fn returns_hover_for_output_processing_data_type_in_sample_call() {
+            // "Sample(1,Var,FP2)": character 13 is the start of "FP2"
+            let tokens = tokenize("Sample(1,Var,FP2)");
+            let position = Position {
+                line: 0,
+                character: 13,
+            };
+
+            let hover = HoverProvider::get_hover_at_position(&tokens, position);
+
+            assert!(hover.is_some());
+            let hover = hover.expect("hover should be Some");
+            match hover.contents {
+                HoverContents::Markup(markup) => {
+                    assert!(markup.value.contains("**FP2**"));
                 }
                 _ => panic!("Expected MarkupContent"),
             }

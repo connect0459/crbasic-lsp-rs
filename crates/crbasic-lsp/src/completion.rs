@@ -366,6 +366,7 @@ impl CompletionProvider {
         items.extend(Self::get_builtin_function_completions());
         items.extend(Self::get_pattern_snippet_completions());
         items.extend(Self::data_type_completions());
+        items.extend(Self::output_processing_data_type_completions());
 
         if let Some(ast) = ast {
             items.extend(Self::get_user_defined_completions(ast));
@@ -380,10 +381,8 @@ impl CompletionProvider {
     /// Per Campbell Scientific's own "Data Types" documentation, exactly
     /// these six are valid there (`Float` is the default if `As` is
     /// omitted) -- distinct from the larger output-processing type set
-    /// (`FP2`, `IEEE4`, `IEEE8`, `UINT2`, `UINT4`, `Bool8`, `NSEC`, ...)
-    /// that's only valid as a `Sample()`/`Average()`-style instruction
-    /// argument, a different position this project doesn't offer type
-    /// completions for.
+    /// (see `output_processing_data_type_completions`) that's only valid as
+    /// a `Sample()`/`Average()`-style instruction argument.
     ///
     /// These aren't part of `LANGUAGE_KEYWORDS`: the parser reads a type
     /// annotation as a plain identifier (`Public x As Float` already
@@ -397,6 +396,43 @@ impl CompletionProvider {
             Self::create_keyword_completion("Boolean", "True (-1) or False (0)"),
             Self::create_keyword_completion("String", "Null-terminated array of characters"),
             Self::create_keyword_completion("UINT1", "8-bit unsigned integer"),
+        ]
+    }
+
+    /// Returns completion items for the data types valid only as a
+    /// `Sample()`/`Average()`-style instruction argument (final data
+    /// storage), e.g. `Sample(1, SourceVariable, FP2)`.
+    ///
+    /// Per Campbell Scientific's own "Data Types" documentation, this set
+    /// overlaps `data_type_completions`'s six on `Long`/`UINT1`/`Boolean`/
+    /// `String` -- those are omitted here to avoid duplicate completion
+    /// items, since `get_all_completions` offers both lists unconditionally
+    /// (this project does not do position-sensitive completion filtering,
+    /// consistent with `data_type_completions`).
+    ///
+    /// Not part of `LANGUAGE_KEYWORDS` for the same reason as
+    /// `data_type_completions`: these already parse as plain identifiers.
+    fn output_processing_data_type_completions() -> Vec<CompletionItem> {
+        vec![
+            Self::create_keyword_completion(
+                "FP2",
+                "Campbell Scientific proprietary format; 3 or 4 significant digits (2 bytes)",
+            ),
+            Self::create_keyword_completion(
+                "IEEE4",
+                "Single-precision floating point number (4 bytes); same precision as Float",
+            ),
+            Self::create_keyword_completion(
+                "IEEE8",
+                "Double-precision floating point number (8 bytes); same precision as Double",
+            ),
+            Self::create_keyword_completion("UINT2", "16-bit unsigned integer"),
+            Self::create_keyword_completion("UINT4", "32-bit unsigned integer"),
+            Self::create_keyword_completion(
+                "Bool8",
+                "Array of eight 1-bit Boolean values packed into 1 byte",
+            ),
+            Self::create_keyword_completion("NSEC", "Nanosecond-resolution time stamp (8 bytes)"),
         ]
     }
 
@@ -805,6 +841,59 @@ mod tests {
             for completion in &completions {
                 assert_eq!(completion.kind, Some(CompletionItemKind::KEYWORD));
             }
+        }
+    }
+
+    mod output_processing_data_type_completions {
+        use super::*;
+
+        #[test]
+        fn includes_every_type_valid_only_in_output_processing_instructions() {
+            let completions = CompletionProvider::output_processing_data_type_completions();
+            let labels: Vec<&str> = completions.iter().map(|c| c.label.as_str()).collect();
+
+            // Per Campbell Scientific's own "Data Types" documentation, these
+            // are valid as a Sample()/Average()-style instruction argument
+            // but not after `As` in a Public/Dim declaration -- the inverse
+            // of `data_type_completions`'s six.
+            for expected in ["FP2", "IEEE4", "IEEE8", "UINT2", "UINT4", "Bool8", "NSEC"] {
+                assert!(
+                    labels.contains(&expected),
+                    "Missing output-processing data type completion: {}",
+                    expected
+                );
+            }
+        }
+
+        #[test]
+        fn does_not_duplicate_types_already_valid_after_as() {
+            let completions = CompletionProvider::output_processing_data_type_completions();
+            let labels: Vec<&str> = completions.iter().map(|c| c.label.as_str()).collect();
+
+            for already_covered in ["Float", "Double", "Long", "Boolean", "String", "UINT1"] {
+                assert!(
+                    !labels.contains(&already_covered),
+                    "{} is already offered by data_type_completions",
+                    already_covered
+                );
+            }
+        }
+
+        #[test]
+        fn types_have_correct_kind() {
+            let completions = CompletionProvider::output_processing_data_type_completions();
+
+            for completion in &completions {
+                assert_eq!(completion.kind, Some(CompletionItemKind::KEYWORD));
+            }
+        }
+
+        #[test]
+        fn is_included_in_all_completions() {
+            let completions = CompletionProvider::get_all_completions(None);
+            let labels: Vec<&str> = completions.iter().map(|c| c.label.as_str()).collect();
+
+            assert!(labels.contains(&"FP2"));
         }
     }
 
