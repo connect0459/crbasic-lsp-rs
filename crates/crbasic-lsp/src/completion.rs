@@ -75,12 +75,12 @@ impl CompletionProvider {
             ),
             Self::create_function_completion(
                 "VoltSe",
-                "VoltSe(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:SEChan}, ${5:MeasOfs}, ${6:SettlingTime}, ${7:Integ}, ${8:Mult}, ${9:Offset})",
+                "VoltSe(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:SEChan}, ${5:MeasOff}, ${6:SettlingTime}, ${7:fN1}, ${8:Mult}, ${9:Offset})",
                 "Measures single-ended voltage.",
             ),
             Self::create_function_completion(
                 "VoltDiff",
-                "VoltDiff(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:DiffChan}, ${5:RevDiff}, ${6:SettlingTime}, ${7:Integ}, ${8:Mult}, ${9:Offset})",
+                "VoltDiff(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:DiffChan}, ${5:RevDiff}, ${6:SettlingTime}, ${7:fN1}, ${8:Mult}, ${9:Offset})",
                 "Measures differential voltage.",
             ),
             Self::create_function_completion(
@@ -192,7 +192,7 @@ impl CompletionProvider {
             ),
             Self::create_function_completion(
                 "InStr",
-                "InStr(${1:Start}, ${2:String}, ${3:SearchString}, ${4:CaseSensitive})",
+                "InStr(${1:Start}, ${2:SearchString}, ${3:FilterString}, ${4:SearchOption})",
                 "Finds a substring within a string.",
             ),
             Self::create_function_completion(
@@ -227,7 +227,7 @@ impl CompletionProvider {
             ),
             Self::create_function_completion(
                 "SplitStr",
-                "SplitStr(${1:Result}, ${2:SearchString}, ${3:Delimiter}, ${4:NumSplits}, ${5:SplitOption})",
+                "SplitStr(${1:Result}, ${2:SearchString}, ${3:FilterString}, ${4:NumSplits}, ${5:SplitOption})",
                 "Splits a string by delimiter.",
             ),
             Self::create_function_completion(
@@ -242,7 +242,7 @@ impl CompletionProvider {
             ),
             Self::create_function_completion(
                 "TimeIntoInterval",
-                "TimeIntoInterval(${1:Interval}, ${2:Units})",
+                "TimeIntoInterval(${1:TintoInt}, ${2:Interval}, ${3:Units})",
                 "Returns true when the interval boundary is crossed.",
             ),
             Self::create_function_completion(
@@ -257,7 +257,7 @@ impl CompletionProvider {
             ),
             Self::create_function_completion(
                 "Delay",
-                "Delay(${1:Duration}, ${2:Units})",
+                "Delay(${1:Option}, ${2:Duration}, ${3:Units})",
                 "Pauses execution for a specified time.",
             ),
         ]
@@ -1006,6 +1006,98 @@ mod tests {
             let tcdiff = completions.iter().find(|c| c.label == "TCDiff").unwrap();
 
             assert!(tcdiff.insert_text.as_ref().unwrap().contains("${9:fN1}"));
+        }
+
+        #[test]
+        fn voltdiff_seventh_placeholder_is_the_notch_filter_frequency_not_integration() {
+            // Same bug class as TCDiff above, not previously checked for
+            // VoltDiff -- confirmed at
+            // https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/voltdiff.htm
+            let completions = CompletionProvider::get_builtin_function_completions();
+            let voltdiff = completions.iter().find(|c| c.label == "VoltDiff").unwrap();
+
+            assert!(voltdiff.insert_text.as_ref().unwrap().contains("${7:fN1}"));
+        }
+
+        #[test]
+        fn voltse_fifth_and_seventh_placeholders_match_the_official_names() {
+            // Confirmed at
+            // https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/voltse.htm:
+            // the 5th parameter is `MeasOff` (not `MeasOfs`), and the 7th is
+            // `fN1` (same bug class as TCDiff/VoltDiff above, not `Integ`).
+            let completions = CompletionProvider::get_builtin_function_completions();
+            let voltse = completions.iter().find(|c| c.label == "VoltSe").unwrap();
+            let snippet = voltse.insert_text.as_ref().unwrap();
+
+            assert!(snippet.contains("${5:MeasOff}"));
+            assert!(snippet.contains("${7:fN1}"));
+        }
+
+        #[test]
+        fn instr_third_and_fourth_placeholders_match_the_official_names() {
+            // Confirmed at
+            // https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/instr.htm:
+            // parameter order is (Start, SearchString, FilterString,
+            // SearchOption) -- the codebase had `String`/`SearchString`
+            // shifted one slot early and mislabeled the 4th as a boolean
+            // `CaseSensitive`.
+            let completions = CompletionProvider::get_builtin_function_completions();
+            let instr = completions.iter().find(|c| c.label == "InStr").unwrap();
+            let snippet = instr.insert_text.as_ref().unwrap();
+
+            assert!(snippet.contains("${2:SearchString}"));
+            assert!(snippet.contains("${3:FilterString}"));
+            assert!(snippet.contains("${4:SearchOption}"));
+        }
+
+        #[test]
+        fn splitstr_third_placeholder_is_named_filterstring_not_delimiter() {
+            // Confirmed at
+            // https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/splitstr.htm
+            let completions = CompletionProvider::get_builtin_function_completions();
+            let splitstr = completions.iter().find(|c| c.label == "SplitStr").unwrap();
+
+            assert!(
+                splitstr
+                    .insert_text
+                    .as_ref()
+                    .unwrap()
+                    .contains("${3:FilterString}")
+            );
+        }
+
+        #[test]
+        fn timeintointerval_snippet_includes_the_leading_tintoint_parameter() {
+            // Confirmed at
+            // https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/timeintointervaliftime.htm:
+            // TimeIntoInterval and IfTime are the same instruction and take
+            // the same 3 parameters, but this snippet was missing the
+            // leading `TintoInt` parameter.
+            let completions = CompletionProvider::get_builtin_function_completions();
+            let tii = completions
+                .iter()
+                .find(|c| c.label == "TimeIntoInterval")
+                .unwrap();
+
+            assert_eq!(
+                tii.insert_text.as_deref(),
+                Some("TimeIntoInterval(${1:TintoInt}, ${2:Interval}, ${3:Units})")
+            );
+        }
+
+        #[test]
+        fn delay_snippet_includes_the_leading_option_parameter() {
+            // Confirmed at
+            // https://help.campbellsci.com/crbasic/cr6/Content/Instructions/delay3.htm:
+            // `Delay(Option, Delay, Units)` -- `Option` was entirely
+            // missing from this snippet.
+            let completions = CompletionProvider::get_builtin_function_completions();
+            let delay = completions.iter().find(|c| c.label == "Delay").unwrap();
+
+            assert_eq!(
+                delay.insert_text.as_deref(),
+                Some("Delay(${1:Option}, ${2:Duration}, ${3:Units})")
+            );
         }
 
         #[test]

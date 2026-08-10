@@ -228,7 +228,7 @@ impl SignatureProvider {
                         documentation: "Single-ended channel number.".to_string(),
                     },
                     ParameterInfo {
-                        name: "MeasOfs".to_string(),
+                        name: "MeasOff".to_string(),
                         documentation: "Measure offset (True/False).".to_string(),
                     },
                     ParameterInfo {
@@ -236,8 +236,8 @@ impl SignatureProvider {
                         documentation: "Settling time in microseconds.".to_string(),
                     },
                     ParameterInfo {
-                        name: "Integ".to_string(),
-                        documentation: "Integration (250, 60Hz, 50Hz, etc.).".to_string(),
+                        name: "fN1".to_string(),
+                        documentation: "Lowest frequency notched out by the sinc filter.".to_string(),
                     },
                     ParameterInfo {
                         name: "Mult".to_string(),
@@ -279,8 +279,8 @@ impl SignatureProvider {
                         documentation: "Settling time in microseconds.".to_string(),
                     },
                     ParameterInfo {
-                        name: "Integ".to_string(),
-                        documentation: "Integration setting.".to_string(),
+                        name: "fN1".to_string(),
+                        documentation: "Lowest frequency notched out by the sinc filter.".to_string(),
                     },
                     ParameterInfo {
                         name: "Mult".to_string(),
@@ -708,16 +708,16 @@ impl SignatureProvider {
                         documentation: "Starting position for search.".to_string(),
                     },
                     ParameterInfo {
-                        name: "String".to_string(),
+                        name: "SearchString".to_string(),
                         documentation: "String to search in.".to_string(),
                     },
                     ParameterInfo {
-                        name: "SearchString".to_string(),
+                        name: "FilterString".to_string(),
                         documentation: "String to search for.".to_string(),
                     },
                     ParameterInfo {
-                        name: "CaseSensitive".to_string(),
-                        documentation: "Case-sensitive search (0/1).".to_string(),
+                        name: "SearchOption".to_string(),
+                        documentation: "Method-of-search code (0-10; add 100 to strip quotes), not a boolean case-sensitivity flag.".to_string(),
                     },
                 ],
             }),
@@ -735,8 +735,8 @@ impl SignatureProvider {
                         documentation: "String to split.".to_string(),
                     },
                     ParameterInfo {
-                        name: "Delimiter".to_string(),
-                        documentation: "Delimiter character(s).".to_string(),
+                        name: "FilterString".to_string(),
+                        documentation: "Filter for the string(s) to return; its role (delimiter set, exact-match string, or header/footer filter) depends on SplitOption.".to_string(),
                     },
                     ParameterInfo {
                         name: "NumSplits".to_string(),
@@ -773,6 +773,10 @@ impl SignatureProvider {
                 documentation: "Returns true when the interval boundary is crossed.".to_string(),
                 parameters: vec![
                     ParameterInfo {
+                        name: "TintoInt".to_string(),
+                        documentation: "Time into interval to trigger.".to_string(),
+                    },
+                    ParameterInfo {
                         name: "Interval".to_string(),
                         documentation: "Time interval to check.".to_string(),
                     },
@@ -806,6 +810,10 @@ impl SignatureProvider {
                 name: "Delay".to_string(),
                 documentation: "Pauses execution for a specified time.".to_string(),
                 parameters: vec![
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "0=measurement task sequence, 1=processing, 2=digital/SDM measurements.".to_string(),
+                    },
                     ParameterInfo {
                         name: "Duration".to_string(),
                         documentation: "Length of delay.".to_string(),
@@ -1098,6 +1106,33 @@ mod tests {
         }
 
         #[test]
+        fn voltdiff_seventh_parameter_is_the_notch_filter_frequency_not_integration() {
+            // Same bug class as TCDiff above, not previously checked for
+            // VoltDiff -- confirmed at
+            // https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/voltdiff.htm
+            let sig = SignatureProvider::get_function_signature("VoltDiff")
+                .expect("VoltDiff should have a signature");
+
+            assert_eq!(sig.parameters.len(), 9);
+            assert_eq!(sig.parameters[6].name, "fN1");
+        }
+
+        #[test]
+        fn voltse_fifth_and_seventh_parameters_match_the_official_names() {
+            // Confirmed at
+            // https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/voltse.htm:
+            // the 5th parameter is `MeasOff` (not `MeasOfs`), and the 7th is
+            // `fN1` (the sinc filter's first notch frequency, same bug class
+            // as TCDiff/VoltDiff above, not `Integ`).
+            let sig = SignatureProvider::get_function_signature("VoltSe")
+                .expect("VoltSe should have a signature");
+
+            assert_eq!(sig.parameters.len(), 9);
+            assert_eq!(sig.parameters[4].name, "MeasOff");
+            assert_eq!(sig.parameters[6].name, "fN1");
+        }
+
+        #[test]
         fn resistance_has_fourteen_parameters_in_documented_order() {
             let sig = SignatureProvider::get_function_signature("Resistance")
                 .expect("Resistance should have a signature");
@@ -1190,10 +1225,74 @@ mod tests {
         }
 
         #[test]
+        fn instr_third_and_fourth_parameters_match_the_official_names() {
+            // Confirmed at
+            // https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/instr.htm:
+            // the 3rd parameter is `FilterString` (the string being
+            // searched for), not `SearchString` (which is the official
+            // name of the 2nd parameter -- the string being searched in);
+            // the 4th parameter is `SearchOption`, a multi-value method
+            // code (0-10, +100 for quote-stripping), not a boolean
+            // case-sensitivity flag.
+            let sig = SignatureProvider::get_function_signature("InStr")
+                .expect("InStr should have a signature");
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+
+            assert_eq!(
+                names,
+                vec!["Start", "SearchString", "FilterString", "SearchOption"]
+            );
+        }
+
+        #[test]
+        fn splitstr_third_parameter_is_named_filterstring_not_delimiter() {
+            // Confirmed at
+            // https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/splitstr.htm:
+            // depending on SplitOption, this parameter can be a delimiter
+            // set, an exact-match search string, or a header/footer filter,
+            // so `Delimiter` undersells its documented role.
+            let sig = SignatureProvider::get_function_signature("SplitStr")
+                .expect("SplitStr should have a signature");
+
+            assert_eq!(sig.parameters[2].name, "FilterString");
+        }
+
+        #[test]
         fn has_time_functions() {
             assert!(SignatureProvider::get_function_signature("Timer").is_some());
             assert!(SignatureProvider::get_function_signature("TimeIntoInterval").is_some());
             assert!(SignatureProvider::get_function_signature("Delay").is_some());
+        }
+
+        #[test]
+        fn timeintointerval_has_the_same_leading_tintoint_parameter_as_iftime() {
+            // Confirmed at
+            // https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/timeintointervaliftime.htm:
+            // TimeIntoInterval and IfTime are documented as the same
+            // instruction ("Either keyword can be used within the
+            // program"), so both take the same 3 parameters -- but the
+            // `timeintointerval` arm was missing the leading `TintoInt`
+            // parameter that the `iftime` arm already had correctly.
+            let sig = SignatureProvider::get_function_signature("TimeIntoInterval")
+                .expect("TimeIntoInterval should have a signature");
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+
+            assert_eq!(names, vec!["TintoInt", "Interval", "Units"]);
+        }
+
+        #[test]
+        fn delay_has_the_leading_option_parameter() {
+            // Confirmed at
+            // https://help.campbellsci.com/crbasic/cr6/Content/Instructions/delay3.htm:
+            // `Delay(Option, Delay, Units)` -- `Option` (0/1/2, selecting
+            // whether the pause affects the measurement task sequence,
+            // processing, or digital/SDM measurements) is a required
+            // leading parameter that was entirely missing.
+            let sig = SignatureProvider::get_function_signature("Delay")
+                .expect("Delay should have a signature");
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+
+            assert_eq!(names, vec!["Option", "Duration", "Units"]);
         }
     }
 
