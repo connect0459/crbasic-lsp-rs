@@ -2132,6 +2132,72 @@ gap was found; this round's only change is a documentation correction.
   open gap, matching `workspaceSymbolProvider`/`callHierarchyProvider`'s
   already-accepted open-documents-only scope boundary
 
+### Reference Implementation & Official Docs Comparison, Round 15 (2026-08-10)
+
+Found while turning Round 13's 7-function signature.rs spot check into a
+full sweep: of the ~33 functions `signature.rs` covers, only those 7
+(Scan, Sample, Average, Minimum, Maximum, DataTable, SerialOpen) plus
+Round 14's 4 (WindVector, TCDiff, Resistance, SDI12Recorder) had ever been
+checked against help.campbellsci.com's syntax diagrams. The remaining 22
+were verified here (2 parallel research passes), turning up the same
+TCDiff-style mislabeling bug in six more functions. Each finding
+re-verified directly against the official docs before fixing.
+
+- [x] `Delay`, `InStr`, `SplitStr`, `TimeIntoInterval`, `VoltDiff`,
+  `VoltSe` -- six parameter-list mismatches in `signature.rs`/
+  `completion.rs` (bug) ✅ Resolved
+  - `Delay` was missing its required leading `Option` parameter (0/1/2,
+    selecting whether the pause affects the measurement task sequence,
+    processing, or digital/SDM measurements) -- confirmed at
+    [delay3.htm](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/delay3.htm).
+    Only `(Duration, Units)` existed before this fix
+  - `InStr`'s 3rd and 4th parameters were both wrong: the 3rd was named
+    `SearchString`, colliding with the *official* name of the 2nd
+    parameter (the string being searched *in*) -- the real 3rd parameter
+    is `FilterString` (the string being searched *for*). The 4th was
+    named/documented as a boolean `CaseSensitive (0/1)`, but official
+    `SearchOption` (confirmed at
+    [instr.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/instr.htm)
+    and
+    [searchoption.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/parameters/searchoption.htm))
+    is a 0-10 method-of-search code (plus +100 for quote-stripping), not
+    a simple flag -- a semantic mismatch, not just a rename
+  - `SplitStr`'s 3rd parameter was named `Delimiter`, underselling its
+    documented role: per
+    [splitstr.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/splitstr.htm),
+    `FilterString`'s actual behavior (delimiter set, exact-match string,
+    or header/footer filter) depends on `SplitOption`
+  - `TimeIntoInterval` was missing the leading `TintoInt` parameter that
+    its documented alias `IfTime` already had correctly -- confirmed at
+    [timeintointervaliftime.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/timeintointervaliftime.htm):
+    "This instruction is also known as IfTime. Either keyword can be used
+    within the program," with identical 3-parameter syntax
+  - `VoltDiff` and `VoltSe` both used `Integ` for their 7th parameter --
+    the exact same mislabeling already fixed for `TCDiff`/`Resistance` in
+    prior rounds, just not applied here; the real parameter is `fN1` (the
+    sinc filter's first notch frequency), confirmed at
+    [voltdiff.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/voltdiff.htm)
+    and
+    [voltse.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/voltse.htm).
+    `VoltSe`'s 5th parameter was also misspelled `MeasOfs` (official:
+    `MeasOff`)
+  - 6 new parser-side tests (`signature.rs`: one per function, checking
+    full parameter-name order) + 6 new snippet tests (`completion.rs`:
+    one per function, checking the corrected placeholder names) added
+    Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate passes.
+    No `hover.rs` coverage exists for any of these six functions, so
+    nothing to fix there
+
+Not flagged as gaps (verified during the same comparison):
+
+- Every other unchecked function (`Abs`, `Atn2`, `Cos`, `IfTime`, `Left`,
+  `Len`, `Mid`, `PulseCount`, `Right`, `Round`, `SerialIn`, `SerialOut`,
+  `Sin`, `Sqr`, `Tan`, `Timer`) confirmed to match the official parameter
+  names/order/count exactly (naming-only differences, e.g. `Value` vs.
+  the official `number`, are not a bug per the standing precedent from
+  the `TCDiff` fix -- only flagged when a *different* parameter is
+  substituted or misdescribed)
+
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
 Found while auditing `crbasic-lsp`'s diagnostic-publishing path for
