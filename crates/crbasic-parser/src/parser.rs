@@ -164,6 +164,12 @@ impl<'a> Parser<'a> {
         }
 
         if let &TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "ReadOnly"
+        {
+            return self.parse_readonly_statement();
+        }
+
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "BeginProg"
                 || kw == "EndProg"
                 || kw == "DataTable"
@@ -836,6 +842,36 @@ impl<'a> Parser<'a> {
         Ok(Statement::Units {
             variable,
             unit,
+            span: crate::lexer::token::Span::new(start, end),
+        })
+    }
+
+    /// Parses a `ReadOnly` statement.
+    /// Syntax: `ReadOnly VariableName [, VariableName...]`
+    ///
+    /// See `parse_alias_statement` for why each entry uses `parse_primary`.
+    fn parse_readonly_statement(&mut self) -> Result<Statement, ParseError> {
+        let readonly_token = self.advance();
+        let start = readonly_token.span.start;
+
+        let mut variables = vec![self.parse_primary()?];
+        while matches!(self.peek().kind, TokenKind::Comma) {
+            self.advance();
+            variables.push(self.parse_primary()?);
+        }
+
+        let end = variables
+            .last()
+            .expect("variables always has at least one entry")
+            .span()
+            .end;
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        Ok(Statement::ReadOnly {
+            variables,
             span: crate::lexer::token::Span::new(start, end),
         })
     }
@@ -2146,6 +2182,7 @@ impl Statement {
             Statement::SelectCase { span, .. } => *span,
             Statement::Alias { span, .. } => *span,
             Statement::Units { span, .. } => *span,
+            Statement::ReadOnly { span, .. } => *span,
         }
     }
 }
@@ -4395,6 +4432,95 @@ mod tests {
             } else {
                 panic!("Expected Units statement, got {:?}", program.statements[0]);
             }
+        }
+    }
+
+    mod readonly_statement {
+        use super::*;
+
+        #[test]
+        fn parses_readonly_of_a_single_variable() {
+            let mut scanner = Scanner::new("ReadOnly Mult");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ReadOnly { variables, .. } = &program.statements[0] {
+                assert_eq!(variables.len(), 1);
+                assert!(
+                    matches!(&variables[0], Expression::Identifier { name, .. } if name == "Mult")
+                );
+            } else {
+                panic!(
+                    "Expected ReadOnly statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_readonly_with_multiple_comma_separated_variables() {
+            let mut scanner = Scanner::new("ReadOnly Mult, Offset");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ReadOnly { variables, .. } = &program.statements[0] {
+                assert_eq!(variables.len(), 2);
+                assert!(
+                    matches!(&variables[0], Expression::Identifier { name, .. } if name == "Mult")
+                );
+                assert!(
+                    matches!(&variables[1], Expression::Identifier { name, .. } if name == "Offset")
+                );
+            } else {
+                panic!(
+                    "Expected ReadOnly statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_readonly_of_an_indexed_array_element() {
+            let mut scanner = Scanner::new("ReadOnly Cal(1)");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::ReadOnly { variables, .. } = &program.statements[0] {
+                assert_eq!(variables.len(), 1);
+                assert!(matches!(
+                    &variables[0],
+                    Expression::FunctionCall { name, arguments, .. }
+                        if name == "Cal" && arguments.len() == 1
+                ));
+            } else {
+                panic!(
+                    "Expected ReadOnly statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn readonly_does_not_swallow_the_following_statement() {
+            let mut scanner = Scanner::new("ReadOnly Mult, Offset\nDim i");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 2);
+            assert!(matches!(
+                &program.statements[1],
+                Statement::VarDeclaration { name, .. } if name == "i"
+            ));
         }
     }
 

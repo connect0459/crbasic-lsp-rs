@@ -222,6 +222,9 @@ impl HoverProvider {
                 "**As**\n\nSpecifies the data type in a variable declaration.\n\nTypes: Float, Long, String, Boolean",
             ),
             "units" => Some("**Units**\n\nSpecifies the engineering units for a variable."),
+            "readonly" => Some(
+                "**ReadOnly**\n\nMarks one or more previously declared `Public` variables as visible for monitoring but not externally editable.\n\n```crbasic\nPublic Mult, Offset\nReadOnly Mult, Offset\n```",
+            ),
             "optional" => Some(
                 "**Optional**\n\nMarks a `Function`/`Sub` parameter as optional.\n\n```crbasic\nFunction Scale(a, Optional b)\n  ...\nEndFunction\n```",
             ),
@@ -362,7 +365,9 @@ mod tests {
 
             #[test]
             fn all_declaration_keywords_have_hover_info() {
-                let keywords = ["Public", "Dim", "Const", "Alias", "As", "Units", "Optional"];
+                let keywords = [
+                    "Public", "Dim", "Const", "Alias", "As", "Units", "ReadOnly", "Optional",
+                ];
 
                 for keyword in keywords {
                     let hover = HoverProvider::get_keyword_hover(keyword);

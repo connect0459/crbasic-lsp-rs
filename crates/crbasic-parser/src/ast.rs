@@ -225,6 +225,19 @@ pub enum Statement {
         /// The source code span
         span: Span,
     },
+
+    /// `ReadOnly` statement: marks one or more previously declared `Public`
+    /// variables as visible for monitoring but not externally editable.
+    /// Syntax: `ReadOnly VariableName [, VariableName...]`
+    ///
+    /// See `Alias`'s doc comment for why entries are plain expressions
+    /// rather than a new indexed-name type.
+    ReadOnly {
+        /// The variables marked read-only, in source order
+        variables: Vec<Expression>,
+        /// The source code span
+        span: Span,
+    },
 }
 
 /// A single `Case` clause within a `Select Case` statement

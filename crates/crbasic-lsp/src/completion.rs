@@ -511,6 +511,10 @@ impl CompletionProvider {
             Self::create_keyword_completion("As", "Specify data type"),
             Self::create_keyword_completion("Units", "Specify engineering units"),
             Self::create_keyword_completion(
+                "ReadOnly",
+                "Mark a Public variable as visible but not externally editable",
+            ),
+            Self::create_keyword_completion(
                 "Optional",
                 "Mark a Function/Sub parameter as optional",
             ),

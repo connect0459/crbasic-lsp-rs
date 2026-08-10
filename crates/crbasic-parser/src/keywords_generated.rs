@@ -40,6 +40,7 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("Alias", "declaration"),
     ("As", "declaration"),
     ("Units", "declaration"),
+    ("ReadOnly", "declaration"),
     ("Optional", "declaration"),
     ("BeginProg", "program"),
     ("EndProg", "program"),
