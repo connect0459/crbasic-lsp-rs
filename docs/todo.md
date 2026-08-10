@@ -2198,6 +2198,51 @@ Not flagged as gaps (verified during the same comparison):
   the `TCDiff` fix -- only flagged when a *different* parameter is
   substituted or misdescribed)
 
+### Reference Implementation & Official Docs Comparison, Round 16 (2026-08-10)
+
+Found while extending Round 15's `signature.rs` parameter-order sweep to
+`completion.rs`'s own per-parameter snippets: `completion.rs` has 52
+functions with a real (non-generic) snippet, but only 33 of those overlap
+with `signature.rs`'s already-fully-audited set, leaving 23 functions whose
+snippets had never been checked against official syntax diagrams at all
+(`signature.rs`'s Round 15 sweep covered a different subset). Audited via
+two parallel research passes, matching Round 15's methodology. Each finding
+verified against an official source before fixing.
+
+- [x] `Therm107`/`Therm108`/`Therm109` -- missing `SettlingTime`/`Integ`
+  parameters, truncated to 6 of 8 parameters (bug) ✅ Resolved
+  - `completion.rs`'s snippets were
+    `Therm10X(Dest, Reps, SEChan, Excite, Mult, Offset)` -- 6 parameters.
+    The real, documented syntax is `Therm10X(Dest, Reps, SEChan, Excite,
+    SettlingTime, Integ, Mult, Offset)` -- 8 parameters, confirmed via
+    Campbell Scientific's Model 107/108/109 instruction manuals
+    (`s.campbellsci.com/documents/us/manuals/10{7,8,9}.pdf`) and the CR6
+    Measurement and Control System manual; no dedicated
+    help.campbellsci.com page exists for these three (confirmed 404), so
+    the PDF manuals are the authoritative source here, same as how earlier
+    rounds treated PDF-only instructions
+    - Same mislabeled/missing-parameter bug class as the already-resolved
+    `TCDiff`/`VoltDiff`/`VoltSe` `Integ`→`fN1` fixes (Rounds 14-15), but a
+    parameter *omission* rather than a rename -- silently dropping
+    `SettlingTime`/`Integ` also misplaced `Mult`/`Offset` into the wrong
+    argument positions for anyone using the snippet as a template
+  - 1 new completion test
+    (`therm10x_functions_include_settling_time_and_integration_parameters`,
+    table-driven across all three functions) added Red-first; full
+    workspace `build`/`test`/`clippy`/`fmt` gate passes
+
+Not flagged as gaps (verified during the same comparison):
+
+- The other 22 of the 23 previously-unaudited `completion.rs`-only
+  functions (`SubScan`, `Totalize`, `StdDev`, `SerialClose`, `Exp`, `Log10`,
+  `Int`, `Fix`, `Asin`, `Acos`, `Atn`, `Replace`, `Trim`, `LTrim`, `RTrim`,
+  `UpperCase`, `LowerCase`, `FormatFloat`, `RealTime`) all confirmed to
+  match their official parameter names/order/count exactly. `RealTime`
+  and `FormatFloat` got extra scrutiny (a single-parameter array-fill
+  instruction and a printf-style format string, respectively, both
+  confirmed genuinely correct as single/two-parameter shapes, not
+  under-specified)
+
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
 Found while auditing `crbasic-lsp`'s diagnostic-publishing path for
