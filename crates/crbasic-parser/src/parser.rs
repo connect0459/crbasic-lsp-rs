@@ -55,22 +55,7 @@ impl<'a> Parser<'a> {
                 continue;
             }
 
-            let stmt = self.parse_statement()?;
-
-            if let Statement::VarDeclaration { keyword, .. } = &stmt {
-                let keyword_clone = keyword.clone();
-                statements.push(stmt);
-
-                while matches!(self.peek().kind, TokenKind::Comma) {
-                    self.advance();
-
-                    let additional_var =
-                        self.parse_single_var_with_keyword(keyword_clone.clone())?;
-                    statements.push(additional_var);
-                }
-            } else {
-                statements.push(stmt);
-            }
+            self.parse_statement_into(&mut statements)?;
         }
 
         let span = if statements.is_empty() {
@@ -93,6 +78,46 @@ impl<'a> Parser<'a> {
         };
 
         Ok(Program::new(statements, span))
+    }
+
+    /// Parses one statement and appends it to `out`, expanding a
+    /// comma-separated `Public`/`Dim` declaration list (e.g. `Dim a, b, c`)
+    /// into multiple `VarDeclaration` statements. Used by every
+    /// statement-list-parsing loop -- the top-level program body and every
+    /// block body (`If`, `For`, `Do`, `Function`, `Sub`, `Select Case`,
+    /// `#If`) -- since CRBasic allows this comma-list form inside nested
+    /// blocks too, not just at the top level.
+    ///
+    /// `Const` does not support this form: per Campbell Scientific's own
+    /// docs, "CRBasic does not allow multiple constants to be defined with
+    /// one declaration," so a comma following a `Const` declaration is a
+    /// parse error here instead of silently expanding into a second
+    /// constant.
+    fn parse_statement_into(&mut self, out: &mut Vec<Statement>) -> Result<(), ParseError> {
+        let stmt = self.parse_statement()?;
+
+        if let Statement::VarDeclaration { keyword, .. } = &stmt {
+            let keyword_clone = keyword.clone();
+            out.push(stmt);
+
+            while matches!(self.peek().kind, TokenKind::Comma) {
+                if keyword_clone == "Const" {
+                    return Err(ParseError {
+                        message: "Const does not support multiple declarations in a single statement; use a separate Const declaration for each constant".to_string(),
+                        span: self.peek().span,
+                    });
+                }
+
+                self.advance();
+
+                let additional_var = self.parse_single_var_with_keyword(keyword_clone.clone())?;
+                out.push(additional_var);
+            }
+        } else {
+            out.push(stmt);
+        }
+
+        Ok(())
     }
 
     /// Parses a single statement
@@ -1125,7 +1150,7 @@ impl<'a> Parser<'a> {
                 while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndSelect")
                     && !self.is_at_end()
                 {
-                    stmts.push(self.parse_statement()?);
+                    self.parse_statement_into(&mut stmts)?;
                     self.skip_whitespace_and_comments();
                 }
 
@@ -1150,7 +1175,7 @@ impl<'a> Parser<'a> {
                 TokenKind::Keyword(kw) if kw == "Case" || kw == "EndSelect"
             ) && !self.is_at_end()
             {
-                body.push(self.parse_statement()?);
+                self.parse_statement_into(&mut body)?;
                 self.skip_whitespace_and_comments();
             }
 
@@ -1301,7 +1326,7 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(kw) if kw == "Else" || kw == "ElseIf" || kw == "EndIf"
         ) && !self.is_at_end()
         {
-            then_branch.push(self.parse_statement()?);
+            self.parse_statement_into(&mut then_branch)?;
             self.skip_whitespace_and_comments();
         }
 
@@ -1328,7 +1353,7 @@ impl<'a> Parser<'a> {
             while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndIf")
                 && !self.is_at_end()
             {
-                else_stmts.push(self.parse_statement()?);
+                self.parse_statement_into(&mut else_stmts)?;
                 self.skip_whitespace_and_comments();
             }
 
@@ -1343,11 +1368,12 @@ impl<'a> Parser<'a> {
     /// Parses one or more statements separated by `:` on a single line,
     /// stopping as soon as a statement isn't followed by another `:`.
     fn parse_colon_separated_statements(&mut self) -> Result<Vec<Statement>, ParseError> {
-        let mut statements = vec![self.parse_statement()?];
+        let mut statements = Vec::new();
+        self.parse_statement_into(&mut statements)?;
 
         while matches!(self.peek().kind, TokenKind::Colon) {
             self.advance();
-            statements.push(self.parse_statement()?);
+            self.parse_statement_into(&mut statements)?;
         }
 
         Ok(statements)
@@ -1467,7 +1493,7 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(kw) if kw == "#Else" || kw == "#ElseIf" || kw == "#EndIf"
         ) && !self.is_at_end()
         {
-            then_branch.push(self.parse_statement()?);
+            self.parse_statement_into(&mut then_branch)?;
             self.skip_whitespace_and_comments();
         }
 
@@ -1495,7 +1521,7 @@ impl<'a> Parser<'a> {
             while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "#EndIf")
                 && !self.is_at_end()
             {
-                else_stmts.push(self.parse_statement()?);
+                self.parse_statement_into(&mut else_stmts)?;
                 self.skip_whitespace_and_comments();
             }
 
@@ -1563,7 +1589,7 @@ impl<'a> Parser<'a> {
         while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Next")
             && !self.is_at_end()
         {
-            body.push(self.parse_statement()?);
+            self.parse_statement_into(&mut body)?;
             self.skip_whitespace_and_comments();
         }
 
@@ -1638,7 +1664,7 @@ impl<'a> Parser<'a> {
         while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Loop")
             && !self.is_at_end()
         {
-            body.push(self.parse_statement()?);
+            self.parse_statement_into(&mut body)?;
             self.skip_whitespace_and_comments();
         }
 
@@ -1707,7 +1733,7 @@ impl<'a> Parser<'a> {
         while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Wend")
             && !self.is_at_end()
         {
-            body.push(self.parse_statement()?);
+            self.parse_statement_into(&mut body)?;
             self.skip_whitespace_and_comments();
         }
 
@@ -1801,7 +1827,7 @@ impl<'a> Parser<'a> {
         while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndFunction")
             && !self.is_at_end()
         {
-            body.push(self.parse_statement()?);
+            self.parse_statement_into(&mut body)?;
             self.skip_whitespace_and_comments();
         }
 
@@ -1895,7 +1921,7 @@ impl<'a> Parser<'a> {
         while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndSub")
             && !self.is_at_end()
         {
-            body.push(self.parse_statement()?);
+            self.parse_statement_into(&mut body)?;
             self.skip_whitespace_and_comments();
         }
 
@@ -4609,6 +4635,111 @@ mod tests {
                     "Expected variable declaration, got {:?}",
                     program.statements[0]
                 );
+            }
+        }
+
+        #[test]
+        fn const_with_a_second_comma_separated_constant_is_a_parse_error() {
+            let mut scanner = Scanner::new("Const A = 1, B = 2");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let result = parser.parse();
+            assert!(
+                result.is_err(),
+                "CRBasic does not allow multiple constants in one Const declaration"
+            );
+        }
+
+        #[test]
+        fn parses_multiple_variable_declarations_with_comma_inside_a_function_body() {
+            let source = "Function Scale()\n  Dim a, b\n  Scale = a\nEndFunction".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::FunctionDefinition { body, .. } = &program.statements[0] {
+                assert_eq!(
+                    body.len(),
+                    3,
+                    "Dim a, b should expand into two separate declarations plus the assignment"
+                );
+                assert!(matches!(
+                    &body[0],
+                    Statement::VarDeclaration { name, .. } if name == "a"
+                ));
+                assert!(matches!(
+                    &body[1],
+                    Statement::VarDeclaration { name, .. } if name == "b"
+                ));
+            } else {
+                panic!("Expected function definition");
+            }
+        }
+
+        #[test]
+        fn parses_multiple_variable_declarations_with_comma_inside_a_sub_body() {
+            let source = "Sub Configure()\n  Dim x, y, z\nEndSub".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::SubroutineDefinition { body, .. } = &program.statements[0] {
+                assert_eq!(body.len(), 3);
+            } else {
+                panic!("Expected subroutine definition");
+            }
+        }
+
+        #[test]
+        fn parses_multiple_variable_declarations_with_comma_inside_an_if_block() {
+            let source = "If x = 1 Then\n  Dim a, b\nEndIf".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::IfStatement { then_branch, .. } = &program.statements[0] {
+                assert_eq!(then_branch.len(), 2);
+            } else {
+                panic!("Expected if statement");
+            }
+        }
+
+        #[test]
+        fn parses_multiple_variable_declarations_with_comma_inside_a_for_loop() {
+            let source = "For i = 1 To 10\n  Dim a, b\nNext".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::ForLoop { body, .. } = &program.statements[0] {
+                assert_eq!(body.len(), 2);
+            } else {
+                panic!("Expected for loop");
+            }
+        }
+
+        #[test]
+        fn parses_multiple_variable_declarations_with_comma_inside_a_do_loop() {
+            let source = "Do\n  Dim a, b\nLoop".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::DoLoop { body, .. } = &program.statements[0] {
+                assert_eq!(body.len(), 2);
+            } else {
+                panic!("Expected do loop");
             }
         }
     }
