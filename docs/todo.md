@@ -81,10 +81,13 @@
   - [x] Expression arguments: `Max(1 + 2, 5)`
   - [x] Nested function calls: `Avg(Max(1, 2), 3)`
 - [x] Array access
-  - [x] Simple array access: `Data[0]`
-  - [x] Variable index: `Temp_C[i]`
-  - [x] Expression index: `Data[i + 1]`
-  - [x] Multi-dimensional: `Matrix[1][2]`
+  - [x] Simple array access: `Data(0)`
+  - [x] Variable index: `Temp_C(i)`
+  - [x] Expression index: `Data(i + 1)`
+  - [x] Multi-dimensional: `Matrix(1, 2)`
+  - Originally implemented with a fabricated `Data[0]` bracket syntax; see
+    Round 12 (Reference Implementation & Official Docs Comparison) below
+    for the real-syntax fix
 
 ### Statement Parsing
 
@@ -100,7 +103,7 @@
 - [x] Assignment statements
   - [x] Simple assignment (`x = 5`)
   - [x] Assignment with expressions (`x = 1 + 2`)
-  - [x] Assignment to array elements (`Data[0] = 5`, `Matrix[1][2] = 100`)
+  - [x] Assignment to array elements (`Data(0) = 5`, `Matrix(1, 2) = 100`)
 - [x] Function call statements
   - [x] Function calls with no arguments (`TimeIntoInterval()`)
   - [x] Function calls with arguments (`Scan(1, Temp_C, 0)`)
@@ -1807,6 +1810,144 @@ Not flagged as gaps (verified during the same comparison):
   extension-based detection alone, since the file extension carries no OS
   version -- an inherent limitation of this project's detection strategy,
   not a bug to fix
+
+### Reference Implementation & Official Docs Comparison, Round 12 (2026-08-10)
+
+Found during a twelfth comparison round. Rounds 1-11 had exhausted
+keyword/operator diffing against the two reference grammars, so this round
+instead targeted fresh angles: numeric/string literal edge cases, an
+AST-consumer walk for LSP-layer behavior (not language-grammar gaps), and a
+full fabrication audit of a foundational syntax assumption never
+re-examined since Phase 3. Each finding verified against an official
+help.campbellsci.com page and a real parse repro before fixing.
+
+- [x] Array element access used a fabricated `Data[0]` bracket syntax --
+  the real CRBasic syntax is `Data(0)`, and the real syntax's *write* form
+  was unparseable (bug) ✅ Resolved
+  - This project's parser has used `[index]` bracket syntax for array
+    access since Phase 3 (the very first parser implementation), never
+    checked against an official source. Confirmed via multiple independent
+    help.campbellsci.com pages
+    ([Dim](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/dim.htm):
+    `"DimArray3D(1,2,3) = count"`; [Arrays and Indexes into
+    Arrays](https://help.campbellsci.com/crbasic/cr6/Content/Info/arraysandindexintoarrays.htm))
+    plus a web search corroborating "the () pair must always be present" --
+    CRBasic has no bracket array syntax at all, only `Name(index)`, the
+    same syntax used for calls. Neither `docs/researches/` nor any ADR ever
+    stated a rationale for the bracket choice
+  - Real impact, not just a cosmetic mismatch: since `Name(args)` was
+    already parsed uniformly as `Expression::FunctionCall` (accepted
+    design, see Round 5's `StructureType` entry), array element *reads*
+    already worked by accident through that path. But the real *write*
+    form, `Data(0) = 5`, was never recognized by the assignment-target
+    fast path (which only checked for `[`) -- confirmed via repro: it fell
+    through to the generic expression parser and silently became an inert
+    whole-statement *comparison* (`=` read as the comparison operator)
+    instead of an assignment, the same silent-corruption bug class as
+    `Next i`/`ContinueScan`/`Include` in earlier rounds. Real-world CRBasic
+    programs assigning to array elements -- an extremely common
+    operation -- were silently mishandled by this LSP
+  - The same fast path also never recognized a `StructureType` member
+    target (`CS215.Temp = 25`, deferred as a "read-only" scope decision in
+    Round 5): confirmed via repro to hit the identical silent
+    comparison-misparse, not merely "unsupported" as Round 5 believed
+  - Fixed by factoring the postfix-chain parsing (call/array-index parens,
+    member-access dots) shared by `parse_primary` and the
+    assignment-target detector into one `parse_postfix_chain` helper, then
+    deriving the assignment target from the parsed expression via a new
+    `expression_to_assignment_target` instead of hand-rolling
+    bracket-specific lookahead. Added `AssignmentTarget::Member` alongside
+    the existing `Identifier`/`ArrayElement` variants
+  - Removed the `[`/`]` lexer tokens and the now-unreachable
+    `Expression::ArrayAccess` AST variant, since nothing produces or needs
+    them once array reads and writes both go through the same `Name(args)`
+    shape real CRBasic uses -- confirmed with the user before removing,
+    since this is a foundational syntax change (matches the bar set by
+    Round 11's `GRANITE` enum removal and Round 2's fabricated-keyword
+    removals)
+  - Blast radius was smaller than the fabrication's age suggested: bracket
+    syntax appeared in exactly 10 test fixtures (all in
+    `crbasic-parser`'s own lexer/parser test suite) and nowhere in
+    `docs/sample-codes/`, `docs/examples/`, or any LSP-provider matching
+    logic (those match on AST shape or token names, not source syntax) --
+    rewritten to the real paren syntax rather than removed, since they
+    remain valid coverage of array parsing
+  - 4 new parser tests (`array_element_assignment_is_not_misparsed_as_a_comparison`,
+    3 tests in a new `member_assignment_statements` module) + 1 rewritten
+    lexer test (`tokenizes_array_element_assignment`, replacing
+    `tokenizes_array_access`) added Red-first; full workspace
+    `build`/`test`/`clippy`/`fmt` gate passes (llvm-cov: 92.89% line /
+    98.05% function, no regression from the 80%/90% gate)
+- [x] Unterminated string literals swallowed every following line up to
+  the next stray `"` or EOF (bug) ✅ Resolved
+  - `scan_string` had no line boundary, only `"` or EOF. Confirmed via
+    repro: a forgotten closing quote (e.g. a mistyped Windows path) caused
+    every subsequent source line -- including real code -- to be silently
+    absorbed into the string's value up to wherever the next `"` happened
+    to appear, corrupting the program far past the actual typo. No
+    official docs page addresses this (malformed-input handling isn't a
+    language-spec question), but CRBasic string literals are single-line
+    by every example seen across all 12 rounds, so stopping at `\n` matches
+    how virtually every BASIC dialect treats string literals
+  - Fixed by stopping `scan_string` at `\n` the same way it already stops
+    at `"` or EOF
+  - 1 new lexer test
+    (`unterminated_string_does_not_swallow_the_rest_of_the_file`) added
+    Red-first
+
+Not flagged as gaps (verified during the same comparison):
+
+- Leading-dot (`.5`) and trailing-dot (`5.`) float literals are hard parse
+  errors today (`scan_number` requires a digit before the dot, and a digit
+  after it). One reference grammar's regex
+  (`([0-9]+\.?[0-9]*)|(\.[0-9]+)`) would accept both forms, but no official
+  help.campbellsci.com page was found describing numeric-literal grammar
+  precisely enough to confirm or deny either form -- doesn't clear this
+  project's own repro-plus-official-docs corroboration bar (the same bar
+  Round 11 used to keep `Eqv`/`IntDv` dismissed). Left unaddressed rather
+  than loosening the bar
+- `Parser::parse()` has no error recovery: the first `ParseError` anywhere
+  in a document aborts the entire parse, so `Document::analyze()` never
+  sets `doc.ast`, and every AST-dependent LSP feature (document symbols,
+  semantic tokens, folding, code lens, inlay hints, go-to-definition,
+  find-references, rename, call hierarchy, and the user-defined-symbol
+  portion of completion) goes dark for the *whole file* until that one
+  syntax error is fixed -- only token-based features (keyword hover,
+  TextMate highlighting) keep working. This is an LSP-layer UX question
+  (many LSPs behave this way pre-1.0), not a CRBasic-language gap, and a
+  real fix (statement-level synchronize/panic-mode recovery collecting
+  multiple independent `ParseError`s per file) is a larger, deliberate
+  design change rather than a same-class bug fix -- left unaddressed here,
+  flagged for a future round to decide as its own scoped piece of work
+- `&O` octal literal prefix: no official docs page found, and neither
+  reference grammar's `constant.numeric` regex includes an octal
+  alternative (only `&H`/`&B`) -- reconfirms Round 7's original dismissal
+- `&H`/`&B` edge cases (invalid digit after the prefix, numeric overflow):
+  read `parse_integer_literal` and the scanner's `&` handling -- both
+  already handled correctly (invalid digit falls back to plain
+  concatenation by design; overflow is a clean `ParseError`, not a panic)
+- Colon-separated (`:`) multi-statement lines inside every block type
+  added since Round 2's original fix (`StructureType` member lists,
+  `ConstTable`, `ApplyAndRestartSequence`, `ShutDownBegin`/`End`,
+  `DisplayMenu`, `DataTable` body): repro-verified across all of these --
+  already works correctly everywhere via the shared
+  `skip_whitespace_and_comments` helper
+- `DataTable`-body sibling instructions `Resolution`, `Format`, `Trigger`,
+  `WaitAll` are not documented instructions at all (`Trigger` is a
+  *parameter* of `DataTable(...)` itself, not a body keyword);
+  `FieldNames` is real, function-shaped, and already registered and
+  parses correctly
+- Full re-diff of both reference repos' keyword lists against
+  `keywords.json`, including punctuation/case-mangled slip-throughs
+  (`#`-prefixed, dotted names): every remaining unmatched token is
+  TextMate scope-name/JSON-structural noise, not a CRBasic keyword
+- `hover.rs`/`completion.rs` prose spot-checked against official Data
+  Types and `INT, FIX` pages (Boolean = -1/0, Long = 32-bit signed, `Int`
+  truncates toward -∞ vs. `Fix` toward 0, etc.): all accurate. A full
+  line-by-line sweep of all ~90 hover descriptions and ~120 completion
+  doc-strings (e.g. verifying every built-in function's documented
+  parameter *order*) was time-boxed out rather than padding this round --
+  flagged for a future round
 
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
