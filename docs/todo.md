@@ -1203,6 +1203,88 @@ Not flagged as gaps (verified during the same comparison):
   regex -- still no official-docs corroboration (Round 3's bar), looks
   like a VB6-list/regex-escaping artifact; correctly left dismissed.
 
+### Reference Implementation & Official Docs Comparison, Round 6 (2026-08-10)
+
+Found during a sixth comparison round, this time driven by a fresh
+full-text grep of both reference grammars' keyword lists against
+`keywords.json` (rather than spot-checking specific instructions), plus a
+re-read of `docs/researches/`. Each finding verified against an official
+help.campbellsci.com page and a real parse repro before fixing.
+
+- [x] `ExitScan` miscategorized as a `builtinFunctions` entry instead of a
+  `languageKeywords` one (bug) ✅ Resolved
+  - Same "silently corrupted statement list" bug class as the
+    already-resolved `ContinueScan`/`WaitTriggerSequence`/`DebugBreak`
+    gaps. `ExitScan` *was* present in `keywords.json`, but filed under
+    `builtinFunctions` (category `time`); since the lexer's
+    `lookup_keyword` only checks `LANGUAGE_KEYWORDS`, it lexed as a plain
+    `Identifier` and parsed as an inert expression statement instead of a
+    real scan-exit. Confirmed real and bare (no parens) at
+    [Scan, NextScan](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/scannextscan.htm),
+    the same page already cited for `ContinueScan`.
+  - Moved to `languageKeywords` (category `scan`, alongside `NextScan`/
+    `ContinueScan`); its pre-existing `builtinFunctions`-style completion
+    item replaced with a keyword-style one; added to the parser's bare
+    program-structure keyword list
+  - 1 new parser test (`parses_exitscan_inside_scan_loop`) added Red-first
+- [x] `SequentialMode`/`PipeLineMode` bare keywords -- entirely
+  unregistered, same silent-corruption bug class ✅ Resolved
+  - Confirmed real, bare (no parens), placed before `BeginProg`, at
+    [SequentialMode, PipeLineMode](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/sequentialmodepipeli2.htm).
+    Present in both reference grammars; zero coverage anywhere in this
+    project before this fix
+  - Added to `languageKeywords` (category `program`, alongside
+    `BeginProg`/`EndProg`), the parser's bare program-structure keyword
+    list, and matching completion/hover entries
+  - 2 new parser tests (`parses_sequentialmode_before_beginprog`,
+    `parses_pipelinemode_before_beginprog`) added Red-first
+- [x] `DisplayMenu`/`SubMenu`'s bare closing keywords `EndMenu`/
+  `EndSubMenu` -- entirely unregistered, same silent-corruption bug class
+  ✅ Resolved
+  - Confirmed at
+    [DisplayMenu, EndMenu](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/displaymenuendmenu.htm):
+    a custom keypad/display menu block, closed by a bare `EndMenu`, with
+    nestable `SubMenu("Name")`/bare `EndSubMenu` blocks inside. Present in
+    both reference grammars' keyword lists
+  - `DisplayMenu(...)`/`SubMenu(...)` themselves already parse correctly
+    today as ordinary `FunctionCall` statements (parenthesized-call shape
+    needs no special grammar), but `EndMenu`/`EndSubMenu` lexed as plain
+    identifiers and parsed as inert expression statements, corrupting the
+    block structure
+  - Added `EndMenu`/`EndSubMenu` to `languageKeywords` (new `menu`
+    category) and the parser's bare program-structure keyword list;
+    `generate-grammar.js` gained a matching `keyword.control.menu.crbasic`
+    scope block (the Round 5 `StructureType` lesson: a new category needs
+    an explicit codegen scope or it silently drops from the generated
+    TextMate grammar)
+  - `folding.rs` pairs `DisplayMenu`/`EndMenu` and `SubMenu`/`EndSubMenu`
+    the same way it already pairs `Scan`/`NextScan` and `SubScan`/
+    `NextSubScan`, keyed off the `FunctionCall` statement's name for the
+    openers; `client/language-configuration.json`'s indentation and
+    `folding.markers` regexes extended to match, with matching Vitest
+    cases
+  - Deliberately did **not** register `DisplayMenu`/`SubMenu` themselves in
+    `keywords.json`: they already parse correctly, and adding
+    completion/hover/highlighting parity for them is separate content
+    work in the same already-deferred tier as the ~126-vs-~420
+    `builtinFunctions` backlog (Round 2)
+  - 2 new parser tests (`parses_endmenu_closing_a_display_menu_block`,
+    `parses_endsubmenu_nested_inside_display_menu`) + 2 new folding tests
+    - 16 new Vitest cases (indentation + folding.markers) added Red-first
+
+Not flagged as gaps (verified during the same comparison):
+
+- Full re-diff of both `syntaxes/*.tmLanguage.json` files' keyword lists
+  against `keywords.json` turned up nothing else uncovered; the
+  `Eqv`/`IntDv`/stray-`|` operator artifacts remain uncorroborated by
+  official docs, consistent with Rounds 1-3
+- `docs/researches/research-001-crbasic-for-vscode.md` re-read in full:
+  its line-continuation, scope, and Function/Sub copy-back-semantics
+  sections are all either already implemented or LSP-doc/hover content,
+  not parser gaps
+- `crbasic-vscode-support/snippets/crbasic.json` (exhaustively checked in
+  Round 5) and `src/extension.js` (dismissed in Round 1) had nothing new
+
 ### Packaging Gap (discovered while designing the release workflow)
 
 - [x] Multi-platform `.vsix` packaging ✅ Resolved
