@@ -313,6 +313,9 @@ impl HoverProvider {
             "preservevariables" => Some(
                 "**PreserveVariables**\n\nRetains the values of all `Dim`/`Public` variables in memory across a power loss. Placed before `BeginProg`.",
             ),
+            "angledegrees" => Some(
+                "**AngleDegrees**\n\nSwitches `ATN`/`ATN2`/`ACOS`/`ASIN`/`RectPolar` to return degrees (instead of radians) and `COS`/`TAN`/`SIN` to interpret their arguments as degrees. Placed before `BeginProg`.",
+            ),
             "applyandrestartsequence" => Some(
                 "**ApplyAndRestartSequence**\n\nRuns arbitrary code when the `ConstTable` it follows has its `ApplyAndRestart` setting externally set (e.g. via `SetSetting`), typically to validate the table's new constant values before triggering the restart itself. Declared after the `ConstTable` it applies to, both before `BeginProg`.\n\n```crbasic\nConstTable(TableName, Hidden)\n  Const A = 1\nEndConstTable\nApplyAndRestartSequence\n  ' validation code\n  SetSetting(\"TableName.ApplyAndRestart\", 1)\nEndApplyAndRestartSequence\n```",
             ),
@@ -508,6 +511,7 @@ mod tests {
                     "StructureType",
                     "EndStructureType",
                     "PreserveVariables",
+                    "AngleDegrees",
                     "ApplyAndRestartSequence",
                     "EndApplyAndRestartSequence",
                     "ShutDownBegin",

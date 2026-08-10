@@ -109,7 +109,7 @@
       "patterns": [
         {
           "name": "keyword.control.program.crbasic",
-          "match": "(?i)\\b(BeginProg|EndProg|SequentialMode|PipeLineMode|PreserveVariables|ApplyAndRestartSequence|EndApplyAndRestartSequence|ShutDownBegin|ShutDownEnd)\\b"
+          "match": "(?i)\\b(BeginProg|EndProg|SequentialMode|PipeLineMode|PreserveVariables|AngleDegrees|ApplyAndRestartSequence|EndApplyAndRestartSequence|ShutDownBegin|ShutDownEnd)\\b"
         },
         {
           "name": "keyword.control.datatable.crbasic",
@@ -139,25 +139,25 @@
     },
     "builtin-functions-measurement": {
       "name": "support.function.measurement.crbasic",
-      "match": "(?i)\\b(Battery|PanelTemp|VoltSe|VoltDiff|BrHalf|BrFull|Therm107|Therm108|Therm109|TCDiff|Resistance|PeriodAvg|PulseCount|FreqCount|Thermocouple|PortSet|PulsePort|ExciteV|BrHalf3W|BrHalf4W|BrFull6W|TCSE)\\b"
+      "match": "(?i)\\b(Battery|PanelTemp|VoltSe|VoltDiff|BrHalf|BrFull|Therm107|Therm108|Therm109|TCDiff|Resistance|PeriodAvg|PulseCount|PortSet|PulsePort|ExciteV|BrHalf3W|BrHalf4W|BrFull6W|TCSE)\\b"
     },
     "builtin-functions-communication": {
       "name": "support.function.communication.crbasic",
-      "match": "(?i)\\b(SerialOpen|SerialClose|SerialIn|SerialOut|SerialInRecord|SerialOutBlock|SerialFlush|ModbusMaster|SDI12Recorder|TCPOpen|TCPClose|UDPOpen|UDPClose|EmailRelay|PPPOpen|PPPClose|FTPClient|HTTPGet|HTTPPost|HTTPPut)\\b"
+      "match": "(?i)\\b(SerialOpen|SerialClose|SerialIn|SerialOut|SerialInRecord|SerialOutBlock|SerialFlush|ModbusMaster|SDI12Recorder|TCPOpen|TCPClose|UDPOpen|UDPSocketOpen|UDPSocketSend|UDPSocketRecv|UDPSocketClose|EmailRelay|PPPOpen|PPPClose|FTPClient|HTTPGet|HTTPPost|HTTPPut)\\b"
     },
     "builtin-functions-data": {
       "name": "support.function.data.crbasic",
-      "match": "(?i)\\b(Sample|Average|StdDev|Variance|Minimum|Maximum|Totalize|WindVector|Histogram|FieldNames|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval)\\b"
+      "match": "(?i)\\b(Sample|Average|StdDev|Minimum|Maximum|Totalize|WindVector|Histogram|FieldNames|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval)\\b"
     },
     "builtin-functions-general": {
       "patterns": [
         {
           "name": "support.function.string.crbasic",
-          "match": "(?i)\\b(SplitStr|FormatFloat|FormatLong|Mid|Left|Right|Len|InStr|LowerCase|UpperCase|Trim|RTrim|LTrim|Replace|Chr|Asc|StrComp|CheckSum|HexToDec|DecToHex)\\b"
+          "match": "(?i)\\b(SplitStr|FormatFloat|FormatLong|Mid|Left|Right|Len|InStr|LowerCase|UpperCase|Trim|RTrim|LTrim|Replace|Chr|ASCII|StrComp|CheckSum|HexToDec|Hex|Sprintf)\\b"
         },
         {
           "name": "support.function.math.crbasic",
-          "match": "(?i)\\b(Abs|Sgn|Sqr|Exp|Ln|Log|Log10|Sin|Cos|Tan|Asin|Acos|Atn|Atn2|Int|Fix|Round|Rnd|Ceiling|Floor)\\b"
+          "match": "(?i)\\b(Abs|Sgn|Sqr|Exp|Ln|Log|Log10|Sin|Cos|Tan|Sinh|Cosh|Tanh|Asin|Acos|Atn|Atn2|Int|Fix|Frac|Round|Rnd|Ceiling|Floor)\\b"
         },
         {
           "name": "support.function.time.crbasic",

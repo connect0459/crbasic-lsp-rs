@@ -582,6 +582,10 @@ impl CompletionProvider {
                 "PreserveVariables",
                 "Retains Dim/Public variable values in memory across a power loss; placed before BeginProg",
             ),
+            Self::create_keyword_completion(
+                "AngleDegrees",
+                "Switches trig functions to use degrees instead of radians; placed before BeginProg",
+            ),
             Self::create_keyword_snippet(
                 "ApplyAndRestartSequence",
                 "ApplyAndRestartSequence\n\t$0\nEndApplyAndRestartSequence",

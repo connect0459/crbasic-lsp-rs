@@ -239,6 +239,7 @@ impl<'a> Parser<'a> {
                 || kw == "SequentialMode"
                 || kw == "PipeLineMode"
                 || kw == "PreserveVariables"
+                || kw == "AngleDegrees"
                 || kw == "ApplyAndRestartSequence"
                 || kw == "EndApplyAndRestartSequence"
                 || kw == "ShutDownBegin"
@@ -7016,6 +7017,21 @@ mod tests {
             assert!(matches!(
                 &program.statements[0],
                 Statement::ProgramStructure { keyword, .. } if keyword == "PreserveVariables"
+            ));
+        }
+
+        #[test]
+        fn parses_angledegrees_before_beginprog() {
+            let source = "AngleDegrees\nBeginProg\nEndProg".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::ProgramStructure { keyword, .. } if keyword == "AngleDegrees"
             ));
         }
 
