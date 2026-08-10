@@ -544,6 +544,10 @@ impl CompletionProvider {
                 "PipeLineMode",
                 "Forces the datalogger to run in pipeline execution mode; placed before BeginProg",
             ),
+            Self::create_keyword_completion(
+                "PreserveVariables",
+                "Retains Dim/Public variable values in memory across a power loss; placed before BeginProg",
+            ),
             Self::create_keyword_snippet(
                 "DataTable",
                 "DataTable(${1:TableName}, ${2:TriggerCondition}, ${3:Size})\n\t$0\nEndTable",

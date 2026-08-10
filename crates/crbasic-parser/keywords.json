@@ -47,6 +47,7 @@
     { "name": "EndProg", "category": "program" },
     { "name": "SequentialMode", "category": "program" },
     { "name": "PipeLineMode", "category": "program" },
+    { "name": "PreserveVariables", "category": "program" },
     { "name": "DataTable", "category": "datatable" },
     { "name": "EndTable", "category": "datatable" },
     { "name": "ConstTable", "category": "consttable" },

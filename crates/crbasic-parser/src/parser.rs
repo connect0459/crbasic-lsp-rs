@@ -180,6 +180,7 @@ impl<'a> Parser<'a> {
                 || kw == "EndProg"
                 || kw == "SequentialMode"
                 || kw == "PipeLineMode"
+                || kw == "PreserveVariables"
                 || kw == "DataTable"
                 || kw == "EndTable"
                 || kw == "ConstTable"
@@ -6437,6 +6438,21 @@ mod tests {
             assert!(matches!(
                 &program.statements[0],
                 Statement::ProgramStructure { keyword, .. } if keyword == "PipeLineMode"
+            ));
+        }
+
+        #[test]
+        fn parses_preservevariables_before_beginprog() {
+            let source = "PreserveVariables\nBeginProg\nEndProg".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::ProgramStructure { keyword, .. } if keyword == "PreserveVariables"
             ));
         }
 

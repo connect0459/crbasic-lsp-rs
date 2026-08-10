@@ -255,6 +255,9 @@ impl HoverProvider {
             "pipelinemode" => Some(
                 "**PipeLineMode**\n\nForces the datalogger to run in pipeline execution mode. Placed before `BeginProg`.",
             ),
+            "preservevariables" => Some(
+                "**PreserveVariables**\n\nRetains the values of all `Dim`/`Public` variables in memory across a power loss. Placed before `BeginProg`.",
+            ),
             "datatable" => Some(
                 "**DataTable**\n\nDefines a data table for storing measurements.\n\n```crbasic\nDataTable(TableName, TriggerCondition, Size)\n  ' output instructions\nEndTable\n```",
             ),
@@ -421,6 +424,7 @@ mod tests {
                     "EndConstTable",
                     "StructureType",
                     "EndStructureType",
+                    "PreserveVariables",
                 ];
 
                 for keyword in keywords {
