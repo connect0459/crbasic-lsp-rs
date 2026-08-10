@@ -2719,6 +2719,77 @@ Not flagged as gaps (verified during the same audit):
   AST, confirmed by reading each file rather than assumed from the grep
   count alone
 
+### Semantic Rule Coverage Audit, Round 22 (2026-08-10)
+
+Found during a twenty-second round, this time targeting an angle the
+twenty-one rounds above never covered: not keyword/grammar diffing or
+AST-variant-vs-consumer wiring, but whether `semantic.rs`'s *rule content*
+itself is missing a documented, compile-time-enforced CRBasic rule. Checked
+by reading `semantic.rs` in full against Campbell Scientific's own docs for
+each declaration keyword it already partially handles.
+
+- [x] `Const` reassignment (`PI = 99` after `Const PI = 3.14`) never
+  diagnosed as an error (bug) ✅ Resolved
+  - Campbell Scientific's own
+    [`Const` page](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/const1.htm)
+    states outright: "Unlike variables, constants cannot be changed while
+    the program is running." `semantic.rs` tracked `Public`-vs-`Dim` scope
+    per declaration but discarded the `Const` keyword itself immediately
+    after computing scope, and `analyze_statement` had no match arm for
+    `Statement::Assignment` at all (it fell into the catch-all `_ => {}`),
+    so an assignment was never checked against the symbol table at all.
+    Confirmed via a real parse-and-analyze repro (a throwaway Cargo crate
+    outside the repo) before fixing: `analyze()` returned `errors: []` for
+    a program containing `Const PI = 3.14` followed by `PI = 99`
+  - Added `is_const: bool` to `Symbol`, set from `keyword == "Const"` in
+    `analyze_variable_declaration` (previously the keyword was used once,
+    inline, only to compute `scope`, then dropped); added a new
+    `SemanticErrorKind::ConstReassignment { variable_name, declared_at }`
+    variant and a `Statement::Assignment` arm in `analyze_statement`
+    calling a new `check_const_reassignment` helper. Only
+    `AssignmentTarget::Identifier` is checked -- `Const` declarations are
+    always scalar per the same docs page, so `ArrayElement`/`Member`
+    targets can never refer to one
+  - Rust's exhaustiveness checking surfaced the one consumer that matches
+    on `SemanticErrorKind` outside `semantic.rs`:
+    `backend.rs::code_action_data`, which now returns `(None, None)` for
+    `ConstReassignment` (like the existing `TruncationCollision` arm) --
+    reassigning a `Const` has no mechanical quick fix
+  - 3 new `semantic.rs` tests (`reassigning_a_const_variable_is_a_semantic_error`,
+    `assigning_to_a_public_variable_is_not_a_semantic_error`,
+    `assigning_to_an_undeclared_identifier_is_not_flagged_here`) + 1 new
+    `backend.rs` test (`omits_quick_fix_data_for_const_reassignment`) added
+    Red-first; full workspace `build`/`test`/`clippy`/`fmt`/`coverage` gate
+    passes (93.18% line / 97.98% function, both clear of the 80%/90%
+    targets). Re-ran the full `cargo test --workspace` suite (including
+    `docs/examples/`'s `01-getting-started.CR6` and
+    `docs/sample-codes/sample-complex-realworld.CR6`, both of which declare
+    `Const`s) to confirm no false positives against real `Const` usage that
+    never gets reassigned
+
+Not flagged as a gap (investigated during the same audit, corroboration too
+weak to act on yet):
+
+- Redeclaring a variable name (`Dim X As Float` followed by `Dim X As
+  Long`, or `Const X = 1` followed by `Dim X As Long`) is also silently
+  accepted -- `self.symbols.insert(...)` is a plain `HashMap::insert` that
+  overwrites on a repeated name, with no prior-declaration check at all.
+  Unlike the `Const`-reassignment gap above, no Campbell Scientific docs
+  page was found stating outright that redeclaration is a compile error (a
+  general web search surfaced only generic BASIC-family reasoning, not a
+  help.campbellsci.com citation). It is suggestively corroborated by this
+  project's own Preprocessor Directive Support entry above (`#UnDef`
+  exists specifically to legally *un-declare* a `Const` so it can be
+  redeclared, which only makes sense if redeclaring it unconditionally is
+  normally illegal) but implementing it also risks reintroducing exactly
+  the false-positive that entry deliberately designed around: `#If`/`#Else`
+  branches are both always walked unconditionally (conditions are never
+  evaluated), so the official docs' own idiom of declaring the *same*
+  `Const` name differently in two mutually-exclusive branches would need
+  branch-exclusivity tracking to avoid a false "duplicate declaration"
+  diagnostic -- meaningfully more design work than a mechanical check,
+  deferred rather than rushed
+
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
 Found while auditing `crbasic-lsp`'s diagnostic-publishing path for
