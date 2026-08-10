@@ -110,10 +110,6 @@ pub enum TokenKind<'a> {
     LeftParen,
     /// Right parenthesis )
     RightParen,
-    /// Left bracket [
-    LeftBracket,
-    /// Right bracket ]
-    RightBracket,
     /// Left brace { (array literal initializer, e.g. `= {1, 2, 3}`)
     LeftBrace,
     /// Right brace } (array literal initializer)

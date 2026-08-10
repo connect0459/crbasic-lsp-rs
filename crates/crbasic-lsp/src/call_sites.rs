@@ -53,10 +53,16 @@ fn walk_statements<'a>(
                 }
             }
             Statement::Assignment { target, value, .. } => {
-                if let AssignmentTarget::ArrayElement { indices, .. } = target {
-                    for index in indices {
-                        walk_expression(index, enclosing, sites);
+                match target {
+                    AssignmentTarget::ArrayElement { indices, .. } => {
+                        for index in indices {
+                            walk_expression(index, enclosing, sites);
+                        }
                     }
+                    AssignmentTarget::Member { object, .. } => {
+                        walk_expression(object, enclosing, sites);
+                    }
+                    AssignmentTarget::Identifier { .. } => {}
                 }
                 walk_expression(value, enclosing, sites);
             }
@@ -204,10 +210,6 @@ fn walk_expression<'a>(
             for arg in arguments {
                 walk_expression(arg, enclosing, sites);
             }
-        }
-        Expression::ArrayAccess { array, index, .. } => {
-            walk_expression(array, enclosing, sites);
-            walk_expression(index, enclosing, sites);
         }
         Expression::MemberAccess { object, .. } => {
             walk_expression(object, enclosing, sites);

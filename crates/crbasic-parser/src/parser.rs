@@ -276,51 +276,21 @@ impl<'a> Parser<'a> {
             return self.parse_var_declaration();
         }
 
-        // Look ahead to check if this is an assignment statement
-        // Assignment: identifier = expression or identifier[index] = expression
+        // Look ahead to check if this is an assignment statement.
+        // Assignment targets are: a bare identifier (`x = 5`), an array
+        // element (`Data(0) = 5` -- CRBasic reuses call syntax for array
+        // indexing, see `Expression::FunctionCall`'s doc comment), a
+        // `StructureType` member (`CS215.Temp = 25`), or an array-of-structure
+        // member (`CS215(1).Temp = 25`).
         if matches!(self.peek().kind, TokenKind::Identifier(_)) {
             let saved_pos = self.current;
 
             if let &TokenKind::Identifier(name) = &self.peek().kind {
                 let ident_name = name.to_string();
                 let ident_span = self.advance().span;
+                let expr = self.parse_postfix_chain(ident_name, ident_span)?;
 
-                let target = if matches!(self.peek().kind, TokenKind::LeftBracket) {
-                    let mut indices = Vec::new();
-                    let mut last_bracket_span = ident_span;
-
-                    while matches!(self.peek().kind, TokenKind::LeftBracket) {
-                        self.advance();
-                        let index_expr = self.parse_expression()?;
-                        indices.push(index_expr);
-
-                        if !matches!(self.peek().kind, TokenKind::RightBracket) {
-                            self.current = saved_pos;
-                            break;
-                        }
-                        last_bracket_span = self.advance().span;
-                    }
-
-                    // If we broke out early, this will be handled by the expression parser below
-                    if self.current == saved_pos {
-                        None
-                    } else {
-                        let target_span =
-                            crate::lexer::token::Span::new(ident_span.start, last_bracket_span.end);
-                        Some(crate::ast::AssignmentTarget::ArrayElement {
-                            array: ident_name,
-                            indices,
-                            span: target_span,
-                        })
-                    }
-                } else {
-                    Some(crate::ast::AssignmentTarget::Identifier {
-                        name: ident_name,
-                        span: ident_span,
-                    })
-                };
-
-                if let Some(target) = target {
+                if let Some(target) = Self::expression_to_assignment_target(&expr) {
                     if matches!(self.peek().kind, TokenKind::Equal) {
                         self.advance();
 
@@ -348,13 +318,10 @@ impl<'a> Parser<'a> {
                             self.advance();
                         }
 
-                        let target_expr = Self::assignment_target_to_expression(&target);
-                        let value_span = crate::lexer::token::Span::new(
-                            target_expr.span().start,
-                            rhs.span().end,
-                        );
+                        let value_span =
+                            crate::lexer::token::Span::new(expr.span().start, rhs.span().end);
                         let value = Expression::BinaryOp {
-                            left: Box::new(target_expr),
+                            left: Box::new(expr),
                             operator,
                             right: Box::new(rhs),
                             span: value_span,
@@ -431,30 +398,116 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// Rebuilds an `AssignmentTarget` as the equivalent read `Expression`,
-    /// needed to desugar `x += y` into `x = x + y` (the left operand reads
-    /// the same variable/array element the assignment writes to).
-    fn assignment_target_to_expression(target: &crate::ast::AssignmentTarget) -> Expression {
-        match target {
-            crate::ast::AssignmentTarget::Identifier { name, span } => Expression::Identifier {
-                name: name.clone(),
-                span: *span,
-            },
-            crate::ast::AssignmentTarget::ArrayElement {
-                array,
-                indices,
+    /// Parses the postfix chain following a leading identifier: any mix of
+    /// call/array-index parentheses (`Name(args)`) and member access
+    /// (`.member`), e.g. `CS215(1).Temp`. Shared by `parse_primary` (reads)
+    /// and the assignment-target detection above (writes), so both agree on
+    /// what counts as an indexable/member-accessible expression.
+    fn parse_postfix_chain(
+        &mut self,
+        ident_name: String,
+        ident_span: crate::lexer::token::Span,
+    ) -> Result<Expression, ParseError> {
+        let mut expr = Expression::identifier(ident_name.clone(), ident_span);
+
+        loop {
+            match self.peek().kind {
+                TokenKind::LeftParen => {
+                    self.advance();
+
+                    let mut arguments = Vec::new();
+                    if !matches!(self.peek().kind, TokenKind::RightParen) {
+                        loop {
+                            arguments.push(self.parse_expression()?);
+
+                            if matches!(self.peek().kind, TokenKind::Comma) {
+                                self.advance();
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+
+                    if !matches!(self.peek().kind, TokenKind::RightParen) {
+                        return Err(ParseError {
+                            message: "Expected ')' after function arguments".to_string(),
+                            span: self.peek().span,
+                        });
+                    }
+                    let end_paren_span = self.advance().span;
+
+                    let span =
+                        crate::lexer::token::Span::new(expr.span().start, end_paren_span.end);
+                    expr = Expression::FunctionCall {
+                        name: ident_name.clone(),
+                        arguments,
+                        span,
+                    };
+                }
+                TokenKind::Dot => {
+                    self.advance();
+
+                    let member_token = if matches!(self.peek().kind, TokenKind::Identifier(_)) {
+                        self.advance()
+                    } else {
+                        return Err(ParseError {
+                            message: "Expected member name after '.'".to_string(),
+                            span: self.peek().span,
+                        });
+                    };
+                    let member = if let &TokenKind::Identifier(name) = &member_token.kind {
+                        name.to_string()
+                    } else {
+                        unreachable!()
+                    };
+
+                    let span =
+                        crate::lexer::token::Span::new(expr.span().start, member_token.span.end);
+                    expr = Expression::MemberAccess {
+                        object: Box::new(expr),
+                        member,
+                        span,
+                    };
+                }
+                _ => break,
+            }
+        }
+
+        Ok(expr)
+    }
+
+    /// Converts a parsed `Expression` into the `AssignmentTarget` it denotes,
+    /// if it's a shape CRBasic allows on the left of `=`: a bare identifier,
+    /// an array element (`FunctionCall`-shaped, see that variant's doc
+    /// comment), or a `StructureType` member. Anything else (literals,
+    /// arbitrary binary/unary expressions) can't be assigned to.
+    fn expression_to_assignment_target(expr: &Expression) -> Option<crate::ast::AssignmentTarget> {
+        match expr {
+            Expression::Identifier { name, span } => {
+                Some(crate::ast::AssignmentTarget::Identifier {
+                    name: name.clone(),
+                    span: *span,
+                })
+            }
+            Expression::FunctionCall {
+                name,
+                arguments,
                 span,
-            } => indices.iter().fold(
-                Expression::Identifier {
-                    name: array.clone(),
-                    span: *span,
-                },
-                |acc, index| Expression::ArrayAccess {
-                    array: Box::new(acc),
-                    index: Box::new(index.clone()),
-                    span: *span,
-                },
-            ),
+            } => Some(crate::ast::AssignmentTarget::ArrayElement {
+                array: name.clone(),
+                indices: arguments.clone(),
+                span: *span,
+            }),
+            Expression::MemberAccess {
+                object,
+                member,
+                span,
+            } => Some(crate::ast::AssignmentTarget::Member {
+                object: object.clone(),
+                member: member.clone(),
+                span: *span,
+            }),
+            _ => None,
         }
     }
 
@@ -2318,110 +2371,9 @@ impl<'a> Parser<'a> {
                     }
                     TokenKind::String(value) => Ok(Expression::string(value.clone(), token.span)),
                     TokenKind::Identifier(name) => {
-                        // Clone necessary data to avoid borrow issues
                         let ident_name = name.to_string();
                         let ident_span = token.span;
-
-                        let mut expr = Expression::identifier(ident_name.to_string(), ident_span);
-
-                        loop {
-                            match self.peek().kind {
-                                TokenKind::LeftParen => {
-                                    self.advance();
-
-                                    let mut arguments = Vec::new();
-
-                                    if !matches!(self.peek().kind, TokenKind::RightParen) {
-                                        loop {
-                                            arguments.push(self.parse_expression()?);
-
-                                            if matches!(self.peek().kind, TokenKind::Comma) {
-                                                self.advance();
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                    if !matches!(self.peek().kind, TokenKind::RightParen) {
-                                        return Err(ParseError {
-                                            message: "Expected ')' after function arguments"
-                                                .to_string(),
-                                            span: self.peek().span,
-                                        });
-                                    }
-                                    let end_paren_span = self.advance().span;
-
-                                    let span = crate::lexer::token::Span::new(
-                                        expr.span().start,
-                                        end_paren_span.end,
-                                    );
-                                    expr = Expression::FunctionCall {
-                                        name: ident_name.to_string(),
-                                        arguments,
-                                        span,
-                                    };
-                                }
-                                TokenKind::LeftBracket => {
-                                    self.advance();
-
-                                    let index = self.parse_expression()?;
-
-                                    if !matches!(self.peek().kind, TokenKind::RightBracket) {
-                                        return Err(ParseError {
-                                            message: "Expected ']' after array index".to_string(),
-                                            span: self.peek().span,
-                                        });
-                                    }
-                                    let end_bracket_span = self.advance().span;
-
-                                    let span = crate::lexer::token::Span::new(
-                                        expr.span().start,
-                                        end_bracket_span.end,
-                                    );
-                                    expr = Expression::ArrayAccess {
-                                        array: Box::new(expr),
-                                        index: Box::new(index),
-                                        span,
-                                    };
-                                }
-                                TokenKind::Dot => {
-                                    self.advance();
-
-                                    let member_token =
-                                        if matches!(self.peek().kind, TokenKind::Identifier(_)) {
-                                            self.advance()
-                                        } else {
-                                            return Err(ParseError {
-                                                message: "Expected member name after '.'"
-                                                    .to_string(),
-                                                span: self.peek().span,
-                                            });
-                                        };
-                                    let member =
-                                        if let &TokenKind::Identifier(name) = &member_token.kind {
-                                            name.to_string()
-                                        } else {
-                                            unreachable!()
-                                        };
-
-                                    let span = crate::lexer::token::Span::new(
-                                        expr.span().start,
-                                        member_token.span.end,
-                                    );
-                                    expr = Expression::MemberAccess {
-                                        object: Box::new(expr),
-                                        member,
-                                        span,
-                                    };
-                                }
-                                _ => {
-                                    break;
-                                }
-                            }
-                        }
-
-                        Ok(expr)
+                        self.parse_postfix_chain(ident_name, ident_span)
                     }
                     _ => unreachable!(),
                 }
@@ -3868,121 +3820,104 @@ mod tests {
     mod array_access_expressions {
         use super::*;
 
+        // CRBasic has no bracket syntax for array elements: `Name(index)` is
+        // the only form, lexically identical to a function call. See
+        // https://help.campbellsci.com/crbasic/cr6/Content/Info/arraysandindexintoarrays.htm
+
         #[test]
         fn parses_simple_array_access() {
-            let mut scanner = Scanner::new("Data[0]");
+            let mut scanner = Scanner::new("Data(0)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
-                    Expression::ArrayAccess { array, index, .. } => {
-                        if let Expression::Identifier { name, .. } = &**array {
-                            assert_eq!(name, "Data");
-                        } else {
-                            panic!("Expected identifier for array");
-                        }
-
-                        if let Expression::IntegerLiteral { value, .. } = &**index {
-                            assert_eq!(*value, 0);
-                        } else {
-                            panic!("Expected integer literal for index");
-                        }
-                    }
-                    _ => panic!("Expected array access expression"),
-                }
+            if let Statement::FunctionCall {
+                name, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "Data");
+                assert_eq!(arguments.len(), 1);
+                assert!(matches!(
+                    arguments[0],
+                    Expression::IntegerLiteral { value: 0, .. }
+                ));
+            } else {
+                panic!("Expected an array element read");
             }
         }
 
         #[test]
         fn parses_array_access_with_variable_index() {
-            let mut scanner = Scanner::new("Temp_C[i]");
+            let mut scanner = Scanner::new("Temp_C(i)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
-                    Expression::ArrayAccess { array, index, .. } => {
-                        if let Expression::Identifier { name, .. } = &**array {
-                            assert_eq!(name, "Temp_C");
-                        } else {
-                            panic!("Expected identifier for array");
-                        }
-
-                        if let Expression::Identifier { name, .. } = &**index {
-                            assert_eq!(name, "i");
-                        } else {
-                            panic!("Expected identifier for index");
-                        }
-                    }
-                    _ => panic!("Expected array access expression"),
-                }
+            if let Statement::FunctionCall {
+                name, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "Temp_C");
+                assert!(
+                    matches!(&arguments[0], Expression::Identifier { name, .. } if name == "i")
+                );
+            } else {
+                panic!("Expected an array element read");
             }
         }
 
         #[test]
         fn parses_array_access_with_expression_index() {
-            let mut scanner = Scanner::new("Data[i + 1]");
+            let mut scanner = Scanner::new("Data(i + 1)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
-                    Expression::ArrayAccess { array, index, .. } => {
-                        assert!(matches!(**array, Expression::Identifier { .. }));
-
-                        assert!(matches!(**index, Expression::BinaryOp { .. }));
-                    }
-                    _ => panic!("Expected array access expression"),
-                }
+            if let Statement::FunctionCall {
+                name, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "Data");
+                assert!(matches!(arguments[0], Expression::BinaryOp { .. }));
+            } else {
+                panic!("Expected an array element read");
             }
         }
 
         #[test]
         fn parses_multi_dimensional_array_access() {
-            let mut scanner = Scanner::new("Matrix[1][2]");
+            // Multi-dimensional indices are comma-separated within one
+            // parenthesized group (matching `Dim Matrix(10, 20)`), not
+            // chained separately per dimension.
+            let mut scanner = Scanner::new("Matrix(1, 2)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
-                    Expression::ArrayAccess { array, index, .. } => {
-                        if let Expression::ArrayAccess { array, index, .. } = &**array {
-                            if let Expression::Identifier { name, .. } = &**array {
-                                assert_eq!(name, "Matrix");
-                            } else {
-                                panic!("Expected identifier for inner array");
-                            }
-
-                            if let Expression::IntegerLiteral { value, .. } = &**index {
-                                assert_eq!(*value, 1);
-                            } else {
-                                panic!("Expected integer literal for first index");
-                            }
-                        } else {
-                            panic!("Expected nested array access");
-                        }
-
-                        if let Expression::IntegerLiteral { value, .. } = &**index {
-                            assert_eq!(*value, 2);
-                        } else {
-                            panic!("Expected integer literal for second index");
-                        }
-                    }
-                    _ => panic!("Expected array access expression"),
-                }
+            if let Statement::FunctionCall {
+                name, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "Matrix");
+                assert_eq!(arguments.len(), 2);
+                assert!(matches!(
+                    arguments[0],
+                    Expression::IntegerLiteral { value: 1, .. }
+                ));
+                assert!(matches!(
+                    arguments[1],
+                    Expression::IntegerLiteral { value: 2, .. }
+                ));
+            } else {
+                panic!("Expected an array element read");
             }
         }
     }
@@ -4041,6 +3976,104 @@ mod tests {
             } else {
                 panic!(
                     "Expected FunctionCall statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+    }
+
+    mod member_assignment_statements {
+        use super::*;
+
+        #[test]
+        fn parses_member_assignment_on_a_plain_identifier() {
+            // Previously silently misparsed as a whole-statement comparison
+            // expression (`=` read as the comparison operator) instead of an
+            // assignment, since the assignment fast path never recognized a
+            // `Dot`-terminated target.
+            let mut scanner = Scanner::new("CS215.Temp = 25");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Assignment { target, value, .. } = &program.statements[0] {
+                if let crate::ast::AssignmentTarget::Member { object, member, .. } = target {
+                    assert_eq!(member, "Temp");
+                    assert!(
+                        matches!(&**object, Expression::Identifier { name, .. } if name == "CS215")
+                    );
+                } else {
+                    panic!("Expected a member assignment target, got {target:?}");
+                }
+
+                assert!(matches!(
+                    value,
+                    Expression::IntegerLiteral { value: 25, .. }
+                ));
+            } else {
+                panic!(
+                    "Expected assignment statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_member_assignment_on_an_indexed_structure_array_element() {
+            let mut scanner = Scanner::new("CS215(1).Temp = 25");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Assignment { target, .. } = &program.statements[0] {
+                if let crate::ast::AssignmentTarget::Member { object, member, .. } = target {
+                    assert_eq!(member, "Temp");
+                    assert!(matches!(
+                        &**object,
+                        Expression::FunctionCall { name, arguments, .. }
+                            if name == "CS215" && arguments.len() == 1
+                    ));
+                } else {
+                    panic!("Expected a member assignment target, got {target:?}");
+                }
+            } else {
+                panic!(
+                    "Expected assignment statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn desugars_compound_assignment_to_structure_member() {
+            use crate::ast::BinaryOperator;
+
+            let mut scanner = Scanner::new("CS215.Temp += 1");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Assignment { target, value, .. } = &program.statements[0] {
+                assert!(matches!(
+                    target,
+                    crate::ast::AssignmentTarget::Member { member, .. } if member == "Temp"
+                ));
+
+                if let Expression::BinaryOp { left, operator, .. } = value {
+                    assert_eq!(*operator, BinaryOperator::Add);
+                    assert!(matches!(&**left, Expression::MemberAccess { .. }));
+                } else {
+                    panic!("Expected desugared binary operation as value");
+                }
+            } else {
+                panic!(
+                    "Expected assignment statement, got {:?}",
                     program.statements[0]
                 );
             }
@@ -4108,8 +4141,29 @@ mod tests {
         }
 
         #[test]
+        fn array_element_assignment_is_not_misparsed_as_a_comparison() {
+            // Regression test: `Data(0)` is lexically identical to a function
+            // call, so before the assignment-target detection understood
+            // parenthesized targets, `Data(0) = 5` fell through to the
+            // generic expression parser and silently became an inert
+            // `Data(0) = 5` *comparison* expression statement instead of an
+            // assignment -- the intended write never happened.
+            let mut scanner = Scanner::new("Data(0) = 5");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            assert!(matches!(
+                program.statements[0],
+                Statement::Assignment { .. }
+            ));
+        }
+
+        #[test]
         fn parses_array_element_assignment() {
-            let mut scanner = Scanner::new("Data[0] = 5");
+            let mut scanner = Scanner::new("Data(0) = 5");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -4142,7 +4196,7 @@ mod tests {
 
         #[test]
         fn parses_array_element_assignment_with_variable_index() {
-            let mut scanner = Scanner::new("Data[i] = 10");
+            let mut scanner = Scanner::new("Data(i) = 10");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -4175,7 +4229,9 @@ mod tests {
 
         #[test]
         fn parses_multi_dimensional_array_assignment() {
-            let mut scanner = Scanner::new("Matrix[1][2] = 100");
+            // Multi-dimensional indices are comma-separated within one
+            // parenthesized group (matching `Dim Matrix(10, 20)`).
+            let mut scanner = Scanner::new("Matrix(1, 2) = 100");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -4214,7 +4270,7 @@ mod tests {
 
         #[test]
         fn parses_array_element_assignment_with_expression_value() {
-            let mut scanner = Scanner::new("Data[0] = x + 1");
+            let mut scanner = Scanner::new("Data(0) = x + 1");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -4295,7 +4351,7 @@ mod tests {
         fn desugars_compound_assignment_to_array_element() {
             use crate::ast::BinaryOperator;
 
-            let source = "Data[0] += 1".to_string();
+            let source = "Data(0) += 1".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -4311,7 +4367,7 @@ mod tests {
 
                 if let Expression::BinaryOp { left, operator, .. } = value {
                     assert_eq!(*operator, BinaryOperator::Add);
-                    assert!(matches!(&**left, Expression::ArrayAccess { .. }));
+                    assert!(matches!(&**left, Expression::FunctionCall { .. }));
                 } else {
                     panic!("Expected desugared binary operation as value");
                 }

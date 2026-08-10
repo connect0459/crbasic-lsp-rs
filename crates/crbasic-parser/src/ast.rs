@@ -25,12 +25,24 @@ pub enum AssignmentTarget {
         span: Span,
     },
 
-    /// Array element access: `Data[0] = 5` or `Matrix[1][2] = 10`
+    /// Array element assignment: `Data(0) = 5` or `Matrix(1, 2) = 10`
     ArrayElement {
         /// The array variable name
         array: String,
         /// The index expressions (one per dimension)
         indices: Vec<Expression>,
+        /// The source code span
+        span: Span,
+    },
+
+    /// Member assignment on a `StructureType` instance: `object.member = value`
+    /// (e.g. `CS215.Temp = 25`, `CS215(1).Temp = 25`).
+    /// See <https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/structuretype.htm>
+    Member {
+        /// The structure instance expression (identifier or indexed element)
+        object: Box<Expression>,
+        /// The member name being assigned
+        member: String,
         /// The source code span
         span: Span,
     },
@@ -402,22 +414,15 @@ pub enum Expression {
         span: Span,
     },
 
-    /// Function call
+    /// Function call, or an array element read (`Data(0)`, `Matrix(1, 2)`):
+    /// CRBasic uses the same `Name(args)` syntax for both, so a parser with
+    /// no symbol table can't tell them apart until name resolution.
+    /// See <https://help.campbellsci.com/crbasic/cr6/Content/Info/arraysandindexintoarrays.htm>
     FunctionCall {
         /// The function name
         name: String,
         /// The argument expressions
         arguments: Vec<Expression>,
-        /// The source code span
-        span: Span,
-    },
-
-    /// Array access: `array[index]`
-    ArrayAccess {
-        /// The array expression
-        array: Box<Expression>,
-        /// The index expression
-        index: Box<Expression>,
         /// The source code span
         span: Span,
     },
@@ -519,6 +524,7 @@ impl AssignmentTarget {
         match self {
             AssignmentTarget::Identifier { span, .. } => *span,
             AssignmentTarget::ArrayElement { span, .. } => *span,
+            AssignmentTarget::Member { span, .. } => *span,
         }
     }
 }
@@ -560,7 +566,6 @@ impl Expression {
             Expression::BinaryOp { span, .. } => *span,
             Expression::UnaryOp { span, .. } => *span,
             Expression::FunctionCall { span, .. } => *span,
-            Expression::ArrayAccess { span, .. } => *span,
             Expression::MemberAccess { span, .. } => *span,
             Expression::ArrayLiteral { span, .. } => *span,
         }

@@ -319,16 +319,6 @@ impl<'a> Scanner<'a> {
                 let span = Span::new(start_pos, end_pos);
                 Some(Token::new(TokenKind::RightParen, ")", span))
             }
-            '[' => {
-                let end_pos = Position::new(self.line, self.column);
-                let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::LeftBracket, "[", span))
-            }
-            ']' => {
-                let end_pos = Position::new(self.line, self.column);
-                let span = Span::new(start_pos, end_pos);
-                Some(Token::new(TokenKind::RightBracket, "]", span))
-            }
             '{' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
@@ -1287,18 +1277,6 @@ mod tests {
         }
 
         #[test]
-        fn recognizes_brackets() {
-            let mut scanner = Scanner::new("[]");
-            let tokens = scanner.scan_tokens();
-
-            assert_eq!(tokens.len(), 3);
-
-            assert_eq!(tokens[0].kind, TokenKind::LeftBracket);
-            assert_eq!(tokens[1].kind, TokenKind::RightBracket);
-            assert_eq!(tokens[2].kind, TokenKind::Eof);
-        }
-
-        #[test]
         fn recognizes_braces() {
             let mut scanner = Scanner::new("{}");
             let tokens = scanner.scan_tokens();
@@ -1643,26 +1621,17 @@ EndIf"#;
         }
 
         #[test]
-        fn tokenizes_array_access() {
-            let source = r#"Data[Index] = Values(1, 2)"#;
+        fn tokenizes_array_element_assignment() {
+            // CRBasic has no bracket syntax for array elements; `Name(index)`
+            // is the only form, indistinguishable at the lexer level from a
+            // function call.
+            // See https://help.campbellsci.com/crbasic/cr6/Content/Info/arraysandindexintoarrays.htm
+            let source = r#"Data(Index) = Values(1, 2)"#;
 
             let mut scanner = Scanner::new(source);
             let tokens = scanner.scan_tokens();
 
             let token_kinds: Vec<_> = tokens.iter().map(|t| &t.kind).collect();
-
-            assert!(
-                token_kinds
-                    .iter()
-                    .any(|k| matches!(k, TokenKind::LeftBracket)),
-                "Should contain ["
-            );
-            assert!(
-                token_kinds
-                    .iter()
-                    .any(|k| matches!(k, TokenKind::RightBracket)),
-                "Should contain ]"
-            );
 
             assert!(
                 token_kinds
