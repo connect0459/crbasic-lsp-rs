@@ -258,6 +258,12 @@ impl HoverProvider {
             "preservevariables" => Some(
                 "**PreserveVariables**\n\nRetains the values of all `Dim`/`Public` variables in memory across a power loss. Placed before `BeginProg`.",
             ),
+            "applyandrestartsequence" => Some(
+                "**ApplyAndRestartSequence**\n\nValidates a `ConstTable` field before it is applied at runtime. Placed before `ConstTable`.\n\n```crbasic\nApplyAndRestartSequence\n  ' validation code\nEndApplyAndRestartSequence\nConstTable(TableName, Enabled)\n  Const A = 1\nEndConstTable\n```",
+            ),
+            "endapplyandrestartsequence" => Some(
+                "**EndApplyAndRestartSequence**\n\nTerminates an ApplyAndRestartSequence block.",
+            ),
             "datatable" => Some(
                 "**DataTable**\n\nDefines a data table for storing measurements.\n\n```crbasic\nDataTable(TableName, TriggerCondition, Size)\n  ' output instructions\nEndTable\n```",
             ),
@@ -425,6 +431,8 @@ mod tests {
                     "StructureType",
                     "EndStructureType",
                     "PreserveVariables",
+                    "ApplyAndRestartSequence",
+                    "EndApplyAndRestartSequence",
                 ];
 
                 for keyword in keywords {

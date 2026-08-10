@@ -18,18 +18,18 @@
   ],
   "indentationRules": {
     "increaseIndentPattern": {
-      "pattern": "^\\s*(BeginProg\\b|DataTable\\s*\\(|ConstTable\\s*\\(|StructureType\\b|Sub\\s|Function\\s|For\\s|Do\\b|While\\b|Scan\\s*\\(|SubScan\\s*\\(|SlowSequence\\b|DisplayMenu\\s*\\(|SubMenu\\s*\\(|Select\\s+Case\\b|Else\\b|ElseIf\\b.*\\bThen\\s*$|Case\\b|If\\b.*\\bThen\\s*$|#If\\b|#IfDef\\b|#ElseIf\\b|#Else\\b)",
+      "pattern": "^\\s*(BeginProg\\b|DataTable\\s*\\(|ConstTable\\s*\\(|ApplyAndRestartSequence\\b|StructureType\\b|Sub\\s|Function\\s|For\\s|Do\\b|While\\b|Scan\\s*\\(|SubScan\\s*\\(|SlowSequence\\b|DisplayMenu\\s*\\(|SubMenu\\s*\\(|Select\\s+Case\\b|Else\\b|ElseIf\\b.*\\bThen\\s*$|Case\\b|If\\b.*\\bThen\\s*$|#If\\b|#IfDef\\b|#ElseIf\\b|#Else\\b)",
       "flags": "i"
     },
     "decreaseIndentPattern": {
-      "pattern": "^\\s*(EndProg\\b|EndTable\\b|EndConstTable\\b|EndStructureType\\b|EndSub\\b|EndFunction\\b|NextScan\\b|NextSubScan\\b|EndSequence\\b|EndMenu\\b|EndSubMenu\\b|EndSelect\\b|EndIf\\b|Next\\b|Loop\\b|Wend\\b|Else\\b|ElseIf\\b|Case\\b|#EndIf\\b|#ElseIf\\b|#Else\\b)",
+      "pattern": "^\\s*(EndProg\\b|EndTable\\b|EndConstTable\\b|EndApplyAndRestartSequence\\b|EndStructureType\\b|EndSub\\b|EndFunction\\b|NextScan\\b|NextSubScan\\b|EndSequence\\b|EndMenu\\b|EndSubMenu\\b|EndSelect\\b|EndIf\\b|Next\\b|Loop\\b|Wend\\b|Else\\b|ElseIf\\b|Case\\b|#EndIf\\b|#ElseIf\\b|#Else\\b)",
       "flags": "i"
     }
   },
   "folding": {
     "markers": {
-      "start": "^\\s*(BeginProg\\b|DataTable\\b|ConstTable\\b|StructureType\\b|Sub\\b|Function\\b|If\\b|For\\b|Do\\b|While\\b|Scan\\s*\\(|SubScan\\s*\\(|SlowSequence\\b|DisplayMenu\\s*\\(|SubMenu\\s*\\(|Select\\s+Case\\b|#If\\b|#IfDef\\b)",
-      "end": "^\\s*(EndProg\\b|EndTable\\b|EndConstTable\\b|EndStructureType\\b|EndSub\\b|EndFunction\\b|NextScan\\b|NextSubScan\\b|EndSequence\\b|EndMenu\\b|EndSubMenu\\b|EndIf\\b|Next\\b|Loop\\b|Wend\\b|EndSelect\\b|#EndIf\\b)"
+      "start": "^\\s*(BeginProg\\b|DataTable\\b|ConstTable\\b|ApplyAndRestartSequence\\b|StructureType\\b|Sub\\b|Function\\b|If\\b|For\\b|Do\\b|While\\b|Scan\\s*\\(|SubScan\\s*\\(|SlowSequence\\b|DisplayMenu\\s*\\(|SubMenu\\s*\\(|Select\\s+Case\\b|#If\\b|#IfDef\\b)",
+      "end": "^\\s*(EndProg\\b|EndTable\\b|EndConstTable\\b|EndApplyAndRestartSequence\\b|EndStructureType\\b|EndSub\\b|EndFunction\\b|NextScan\\b|NextSubScan\\b|EndSequence\\b|EndMenu\\b|EndSubMenu\\b|EndIf\\b|Next\\b|Loop\\b|Wend\\b|EndSelect\\b|#EndIf\\b)"
     }
   }
 }

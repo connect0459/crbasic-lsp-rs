@@ -181,6 +181,8 @@ impl<'a> Parser<'a> {
                 || kw == "SequentialMode"
                 || kw == "PipeLineMode"
                 || kw == "PreserveVariables"
+                || kw == "ApplyAndRestartSequence"
+                || kw == "EndApplyAndRestartSequence"
                 || kw == "DataTable"
                 || kw == "EndTable"
                 || kw == "ConstTable"
@@ -6453,6 +6455,25 @@ mod tests {
             assert!(matches!(
                 &program.statements[0],
                 Statement::ProgramStructure { keyword, .. } if keyword == "PreserveVariables"
+            ));
+        }
+
+        #[test]
+        fn parses_applyandrestartsequence_block_before_beginprog() {
+            let source = "ApplyAndRestartSequence\n  SetSetting(\"X\",1)\nEndApplyAndRestartSequence\nBeginProg\nEndProg".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 5);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::ProgramStructure { keyword, .. } if keyword == "ApplyAndRestartSequence"
+            ));
+            assert!(matches!(
+                &program.statements[2],
+                Statement::ProgramStructure { keyword, .. } if keyword == "EndApplyAndRestartSequence"
             ));
         }
 

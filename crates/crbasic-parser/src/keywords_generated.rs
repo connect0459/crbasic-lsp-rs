@@ -51,6 +51,8 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("SequentialMode", "program"),
     ("PipeLineMode", "program"),
     ("PreserveVariables", "program"),
+    ("ApplyAndRestartSequence", "program"),
+    ("EndApplyAndRestartSequence", "program"),
     ("DataTable", "datatable"),
     ("EndTable", "datatable"),
     ("ConstTable", "consttable"),

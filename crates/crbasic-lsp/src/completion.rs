@@ -549,6 +549,15 @@ impl CompletionProvider {
                 "Retains Dim/Public variable values in memory across a power loss; placed before BeginProg",
             ),
             Self::create_keyword_snippet(
+                "ApplyAndRestartSequence",
+                "ApplyAndRestartSequence\n\t$0\nEndApplyAndRestartSequence",
+                "Validates a ConstTable field before it is applied at runtime; placed before ConstTable",
+            ),
+            Self::create_keyword_completion(
+                "EndApplyAndRestartSequence",
+                "Terminates an ApplyAndRestartSequence block",
+            ),
+            Self::create_keyword_snippet(
                 "DataTable",
                 "DataTable(${1:TableName}, ${2:TriggerCondition}, ${3:Size})\n\t$0\nEndTable",
                 "Define data storage table",

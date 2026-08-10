@@ -27,13 +27,15 @@ impl FoldingRangeProvider {
 
     /// Walks a statement list, recursing into block bodies and pairing up
     /// the flat `BeginProg`/`EndProg`, `DataTable`/`EndTable`,
-    /// `ConstTable`/`EndConstTable`, `Scan`/`NextScan`, `SubScan`/
+    /// `ConstTable`/`EndConstTable`, `ApplyAndRestartSequence`/
+    /// `EndApplyAndRestartSequence`, `Scan`/`NextScan`, `SubScan`/
     /// `NextSubScan`, `SlowSequence`/`EndSequence`, and `DisplayMenu`/
     /// `EndMenu`/`SubMenu`/`EndSubMenu` markers
     fn collect_from_statements(statements: &[Statement], ranges: &mut Vec<FoldingRange>) {
         let mut begin_prog_stack: Vec<Position> = Vec::new();
         let mut data_table_stack: Vec<Position> = Vec::new();
         let mut const_table_stack: Vec<Position> = Vec::new();
+        let mut apply_and_restart_sequence_stack: Vec<Position> = Vec::new();
         let mut scan_stack: Vec<Position> = Vec::new();
         let mut subscan_stack: Vec<Position> = Vec::new();
         let mut slow_sequence_stack: Vec<Position> = Vec::new();
@@ -46,6 +48,7 @@ impl FoldingRangeProvider {
                     "BeginProg" => begin_prog_stack.push(span.start),
                     "DataTable" => data_table_stack.push(span.start),
                     "ConstTable" => const_table_stack.push(span.start),
+                    "ApplyAndRestartSequence" => apply_and_restart_sequence_stack.push(span.start),
                     "SlowSequence" => slow_sequence_stack.push(span.start),
                     "EndProg" => {
                         if let Some(start) = begin_prog_stack.pop() {
@@ -59,6 +62,11 @@ impl FoldingRangeProvider {
                     }
                     "EndConstTable" => {
                         if let Some(start) = const_table_stack.pop() {
+                            Self::push_range(ranges, start, span.end);
+                        }
+                    }
+                    "EndApplyAndRestartSequence" => {
+                        if let Some(start) = apply_and_restart_sequence_stack.pop() {
                             Self::push_range(ranges, start, span.end);
                         }
                     }
@@ -340,6 +348,20 @@ mod tests {
             assert_eq!(ranges.len(), 1);
             assert_eq!(ranges[0].start_line, 1);
             assert_eq!(ranges[0].end_line, 7);
+        }
+
+        #[test]
+        fn pairs_apply_and_restart_sequence_with_its_matching_end() {
+            let program = program(vec![
+                program_structure("ApplyAndRestartSequence", 1),
+                program_structure("EndApplyAndRestartSequence", 5),
+            ]);
+
+            let ranges = FoldingRangeProvider::get_folding_ranges(&program);
+
+            assert_eq!(ranges.len(), 1);
+            assert_eq!(ranges[0].start_line, 0);
+            assert_eq!(ranges[0].end_line, 4);
         }
 
         #[test]
