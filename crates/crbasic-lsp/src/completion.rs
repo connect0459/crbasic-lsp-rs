@@ -85,17 +85,17 @@ impl CompletionProvider {
             ),
             Self::create_function_completion(
                 "Therm107",
-                "Therm107(${1:Dest}, ${2:Reps}, ${3:SEChan}, ${4:Excite}, ${5:Mult}, ${6:Offset})",
+                "Therm107(${1:Dest}, ${2:Reps}, ${3:SEChan}, ${4:Excite}, ${5:SettlingTime}, ${6:Integ}, ${7:Mult}, ${8:Offset})",
                 "Measures temperature using a 107 thermistor.",
             ),
             Self::create_function_completion(
                 "Therm108",
-                "Therm108(${1:Dest}, ${2:Reps}, ${3:SEChan}, ${4:Excite}, ${5:Mult}, ${6:Offset})",
+                "Therm108(${1:Dest}, ${2:Reps}, ${3:SEChan}, ${4:Excite}, ${5:SettlingTime}, ${6:Integ}, ${7:Mult}, ${8:Offset})",
                 "Measures temperature using a 108 thermistor.",
             ),
             Self::create_function_completion(
                 "Therm109",
-                "Therm109(${1:Dest}, ${2:Reps}, ${3:SEChan}, ${4:Excite}, ${5:Mult}, ${6:Offset})",
+                "Therm109(${1:Dest}, ${2:Reps}, ${3:SEChan}, ${4:Excite}, ${5:SettlingTime}, ${6:Integ}, ${7:Mult}, ${8:Offset})",
                 "Measures temperature using a 109 thermistor.",
             ),
             Self::create_function_completion(
@@ -1031,6 +1031,39 @@ mod tests {
 
             assert!(snippet.contains("${5:MeasOff}"));
             assert!(snippet.contains("${7:fN1}"));
+        }
+
+        #[test]
+        fn therm10x_functions_include_settling_time_and_integration_parameters() {
+            // Therm107/108/109's official 8-parameter syntax
+            // (Dest, Reps, SEChan, Excite, SettlingTime, Integ, Mult, Offset)
+            // was missing SettlingTime/Integ entirely, truncated to 6
+            // parameters -- confirmed via Campbell Scientific's Model
+            // 107/108/109 manuals (s.campbellsci.com/documents/us/manuals/107.pdf)
+            // and the CR6 Measurement and Control System manual.
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            for name in ["Therm107", "Therm108", "Therm109"] {
+                let completion = completions.iter().find(|c| c.label == name).unwrap();
+                let snippet = completion.insert_text.as_ref().unwrap();
+
+                assert!(
+                    snippet.contains("${5:SettlingTime}"),
+                    "{name} snippet missing SettlingTime: {snippet}"
+                );
+                assert!(
+                    snippet.contains("${6:Integ}"),
+                    "{name} snippet missing Integ: {snippet}"
+                );
+                assert!(
+                    snippet.contains("${7:Mult}"),
+                    "{name} snippet's Mult should be the 7th parameter: {snippet}"
+                );
+                assert!(
+                    snippet.contains("${8:Offset}"),
+                    "{name} snippet's Offset should be the 8th parameter: {snippet}"
+                );
+            }
         }
 
         #[test]
