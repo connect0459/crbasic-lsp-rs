@@ -2915,6 +2915,104 @@ Not flagged as gaps (investigated during the same round):
   bar that caused Round 22 to defer the general variable-redeclaration
   check; not acted on for the same reason.
 
+### Reference Implementation & Official Docs Comparison, Round 24 (2026-08-10)
+
+Found while re-surveying `.connect0459/ref-repos/`'s two reference extensions
+and help.campbellsci.com for gaps the prior 23 rounds hadn't covered.
+Rounds 1-23 had already exhausted general keyword/grammar diffing, operator
+coverage, control-flow constructs, preprocessor directives, declaration-
+keyword semantic rules, and LSP-provider/AST-consumer wiring, so this round
+targeted the one remaining unswept corner of `keywords.json`'s
+`builtinFunctions` categories: PakBus/telemetry, voice-modem, and
+web-server instruction families that earlier rounds bucketed wholesale
+into the "content-volume backlog" without checking each name's actual
+bare-vs-parenthesized grammar shape. All four findings below are new
+instances of the same "advertised via a real docs page but silently
+mis-lexed" bug class already fixed 10+ times in Rounds 1-8
+(`ContinueScan`, `WaitTriggerSequence`, `EndMenu`/`EndSubMenu`,
+`SequentialMode`, etc.), confirmed by actually parsing each repro before
+fixing, not just by reading the docs.
+
+- [x] `ESSVariables`, `WebPageEnd`, `EndModemHangup`, `VoiceBeg`/`EndVoice`
+  entirely unregistered bare keywords (bug) ✅ Resolved
+  - None of these appeared anywhere in `keywords.json`, so the lexer's
+    keyword table never tokenized them; each lexed as a plain
+    `Identifier` and the parser silently accepted it as an inert
+    `Statement::Expression` -- or, for `ESSVariables Dim`, as a hard
+    `ParseError`, since `Dim` (a real keyword) was then misread as the
+    start of a new statement with no identifier after it.
+  - `ESSVariables Public`/`ESSVariables Dim` (confirmed at
+    [essvariables.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/essvariables.htm)):
+    auto-declares ~1665 NTCIP Environmental Sensor Station variables for
+    roadway-weather/DOT telemetry programs, with an optional `Public`/`Dim`
+    modifier defaulting to `Public`. Repro before fixing: Campbell's own
+    example (`ESSVariables Dim` immediately followed by an ordinary
+    `Public BattV` declaration) failed with `Expected identifier after
+    variable declaration keyword` -- a hard parse error that blocks
+    semantic analysis for the entire file, not just a cosmetic gap.
+  - `WebPageEnd` (confirmed at
+    [webpagebeginwebpageend.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/webpagebeginwebpageend.htm))
+    terminates a `WebPageBegin(WebPageName, WebPageCmd)` block (serves a
+    custom web UI from the datalogger); `EndModemHangup` (confirmed at
+    [modemhangupendmodemhangup.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/modemhangupendmodemhangup.htm))
+    terminates a `ModemHangup(ComPort)` block; `VoiceBeg`/`EndVoice`
+    (confirmed at
+    [voicekey.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/voicekey.htm))
+    bracket voice-modem response code as a bare pair, like
+    `ShutDownBegin`/`ShutDownEnd`.
+  - `WebPageBegin` and `ModemHangup` themselves were left unregistered
+    deliberately: both already parse correctly today via the generic
+    `Statement::FunctionCall` grammar (same as `DisplayMenu`, `Debug`,
+    etc.), since any identifier followed by `(` parses as a function call
+    regardless of `keywords.json` registration -- only the bare closers
+    needed a fix. `folding.rs` already had precedent for pairing a
+    non-keyword `FunctionCall` opener with a keyword `ProgramStructure`
+    closer (`DisplayMenu`/`EndMenu`, `Scan`/`NextScan`), so
+    `WebPageBegin`/`WebPageEnd` and `ModemHangup`/`EndModemHangup` reuse
+    that exact mechanism instead of promoting the openers to keywords.
+  - `ESSVariables`'s optional modifier is parsed as a new branch in
+    `parse_program_structure` (`crates/crbasic-parser/src/parser.rs`)
+    rather than via `parse_expression`, since `Public`/`Dim` are keyword
+    tokens, not expression-parseable values; stored as an
+    `Expression::Identifier` argument, mirroring how `#UnDef`/`Return`
+    already attach a single argument to a `ProgramStructure` statement.
+  - Added matching completion snippets/hover text (required to keep the
+    existing `every_language_keyword_has_a_completion_item`/
+    `every_language_keyword_has_hover_info` completeness tests green) and
+    `client/language-configuration.json` indentation/folding-marker
+    coverage for the two genuine block pairs, with matching Vitest cases
+  - 6 new parser tests (`parses_webpageend_closing_a_webpagebegin_block`,
+    `parses_endmodemhangup_closing_a_modemhangup_block`,
+    `parses_voicebeg_endvoice_block`,
+    `parses_bare_essvariables_with_no_modifier`,
+    `parses_essvariables_with_public_modifier`,
+    `essvariables_dim_modifier_no_longer_corrupts_the_surrounding_program`)
+    - 3 new folding tests added Red-first; full workspace
+    `build`/`test`/`clippy`/`fmt` and client `lint`/`format:check`/`test`
+    gates pass
+
+Not flagged as gaps (verified during the same round):
+
+- `NULL` (appears only in `cr-basic-ms-vscode`'s `constant.language` list):
+  every corroborating hit uses "null" informally to mean an empty string
+  (`""`), never as a language keyword/literal -- doesn't clear this
+  project's corroboration bar, the same VB-family-artifact class as the
+  already-dismissed `Eqv`/`IntDv`.
+- `EndBurstTrigger`/`BeginBurstTrigger`, `EndDialSequence` (parenthesized,
+  already dismissed Rounds 7/8), and bare `End` (single-grammar-only) --
+  re-confirmed still correctly dismissed, no new evidence.
+- `GOESSetup`/`ArgosSetup`-family, `ModbusClient`, `DNPVariable`: checked
+  each for the same suspicious "bare block closer" shape that surfaced
+  the findings above; none exists -- they're ordinary parenthesized calls
+  with no matching `End...` keyword.
+- `Alias`/`Units` multi-pair grammar, scientific-notation numeric
+  literals, and line continuation: re-verified against official docs and
+  found to already match this project's implementation exactly.
+- `StructureType` member-chain assignment through array indices
+  (`CS215(1).Temp = 25`) and nested member chains: `AssignmentTarget::Member.object`
+  is already a boxed `Expression`, so array-indexed and chained member
+  targets already compose correctly -- no gap found.
+
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
 Found while auditing `crbasic-lsp`'s diagnostic-publishing path for
