@@ -1400,6 +1400,113 @@ Not flagged as gaps (verified during the same comparison):
   `WorstCase`) to rule out parser bugs specifically -- all parenthesized,
   all already parse correctly via the generic `FunctionCall` grammar
 
+### Reference Implementation & Official Docs Comparison, Round 8 (2026-08-10)
+
+Found during an eighth comparison round, this time targeting angles Rounds
+1-7 hadn't systematically covered: a fabrication audit of every current
+`keywords.json` entry (not just ones found incidentally), a fresh
+re-verification of previously-dismissed uncorroborated names, and the
+`Include` statement's exact current parse behavior. Each finding verified
+against an official help.campbellsci.com page fetched directly, not just a
+reference grammar.
+
+- [x] `FillStop` bare keyword inside `DataTable` body -- silently corrupted
+  the statement list (bug) ✅ Resolved
+  - Same bug class as Round 7's `TableHide`/`OpenInterval` fix, missed by
+    that round despite being a sibling `DataTable`-body keyword. Confirmed
+    real and bare (no parens) at
+    [FillStop](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/fillstop.htm):
+    stops data storage once the table reaches its configured size, instead
+    of the default ring-memory overwrite behavior
+  - Parsed the same way as `TableHide`/`OpenInterval`: a bare keyword
+    handled by `parse_program_structure`
+  - 1 new parser test (`parses_fillstop_inside_datatable_body`) added
+    Red-first
+- [x] `Include "Device:Filename"` -- silently corrupted the statement list
+  (bug) ✅ Resolved
+  - Round 2 characterized `Include` as a deferred *feature* ("structural
+    parsing would be low effort... deferred" pending cross-file
+    infrastructure), which undersold it: a repro showed it parses **without
+    error** but wrongly, splitting into two bogus statements (an
+    `Identifier("Include")` expression followed by the path string
+    literal) -- the same silent-corruption bug class as `ContinueScan` and
+    `Next`'s trailing counter list. Confirmed real at
+    [Include](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/include.htm)
+  - New `Statement::Include` AST variant consumes the keyword and its path
+    expression as one unit. Deliberately still does not resolve, read, or
+    index the referenced file -- this project has no cross-file
+    infrastructure yet, matching the existing open-documents-only scope of
+    `workspaceSymbolProvider`/`callHierarchyProvider`. Splits the bug
+    (fixed now) from the resolution/indexing feature (still deferred)
+  - 2 new parser tests (`parses_include_of_a_string_path`,
+    `include_does_not_swallow_the_following_statement`) added Red-first
+- [x] `Sqrt`, `LCase`, `UCase`, `TableName`, `IsNaN` -- fabricated, not real
+  CRBasic ✅ Resolved (removed)
+  - First systematic fabrication audit of `keywords.json`'s full 202
+    entries, rather than relying on names found incidentally (the prior
+    fabrication removal, `ExitSelect`/`Continue`/`Break`/`GoTo` in Round 2,
+    was found that way). Each confirmed absent from official docs and both
+    reference grammars:
+    - `Sqrt`: not documented anywhere, and not an alias of `Sqr` --
+      [Sqr's own page](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/sqr.htm)
+      never mentions "Sqrt". Worst of the five: it shipped in
+      `completion.rs` with a false claim ("alias for Sqr"), unlike the
+      other four which were only phantom `keywords.json` entries with no
+      completion/hover coverage
+    - `LCase`/`UCase`: the real, documented names are
+      [LowerCase](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/lowercase.htm)/[UpperCase](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/uppercase.htm)
+      (both already correctly present in `keywords.json`); `lcase.htm`/
+      `ucase.htm` both 404
+    - `TableName`: a syntax-diagram placeholder meaning "substitute your
+      own declared `DataTable`'s name" (as in
+      [`TableName.FieldName`](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/tablenamefieldname.htm)),
+      not a real standalone instruction -- the same placeholder-extraction
+      mistake, worth watching for elsewhere in the `data` category
+    - `IsNaN`: `NaN` is a real predefined comparison constant
+      (`x = NaN`), but there is no such wrapper function --
+      `isnan.htm` 404s and Campbell's own forum guidance describes
+      checking for NaN via direct comparison, not a function call
+  - Removed from `keywords.json`; `Sqrt`'s `completion.rs` entry removed;
+    `signature.rs`'s `"sqr" | "sqrt"` match arm narrowed to `"sqr"` and its
+    test comment (which cited the false alias claim as its example)
+    corrected to cite the genuine `Log`/`Ln` alias pair instead (confirmed
+    real at
+    [LOG or LN](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/logorln.htm):
+    "The LOG, or LN, function returns the natural logarithm of a number");
+    `inlay_hint.rs`'s incidental `"Sqrt"` test fixture (unrelated to the
+    finding -- just an arbitrary call name) renamed to the real `"Sqr"`
+
+Not flagged as gaps (verified during the same comparison):
+
+- `TriggerSequence` (companion to the already-supported bare
+  `WaitTriggerSequence`, Round 5): confirmed function-shaped
+  (`TriggerSequence(SequenceNum, TimeOut)`) at the same official page
+  already cited for `WaitTriggerSequence` -- already parses correctly via
+  the generic `FunctionCall` grammar, not a second missed bare keyword
+- `Debug` (bare-keyword sibling of `DebugBreak`): confirmed function-shaped
+  (`Debug(DebugSequence, HistorySize, Control, LineBreak, TraceHistory)`),
+  so it was never a bare-keyword risk regardless of Round 4's
+  single-reference-grammar dismissal
+- `Eqv`/`IntDv`/stray `|` operator/`BeginBurstTrigger`/`EndBurstTrigger`/
+  `Restore`: re-searched with fresh queries and alternate datalogger-model
+  doc pages; still zero official-docs corroboration. Status unchanged from
+  Rounds 1/3/7
+- `Ln`: unlike the four removed fabrications above, this one is
+  independently corroborated by the `cr-basic-ms-vscode` reference
+  grammar's function list -- not a fabrication, and confirmed genuinely
+  real (see the `Log`/`Ln` alias finding above)
+- `DialSequence`/`EndDialSequence` folding (Round 7's deferred, low-priority
+  item): re-confirmed still purely an editor-folding gap, not a parser bug
+  -- the statement itself already parses correctly via the generic
+  `FunctionCall` grammar
+- Full independent re-diff of both reference grammars' keyword lists
+  against `keywords.json`: beyond `FillStop` above, everything else
+  unmatched resolves to either the already-deferred ~126-vs-~420
+  `builtinFunctions` content backlog (function-shaped, parses fine
+  generically) or names already individually dismissed in Rounds 4/5/7
+  (`ArrayIndex`, `StationName`, `Status`, `LoggerType`, `RunProgram`,
+  `SemaphoreGet`/`Release`, `WaitDigTrig`, `NewFieldNames`, etc.)
+
 ### Packaging Gap (discovered while designing the release workflow)
 
 - [x] Multi-platform `.vsix` packaging ✅ Resolved
