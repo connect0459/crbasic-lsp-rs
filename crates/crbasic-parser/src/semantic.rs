@@ -95,6 +95,9 @@ pub enum SemanticErrorKind {
     TruncationCollision {
         /// The offending variable name
         variable_name: String,
+        /// The other variable name(s) and declaration span(s) it collides
+        /// with, for use as a diagnostic's `related_information`
+        colliding_with: Vec<(String, Span)>,
     },
 }
 
@@ -347,6 +350,12 @@ impl SemanticAnalyzer {
             for (truncated, symbols) in truncated_names {
                 if symbols.len() > 1 {
                     for symbol in &symbols {
+                        let colliding_with = symbols
+                            .iter()
+                            .filter(|other| other.name != symbol.name)
+                            .map(|other| (other.name.clone(), other.declaration_span))
+                            .collect();
+
                         self.errors.push(SemanticError {
                             message: format!(
                                 "Variable name '{}' will be truncated to '{}' in output tables, \
@@ -357,6 +366,7 @@ impl SemanticAnalyzer {
                             severity: ErrorSeverity::Error,
                             kind: SemanticErrorKind::TruncationCollision {
                                 variable_name: symbol.name.clone(),
+                                colliding_with,
                             },
                         });
                     }
@@ -743,6 +753,68 @@ mod tests {
                     .iter()
                     .all(|e| matches!(&e.kind, SemanticErrorKind::TruncationCollision { .. }))
             );
+        }
+
+        #[test]
+        fn truncation_collision_error_references_the_colliding_variable() {
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR200X);
+            let span1 = Span::new(Position::new(2, 1), Position::new(2, 10));
+            let span2 = Span::new(Position::new(3, 1), Position::new(3, 10));
+            let program = Program::new(
+                vec![
+                    Statement::VarDeclaration {
+                        keyword: "Public".to_string(),
+                        name: "Temperature_S1".to_string(),
+                        array_dimensions: None,
+                        type_annotation: None,
+                        type_size: None,
+                        initializer: None,
+                        span: span1,
+                    },
+                    Statement::VarDeclaration {
+                        keyword: "Public".to_string(),
+                        name: "Temperature_S2".to_string(),
+                        array_dimensions: None,
+                        type_annotation: None,
+                        type_size: None,
+                        initializer: None,
+                        span: span2,
+                    },
+                ],
+                create_test_span(),
+            );
+
+            let errors = analyzer.analyze(&program);
+
+            let collision_errors: Vec<_> = errors
+                .iter()
+                .filter(|e| matches!(&e.kind, SemanticErrorKind::TruncationCollision { .. }))
+                .collect();
+            assert_eq!(collision_errors.len(), 2);
+
+            for error in &collision_errors {
+                let SemanticErrorKind::TruncationCollision {
+                    variable_name,
+                    colliding_with,
+                } = &error.kind
+                else {
+                    panic!("Expected TruncationCollision kind");
+                };
+
+                assert_eq!(
+                    colliding_with.len(),
+                    1,
+                    "Should reference exactly the other colliding variable"
+                );
+                let (other_name, other_span) = &colliding_with[0];
+                assert_ne!(other_name, variable_name, "Should not reference itself");
+                let expected_span = if variable_name == "Temperature_S1" {
+                    span2
+                } else {
+                    span1
+                };
+                assert_eq!(*other_span, expected_span);
+            }
         }
 
         #[test]

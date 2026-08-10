@@ -72,7 +72,7 @@ impl CRBasicLanguageServer {
     }
 
     /// Converts semantic errors to LSP diagnostics
-    fn semantic_errors_to_diagnostics(errors: &[SemanticError]) -> Vec<Diagnostic> {
+    fn semantic_errors_to_diagnostics(uri: &Uri, errors: &[SemanticError]) -> Vec<Diagnostic> {
         errors
             .iter()
             .map(|error| {
@@ -84,6 +84,7 @@ impl CRBasicLanguageServer {
                 let start_pos = error.span.start;
                 let end_pos = error.span.end;
                 let (code, data) = Self::code_action_data(&error.kind);
+                let related_information = Self::related_information(uri, &error.kind);
 
                 Diagnostic {
                     range: Range {
@@ -95,12 +96,44 @@ impl CRBasicLanguageServer {
                     code_description: None,
                     source: Some("crbasic-lsp".to_string()),
                     message: error.message.clone(),
-                    related_information: None,
+                    related_information,
                     tags: None,
                     data,
                 }
             })
             .collect()
+    }
+
+    /// Builds the `related_information` locations pointing at the other
+    /// variable(s) a [`SemanticErrorKind::TruncationCollision`] collides
+    /// with, if any
+    fn related_information(
+        uri: &Uri,
+        kind: &SemanticErrorKind,
+    ) -> Option<Vec<DiagnosticRelatedInformation>> {
+        let SemanticErrorKind::TruncationCollision { colliding_with, .. } = kind else {
+            return None;
+        };
+
+        if colliding_with.is_empty() {
+            return None;
+        }
+
+        Some(
+            colliding_with
+                .iter()
+                .map(|(name, span)| DiagnosticRelatedInformation {
+                    location: Location::new(
+                        uri.clone(),
+                        Range {
+                            start: Self::position_to_lsp(span.start),
+                            end: Self::position_to_lsp(span.end),
+                        },
+                    ),
+                    message: format!("'{name}' truncates to the same output-table name"),
+                })
+                .collect(),
+        )
     }
 
     /// Builds the diagnostic `code` and `data` needed to offer a quick fix
@@ -181,7 +214,7 @@ impl CRBasicLanguageServer {
                 return;
             }
 
-            let diagnostics = Self::semantic_errors_to_diagnostics(doc.errors());
+            let diagnostics = Self::semantic_errors_to_diagnostics(&uri, doc.errors());
             self.client
                 .publish_diagnostics(uri, diagnostics, None)
                 .await;
@@ -625,6 +658,10 @@ mod tests {
     use crbasic_parser::lexer::token::Span;
     use crbasic_parser::semantic::{ErrorSeverity, SemanticErrorKind};
 
+    fn test_uri() -> Uri {
+        "file:///test.cr2".parse::<Uri>().expect("Valid URL")
+    }
+
     #[test]
     fn converts_error_severity_to_diagnostic_severity() {
         let error = SemanticError {
@@ -633,10 +670,12 @@ mod tests {
             severity: ErrorSeverity::Error,
             kind: SemanticErrorKind::TruncationCollision {
                 variable_name: "Test".to_string(),
+                colliding_with: vec![],
             },
         };
 
-        let diagnostics = CRBasicLanguageServer::semantic_errors_to_diagnostics(&[error]);
+        let diagnostics =
+            CRBasicLanguageServer::semantic_errors_to_diagnostics(&test_uri(), &[error]);
 
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(diagnostics[0].severity, Some(DiagnosticSeverity::ERROR));
@@ -651,13 +690,61 @@ mod tests {
             severity: ErrorSeverity::Warning,
             kind: SemanticErrorKind::TruncationCollision {
                 variable_name: "Test".to_string(),
+                colliding_with: vec![],
             },
         };
 
-        let diagnostics = CRBasicLanguageServer::semantic_errors_to_diagnostics(&[error]);
+        let diagnostics =
+            CRBasicLanguageServer::semantic_errors_to_diagnostics(&test_uri(), &[error]);
 
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(diagnostics[0].severity, Some(DiagnosticSeverity::WARNING));
+    }
+
+    #[test]
+    fn populates_related_information_for_truncation_collision() {
+        let error = SemanticError {
+            message: "Test error".to_string(),
+            span: Span::new(Position::new(2, 1), Position::new(2, 10)),
+            severity: ErrorSeverity::Error,
+            kind: SemanticErrorKind::TruncationCollision {
+                variable_name: "Temperature_S1".to_string(),
+                colliding_with: vec![(
+                    "Temperature_S2".to_string(),
+                    Span::new(Position::new(3, 1), Position::new(3, 10)),
+                )],
+            },
+        };
+
+        let diagnostics =
+            CRBasicLanguageServer::semantic_errors_to_diagnostics(&test_uri(), &[error]);
+
+        let related = diagnostics[0]
+            .related_information
+            .as_ref()
+            .expect("Should have related_information for a truncation collision");
+        assert_eq!(related.len(), 1);
+        assert_eq!(related[0].location.uri, test_uri());
+        assert_eq!(related[0].location.range.start.line, 2); // parser line 3, 0-indexed
+        assert!(related[0].message.contains("Temperature_S2"));
+    }
+
+    #[test]
+    fn omits_related_information_for_non_collision_errors() {
+        let error = SemanticError {
+            message: "Test error".to_string(),
+            span: Span::new(Position::new(1, 1), Position::new(1, 10)),
+            severity: ErrorSeverity::Error,
+            kind: SemanticErrorKind::MaxLengthExceeded {
+                variable_name: "Temperature_Sensor_1".to_string(),
+                max_length: 16,
+            },
+        };
+
+        let diagnostics =
+            CRBasicLanguageServer::semantic_errors_to_diagnostics(&test_uri(), &[error]);
+
+        assert_eq!(diagnostics[0].related_information, None);
     }
 
     #[test]
@@ -672,7 +759,8 @@ mod tests {
             },
         };
 
-        let diagnostics = CRBasicLanguageServer::semantic_errors_to_diagnostics(&[error]);
+        let diagnostics =
+            CRBasicLanguageServer::semantic_errors_to_diagnostics(&test_uri(), &[error]);
 
         assert_eq!(
             diagnostics[0].code,
@@ -697,7 +785,8 @@ mod tests {
             },
         };
 
-        let diagnostics = CRBasicLanguageServer::semantic_errors_to_diagnostics(&[error]);
+        let diagnostics =
+            CRBasicLanguageServer::semantic_errors_to_diagnostics(&test_uri(), &[error]);
 
         let data: TruncateVariableNameData =
             serde_json::from_value(diagnostics[0].data.clone().expect("Should have data"))
@@ -714,10 +803,12 @@ mod tests {
             severity: ErrorSeverity::Error,
             kind: SemanticErrorKind::TruncationCollision {
                 variable_name: "Temperature_S1".to_string(),
+                colliding_with: vec![],
             },
         };
 
-        let diagnostics = CRBasicLanguageServer::semantic_errors_to_diagnostics(&[error]);
+        let diagnostics =
+            CRBasicLanguageServer::semantic_errors_to_diagnostics(&test_uri(), &[error]);
 
         assert_eq!(diagnostics[0].code, None);
         assert_eq!(diagnostics[0].data, None);
