@@ -278,6 +278,9 @@ impl HoverProvider {
             "openinterval" => Some(
                 "**OpenInterval**\n\nMakes time series processing include all measurements since the last data storage, spanning any missed output intervals, instead of only the current interval.",
             ),
+            "fillstop" => Some(
+                "**FillStop**\n\nStops data storage once this DataTable reaches its configured size, instead of the default ring-memory behavior of overwriting the oldest records. Placed immediately after the DataTable statement.",
+            ),
             "consttable" => Some(
                 "**ConstTable**\n\nDefines a block of constants that field technicians can edit and recompile without touching the constants' use sites.\n\n```crbasic\nConstTable(TableName, Enabled)\n  Const A = 1\nEndConstTable\n```",
             ),
@@ -438,6 +441,7 @@ mod tests {
                     "EndTable",
                     "TableHide",
                     "OpenInterval",
+                    "FillStop",
                     "ConstTable",
                     "EndConstTable",
                     "StructureType",

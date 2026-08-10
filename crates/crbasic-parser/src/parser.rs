@@ -187,6 +187,7 @@ impl<'a> Parser<'a> {
                 || kw == "ShutDownEnd"
                 || kw == "TableHide"
                 || kw == "OpenInterval"
+                || kw == "FillStop"
                 || kw == "DataTable"
                 || kw == "EndTable"
                 || kw == "ConstTable"
@@ -5275,6 +5276,21 @@ mod tests {
             assert!(matches!(
                 &program.statements[2],
                 Statement::ProgramStructure { keyword, .. } if keyword == "OpenInterval"
+            ));
+        }
+
+        #[test]
+        fn parses_fillstop_inside_datatable_body() {
+            let source = "DataTable(Test,True,1000)\n  FillStop\nEndTable".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[1],
+                Statement::ProgramStructure { keyword, .. } if keyword == "FillStop"
             ));
         }
 

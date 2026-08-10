@@ -577,6 +577,10 @@ impl CompletionProvider {
                 "OpenInterval",
                 "Includes all measurements since the last data storage, spanning missed output intervals",
             ),
+            Self::create_keyword_completion(
+                "FillStop",
+                "Stops data storage once this DataTable reaches its configured size, instead of overwriting the oldest records",
+            ),
             Self::create_keyword_snippet(
                 "ConstTable",
                 "ConstTable(${1:TableName}, ${2:Enabled})\n\tConst $0\nEndConstTable",
