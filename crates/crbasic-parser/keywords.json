@@ -137,6 +137,7 @@
     { "name": "Minimum", "category": "data" },
     { "name": "Maximum", "category": "data" },
     { "name": "Totalize", "category": "data" },
+    { "name": "WindVector", "category": "data" },
     { "name": "Histogram", "category": "data" },
     { "name": "FieldNames", "category": "data" },
     { "name": "CardOut", "category": "data" },

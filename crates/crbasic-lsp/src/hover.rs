@@ -76,7 +76,8 @@ impl HoverProvider {
             // still needs to recognize them, scoped to exactly this known
             // set so ordinary variable identifiers keep returning `None`.
             TokenKind::Identifier(name) => Self::get_data_type_description(name)
-                .or_else(|| Self::get_output_processing_data_type_description(name)),
+                .or_else(|| Self::get_output_processing_data_type_description(name))
+                .or_else(|| Self::get_measurement_function_description(name)),
             _ => None,
         }?;
         let range = Self::token_to_lsp_range(token);
@@ -131,6 +132,29 @@ impl HoverProvider {
             "uint4" => Some("**UINT4**\n\n32-bit unsigned integer."),
             "bool8" => Some("**Bool8**\n\nArray of eight 1-bit Boolean values packed into 1 byte."),
             "nsec" => Some("**NSEC**\n\nNanosecond-resolution time stamp (8 bytes)."),
+            _ => None,
+        }
+    }
+
+    /// Returns the description for a built-in measurement/output-processing
+    /// function name, or `None` if `name` isn't one of them (e.g. an
+    /// ordinary variable name). Scoped narrowly to the functions that also
+    /// have `signature.rs` coverage, the same pattern as
+    /// `get_data_type_description` -- not full `BUILTIN_FUNCTIONS` parity.
+    fn get_measurement_function_description(name: &str) -> Option<&'static str> {
+        match name.to_lowercase().as_str() {
+            "windvector" => Some(
+                "**WindVector**\n\nProcesses raw wind speed/direction samples into mean wind speed, mean wind vector magnitude and direction, and standard deviation of wind direction.",
+            ),
+            "tcdiff" => Some(
+                "**TCDiff**\n\nMeasures a thermocouple on a differential channel and converts the result to degrees Celsius.",
+            ),
+            "resistance" => Some(
+                "**Resistance**\n\nMeasures the resistance of a basic or full-bridge circuit using current excitation.",
+            ),
+            "sdi12recorder" => {
+                Some("**SDI12Recorder**\n\nRetrieves measurement results from an SDI-12 sensor.")
+            }
             _ => None,
         }
     }
@@ -664,6 +688,86 @@ mod tests {
             match hover.contents {
                 HoverContents::Markup(markup) => {
                     assert!(markup.value.contains("**FP2**"));
+                }
+                _ => panic!("Expected MarkupContent"),
+            }
+        }
+
+        #[test]
+        fn returns_hover_for_windvector_function_name() {
+            let tokens = tokenize("WindVector(1,WS_ms,WindDir,IEEE4,0,0,0,0)");
+            let position = Position {
+                line: 0,
+                character: 0,
+            };
+
+            let hover = HoverProvider::get_hover_at_position(&tokens, position);
+
+            assert!(hover.is_some());
+            let hover = hover.expect("hover should be Some");
+            match hover.contents {
+                HoverContents::Markup(markup) => {
+                    assert!(markup.value.contains("**WindVector**"));
+                }
+                _ => panic!("Expected MarkupContent"),
+            }
+        }
+
+        #[test]
+        fn returns_hover_for_tcdiff_function_name() {
+            let tokens = tokenize("TCDiff(Dest,1,mV200C,1,TypeT,PTemp,True,0,15000,1.0,0)");
+            let position = Position {
+                line: 0,
+                character: 0,
+            };
+
+            let hover = HoverProvider::get_hover_at_position(&tokens, position);
+
+            assert!(hover.is_some());
+            let hover = hover.expect("hover should be Some");
+            match hover.contents {
+                HoverContents::Markup(markup) => {
+                    assert!(markup.value.contains("**TCDiff**"));
+                }
+                _ => panic!("Expected MarkupContent"),
+            }
+        }
+
+        #[test]
+        fn returns_hover_for_resistance_function_name() {
+            let tokens = tokenize("Resistance(Dest,1,mV5000,U1,U7,3,2500,True,True,0,60,1.0,0)");
+            let position = Position {
+                line: 0,
+                character: 0,
+            };
+
+            let hover = HoverProvider::get_hover_at_position(&tokens, position);
+
+            assert!(hover.is_some());
+            let hover = hover.expect("hover should be Some");
+            match hover.contents {
+                HoverContents::Markup(markup) => {
+                    assert!(markup.value.contains("**Resistance**"));
+                }
+                _ => panic!("Expected MarkupContent"),
+            }
+        }
+
+        #[test]
+        fn returns_hover_for_sdi12recorder_function_name() {
+            let tokens = tokenize("SDI12Recorder(SR50A(),C1,\"0\",\"C1!\",1,0)");
+            let position = Position {
+                line: 0,
+                character: 0,
+            };
+
+            let hover = HoverProvider::get_hover_at_position(&tokens, position);
+
+            assert!(hover.is_some());
+            let hover = hover.expect("hover should be Some");
+            match hover.contents {
+                HoverContents::Markup(markup) => {
+                    assert!(markup.value.contains("**SDI12Recorder**"));
                 }
                 _ => panic!("Expected MarkupContent"),
             }

@@ -138,6 +138,7 @@ pub const BUILTIN_FUNCTIONS: &[(&str, &str)] = &[
     ("Minimum", "data"),
     ("Maximum", "data"),
     ("Totalize", "data"),
+    ("WindVector", "data"),
     ("Histogram", "data"),
     ("FieldNames", "data"),
     ("CardOut", "data"),

@@ -100,7 +100,7 @@ impl CompletionProvider {
             ),
             Self::create_function_completion(
                 "TCDiff",
-                "TCDiff(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:DiffChan}, ${5:TCType}, ${6:TRef}, ${7:RevDiff}, ${8:SettlingTime}, ${9:Integ}, ${10:Mult}, ${11:Offset})",
+                "TCDiff(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:DiffChan}, ${5:TCType}, ${6:TRef}, ${7:RevDiff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})",
                 "Measures thermocouple temperature (differential).",
             ),
             Self::create_function_completion(
@@ -994,6 +994,18 @@ mod tests {
             assert!(scan.insert_text.is_some());
             assert_eq!(scan.insert_text_format, Some(InsertTextFormat::SNIPPET));
             assert!(scan.insert_text.as_ref().unwrap().contains("${1:"));
+        }
+
+        #[test]
+        fn tcdiff_ninth_placeholder_is_the_notch_filter_frequency_not_integration() {
+            // Campbell Scientific's own syntax diagram names this parameter
+            // `fN1`, distinct from the `Integ` parameter used by
+            // VoltSe/VoltDiff -- confirmed at
+            // https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/tcdiff.htm
+            let completions = CompletionProvider::get_builtin_function_completions();
+            let tcdiff = completions.iter().find(|c| c.label == "TCDiff").unwrap();
+
+            assert!(tcdiff.insert_text.as_ref().unwrap().contains("${9:fN1}"));
         }
 
         #[test]

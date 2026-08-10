@@ -293,6 +293,198 @@ impl SignatureProvider {
                 ],
             }),
 
+            "tcdiff" => Some(FunctionSignature {
+                name: "TCDiff".to_string(),
+                documentation: "Measures a thermocouple on a differential channel and converts the result to degrees Celsius.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable (or array, if Reps > 1) for the result.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "Voltage range for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "Differential channel number for the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TCType".to_string(),
+                        documentation: "Thermocouple type (TypeT, TypeE, TypeK, TypeJ, TypeB, TypeR, TypeS, or TypeN).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TRef".to_string(),
+                        documentation: "Reference temperature variable, in degrees C.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevDiff".to_string(),
+                        documentation: "Reverse differential (True/False).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "Settling time in microseconds.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "Lowest frequency notched out by the sinc filter.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "Multiplier for scaling.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset for scaling.".to_string(),
+                    },
+                ],
+            }),
+
+            "resistance" => Some(FunctionSignature {
+                name: "Resistance".to_string(),
+                documentation: "Measures the resistance of a basic or full-bridge circuit using current excitation.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable (or array, if Reps > 1) for the result.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "Voltage range (mV5000, mV1000, or mV200).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "Differential channel number for the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IexChan".to_string(),
+                        documentation: "Current excitation channel number for the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPEx".to_string(),
+                        documentation: "Number of sensors to excite per excitation channel before advancing.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EXuA".to_string(),
+                        documentation: "Excitation current, in microamps.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Reverse excitation (True/False).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevDiff".to_string(),
+                        documentation: "Reverse differential (True/False).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "Settling time in microseconds.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "Lowest frequency notched out by the sinc filter.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "Multiplier for scaling.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset for scaling.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasCurrent".to_string(),
+                        documentation: "Optional: include the excitation current as the last value in Dest.".to_string(),
+                    },
+                ],
+            }),
+
+            "sdi12recorder" => Some(FunctionSignature {
+                name: "SDI12Recorder".to_string(),
+                documentation: "Retrieves measurement results from an SDI-12 sensor.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination array for the sensor's returned values.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDIPort".to_string(),
+                        documentation: "SDI-12 port the sensor is connected to.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDIAddress".to_string(),
+                        documentation: "SDI-12 address of the sensor (0-9, a-z, A-Z).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDICommand".to_string(),
+                        documentation: "SDI-12 command string to send, in quotes (e.g., \"M!\").".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Multiplier".to_string(),
+                        documentation: "Multiplier for scaling.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset for scaling.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FillNAN".to_string(),
+                        documentation: "Optional: how to record NAN values from a bad sensor reading.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "WaitonTimeout".to_string(),
+                        documentation: "Optional: wait inside the instruction for a C! command to finish.".to_string(),
+                    },
+                ],
+            }),
+
+            "windvector" => Some(FunctionSignature {
+                name: "WindVector".to_string(),
+                documentation: "Processes raw wind speed/direction samples into mean wind speed, mean wind vector magnitude and direction, and standard deviation of wind direction.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of wind vector averages to calculate.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Speed/East".to_string(),
+                        documentation: "Wind speed (polar sensor) or East component (orthogonal sensor); an array if Reps > 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Direction/North".to_string(),
+                        documentation: "Wind direction (polar sensor) or North component (orthogonal sensor); an array if Reps > 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "Output storage format (IEEE4, FP2, IEEE8, etc.).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DisableVar".to_string(),
+                        documentation: "Excludes the current measurement from output when nonzero.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Subinterval".to_string(),
+                        documentation: "Scan interval for subinterval standard-deviation processing (0 to use every sample).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SensorType".to_string(),
+                        documentation: "Sensor configuration: 0 for polar, 1 for orthogonal.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "OutputOpt".to_string(),
+                        documentation: "Selects which of the wind vector outputs to store.".to_string(),
+                    },
+                ],
+            }),
+
             "serialopen" => Some(FunctionSignature {
                 name: "SerialOpen".to_string(),
                 documentation: "Opens a serial communication port.".to_string(),
@@ -886,6 +1078,92 @@ mod tests {
             assert!(SignatureProvider::get_function_signature("PulseCount").is_some());
             assert!(SignatureProvider::get_function_signature("VoltSe").is_some());
             assert!(SignatureProvider::get_function_signature("VoltDiff").is_some());
+            assert!(SignatureProvider::get_function_signature("TCDiff").is_some());
+            assert!(SignatureProvider::get_function_signature("Resistance").is_some());
+            assert!(SignatureProvider::get_function_signature("SDI12Recorder").is_some());
+            assert!(SignatureProvider::get_function_signature("WindVector").is_some());
+        }
+
+        #[test]
+        fn tcdiff_ninth_parameter_is_the_notch_filter_frequency_not_integration() {
+            // Campbell Scientific's own syntax diagram names this parameter
+            // `fN1` (the sinc filter's first notch frequency), distinct from
+            // the `Integ` parameter used by VoltSe/VoltDiff -- confirmed at
+            // https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/tcdiff.htm
+            let sig = SignatureProvider::get_function_signature("TCDiff")
+                .expect("TCDiff should have a signature");
+
+            assert_eq!(sig.parameters.len(), 11);
+            assert_eq!(sig.parameters[8].name, "fN1");
+        }
+
+        #[test]
+        fn resistance_has_fourteen_parameters_in_documented_order() {
+            let sig = SignatureProvider::get_function_signature("Resistance")
+                .expect("Resistance should have a signature");
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+
+            assert_eq!(
+                names,
+                vec![
+                    "Dest",
+                    "Reps",
+                    "Range",
+                    "DiffChan",
+                    "IexChan",
+                    "MeasPEx",
+                    "EXuA",
+                    "RevEx",
+                    "RevDiff",
+                    "SettlingTime",
+                    "fN1",
+                    "Mult",
+                    "Offset",
+                    "MeasCurrent",
+                ]
+            );
+        }
+
+        #[test]
+        fn sdi12recorder_has_eight_parameters_in_documented_order() {
+            let sig = SignatureProvider::get_function_signature("SDI12Recorder")
+                .expect("SDI12Recorder should have a signature");
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+
+            assert_eq!(
+                names,
+                vec![
+                    "Dest",
+                    "SDIPort",
+                    "SDIAddress",
+                    "SDICommand",
+                    "Multiplier",
+                    "Offset",
+                    "FillNAN",
+                    "WaitonTimeout",
+                ]
+            );
+        }
+
+        #[test]
+        fn windvector_has_eight_parameters_in_documented_order() {
+            let sig = SignatureProvider::get_function_signature("WindVector")
+                .expect("WindVector should have a signature");
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+
+            assert_eq!(
+                names,
+                vec![
+                    "Reps",
+                    "Speed/East",
+                    "Direction/North",
+                    "DataType",
+                    "DisableVar",
+                    "Subinterval",
+                    "SensorType",
+                    "OutputOpt",
+                ]
+            );
         }
 
         #[test]

@@ -147,7 +147,7 @@
     },
     "builtin-functions-data": {
       "name": "support.function.data.crbasic",
-      "match": "(?i)\\b(Sample|Average|StdDev|Variance|Minimum|Maximum|Totalize|Histogram|FieldNames|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval)\\b"
+      "match": "(?i)\\b(Sample|Average|StdDev|Variance|Minimum|Maximum|Totalize|WindVector|Histogram|FieldNames|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval)\\b"
     },
     "builtin-functions-general": {
       "patterns": [
