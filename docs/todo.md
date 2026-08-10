@@ -1507,6 +1507,128 @@ Not flagged as gaps (verified during the same comparison):
   (`ArrayIndex`, `StationName`, `Status`, `LoggerType`, `RunProgram`,
   `SemaphoreGet`/`Release`, `WaitDigTrig`, `NewFieldNames`, etc.)
 
+### Reference Implementation & Official Docs Comparison, Round 9 (2026-08-10)
+
+Found during a ninth comparison round, this time targeting angles Rounds
+1-8 hadn't systematically covered: `Dim`/`Public`/`Const` initializer
+syntax specifically (rather than keyword-list diffing), and a fresh
+full-text diff of both reference grammars' keyword/snippet lists against
+`keywords.json`. Unlike every prior round, two of the three findings below
+are the *inverse* of the dominant bug class -- a real, documented
+construct that was unparseable, and over-permissive grammar that silently
+accepted invalid syntax -- rather than a bare keyword being swallowed as
+an inert identifier. Each finding verified against an official
+help.campbellsci.com page and a real parse repro before fixing.
+
+- [x] Brace-list array initializer (`{v1, v2, ...}`) entirely unlexed
+  (bug) ✅ Resolved
+  - `{`/`}` fell through the scanner's catch-all unknown-character arm in
+    `crates/crbasic-parser/src/lexer/scanner.rs`, silently vanishing from
+    the token stream. Confirmed real at
+    [Dim](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/dim.htm)
+    and [Public](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/public.htm)
+    (`Public MyArray(3) = {3, 6, 9}`) and
+    [Const](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/const1.htm)
+    (`Const A = {1,2,3,4,5,6,7,8,9,10}`, added in OS9). Repro confirmed:
+    `Public Array (2,3) = {1,2,3,4}` failed with `Expected identifier
+    after variable declaration keyword or comma`, since the braces
+    disappeared and the bare `1,2,3,4` was misread as a comma-separated
+    *variable list* continuation. Scalar and fixed-length-string
+    initializers already worked correctly -- only the brace-array form
+    was broken
+  - Added `LeftBrace`/`RightBrace` tokens and an
+    `Expression::ArrayLiteral` AST variant, parsed by a new
+    `parse_var_initializer` helper shared by both declaration-parsing
+    functions (`parse_var_declaration`, `parse_single_var_with_keyword`).
+    `call_sites.rs` (shared by inlay hints and call hierarchy) gained a
+    matching arm walking each element the same way it already walks
+    function-call arguments
+  - 1 new lexer test (`recognizes_braces`) + 3 new parser tests
+    (`parses_brace_list_array_initializer`,
+    `parses_multi_dimensional_brace_list_array_initializer`,
+    `parses_brace_list_array_initializer_on_a_second_comma_separated_variable`)
+    added Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate
+    passes
+- [x] Multi-variable `Dim`/`Public` declarations (`Dim a, b, c`) broke
+  inside every nested block (bug) ✅ Resolved
+  - The comma-expansion loop that turns one comma-separated declaration
+    line into multiple `VarDeclaration` statements existed only in
+    `Parser::parse()`'s top-level loop -- every other statement-list loop
+    (`If`/`ElseIf`/`Else` branches, single-line `If`, `Select Case`,
+    `For`, `Do`, `While`, `Function`, `Sub`, `#If`) had no equivalent
+    handling. Confirmed at
+    [Dim](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/dim.htm),
+    which explicitly documents both halves of the combination that
+    tripped this bug: multiple variables comma-separated on one line, and
+    `Dim` variables local to their enclosing `Function`/`Sub`. Repro
+    confirmed: `Dim a, b` inside a `Function`/`Sub`/`If`/`For`/`Do` body
+    failed with `Unexpected token: Comma`
+  - Factored the expansion into a shared `parse_statement_into` helper,
+    used by every statement-list call site instead of each one calling
+    `parse_statement` directly
+  - 4 new parser tests (inside a `Function` body, a `Sub` body, an `If`
+    block, a `For` loop, and a `Do` loop) added Red-first
+- [x] `Const` illegitimately accepted comma-separated multiple constants
+  on one line (over-permissive grammar) ✅ Resolved
+  - The same comma-expansion loop applied uniformly to `Public`/`Dim`/
+    `Const` alike, so `Const A = 1, B = 2` silently produced two valid
+    `VarDeclaration` statements with no error. Campbell Scientific's own
+    [Const](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/const1.htm)
+    docs carry an explicit bolded NOTE: "Only one constant can be defined
+    with each Const declaration. Unlike other similar languages, CRBasic
+    does not allow multiple constants to be defined with one
+    declaration." The inverse of the dominant bug class this project's
+    comparison rounds are tuned to find via keyword-presence diffing --
+    this one only surfaces from reading a docs page's fine print
+  - `parse_statement_into` now returns a `ParseError` when a comma follows
+    a `Const` declaration, instead of expanding into a second constant
+  - 1 new parser test (`const_with_a_second_comma_separated_constant_is_a_parse_error`)
+    added Red-first
+
+Not flagged as gaps (verified during the same comparison):
+
+- `Sample`/`Average`/`Totalize`/`Maximum`/`Minimum`/`StdDev`/`Median`/
+  `WindVector`/`Covariance`/`RectPolar`/`TableFieldNames`/`SampleMaxMin`/
+  `AvgRun`/`ETsz` (`DataTable`-body output-processing instructions): all
+  confirmed function-shaped via official docs syntax diagrams -- already
+  parse correctly via the generic `FunctionCall` grammar, part of the
+  already-deferred ~126-vs-~420 `builtinFunctions` content backlog
+- `Percentile`, `SampleFieldNames`: no official docs page exists for
+  either name under any URL guess or search, and neither is present in
+  `keywords.json` -- not real CRBasic instructions, no fabrication to
+  remove
+- `Identifier()` with zero arguments nested inside another call's
+  argument list (e.g. `Sample(9,Var(),String)`'s `Var()`): confirmed via
+  reading `parse_primary`'s function-call-argument loop that this already
+  parses fine both standalone and nested -- no special "wildcard"
+  handling needed or missing
+- `TypeOf`, `ClockSet`, `ComPortIsActive`, `ResetTable`, `MenuItem`,
+  `MenuPick`, `DisplayValue`, `WatchdogTimer`, `SW12`, `Battery`, `Timer`,
+  `TriggerSequence`: all confirmed function-shaped via docs
+- `ClockChange`: docs show `Variable = ClockChange` -- a bare
+  pseudo-variable used only as an expression operand (same shape as the
+  already-fine `NaN`), never as its own statement; already parses
+  correctly as a plain identifier
+- `Sequential` (as distinct from the already-supported `SequentialMode`):
+  no docs page exists; not a real separate instruction
+- `LoggerType` as a standalone construct: only ever used as an ordinary
+  identifier inside expressions (e.g. `#If LoggerType = "CR1000X"`);
+  already handled generically, no dedicated grammar needed
+- Array-of-`StructureType` combined with fixed-length strings on the same
+  declaration: not a meaningful real construct -- `As StructureTypeName`
+  and `As String * N` are mutually exclusive type-annotation forms
+- `crbasic-vscode-support/src/`: contains only `extension.js` (already
+  dismissed in Round 1); no other source files exist in either reference
+  repo
+- Full fresh regex extraction of every keyword/pattern identifier from
+  both reference repos' `.tmLanguage.json` files and
+  `crbasic-vscode-support/snippets/crbasic.json` against `keywords.json`
+  (363 unmatched names): every one resolves to either the already-deferred
+  `builtinFunctions` content backlog or names individually dismissed in
+  this or prior rounds (`Eqv`, `IntDv`, `Restore`,
+  `BeginBurstTrigger`/`EndBurstTrigger`, `ArrayIndex`, `Status`,
+  `StationName`, `Debug`, `RunProgram`, etc.)
+
 ### Packaging Gap (discovered while designing the release workflow)
 
 - [x] Multi-platform `.vsix` packaging ✅ Resolved
