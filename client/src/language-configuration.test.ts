@@ -262,4 +262,19 @@ describe("language-configuration.json bracket configuration", () => {
   test("still pairs parentheses", () => {
     expect(config.brackets).toContainEqual(["(", ")"]);
   });
+
+  // `{v1, v2, ...}` is the real CRBasic brace-list array initializer syntax
+  // (e.g. `Public MyArray(3) = {3, 6, 9}`), lexed and parsed since it was
+  // added to the parser -- the editor config never gained matching pairing.
+  test("pairs curly braces (array literal initializer syntax)", () => {
+    expect(config.brackets).toContainEqual(["{", "}"]);
+  });
+
+  test("auto-closes curly braces", () => {
+    expect(config.autoClosingPairs).toContainEqual({ open: "{", close: "}" });
+  });
+
+  test("surrounds selections with curly braces", () => {
+    expect(config.surroundingPairs).toContainEqual(["{", "}"]);
+  });
 });
