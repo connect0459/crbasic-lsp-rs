@@ -170,6 +170,12 @@ impl<'a> Parser<'a> {
         }
 
         if let &TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "Include"
+        {
+            return self.parse_include_statement();
+        }
+
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && kw == "StructureType"
         {
             return self.parse_structure_type();
@@ -864,6 +870,30 @@ impl<'a> Parser<'a> {
         Ok(Statement::Units {
             variable,
             unit,
+            span: crate::lexer::token::Span::new(start, end),
+        })
+    }
+
+    /// Parses an `Include` statement.
+    /// Syntax: `Include "Device:Filename"`
+    ///
+    /// Structural only: the referenced file is not resolved, read, or
+    /// indexed -- this project has no cross-file infrastructure yet. The
+    /// path is parsed via `parse_primary` for the same reason as
+    /// `parse_alias_statement`'s operands.
+    fn parse_include_statement(&mut self) -> Result<Statement, ParseError> {
+        let include_token = self.advance();
+        let start = include_token.span.start;
+
+        let path = self.parse_primary()?;
+        let end = path.span().end;
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        Ok(Statement::Include {
+            path,
             span: crate::lexer::token::Span::new(start, end),
         })
     }
@@ -2391,6 +2421,7 @@ impl Statement {
             Statement::Units { span, .. } => *span,
             Statement::ReadOnly { span, .. } => *span,
             Statement::StructureType { span, .. } => *span,
+            Statement::Include { span, .. } => *span,
         }
     }
 }
@@ -4780,6 +4811,47 @@ mod tests {
         #[test]
         fn readonly_does_not_swallow_the_following_statement() {
             let mut scanner = Scanner::new("ReadOnly Mult, Offset\nDim i");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 2);
+            assert!(matches!(
+                &program.statements[1],
+                Statement::VarDeclaration { name, .. } if name == "i"
+            ));
+        }
+    }
+
+    mod include_statement {
+        use super::*;
+
+        #[test]
+        fn parses_include_of_a_string_path() {
+            let mut scanner = Scanner::new(r#"Include "cpu:Sensor_PT500_Lib.crb""#);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Include { path, .. } = &program.statements[0] {
+                assert!(matches!(
+                    path,
+                    Expression::StringLiteral { value, .. }
+                        if value == "cpu:Sensor_PT500_Lib.crb"
+                ));
+            } else {
+                panic!(
+                    "Expected Include statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn include_does_not_swallow_the_following_statement() {
+            let mut scanner = Scanner::new("Include \"cpu:Foo.crb\"\nDim i");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 

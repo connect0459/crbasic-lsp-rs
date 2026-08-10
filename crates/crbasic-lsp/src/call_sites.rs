@@ -154,6 +154,8 @@ fn walk_statements<'a>(
             // are declarations, not expressions, so there are no calls to
             // collect inside one.
             Statement::StructureType { .. } => {}
+            // `Include`'s path is a device/filename string, never a real call.
+            Statement::Include { .. } => {}
         }
     }
 }

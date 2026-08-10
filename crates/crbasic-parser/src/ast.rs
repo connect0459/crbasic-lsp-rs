@@ -239,6 +239,20 @@ pub enum Statement {
         span: Span,
     },
 
+    /// `Include` statement: pulls in an external CRBasic source file.
+    /// Syntax: `Include "Device:Filename"`
+    /// See <https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/include.htm>
+    ///
+    /// Parsed structurally only -- the referenced file is not resolved,
+    /// read, or indexed. This project has no cross-file infrastructure yet
+    /// (same open-documents-only scope as `workspaceSymbolProvider`).
+    Include {
+        /// The included file's path expression (typically a string literal)
+        path: Expression,
+        /// The source code span
+        span: Span,
+    },
+
     /// `StructureType`/`EndStructureType` block: defines a reusable data
     /// structure. Instances are declared via `Public`/`Dim ... As
     /// StructureTypeName` (an ordinary `VarDeclaration` with a

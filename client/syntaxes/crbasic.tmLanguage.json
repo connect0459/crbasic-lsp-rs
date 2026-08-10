@@ -103,7 +103,7 @@
     },
     "declaration-keywords": {
       "name": "storage.type.crbasic",
-      "match": "(?i)\\b(Public|Dim|Const|Alias|As|Units|ReadOnly|Optional)\\b"
+      "match": "(?i)\\b(Public|Dim|Const|Alias|As|Units|ReadOnly|Include|Optional)\\b"
     },
     "structure-keywords": {
       "patterns": [

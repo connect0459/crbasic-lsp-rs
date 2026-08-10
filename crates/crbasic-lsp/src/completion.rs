@@ -525,6 +525,11 @@ impl CompletionProvider {
                 "Optional",
                 "Mark a Function/Sub parameter as optional",
             ),
+            Self::create_keyword_snippet(
+                "Include",
+                "Include \"${1:cpu:Filename.crb}\"",
+                "Pull in an external CRBasic source file",
+            ),
         ]
     }
 

@@ -244,6 +244,9 @@ impl HoverProvider {
             "optional" => Some(
                 "**Optional**\n\nMarks a `Function`/`Sub` parameter as optional.\n\n```crbasic\nFunction Scale(a, Optional b)\n  ...\nEndFunction\n```",
             ),
+            "include" => Some(
+                "**Include**\n\nPulls in an external CRBasic source file.\n\n```crbasic\nInclude \"cpu:Sensor_PT500_Lib.crb\"\n```",
+            ),
 
             "beginprog" => {
                 Some("**BeginProg**\n\nMarks the start of the main program execution block.")
@@ -416,6 +419,7 @@ mod tests {
             fn all_declaration_keywords_have_hover_info() {
                 let keywords = [
                     "Public", "Dim", "Const", "Alias", "As", "Units", "ReadOnly", "Optional",
+                    "Include",
                 ];
 
                 for keyword in keywords {
