@@ -129,7 +129,7 @@
         },
         {
           "name": "keyword.control.scan.crbasic",
-          "match": "(?i)\\b(Scan|SubScan|NextScan|ContinueScan|NextSubScan|SlowSequence|EndSequence)\\b"
+          "match": "(?i)\\b(Scan|SubScan|NextScan|ContinueScan|NextSubScan|SlowSequence|EndSequence|WaitTriggerSequence)\\b"
         }
       ]
     },

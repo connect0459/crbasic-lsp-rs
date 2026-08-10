@@ -187,6 +187,7 @@ impl<'a> Parser<'a> {
                 || kw == "NextSubScan"
                 || kw == "SlowSequence"
                 || kw == "EndSequence"
+                || kw == "WaitTriggerSequence"
                 || kw == "#UnDef"
                 || kw == "ExitFor"
                 || kw == "ExitDo"
@@ -6380,6 +6381,27 @@ mod tests {
                 &program.statements[1],
                 Statement::ProgramStructure { keyword, .. } if keyword == "ContinueScan"
             ));
+        }
+
+        #[test]
+        fn parses_waittriggersequence_inside_slow_sequence() {
+            let source =
+                "SlowSequence\n  Do\n    WaitTriggerSequence\n  Loop\nEndSequence".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            if let Statement::DoLoop { body, .. } = &program.statements[1] {
+                assert_eq!(body.len(), 1);
+                assert!(matches!(
+                    &body[0],
+                    Statement::ProgramStructure { keyword, .. } if keyword == "WaitTriggerSequence"
+                ));
+            } else {
+                panic!("Expected a do-loop statement");
+            }
         }
     }
 

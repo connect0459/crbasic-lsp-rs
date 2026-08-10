@@ -476,6 +476,10 @@ impl CompletionProvider {
                 "Jumps to NextScan, skipping the rest of the scan body",
             ),
             Self::create_keyword_completion("NextSubScan", "Terminates a SubScan block"),
+            Self::create_keyword_completion(
+                "WaitTriggerSequence",
+                "Marks a resume-point inside a SlowSequence, waiting for the trigger condition",
+            ),
             Self::create_keyword_completion("Return", "Returns a value from a Function"),
             Self::create_keyword_completion("ExitFunction", "Exit Function immediately"),
             Self::create_keyword_completion(

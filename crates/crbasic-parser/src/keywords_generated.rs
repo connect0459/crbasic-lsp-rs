@@ -34,6 +34,7 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("NextSubScan", "scan"),
     ("SlowSequence", "scan"),
     ("EndSequence", "scan"),
+    ("WaitTriggerSequence", "scan"),
     ("Public", "declaration"),
     ("Dim", "declaration"),
     ("Const", "declaration"),

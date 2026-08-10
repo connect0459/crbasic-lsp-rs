@@ -31,6 +31,7 @@
     { "name": "NextSubScan", "category": "scan" },
     { "name": "SlowSequence", "category": "scan" },
     { "name": "EndSequence", "category": "scan" },
+    { "name": "WaitTriggerSequence", "category": "scan" },
     { "name": "Public", "category": "declaration" },
     { "name": "Dim", "category": "declaration" },
     { "name": "Const", "category": "declaration" },

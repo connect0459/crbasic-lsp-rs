@@ -207,6 +207,9 @@ impl HoverProvider {
                 "**SlowSequence**\n\nBegins a slow sequence scan block, for measurements at a slower rate than the main scan.\n\n```crbasic\nSlowSequence\n  Scan(...)\n    ' statements\n  NextScan\nEndSequence\n```",
             ),
             "endsequence" => Some("**EndSequence**\n\nTerminates a SlowSequence block."),
+            "waittriggersequence" => Some(
+                "**WaitTriggerSequence**\n\nMarks a resume-point inside a `SlowSequence`, suspending execution there until the trigger condition is met again.",
+            ),
 
             "public" => Some(
                 "**Public**\n\nDeclares a public (global) variable that can be monitored and logged.\n\n```crbasic\nPublic Temp_C As Float\n```",
