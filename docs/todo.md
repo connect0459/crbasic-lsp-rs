@@ -1597,6 +1597,55 @@ Not flagged as gaps (verified during the same comparison):
   either name under any URL guess or search, and neither is present in
   `keywords.json` -- not real CRBasic instructions, no fabrication to
   remove
+
+### Reference Implementation & Official Docs Comparison, Round 10 (2026-08-10)
+
+Found during a tenth comparison round. Rounds 1-9 had already mined both
+reference grammars and help.campbellsci.com to the point of diminishing
+returns on grammar/keyword coverage, so this round instead audited (a)
+consistency of every AST-walking LSP feature across all `Statement`
+variants, and (b) a specific gap Round 9's own "Data type completions"
+entry had named in passing but never turned into its own tracked item.
+
+- [x] `Sample()`/`Average()`-style output-processing data types (`FP2`,
+  `IEEE4`, `IEEE8`, `UINT2`, `UINT4`, `Bool8`, `NSEC`) had no completion or
+  hover coverage ✅ Resolved
+  - Round 9's "Data type completions" entry explicitly noted this set as
+    "a different position this project doesn't offer type completions
+    for," but that gap was never itself tracked or acted on until now.
+    Re-verified against Campbell Scientific's own
+    [Data Types](https://help.campbellsci.com/crbasic/cr1000x/Content/Info/datatypes.htm)
+    page: `Long`/`UINT1`/`Boolean`/`String` are valid in both this set and
+    the six already-covered `As`-clause types, so only the seven listed
+    above are new
+  - This project's completion model has no position-sensitive filtering
+    anywhere (`get_all_completions` already offers the six `As`-clause
+    types unconditionally, not just after `As`), so the seven new types
+    were added as an `output_processing_data_type_completions()` category
+    following that same precedent, wired into `get_all_completions`
+  - `hover.rs`'s existing `get_data_type_description` (scoped to the six
+    `As`-clause types) gained a sibling
+    `get_output_processing_data_type_description`, tried second so a
+    plain identifier still correctly returns `None`
+  - 4 new completion tests + 1 new hover test added Red-first; full
+    workspace `build`/`test`/`clippy`/`fmt` gate passes
+- AST-consumer completeness audit (enumerated every `Statement` variant --
+  including `SelectCase`, `PreprocessorConditional`, `Alias`, `Units`,
+  `ReadOnly`, `Include`, `StructureType` -- against every AST-walking LSP
+  feature: `definition.rs`, `semantic_tokens.rs`, `folding.rs`,
+  `symbols.rs`, `code_lens.rs`, `call_hierarchy.rs`, `completion.rs`):
+  no gap found. `definition.rs`/`semantic_tokens.rs` consistently recurse
+  into every statement holding a nested `Vec<Statement>` body
+  (`IfStatement`, `PreprocessorConditional`, `ForLoop`, `DoLoop`,
+  `SelectCase`'s per-case bodies); the apparent gaps in `symbols.rs`/
+  `completion.rs` (not recursing into any of those bodies at all) are the
+  already-documented, deliberate Round 2 scope decision, not a new bug
+- LSP position-encoding audit: the lexer's `column` counter increments per
+  Rust `char` (Unicode scalar value), which matches the LSP spec's
+  required UTF-16 code-unit counting for every codepoint below U+10000.
+  Only astral-plane codepoints (emoji, rare scripts) would misalign by one
+  column per character -- not acted on, given CRBasic source is
+  effectively ASCII/Latin-1 engineering code in practice
 - `Identifier()` with zero arguments nested inside another call's
   argument list (e.g. `Sample(9,Var(),String)`'s `Var()`): confirmed via
   reading `parse_primary`'s function-call-argument loop that this already
