@@ -2085,16 +2085,44 @@ gap was found; this round's only change is a documentation correction.
   `src/` file) is entirely the same PC400/import command logic already
   covered above; `cr-basic-ms-vscode` has no `src/` directory at all
   (grammar-only extension)
-- Confirmed still open (not a new finding, re-verified against current
-  code): `WindVector`/`TCDiff`/`Resistance`/`SDI12Recorder` remain absent
-  from both `crates/crbasic-lsp/src/signature.rs` and `hover.rs` (`grep`
-  returns zero matches for all four in both files), and only 1 of the 116
-  `BUILTIN_FUNCTIONS` entries (`crates/crbasic-parser/keywords.json`) has a
-  real per-parameter completion snippet in
-  `completion.rs::get_builtin_function_completions` -- both exactly match
-  the scope already recorded in the Round 2 and Codebase Survey Candidates
-  backlog entries above, not acted on here since they're content-authoring
-  volume decisions, not bugs
+- [x] `WindVector`/`TCDiff`/`Resistance`/`SDI12Recorder` missing
+  `signature.rs`/`hover.rs` coverage (Round 2/13 backlog) ✅ Resolved
+  - Re-verified against current code before fixing: `TCDiff`, `Resistance`,
+    and `SDI12Recorder` were registered `BUILTIN_FUNCTIONS` entries
+    (`crates/crbasic-parser/keywords.json`) with zero `signature.rs`/
+    `hover.rs` coverage, matching the backlog description exactly.
+    `WindVector`, however, wasn't registered *anywhere* in the codebase --
+    a strictly bigger gap than "missing signature/hover" (no completion,
+    hover, syntax highlighting, or signature help at all), not caught by
+    Round 2/13 because neither round grepped for its absence, only assumed
+    it was a registered name like the other three
+  - Added `WindVector` to `keywords.json` (`data` category, alongside
+    `Average`/`Maximum`/`Totalize` -- the other output-processing
+    instructions) and regenerated `keywords_generated.rs` and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `node scripts/generate-grammar.js`
+  - Added all four to `signature.rs::get_function_signature` and a new
+    `hover.rs::get_measurement_function_description` (scoped to exactly
+    these four, the same narrow-set pattern `get_data_type_description`
+    already uses), with parameter names/order verified against each
+    instruction's own syntax diagram on help.campbellsci.com (`tcdiff.htm`,
+    `resistance.htm`, `sdi12recorder.htm`, `windvector.htm`)
+  - Found and fixed a real bug while writing `TCDiff`'s signature: its
+    existing `completion.rs` snippet labeled the 9th placeholder `Integ`,
+    but Campbell Scientific's syntax diagram names it `fN1` (the sinc
+    filter's first notch frequency) -- a different parameter from the
+    `Integ` used by `VoltSe`/`VoltDiff`, not a renaming of the same one
+  - No completion snippet was added for `WindVector` itself (only 1 of the
+    now-117 `BUILTIN_FUNCTIONS` entries has a real per-parameter
+    completion snippet) -- still the deliberately deferred content-volume
+    decision from the Codebase Survey Candidates backlog, unaffected by
+    this fix
+  - 4 new `has_measurement_functions` assertions + 4 new parameter-order
+    tests (`signature.rs`) + 1 new regression test
+    (`tcdiff_ninth_placeholder_is_the_notch_filter_frequency_not_integration`,
+    `completion.rs`) + 4 new hover tests (`hover.rs`) added Red-first; full
+    workspace `build`/`test`/`clippy`/`fmt` gate and
+    `node scripts/generate-grammar.js --check` pass
 - Documentation correction (no code change): the Preprocessor directive
   support entry above claimed `Include` was "entirely unsupported by this
   project" -- true when that entry was written, but Round 8's `Include`
