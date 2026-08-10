@@ -187,7 +187,7 @@ mod tests {
         #[test]
         fn positions_a_hint_at_the_start_of_its_argument() {
             let program = program(vec![call_statement(
-                "CallTable",
+                "Abs",
                 vec![identifier("Test", 1, 11)],
                 1,
             )]);
@@ -202,7 +202,7 @@ mod tests {
         #[test]
         fn hint_kind_is_parameter() {
             let program = program(vec![call_statement(
-                "CallTable",
+                "Abs",
                 vec![identifier("Test", 1, 11)],
                 1,
             )]);
@@ -267,22 +267,22 @@ mod tests {
         #[test]
         fn only_hints_arguments_that_have_a_corresponding_parameter() {
             let program = program(vec![call_statement(
-                "CallTable",
+                "Abs",
                 vec![identifier("Test", 1, 11), identifier("Extra", 1, 17)],
                 1,
             )]);
 
             let hints = InlayHintProvider::get_inlay_hints(&program, whole_document_range());
 
-            // CallTable only has one documented parameter (TableName)
+            // Abs only has one documented parameter (Value)
             assert_eq!(hints.len(), 1);
         }
 
         #[test]
         fn excludes_hints_outside_the_requested_range() {
             let program = program(vec![
-                call_statement("CallTable", vec![identifier("A", 1, 11)], 1),
-                call_statement("CallTable", vec![identifier("B", 50, 11)], 50),
+                call_statement("Abs", vec![identifier("A", 1, 11)], 1),
+                call_statement("Abs", vec![identifier("B", 50, 11)], 50),
             ]);
             let narrow_range = Range {
                 start: Position {

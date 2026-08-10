@@ -251,6 +251,21 @@ pub enum Statement {
         span: Span,
     },
 
+    /// `CallTable` statement: invokes a previously declared `DataTable`,
+    /// checking its trigger condition and storing a record if it fires.
+    /// Syntax: `CallTable TableName` (bare keyword, no parentheses, despite
+    /// superficially resembling a function call).
+    /// See <https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/calltable.htm>
+    ///
+    /// See `Alias`'s doc comment for why `table_name` is a plain expression
+    /// rather than a new indexed-name type.
+    CallTable {
+        /// The invoked table's name
+        table_name: Expression,
+        /// The source code span
+        span: Span,
+    },
+
     /// `Include` statement: pulls in an external CRBasic source file.
     /// Syntax: `Include "Device:Filename"`
     /// See <https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/include.htm>

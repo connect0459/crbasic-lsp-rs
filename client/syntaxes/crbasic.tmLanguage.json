@@ -113,7 +113,7 @@
         },
         {
           "name": "keyword.control.datatable.crbasic",
-          "match": "(?i)\\b(DataTable|EndTable|TableHide|OpenInterval|FillStop)\\b"
+          "match": "(?i)\\b(DataTable|EndTable|TableHide|OpenInterval|FillStop|CallTable)\\b"
         },
         {
           "name": "keyword.control.consttable.crbasic",
@@ -161,7 +161,7 @@
         },
         {
           "name": "support.function.time.crbasic",
-          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|CallTable|SetStatus|Watch|MoveBytes|ArrayLength|NaN)\\b"
+          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|SetStatus|Watch|MoveBytes|ArrayLength|NaN)\\b"
         },
         {
           "name": "support.function.logical.crbasic",

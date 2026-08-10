@@ -39,11 +39,6 @@ impl CompletionProvider {
                 "Begins a nested sub-scan for faster measurement or multiplexer control.",
             ),
             Self::create_function_completion(
-                "CallTable",
-                "CallTable(${1:TableName})",
-                "Calls a data table to process and store data.",
-            ),
-            Self::create_function_completion(
                 "Sample",
                 "Sample(${1:Reps}, ${2:Source}, ${3:DataType})",
                 "Samples and stores a value in the data table.",
@@ -339,12 +334,12 @@ impl CompletionProvider {
         vec![
             Self::create_pattern_snippet(
                 "ScanLoop",
-                "Scan(${1:Interval}, ${2:Sec}, ${3:0}, ${4:0})\n\t$0\n\tCallTable(${5:TableName})\nNextScan",
+                "Scan(${1:Interval}, ${2:Sec}, ${3:0}, ${4:0})\n\t$0\n\tCallTable ${5:TableName}\nNextScan",
                 "Scan/NextScan loop with a CallTable call",
             ),
             Self::create_pattern_snippet(
                 "SlowSequenceLoop",
-                "SlowSequence\n\tScan(${1:Interval}, ${2:Sec}, ${3:0}, ${4:0})\n\t\t$0\n\t\tCallTable(${5:TableName})\n\tNextScan\nEndSequence",
+                "SlowSequence\n\tScan(${1:Interval}, ${2:Sec}, ${3:0}, ${4:0})\n\t\t$0\n\t\tCallTable ${5:TableName}\n\tNextScan\nEndSequence",
                 "Low-priority scan sequence for non-time-critical measurements",
             ),
             Self::create_pattern_snippet(
@@ -354,7 +349,7 @@ impl CompletionProvider {
             ),
             Self::create_pattern_snippet(
                 "NewProgram",
-                "Const ${1:ScanIntervalSec} = ${2:5}\nPublic ${3:VarName} As ${4:Float}\n\nDataTable(${5:TableName},True,-1)\n\tSample(1,${3:VarName},FP2)\nEndTable\n\nBeginProg\n\tScan(${1:ScanIntervalSec},Sec,0,0)\n\t\t$0\n\t\tCallTable(${5:TableName})\n\tNextScan\nEndProg",
+                "Const ${1:ScanIntervalSec} = ${2:5}\nPublic ${3:VarName} As ${4:Float}\n\nDataTable(${5:TableName},True,-1)\n\tSample(1,${3:VarName},FP2)\nEndTable\n\nBeginProg\n\tScan(${1:ScanIntervalSec},Sec,0,0)\n\t\t$0\n\t\tCallTable ${5:TableName}\n\tNextScan\nEndProg",
                 "Starter program skeleton: declarations, DataTable, Scan loop",
             ),
         ]
@@ -618,6 +613,11 @@ impl CompletionProvider {
                 "Stops data storage once this DataTable reaches its configured size, instead of overwriting the oldest records",
             ),
             Self::create_keyword_snippet(
+                "CallTable",
+                "CallTable ${1:TableName}",
+                "Invoke a previously declared DataTable, storing a record if its trigger condition fires",
+            ),
+            Self::create_keyword_snippet(
                 "ConstTable",
                 "ConstTable(${1:TableName}, ${2:Enabled})\n\tConst $0\nEndConstTable",
                 "Define a block of editable constants",
@@ -759,6 +759,7 @@ mod tests {
             assert!(labels.contains(&"EndProg"));
             assert!(labels.contains(&"DataTable"));
             assert!(labels.contains(&"EndTable"));
+            assert!(labels.contains(&"CallTable"));
             assert!(labels.contains(&"ConstTable"));
             assert!(labels.contains(&"EndConstTable"));
             assert!(labels.contains(&"StructureType"));
@@ -920,7 +921,6 @@ mod tests {
             let completions = CompletionProvider::get_builtin_function_completions();
             let labels: Vec<&str> = completions.iter().map(|c| c.label.as_str()).collect();
 
-            assert!(labels.contains(&"CallTable"));
             assert!(labels.contains(&"Sample"));
             assert!(labels.contains(&"Average"));
         }

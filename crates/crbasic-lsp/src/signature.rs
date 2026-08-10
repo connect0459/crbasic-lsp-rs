@@ -76,15 +76,6 @@ impl SignatureProvider {
                 ],
             }),
 
-            "calltable" => Some(FunctionSignature {
-                name: "CallTable".to_string(),
-                documentation: "Calls a data table to process and store data.".to_string(),
-                parameters: vec![ParameterInfo {
-                    name: "TableName".to_string(),
-                    documentation: "The name of the data table to call.".to_string(),
-                }],
-            }),
-
             "sample" => Some(FunctionSignature {
                 name: "Sample".to_string(),
                 documentation: "Samples and stores a value in the data table.".to_string(),
@@ -781,6 +772,13 @@ mod tests {
         }
 
         #[test]
+        fn returns_none_for_calltable_since_it_takes_no_parentheses() {
+            // CallTable is a bare keyword (`CallTable TableName`), not a
+            // parenthesized call -- see the parser's `parse_calltable_statement`.
+            assert!(SignatureProvider::get_function_signature("CallTable").is_none());
+        }
+
+        #[test]
         fn recognized_function_names_resolve_to_a_canonical_spelling() {
             // Documented aliases (e.g. Log/Ln for the natural logarithm) are
             // real in CRBasic, so this doesn't require an exact match to the
@@ -879,7 +877,6 @@ mod tests {
 
         #[test]
         fn has_data_table_functions() {
-            assert!(SignatureProvider::get_function_signature("CallTable").is_some());
             assert!(SignatureProvider::get_function_signature("Sample").is_some());
             assert!(SignatureProvider::get_function_signature("Average").is_some());
         }

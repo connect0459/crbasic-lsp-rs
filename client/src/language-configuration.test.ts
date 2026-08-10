@@ -83,7 +83,7 @@ describe("language-configuration.json indentationRules", () => {
     test.each([
       "If x > 5 Then y = 1",
       "x = 5",
-      "CallTable(Status)",
+      "CallTable Status",
       "NextScan",
       "NextSubScan",
       "ContinueScan",
@@ -130,7 +130,7 @@ describe("language-configuration.json indentationRules", () => {
 
     test.each([
       "x = 5",
-      "CallTable(Status)",
+      "CallTable Status",
       "ContinueScan",
       "Scan(1, Sec, 0, 0)",
       "SubScan(0.1, Sec, 5)",

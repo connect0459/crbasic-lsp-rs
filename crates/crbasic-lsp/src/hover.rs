@@ -312,6 +312,9 @@ impl HoverProvider {
             "fillstop" => Some(
                 "**FillStop**\n\nStops data storage once this DataTable reaches its configured size, instead of the default ring-memory behavior of overwriting the oldest records. Placed immediately after the DataTable statement.",
             ),
+            "calltable" => Some(
+                "**CallTable**\n\nInvokes a previously declared DataTable: checks its trigger condition and stores a record if it fires. A bare keyword, not a parenthesized call.\n\n```crbasic\nCallTable TableName\n```",
+            ),
             "consttable" => Some(
                 "**ConstTable**\n\nDefines a block of constants that field technicians can edit and recompile without touching the constants' use sites.\n\n```crbasic\nConstTable(TableName, Enabled)\n  Const A = 1\nEndConstTable\n```",
             ),

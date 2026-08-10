@@ -162,6 +162,9 @@ fn walk_statements<'a>(
             Statement::StructureType { .. } => {}
             // `Include`'s path is a device/filename string, never a real call.
             Statement::Include { .. } => {}
+            // `CallTable`'s operand is a `DataTable` name, not a real call,
+            // even though it superficially resembles one.
+            Statement::CallTable { .. } => {}
         }
     }
 }

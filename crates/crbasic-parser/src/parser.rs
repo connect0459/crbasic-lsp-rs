@@ -216,6 +216,12 @@ impl<'a> Parser<'a> {
         }
 
         if let &TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "CallTable"
+        {
+            return self.parse_calltable_statement();
+        }
+
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
             && kw == "Include"
         {
             return self.parse_include_statement();
@@ -1059,6 +1065,27 @@ impl<'a> Parser<'a> {
 
         Ok(Statement::ReadOnly {
             variables,
+            span: crate::lexer::token::Span::new(start, end),
+        })
+    }
+
+    /// Parses a `CallTable` statement.
+    /// Syntax: `CallTable TableName`
+    ///
+    /// See `parse_alias_statement` for why the operand uses `parse_primary`.
+    fn parse_calltable_statement(&mut self) -> Result<Statement, ParseError> {
+        let calltable_token = self.advance();
+        let start = calltable_token.span.start;
+
+        let table_name = self.parse_primary()?;
+        let end = table_name.span().end;
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        Ok(Statement::CallTable {
+            table_name,
             span: crate::lexer::token::Span::new(start, end),
         })
     }
@@ -2455,6 +2482,7 @@ impl Statement {
             Statement::Alias { span, .. } => *span,
             Statement::Units { span, .. } => *span,
             Statement::ReadOnly { span, .. } => *span,
+            Statement::CallTable { span, .. } => *span,
             Statement::StructureType { span, .. } => *span,
             Statement::Include { span, .. } => *span,
         }
@@ -5214,6 +5242,61 @@ mod tests {
             assert!(matches!(
                 &program.statements[1],
                 Statement::VarDeclaration { name, .. } if name == "i"
+            ));
+        }
+    }
+
+    mod calltable_statement {
+        use super::*;
+
+        #[test]
+        fn parses_calltable_of_a_bare_table_name() {
+            let mut scanner = Scanner::new("CallTable METDATA");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::CallTable { table_name, .. } = &program.statements[0] {
+                assert!(matches!(
+                    table_name,
+                    Expression::Identifier { name, .. } if name == "METDATA"
+                ));
+            } else {
+                panic!(
+                    "Expected CallTable statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn calltable_does_not_swallow_the_following_statement() {
+            let mut scanner = Scanner::new("CallTable METDATA\nDim i");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 2);
+            assert!(matches!(
+                &program.statements[1],
+                Statement::VarDeclaration { name, .. } if name == "i"
+            ));
+        }
+
+        #[test]
+        fn parses_calltable_inside_a_scan_loop() {
+            let source = "Scan(1,Sec,0,0)\n\tCallTable METDATA\nNextScan";
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[1],
+                Statement::CallTable { .. }
             ));
         }
     }
