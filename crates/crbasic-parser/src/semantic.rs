@@ -129,6 +129,20 @@ pub enum SemanticErrorKind {
         /// The disallowed type name as written in the source
         type_name: String,
     },
+    /// An array declaration exceeds CRBasic's maximum dimension count
+    ///
+    /// See <https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/dim.htm>:
+    /// "The maximum number of array dimensions allowed in a Dim statement
+    /// is three... Strings can be dimensioned only up to 2 dimensions
+    /// instead of the 3 allowed for other data types."
+    TooManyArrayDimensions {
+        /// The offending variable name
+        variable_name: String,
+        /// The number of dimensions actually declared
+        dimension_count: usize,
+        /// The maximum allowed for this variable's type (3, or 2 for `String`)
+        max_dimensions: usize,
+    },
 }
 
 /// Semantic error information
@@ -240,11 +254,18 @@ impl SemanticAnalyzer {
             Statement::VarDeclaration {
                 keyword,
                 name,
+                array_dimensions,
                 type_annotation,
                 span,
                 ..
             } => {
-                self.analyze_variable_declaration(keyword, name, type_annotation.as_deref(), *span);
+                self.analyze_variable_declaration(
+                    keyword,
+                    name,
+                    array_dimensions.as_ref().map(Vec::len),
+                    type_annotation.as_deref(),
+                    *span,
+                );
             }
             Statement::Assignment { target, span, .. } => {
                 self.check_const_reassignment(target, *span);
@@ -313,6 +334,7 @@ impl SemanticAnalyzer {
         &mut self,
         keyword: &str,
         name: &str,
+        array_dimension_count: Option<usize>,
         type_annotation: Option<&str>,
         span: Span,
     ) {
@@ -341,6 +363,28 @@ impl SemanticAnalyzer {
                     type_name: type_name.to_string(),
                 },
             });
+        }
+
+        if let Some(dimension_count) = array_dimension_count {
+            let is_string = type_annotation.is_some_and(|t| t.eq_ignore_ascii_case("String"));
+            let max_dimensions = if is_string { 2 } else { 3 };
+
+            if dimension_count > max_dimensions {
+                self.errors.push(SemanticError {
+                    message: format!(
+                        "Array '{name}' has {dimension_count} dimensions, exceeding the \
+                         maximum of {max_dimensions} allowed{}",
+                        if is_string { " for a String array" } else { "" }
+                    ),
+                    span,
+                    severity: ErrorSeverity::Error,
+                    kind: SemanticErrorKind::TooManyArrayDimensions {
+                        variable_name: name.to_string(),
+                        dimension_count,
+                        max_dimensions,
+                    },
+                });
+            }
         }
 
         let profile = self.model.profile();
@@ -1218,6 +1262,149 @@ mod tests {
                     name: "Enabled".to_string(),
                     array_dimensions: None,
                     type_annotation: Some("Boolean".to_string()),
+                    type_size: None,
+                    initializer: None,
+                    span,
+                }],
+                span,
+            );
+
+            let errors = analyzer.analyze(&program);
+
+            assert_eq!(errors, vec![]);
+        }
+    }
+
+    mod array_dimension_limits {
+        use super::*;
+        use crate::ast::Expression;
+        use crate::lexer::token::Position;
+
+        fn create_test_span() -> Span {
+            Span::new(Position::new(1, 1), Position::new(1, 10))
+        }
+
+        fn dimensions(count: usize, span: Span) -> Vec<Expression> {
+            (0..count)
+                .map(|_| Expression::IntegerLiteral { value: 1, span })
+                .collect()
+        }
+
+        #[test]
+        fn a_four_dimensional_array_is_a_semantic_error() {
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+            let span = create_test_span();
+            let program = Program::new(
+                vec![Statement::VarDeclaration {
+                    keyword: "Dim".to_string(),
+                    name: "Matrix".to_string(),
+                    array_dimensions: Some(dimensions(4, span)),
+                    type_annotation: None,
+                    type_size: None,
+                    initializer: None,
+                    span,
+                }],
+                span,
+            );
+
+            let errors = analyzer.analyze(&program);
+
+            assert_eq!(errors.len(), 1);
+            assert_eq!(errors[0].severity, ErrorSeverity::Error);
+            assert_eq!(
+                errors[0].kind,
+                SemanticErrorKind::TooManyArrayDimensions {
+                    variable_name: "Matrix".to_string(),
+                    dimension_count: 4,
+                    max_dimensions: 3,
+                }
+            );
+        }
+
+        #[test]
+        fn a_three_dimensional_array_is_not_a_semantic_error() {
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+            let span = create_test_span();
+            let program = Program::new(
+                vec![Statement::VarDeclaration {
+                    keyword: "Dim".to_string(),
+                    name: "Matrix".to_string(),
+                    array_dimensions: Some(dimensions(3, span)),
+                    type_annotation: None,
+                    type_size: None,
+                    initializer: None,
+                    span,
+                }],
+                span,
+            );
+
+            let errors = analyzer.analyze(&program);
+
+            assert_eq!(errors, vec![]);
+        }
+
+        #[test]
+        fn a_three_dimensional_string_array_is_a_semantic_error() {
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+            let span = create_test_span();
+            let program = Program::new(
+                vec![Statement::VarDeclaration {
+                    keyword: "Dim".to_string(),
+                    name: "Labels".to_string(),
+                    array_dimensions: Some(dimensions(3, span)),
+                    type_annotation: Some("String".to_string()),
+                    type_size: None,
+                    initializer: None,
+                    span,
+                }],
+                span,
+            );
+
+            let errors = analyzer.analyze(&program);
+
+            assert_eq!(errors.len(), 1);
+            assert_eq!(
+                errors[0].kind,
+                SemanticErrorKind::TooManyArrayDimensions {
+                    variable_name: "Labels".to_string(),
+                    dimension_count: 3,
+                    max_dimensions: 2,
+                }
+            );
+        }
+
+        #[test]
+        fn a_two_dimensional_string_array_is_not_a_semantic_error() {
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+            let span = create_test_span();
+            let program = Program::new(
+                vec![Statement::VarDeclaration {
+                    keyword: "Dim".to_string(),
+                    name: "Labels".to_string(),
+                    array_dimensions: Some(dimensions(2, span)),
+                    type_annotation: Some("String".to_string()),
+                    type_size: None,
+                    initializer: None,
+                    span,
+                }],
+                span,
+            );
+
+            let errors = analyzer.analyze(&program);
+
+            assert_eq!(errors, vec![]);
+        }
+
+        #[test]
+        fn a_non_array_declaration_is_not_a_semantic_error() {
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+            let span = create_test_span();
+            let program = Program::new(
+                vec![Statement::VarDeclaration {
+                    keyword: "Public".to_string(),
+                    name: "Temp_C".to_string(),
+                    array_dimensions: None,
+                    type_annotation: None,
                     type_size: None,
                     initializer: None,
                     span,

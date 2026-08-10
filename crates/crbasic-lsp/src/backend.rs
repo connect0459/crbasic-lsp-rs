@@ -189,6 +189,7 @@ impl CRBasicLanguageServer {
             SemanticErrorKind::TruncationCollision { .. } => return (None, None),
             SemanticErrorKind::ConstReassignment { .. } => return (None, None),
             SemanticErrorKind::InvalidConstType { .. } => return (None, None),
+            SemanticErrorKind::TooManyArrayDimensions { .. } => return (None, None),
         };
 
         let data = serde_json::to_value(payload).ok();
@@ -845,6 +846,28 @@ mod tests {
             kind: SemanticErrorKind::ConstReassignment {
                 variable_name: "PI".to_string(),
                 declared_at: Span::new(Position::new(1, 1), Position::new(1, 15)),
+            },
+        };
+
+        let diagnostics =
+            CRBasicLanguageServer::semantic_errors_to_diagnostics(&test_uri(), &[error]);
+
+        assert_eq!(diagnostics[0].code, None);
+        assert_eq!(diagnostics[0].data, None);
+        assert_eq!(diagnostics[0].related_information, None);
+    }
+
+    #[test]
+    fn omits_quick_fix_data_for_too_many_array_dimensions() {
+        let error = SemanticError {
+            message: "Array 'Matrix' has 4 dimensions, exceeding the maximum of 3 allowed"
+                .to_string(),
+            span: Span::new(Position::new(1, 1), Position::new(1, 25)),
+            severity: ErrorSeverity::Error,
+            kind: SemanticErrorKind::TooManyArrayDimensions {
+                variable_name: "Matrix".to_string(),
+                dimension_count: 4,
+                max_dimensions: 3,
             },
         };
 
