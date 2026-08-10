@@ -135,11 +135,6 @@ impl CompletionProvider {
             ),
             Self::create_function_completion("Sqr", "Sqr(${1:Value})", "Returns the square root."),
             Self::create_function_completion(
-                "Sqrt",
-                "Sqrt(${1:Value})",
-                "Returns the square root (alias for Sqr).",
-            ),
-            Self::create_function_completion(
                 "Exp",
                 "Exp(${1:Value})",
                 "Returns e raised to a power.",

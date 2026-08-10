@@ -252,11 +252,11 @@ mod tests {
                     span: span(1, 1, 1, 7),
                 },
                 value: Expression::FunctionCall {
-                    name: "Sqrt".to_string(),
-                    arguments: vec![identifier("X", 1, 15)],
-                    span: span(1, 10, 1, 17),
+                    name: "Sqr".to_string(),
+                    arguments: vec![identifier("X", 1, 14)],
+                    span: span(1, 10, 1, 16),
                 },
-                span: span(1, 1, 1, 17),
+                span: span(1, 1, 1, 16),
             }]);
 
             let hints = InlayHintProvider::get_inlay_hints(&program, whole_document_range());

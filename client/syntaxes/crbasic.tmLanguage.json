@@ -147,21 +147,21 @@
     },
     "builtin-functions-data": {
       "name": "support.function.data.crbasic",
-      "match": "(?i)\\b(Sample|Average|StdDev|Variance|Minimum|Maximum|Totalize|Histogram|FieldNames|TableName|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval)\\b"
+      "match": "(?i)\\b(Sample|Average|StdDev|Variance|Minimum|Maximum|Totalize|Histogram|FieldNames|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval)\\b"
     },
     "builtin-functions-general": {
       "patterns": [
         {
           "name": "support.function.string.crbasic",
-          "match": "(?i)\\b(SplitStr|FormatFloat|FormatLong|Mid|Left|Right|Len|InStr|LCase|UCase|LowerCase|UpperCase|Trim|RTrim|LTrim|Replace|Chr|Asc|StrComp|CheckSum|HexToDec|DecToHex)\\b"
+          "match": "(?i)\\b(SplitStr|FormatFloat|FormatLong|Mid|Left|Right|Len|InStr|LowerCase|UpperCase|Trim|RTrim|LTrim|Replace|Chr|Asc|StrComp|CheckSum|HexToDec|DecToHex)\\b"
         },
         {
           "name": "support.function.math.crbasic",
-          "match": "(?i)\\b(Abs|Sgn|Sqr|Sqrt|Exp|Ln|Log|Log10|Sin|Cos|Tan|Asin|Acos|Atn|Atn2|Int|Fix|Round|Rnd|Ceiling|Floor)\\b"
+          "match": "(?i)\\b(Abs|Sgn|Sqr|Exp|Ln|Log|Log10|Sin|Cos|Tan|Asin|Acos|Atn|Atn2|Int|Fix|Round|Rnd|Ceiling|Floor)\\b"
         },
         {
           "name": "support.function.time.crbasic",
-          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|CallTable|SetStatus|Watch|MoveBytes|ArrayLength|NaN|IsNaN)\\b"
+          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|CallTable|SetStatus|Watch|MoveBytes|ArrayLength|NaN)\\b"
         },
         {
           "name": "support.function.logical.crbasic",

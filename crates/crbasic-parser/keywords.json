@@ -139,7 +139,6 @@
     { "name": "Totalize", "category": "data" },
     { "name": "Histogram", "category": "data" },
     { "name": "FieldNames", "category": "data" },
-    { "name": "TableName", "category": "data" },
     { "name": "CardOut", "category": "data" },
     { "name": "NewFile", "category": "data" },
     { "name": "FileManage", "category": "data" },
@@ -162,8 +161,6 @@
     { "name": "Right", "category": "string" },
     { "name": "Len", "category": "string" },
     { "name": "InStr", "category": "string" },
-    { "name": "LCase", "category": "string" },
-    { "name": "UCase", "category": "string" },
     { "name": "LowerCase", "category": "string" },
     { "name": "UpperCase", "category": "string" },
     { "name": "Trim", "category": "string" },
@@ -180,7 +177,6 @@
     { "name": "Abs", "category": "math" },
     { "name": "Sgn", "category": "math" },
     { "name": "Sqr", "category": "math" },
-    { "name": "Sqrt", "category": "math" },
     { "name": "Exp", "category": "math" },
     { "name": "Ln", "category": "math" },
     { "name": "Log", "category": "math" },
@@ -210,7 +206,6 @@
     { "name": "MoveBytes", "category": "time" },
     { "name": "ArrayLength", "category": "time" },
     { "name": "NaN", "category": "time" },
-    { "name": "IsNaN", "category": "time" },
 
     { "name": "IIf", "category": "logical" }
   ]

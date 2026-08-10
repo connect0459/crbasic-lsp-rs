@@ -392,7 +392,7 @@ impl SignatureProvider {
                 }],
             }),
 
-            "sqr" | "sqrt" => Some(FunctionSignature {
+            "sqr" => Some(FunctionSignature {
                 name: "Sqr".to_string(),
                 documentation: "Returns the square root of a number.".to_string(),
                 parameters: vec![ParameterInfo {
@@ -782,8 +782,8 @@ mod tests {
 
         #[test]
         fn recognized_function_names_resolve_to_a_canonical_spelling() {
-            // Some names are documented aliases (e.g. "Sqrt" resolves to the
-            // canonical "Sqr"), so this doesn't require an exact match to the
+            // Documented aliases (e.g. Log/Ln for the natural logarithm) are
+            // real in CRBasic, so this doesn't require an exact match to the
             // queried name -- only that whatever name comes back is itself a
             // real, correctly-cased entry, catching typos/casing drift like
             // "VoltSE" vs "VoltSe" without breaking intentional aliasing.
