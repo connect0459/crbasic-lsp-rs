@@ -47,6 +47,8 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("Optional", "declaration"),
     ("BeginProg", "program"),
     ("EndProg", "program"),
+    ("SequentialMode", "program"),
+    ("PipeLineMode", "program"),
     ("DataTable", "datatable"),
     ("EndTable", "datatable"),
     ("ConstTable", "consttable"),

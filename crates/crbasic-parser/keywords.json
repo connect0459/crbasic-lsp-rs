@@ -44,6 +44,8 @@
     { "name": "Optional", "category": "declaration" },
     { "name": "BeginProg", "category": "program" },
     { "name": "EndProg", "category": "program" },
+    { "name": "SequentialMode", "category": "program" },
+    { "name": "PipeLineMode", "category": "program" },
     { "name": "DataTable", "category": "datatable" },
     { "name": "EndTable", "category": "datatable" },
     { "name": "ConstTable", "category": "consttable" },

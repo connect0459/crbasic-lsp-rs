@@ -533,6 +533,14 @@ impl CompletionProvider {
                 "Main program execution block",
             ),
             Self::create_keyword_completion("EndProg", "End of program execution block"),
+            Self::create_keyword_completion(
+                "SequentialMode",
+                "Forces the datalogger to run in sequential execution mode; placed before BeginProg",
+            ),
+            Self::create_keyword_completion(
+                "PipeLineMode",
+                "Forces the datalogger to run in pipeline execution mode; placed before BeginProg",
+            ),
             Self::create_keyword_snippet(
                 "DataTable",
                 "DataTable(${1:TableName}, ${2:TriggerCondition}, ${3:Size})\n\t$0\nEndTable",

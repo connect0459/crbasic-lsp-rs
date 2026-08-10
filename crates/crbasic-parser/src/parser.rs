@@ -178,6 +178,8 @@ impl<'a> Parser<'a> {
         if let &TokenKind::Keyword(kw) = &self.peek().kind
             && (kw == "BeginProg"
                 || kw == "EndProg"
+                || kw == "SequentialMode"
+                || kw == "PipeLineMode"
                 || kw == "DataTable"
                 || kw == "EndTable"
                 || kw == "ConstTable"
@@ -6403,6 +6405,36 @@ mod tests {
             } else {
                 panic!("Expected an if statement");
             }
+        }
+
+        #[test]
+        fn parses_sequentialmode_before_beginprog() {
+            let source = "SequentialMode\nBeginProg\nEndProg".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::ProgramStructure { keyword, .. } if keyword == "SequentialMode"
+            ));
+        }
+
+        #[test]
+        fn parses_pipelinemode_before_beginprog() {
+            let source = "PipeLineMode\nBeginProg\nEndProg".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::ProgramStructure { keyword, .. } if keyword == "PipeLineMode"
+            ));
         }
 
         #[test]

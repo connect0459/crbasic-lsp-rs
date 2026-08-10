@@ -242,6 +242,12 @@ impl HoverProvider {
                 Some("**BeginProg**\n\nMarks the start of the main program execution block.")
             }
             "endprog" => Some("**EndProg**\n\nMarks the end of the main program execution block."),
+            "sequentialmode" => Some(
+                "**SequentialMode**\n\nForces the datalogger to run in sequential execution mode. Placed before `BeginProg`.",
+            ),
+            "pipelinemode" => Some(
+                "**PipeLineMode**\n\nForces the datalogger to run in pipeline execution mode. Placed before `BeginProg`.",
+            ),
             "datatable" => Some(
                 "**DataTable**\n\nDefines a data table for storing measurements.\n\n```crbasic\nDataTable(TableName, TriggerCondition, Size)\n  ' output instructions\nEndTable\n```",
             ),
