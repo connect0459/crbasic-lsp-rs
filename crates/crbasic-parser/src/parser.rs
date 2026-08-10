@@ -17,6 +17,27 @@ type IfClause = (Expression, Vec<Statement>, Option<Vec<Statement>>, bool);
 /// preprocessor conditionals have no single-line form.
 type PreprocessorClause = (Expression, Vec<Statement>, Option<Vec<Statement>>);
 
+/// Parses an integer literal's lexeme into its numeric value.
+///
+/// Supports CRBasic's `&H`/`&h` (hexadecimal) and `&B`/`&b` (binary) constant
+/// prefixes in addition to plain decimal, since the lexer passes the literal
+/// through unconverted (see [`crate::lexer::Scanner`]'s `&` handling).
+fn parse_integer_literal(lexeme: &str) -> Result<i64, std::num::ParseIntError> {
+    if let Some(digits) = lexeme
+        .strip_prefix("&H")
+        .or_else(|| lexeme.strip_prefix("&h"))
+    {
+        i64::from_str_radix(digits, 16)
+    } else if let Some(digits) = lexeme
+        .strip_prefix("&B")
+        .or_else(|| lexeme.strip_prefix("&b"))
+    {
+        i64::from_str_radix(digits, 2)
+    } else {
+        lexeme.parse::<i64>()
+    }
+}
+
 /// Parser for CRBasic source code
 pub struct Parser<'a> {
     tokens: Vec<Token<'a>>,
@@ -2282,7 +2303,7 @@ impl<'a> Parser<'a> {
 
                 match &token.kind {
                     TokenKind::Integer(value) => {
-                        let int_value = value.parse::<i64>().map_err(|_| ParseError {
+                        let int_value = parse_integer_literal(value).map_err(|_| ParseError {
                             message: format!("Invalid integer literal: {}", value),
                             span: token.span,
                         })?;
@@ -2510,6 +2531,46 @@ mod tests {
                 match expression {
                     Expression::IntegerLiteral { value, .. } => {
                         assert_eq!(*value, 42);
+                    }
+                    _ => panic!("Expected integer literal"),
+                }
+            } else {
+                panic!("Expected expression statement");
+            }
+        }
+
+        #[test]
+        fn parses_hexadecimal_integer_literal() {
+            let mut scanner = Scanner::new("&HFF");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::IntegerLiteral { value, .. } => {
+                        assert_eq!(*value, 255);
+                    }
+                    _ => panic!("Expected integer literal"),
+                }
+            } else {
+                panic!("Expected expression statement");
+            }
+        }
+
+        #[test]
+        fn parses_binary_integer_literal() {
+            let mut scanner = Scanner::new("&B1010");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::IntegerLiteral { value, .. } => {
+                        assert_eq!(*value, 10);
                     }
                     _ => panic!("Expected integer literal"),
                 }

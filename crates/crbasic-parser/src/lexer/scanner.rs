@@ -231,11 +231,31 @@ impl<'a> Scanner<'a> {
                 ))
             }
             '&' => {
-                let kind = if self.peek() == '=' {
-                    self.advance();
-                    TokenKind::AmpersandEqual
-                } else {
-                    TokenKind::Ampersand
+                // `&H`/`&B` are CRBasic's hexadecimal/binary constant prefixes
+                // (e.g. `&HFF`, `&B1010`). A digit must follow immediately, or
+                // this stays the concatenation operator -- otherwise `A&Bvar`
+                // (concatenation with a variable starting with B or H) would
+                // misparse.
+                let kind = match self.peek() {
+                    'H' | 'h' if self.peek_next().is_some_and(|c| c.is_ascii_hexdigit()) => {
+                        self.advance();
+                        while self.peek().is_ascii_hexdigit() {
+                            self.advance();
+                        }
+                        TokenKind::Integer(&self.source[start_index..self.current])
+                    }
+                    'B' | 'b' if self.peek_next().is_some_and(|c| matches!(c, '0' | '1')) => {
+                        self.advance();
+                        while matches!(self.peek(), '0' | '1') {
+                            self.advance();
+                        }
+                        TokenKind::Integer(&self.source[start_index..self.current])
+                    }
+                    '=' => {
+                        self.advance();
+                        TokenKind::AmpersandEqual
+                    }
+                    _ => TokenKind::Ampersand,
                 };
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
@@ -682,6 +702,59 @@ mod tests {
                 }
                 _ => panic!("Expected Float token, got {:?}", tokens[0].kind),
             }
+        }
+
+        #[test]
+        fn recognizes_hexadecimal_literal() {
+            // `&H` is CRBasic's hexadecimal constant prefix, per
+            // help.campbellsci.com's endword parameter page (`&H80000000`).
+            let mut scanner = Scanner::new("&HFF");
+            let tokens = scanner.scan_tokens();
+
+            assert_eq!(tokens.len(), 2);
+
+            match &tokens[0].kind {
+                TokenKind::Integer(value) => assert_eq!(*value, "&HFF"),
+                _ => panic!("Expected Integer token, got {:?}", tokens[0].kind),
+            }
+        }
+
+        #[test]
+        fn recognizes_lowercase_hexadecimal_literal() {
+            let mut scanner = Scanner::new("&hff");
+            let tokens = scanner.scan_tokens();
+
+            match &tokens[0].kind {
+                TokenKind::Integer(value) => assert_eq!(*value, "&hff"),
+                _ => panic!("Expected Integer token, got {:?}", tokens[0].kind),
+            }
+        }
+
+        #[test]
+        fn recognizes_binary_literal() {
+            let mut scanner = Scanner::new("&B1010");
+            let tokens = scanner.scan_tokens();
+
+            assert_eq!(tokens.len(), 2);
+
+            match &tokens[0].kind {
+                TokenKind::Integer(value) => assert_eq!(*value, "&B1010"),
+                _ => panic!("Expected Integer token, got {:?}", tokens[0].kind),
+            }
+        }
+
+        #[test]
+        fn does_not_treat_ampersand_before_a_plain_identifier_as_a_literal_prefix() {
+            // Without a digit immediately following, `&B`/`&H` must stay the
+            // concatenation operator so `A&Bvar` (string-concatenation with a
+            // variable that happens to start with B or H) still lexes correctly.
+            let mut scanner = Scanner::new("A&Bvar");
+            let tokens = scanner.scan_tokens();
+
+            assert_eq!(tokens.len(), 4, "Identifier, Ampersand, Identifier, EOF");
+            assert_eq!(tokens[0].kind, TokenKind::Identifier("A"));
+            assert_eq!(tokens[1].kind, TokenKind::Ampersand);
+            assert_eq!(tokens[2].kind, TokenKind::Identifier("Bvar"));
         }
     }
 
