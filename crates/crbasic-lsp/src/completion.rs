@@ -460,6 +460,7 @@ impl CompletionProvider {
                 "DebugBreak",
                 "Suspends execution at this line when running under the CRBasic debugger",
             ),
+            Self::create_keyword_completion("Restart", "Stops and restarts the running program"),
             Self::create_keyword_snippet(
                 "Select Case",
                 "Select Case ${1:expression}\n\tCase ${2:value}\n\t\t$0\n\tCase Else\n\t\t\nEndSelect",

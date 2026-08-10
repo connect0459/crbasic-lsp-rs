@@ -17,6 +17,7 @@
     { "name": "ExitFor", "category": "control" },
     { "name": "ExitDo", "category": "control" },
     { "name": "DebugBreak", "category": "control" },
+    { "name": "Restart", "category": "control" },
     { "name": "Case", "category": "control" },
     { "name": "Is", "category": "control" },
     { "name": "Select", "category": "control" },

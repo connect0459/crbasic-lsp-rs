@@ -193,6 +193,7 @@ impl HoverProvider {
             "debugbreak" => Some(
                 "**DebugBreak**\n\nSuspends program execution at this line when running under the CRBasic debugger.",
             ),
+            "restart" => Some("**Restart**\n\nStops and restarts the running program."),
             "select" => Some(
                 "**Select**\n\nMulti-way branch statement.\n\n```crbasic\nSelect Case expression\n  Case value1\n    ' statements\n  Case Else\n    ' default\nEndSelect\n```",
             ),
@@ -372,6 +373,7 @@ mod tests {
                     "Case",
                     "Is",
                     "EndSelect",
+                    "Restart",
                 ];
 
                 for keyword in keywords {

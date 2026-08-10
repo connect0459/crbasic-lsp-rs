@@ -197,6 +197,7 @@ impl<'a> Parser<'a> {
                 || kw == "ExitFunction"
                 || kw == "Return"
                 || kw == "DebugBreak"
+                || kw == "Restart"
                 || kw == "EndMenu"
                 || kw == "EndSubMenu")
         {
@@ -6517,6 +6518,28 @@ mod tests {
                 assert!(matches!(
                     &then_branch[0],
                     Statement::ProgramStructure { keyword, .. } if keyword == "DebugBreak"
+                ));
+            } else {
+                panic!("Expected an if statement");
+            }
+        }
+
+        #[test]
+        fn parses_restart_inside_if_statement() {
+            let source =
+                "Scan(1, Sec, 0, 0)\n  If ProgramRestart = True Then\n    Restart\n  EndIf\nNextScan"
+                    .to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            if let Statement::IfStatement { then_branch, .. } = &program.statements[1] {
+                assert_eq!(then_branch.len(), 1);
+                assert!(matches!(
+                    &then_branch[0],
+                    Statement::ProgramStructure { keyword, .. } if keyword == "Restart"
                 ));
             } else {
                 panic!("Expected an if statement");
