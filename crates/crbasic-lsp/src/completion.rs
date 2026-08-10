@@ -508,7 +508,10 @@ impl CompletionProvider {
                 "WaitTriggerSequence",
                 "Marks a resume-point inside a SlowSequence, waiting for the trigger condition",
             ),
-            Self::create_keyword_completion("ExitScan", "Exits the current scan immediately"),
+            Self::create_keyword_completion(
+                "ExitScan",
+                "Exits the entire Scan loop immediately, regardless of Count",
+            ),
             Self::create_keyword_completion("Return", "Returns a value from a Function"),
             Self::create_keyword_completion("ExitFunction", "Exit Function immediately"),
             Self::create_keyword_completion(
@@ -582,7 +585,7 @@ impl CompletionProvider {
             Self::create_keyword_snippet(
                 "ApplyAndRestartSequence",
                 "ApplyAndRestartSequence\n\t$0\nEndApplyAndRestartSequence",
-                "Validates a ConstTable field before it is applied at runtime; placed before ConstTable",
+                "Runs when the ConstTable it follows has its ApplyAndRestart setting externally set (e.g. via SetSetting), typically to validate the new constant values",
             ),
             Self::create_keyword_completion(
                 "EndApplyAndRestartSequence",
@@ -619,7 +622,7 @@ impl CompletionProvider {
             ),
             Self::create_keyword_snippet(
                 "ConstTable",
-                "ConstTable(${1:TableName}, ${2:Enabled})\n\tConst $0\nEndConstTable",
+                "ConstTable(${1:TableName}, ${2:Hidden})\n\tConst $0\nEndConstTable",
                 "Define a block of editable constants",
             ),
             Self::create_keyword_completion("EndConstTable", "Terminates ConstTable block"),
@@ -784,6 +787,65 @@ mod tests {
 
             for completion in &completions {
                 assert_eq!(completion.kind, Some(CompletionItemKind::KEYWORD));
+            }
+        }
+
+        mod documentation_accuracy {
+            use super::*;
+
+            fn completion_for(label: &str) -> CompletionItem {
+                CompletionProvider::get_keyword_completions()
+                    .into_iter()
+                    .find(|c| c.label == label)
+                    .unwrap_or_else(|| panic!("expected a completion item for: {}", label))
+            }
+
+            #[test]
+            fn consttable_snippet_names_its_second_parameter_hidden_not_enabled() {
+                let insert_text = completion_for("ConstTable").insert_text.unwrap();
+
+                assert!(
+                    !insert_text.contains("Enabled") && insert_text.contains("Hidden"),
+                    "the official syntax \
+                     (help.campbellsci.com/crbasic/cr1000x/Content/Instructions/consttableendconsttable.htm) \
+                     names the second parameter Hidden (1 = visible only at highest security \
+                     level, 0/omitted = standard visible table), not Enabled: {}",
+                    insert_text
+                );
+            }
+
+            #[test]
+            fn applyandrestartsequence_detail_does_not_claim_placement_before_consttable() {
+                let detail = completion_for("ApplyAndRestartSequence").detail.unwrap();
+
+                assert!(
+                    !detail.contains("before ConstTable"),
+                    "the official example \
+                     (help.campbellsci.com/crbasic/cr1000x/Content/Instructions/applyandrestartsequence.htm) \
+                     declares ApplyAndRestartSequence after the ConstTable it applies to, not \
+                     before: {}",
+                    detail
+                );
+            }
+
+            #[test]
+            fn exitscan_detail_is_distinct_from_continuescan_iteration_skip() {
+                let exit_scan_detail = completion_for("ExitScan").detail.unwrap();
+                let continue_scan_detail = completion_for("ContinueScan").detail.unwrap();
+
+                assert_ne!(
+                    exit_scan_detail, continue_scan_detail,
+                    "ExitScan breaks out of the entire Scan loop regardless of Count \
+                     (help.campbellsci.com/crbasic/cr1000x/Content/Instructions/scannextscan.htm), \
+                     a different, stronger effect than ContinueScan's skip-to-next-iteration -- \
+                     the two details must not read as describing the same behavior"
+                );
+                assert!(
+                    exit_scan_detail.to_lowercase().contains("loop"),
+                    "ExitScan's detail should describe leaving the Scan loop itself, not just \
+                     \"the current scan\": {}",
+                    exit_scan_detail
+                );
             }
         }
 

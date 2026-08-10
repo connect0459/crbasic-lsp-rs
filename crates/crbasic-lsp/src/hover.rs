@@ -314,7 +314,7 @@ impl HoverProvider {
                 "**PreserveVariables**\n\nRetains the values of all `Dim`/`Public` variables in memory across a power loss. Placed before `BeginProg`.",
             ),
             "applyandrestartsequence" => Some(
-                "**ApplyAndRestartSequence**\n\nValidates a `ConstTable` field before it is applied at runtime. Placed before `ConstTable`.\n\n```crbasic\nApplyAndRestartSequence\n  ' validation code\nEndApplyAndRestartSequence\nConstTable(TableName, Enabled)\n  Const A = 1\nEndConstTable\n```",
+                "**ApplyAndRestartSequence**\n\nRuns arbitrary code when the `ConstTable` it follows has its `ApplyAndRestart` setting externally set (e.g. via `SetSetting`), typically to validate the table's new constant values before triggering the restart itself. Declared after the `ConstTable` it applies to, both before `BeginProg`.\n\n```crbasic\nConstTable(TableName, Hidden)\n  Const A = 1\nEndConstTable\nApplyAndRestartSequence\n  ' validation code\n  SetSetting(\"TableName.ApplyAndRestart\", 1)\nEndApplyAndRestartSequence\n```",
             ),
             "endapplyandrestartsequence" => Some(
                 "**EndApplyAndRestartSequence**\n\nTerminates an ApplyAndRestartSequence block.",
@@ -334,13 +334,13 @@ impl HoverProvider {
                 "**OpenInterval**\n\nMakes time series processing include all measurements since the last data storage, spanning any missed output intervals, instead of only the current interval.",
             ),
             "fillstop" => Some(
-                "**FillStop**\n\nStops data storage once this DataTable reaches its configured size, instead of the default ring-memory behavior of overwriting the oldest records. Placed immediately after the DataTable statement.",
+                "**FillStop**\n\nStops data storage once this DataTable reaches its configured size, instead of the default ring-memory behavior of overwriting the oldest records. Used within the DataTable declaration.",
             ),
             "calltable" => Some(
                 "**CallTable**\n\nInvokes a previously declared DataTable: checks its trigger condition and stores a record if it fires. A bare keyword, not a parenthesized call.\n\n```crbasic\nCallTable TableName\n```",
             ),
             "consttable" => Some(
-                "**ConstTable**\n\nDefines a block of constants that field technicians can edit and recompile without touching the constants' use sites.\n\n```crbasic\nConstTable(TableName, Enabled)\n  Const A = 1\nEndConstTable\n```",
+                "**ConstTable**\n\nDefines a block of constants that field technicians can edit and recompile without touching the constants' use sites. The second parameter, `Hidden`, is 1 to create a table visible only at the highest security level, or 0 (or omitted) for a standard visible table.\n\n```crbasic\nConstTable(TableName, Hidden)\n  Const A = 1\nEndConstTable\n```",
             ),
             "structuretype" => Some(
                 "**StructureType**\n\nDefines a reusable data structure. Instances are declared with `Public`/`Dim ... As TypeName` and members are accessed with dot notation.\n\n```crbasic\nStructureType TempRHSensor\n  Temp As Float\n  RH As Float\nEndStructureType\n\nPublic CS215(3) As TempRHSensor\n' CS215(1).Temp\n```",
@@ -375,7 +375,9 @@ impl HoverProvider {
             "xor" => Some(
                 "**XOR**\n\nLogical XOR operator. Returns true if exactly one operand is true.",
             ),
-            "mod" => Some("**MOD**\n\nModulo operator. Returns the remainder of integer division."),
+            "mod" => Some(
+                "**MOD**\n\nModulo operator. Returns the remainder of `A / B`. Operands can be any number, not just integers (e.g. `19 MOD 6.7` = `5.6`).",
+            ),
             "imp" => Some(
                 "**IMP**\n\nLogical implication operator. `A IMP B` is equivalent to `(NOT A) OR B`.",
             ),
@@ -574,6 +576,80 @@ mod tests {
                         keyword
                     );
                 }
+            }
+        }
+
+        mod documentation_accuracy {
+            use super::*;
+
+            fn hover_text(keyword: &str) -> String {
+                let hover = HoverProvider::get_keyword_hover(keyword)
+                    .unwrap_or_else(|| panic!("expected hover info for keyword: {}", keyword));
+                match hover.contents {
+                    HoverContents::Markup(markup) => markup.value,
+                    _ => panic!("expected MarkupContent"),
+                }
+            }
+
+            #[test]
+            fn mod_hover_does_not_claim_operands_must_be_integers() {
+                let text = hover_text("MOD");
+
+                assert!(
+                    !text.to_lowercase().contains("integer division"),
+                    "MOD accepts non-integer operands (e.g. 19 MOD 6.7 = 5.6 per \
+                     help.campbellsci.com/crbasic/cr6/Content/Instructions/mod.htm), so its \
+                     hover text must not describe it as integer division: {}",
+                    text
+                );
+            }
+
+            #[test]
+            fn applyandrestartsequence_hover_is_declared_after_consttable() {
+                let text = hover_text("ApplyAndRestartSequence");
+
+                let consttable_pos = text.find("ConstTable(TableName");
+                let sequence_pos = text.find("ApplyAndRestartSequence\n");
+                assert!(
+                    consttable_pos.is_some() && sequence_pos.is_some(),
+                    "expected the example to contain both ConstTable and \
+                     ApplyAndRestartSequence blocks: {}",
+                    text
+                );
+                assert!(
+                    consttable_pos.unwrap() < sequence_pos.unwrap(),
+                    "the official example \
+                     (help.campbellsci.com/crbasic/cr1000x/Content/Instructions/applyandrestartsequence.htm) \
+                     declares ConstTable before ApplyAndRestartSequence, not after: {}",
+                    text
+                );
+            }
+
+            #[test]
+            fn consttable_hover_names_its_second_parameter_hidden_not_enabled() {
+                let text = hover_text("ConstTable");
+
+                assert!(
+                    !text.contains("Enabled") && text.contains("Hidden"),
+                    "the official syntax \
+                     (help.campbellsci.com/crbasic/cr1000x/Content/Instructions/consttableendconsttable.htm) \
+                     names the second parameter Hidden (1 = visible only at highest security \
+                     level, 0/omitted = standard visible table), not Enabled: {}",
+                    text
+                );
+            }
+
+            #[test]
+            fn fillstop_hover_does_not_claim_it_must_immediately_follow_datatable() {
+                let text = hover_text("FillStop");
+
+                assert!(
+                    !text.contains("immediately after the DataTable statement"),
+                    "the official example \
+                     (help.campbellsci.com/crbasic/cr1000x/Content/Instructions/fillstop.htm) \
+                     places FillStop after DataInterval(...), not immediately after DataTable: {}",
+                    text
+                );
             }
         }
 
