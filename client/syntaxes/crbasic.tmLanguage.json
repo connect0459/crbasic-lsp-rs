@@ -76,13 +76,7 @@
     "strings": {
       "name": "string.quoted.double.crbasic",
       "begin": "\"",
-      "end": "\"",
-      "patterns": [
-        {
-          "name": "constant.character.escape.crbasic",
-          "match": "\\\\."
-        }
-      ]
+      "end": "\"|$"
     },
     "numbers": {
       "patterns": [

@@ -129,15 +129,13 @@ function generateGrammar(keywords) {
         match: "\\s_$",
       },
       strings: {
+        // CRBasic string literals have no backslash-escape mechanism (see
+        // `scan_string`, crates/crbasic-parser/src/lexer/scanner.rs) --
+        // `\` is a plain character, and an unterminated string stops at the
+        // end of its line rather than swallowing the rest of the file.
         name: "string.quoted.double.crbasic",
         begin: '"',
-        end: '"',
-        patterns: [
-          {
-            name: "constant.character.escape.crbasic",
-            match: "\\\\.",
-          },
-        ],
+        end: '"|$',
       },
       numbers: {
         patterns: [

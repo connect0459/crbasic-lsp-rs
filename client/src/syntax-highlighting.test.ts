@@ -132,3 +132,40 @@ describe("crbasic.tmLanguage.json numeric literal highlighting", () => {
     expect(isHighlightedAsNumber("&Bvar")).toBe(false);
   });
 });
+
+interface TmStringRule {
+  name: string;
+  begin: string;
+  end: string;
+  patterns?: TmPattern[];
+}
+
+interface TmGrammarWithStrings extends TmGrammar {
+  repository: TmGrammar["repository"] & {
+    strings: TmStringRule;
+  };
+}
+
+function stringRule(): TmStringRule {
+  return (loadGrammar() as TmGrammarWithStrings).repository.strings;
+}
+
+describe("crbasic.tmLanguage.json string literal highlighting", () => {
+  // CRBasic string literals have no backslash-escape mechanism at all --
+  // `scan_string` (crates/crbasic-parser/src/lexer/scanner.rs) treats `\`
+  // as a plain, literal character, so a Windows path like `"C:\network"`
+  // must render as one uncolored string, not partially colored as if `\n`
+  // were an escape sequence.
+  test("does not highlight backslash sequences as escape characters", () => {
+    expect(stringRule().patterns ?? []).toEqual([]);
+  });
+
+  // `scan_string` stops at the end of the line for an unterminated string
+  // (a forgotten closing quote must not swallow the rest of the file) --
+  // the grammar's `end` pattern needs the same line-boundary fallback, or
+  // an unterminated string would visually swallow every following line up
+  // to the next stray `"` instead of stopping where the lexer does.
+  test("does not span an unterminated string past the end of its line", () => {
+    expect(stringRule().end).toMatch(/\$/);
+  });
+});
