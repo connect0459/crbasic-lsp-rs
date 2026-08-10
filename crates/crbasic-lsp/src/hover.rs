@@ -326,6 +326,19 @@ impl HoverProvider {
                 "**ShutDownBegin**\n\nRuns cleanup code (e.g. closing a serial port) when the program stops normally. Placed before `BeginProg`.\n\n```crbasic\nShutDownBegin\n  SerialClose(ComC1)\nShutDownEnd\n```",
             ),
             "shutdownend" => Some("**ShutDownEnd**\n\nTerminates a ShutDownBegin block."),
+            "essvariables" => Some(
+                "**ESSVariables**\n\nAuto-declares the standard set of NTCIP Environmental Sensor Station variables (used with `ESSInitialize` for roadway-weather/DOT telemetry programs). Takes an optional `Public` or `Dim` modifier (defaults to `Public`).\n\n```crbasic\nESSVariables Dim\n```",
+            ),
+            "webpageend" => Some(
+                "**WebPageEnd**\n\nTerminates a `WebPageBegin` block.\n\n```crbasic\nWebPageBegin(\"Page1\", 1)\n  HTTPOut(\"Hello\", \"text/html\")\nWebPageEnd\n```",
+            ),
+            "endmodemhangup" => Some(
+                "**EndModemHangup**\n\nTerminates a `ModemHangup` block.\n\n```crbasic\nModemHangup(ComC1)\n  ' cleanup instructions\nEndModemHangup\n```",
+            ),
+            "voicebeg" => Some(
+                "**VoiceBeg**\n\nBegins a block of voice-modem response code.\n\n```crbasic\nVoiceBeg\n  ' voice response instructions\nEndVoice\n```",
+            ),
+            "endvoice" => Some("**EndVoice**\n\nTerminates a VoiceBeg block."),
             "datatable" => Some(
                 "**DataTable**\n\nDefines a data table for storing measurements.\n\n```crbasic\nDataTable(TableName, TriggerCondition, Size)\n  ' output instructions\nEndTable\n```",
             ),

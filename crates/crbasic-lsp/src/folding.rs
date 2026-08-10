@@ -30,8 +30,9 @@ impl FoldingRangeProvider {
     /// `ConstTable`/`EndConstTable`, `ApplyAndRestartSequence`/
     /// `EndApplyAndRestartSequence`, `ShutDownBegin`/`ShutDownEnd`,
     /// `Scan`/`NextScan`, `SubScan`/`NextSubScan`,
-    /// `SlowSequence`/`EndSequence`, and `DisplayMenu`/`EndMenu`/
-    /// `SubMenu`/`EndSubMenu` markers
+    /// `SlowSequence`/`EndSequence`, `DisplayMenu`/`EndMenu`/
+    /// `SubMenu`/`EndSubMenu`, `WebPageBegin`/`WebPageEnd`,
+    /// `ModemHangup`/`EndModemHangup`, and `VoiceBeg`/`EndVoice` markers
     fn collect_from_statements(statements: &[Statement], ranges: &mut Vec<FoldingRange>) {
         let mut begin_prog_stack: Vec<Position> = Vec::new();
         let mut data_table_stack: Vec<Position> = Vec::new();
@@ -43,6 +44,9 @@ impl FoldingRangeProvider {
         let mut slow_sequence_stack: Vec<Position> = Vec::new();
         let mut display_menu_stack: Vec<Position> = Vec::new();
         let mut sub_menu_stack: Vec<Position> = Vec::new();
+        let mut web_page_stack: Vec<Position> = Vec::new();
+        let mut modem_hangup_stack: Vec<Position> = Vec::new();
+        let mut voice_stack: Vec<Position> = Vec::new();
 
         for statement in statements {
             match statement {
@@ -53,6 +57,7 @@ impl FoldingRangeProvider {
                     "ApplyAndRestartSequence" => apply_and_restart_sequence_stack.push(span.start),
                     "ShutDownBegin" => shutdown_stack.push(span.start),
                     "SlowSequence" => slow_sequence_stack.push(span.start),
+                    "VoiceBeg" => voice_stack.push(span.start),
                     "EndProg" => {
                         if let Some(start) = begin_prog_stack.pop() {
                             Self::push_range(ranges, start, span.end);
@@ -103,6 +108,21 @@ impl FoldingRangeProvider {
                             Self::push_range(ranges, start, span.end);
                         }
                     }
+                    "WebPageEnd" => {
+                        if let Some(start) = web_page_stack.pop() {
+                            Self::push_range(ranges, start, span.end);
+                        }
+                    }
+                    "EndModemHangup" => {
+                        if let Some(start) = modem_hangup_stack.pop() {
+                            Self::push_range(ranges, start, span.end);
+                        }
+                    }
+                    "EndVoice" => {
+                        if let Some(start) = voice_stack.pop() {
+                            Self::push_range(ranges, start, span.end);
+                        }
+                    }
                     _ => {}
                 },
                 Statement::FunctionCall { name, span, .. } => match name.as_str() {
@@ -110,6 +130,8 @@ impl FoldingRangeProvider {
                     "SubScan" => subscan_stack.push(span.start),
                     "DisplayMenu" => display_menu_stack.push(span.start),
                     "SubMenu" => sub_menu_stack.push(span.start),
+                    "WebPageBegin" => web_page_stack.push(span.start),
+                    "ModemHangup" => modem_hangup_stack.push(span.start),
                     _ => {}
                 },
                 Statement::IfStatement {
@@ -513,6 +535,48 @@ mod tests {
             assert_eq!(ranges.len(), 2);
             assert_eq!((ranges[0].start_line, ranges[0].end_line), (1, 3));
             assert_eq!((ranges[1].start_line, ranges[1].end_line), (0, 4));
+        }
+
+        #[test]
+        fn pairs_web_page_begin_with_the_matching_web_page_end() {
+            let program = program(vec![
+                function_call("WebPageBegin", 1),
+                program_structure("WebPageEnd", 4),
+            ]);
+
+            let ranges = FoldingRangeProvider::get_folding_ranges(&program);
+
+            assert_eq!(ranges.len(), 1);
+            assert_eq!(ranges[0].start_line, 0);
+            assert_eq!(ranges[0].end_line, 3);
+        }
+
+        #[test]
+        fn pairs_modem_hangup_with_the_matching_end_modem_hangup() {
+            let program = program(vec![
+                function_call("ModemHangup", 1),
+                program_structure("EndModemHangup", 3),
+            ]);
+
+            let ranges = FoldingRangeProvider::get_folding_ranges(&program);
+
+            assert_eq!(ranges.len(), 1);
+            assert_eq!(ranges[0].start_line, 0);
+            assert_eq!(ranges[0].end_line, 2);
+        }
+
+        #[test]
+        fn pairs_voice_beg_with_the_matching_end_voice() {
+            let program = program(vec![
+                program_structure("VoiceBeg", 1),
+                program_structure("EndVoice", 3),
+            ]);
+
+            let ranges = FoldingRangeProvider::get_folding_ranges(&program);
+
+            assert_eq!(ranges.len(), 1);
+            assert_eq!(ranges[0].start_line, 0);
+            assert_eq!(ranges[0].end_line, 2);
         }
 
         #[test]

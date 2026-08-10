@@ -79,6 +79,9 @@ describe("language-configuration.json indentationRules", () => {
       "#Else",
       'DisplayMenu("Menu1", 1, 1)',
       'SubMenu("Sub1")',
+      'WebPageBegin("Page1", 1)',
+      "ModemHangup(ComC1)",
+      "VoiceBeg",
     ])("matches block-opening line: %s", (line) => {
       expect(increase.test(line)).toBe(true);
     });
@@ -94,6 +97,9 @@ describe("language-configuration.json indentationRules", () => {
       "EndMenu",
       "EndSubMenu",
       'MenuItem("Item1")',
+      "WebPageEnd",
+      "EndModemHangup",
+      "EndVoice",
     ])("does not match non-block-opening line: %s", (line) => {
       expect(increase.test(line)).toBe(false);
     });
@@ -127,6 +133,9 @@ describe("language-configuration.json indentationRules", () => {
       "#Else",
       "EndMenu",
       "EndSubMenu",
+      "WebPageEnd",
+      "EndModemHangup",
+      "EndVoice",
     ])("matches block-closing line: %s", (line) => {
       expect(decrease.test(line)).toBe(true);
     });
@@ -139,6 +148,9 @@ describe("language-configuration.json indentationRules", () => {
       "SubScan(0.1, Sec, 5)",
       'DisplayMenu("Menu1", 1, 1)',
       'SubMenu("Sub1")',
+      'WebPageBegin("Page1", 1)',
+      "ModemHangup(ComC1)",
+      "VoiceBeg",
     ])("does not match non-block-closing line: %s", (line) => {
       expect(decrease.test(line)).toBe(false);
     });
@@ -172,6 +184,9 @@ describe("language-configuration.json folding.markers", () => {
       "#IfDef FINAL Then",
       'DisplayMenu("Menu1", 1, 1)',
       'SubMenu("Sub1")',
+      'WebPageBegin("Page1", 1)',
+      "ModemHangup(ComC1)",
+      "VoiceBeg",
     ])("matches block-opening line: %s", (line) => {
       expect(start.test(line)).toBe(true);
     });
@@ -193,6 +208,9 @@ describe("language-configuration.json folding.markers", () => {
       "EndMenu",
       "EndSubMenu",
       'MenuItem("Item1")',
+      "WebPageEnd",
+      "EndModemHangup",
+      "EndVoice",
     ])("does not match non-block-opening line: %s", (line) => {
       expect(start.test(line)).toBe(false);
     });
@@ -220,6 +238,9 @@ describe("language-configuration.json folding.markers", () => {
       "#EndIf",
       "EndMenu",
       "EndSubMenu",
+      "WebPageEnd",
+      "EndModemHangup",
+      "EndVoice",
     ])("matches block-closing line: %s", (line) => {
       expect(end.test(line)).toBe(true);
     });
@@ -236,6 +257,9 @@ describe("language-configuration.json folding.markers", () => {
       "Loopback = 1",
       'DisplayMenu("Menu1", 1, 1)',
       'SubMenu("Sub1")',
+      'WebPageBegin("Page1", 1)',
+      "ModemHangup(ComC1)",
+      "VoiceBeg",
     ])("does not match non-block-closing line: %s", (line) => {
       expect(end.test(line)).toBe(false);
     });

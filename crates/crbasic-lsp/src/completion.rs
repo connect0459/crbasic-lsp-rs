@@ -602,6 +602,19 @@ impl CompletionProvider {
             ),
             Self::create_keyword_completion("ShutDownEnd", "Terminates a ShutDownBegin block"),
             Self::create_keyword_snippet(
+                "ESSVariables",
+                "ESSVariables ${1:Public}",
+                "Auto-declares the standard set of NTCIP Environmental Sensor Station variables, used with ESSInitialize",
+            ),
+            Self::create_keyword_completion("WebPageEnd", "Terminates a WebPageBegin block"),
+            Self::create_keyword_completion("EndModemHangup", "Terminates a ModemHangup block"),
+            Self::create_keyword_snippet(
+                "VoiceBeg",
+                "VoiceBeg\n\t$0\nEndVoice",
+                "Begins a block of voice-modem response code",
+            ),
+            Self::create_keyword_completion("EndVoice", "Terminates a VoiceBeg block"),
+            Self::create_keyword_snippet(
                 "DataTable",
                 "DataTable(${1:TableName}, ${2:TriggerCondition}, ${3:Size})\n\t$0\nEndTable",
                 "Define data storage table",

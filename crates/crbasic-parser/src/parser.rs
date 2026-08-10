@@ -244,6 +244,11 @@ impl<'a> Parser<'a> {
                 || kw == "EndApplyAndRestartSequence"
                 || kw == "ShutDownBegin"
                 || kw == "ShutDownEnd"
+                || kw == "ESSVariables"
+                || kw == "WebPageEnd"
+                || kw == "EndModemHangup"
+                || kw == "VoiceBeg"
+                || kw == "EndVoice"
                 || kw == "TableHide"
                 || kw == "OpenInterval"
                 || kw == "FillStop"
@@ -843,6 +848,21 @@ impl<'a> Parser<'a> {
             Some(args)
         } else if keyword == "#UnDef" {
             Some(vec![self.parse_expression()?])
+        } else if keyword == "ESSVariables" {
+            // `ESSVariables [Public|Dim]`: an optional modifier (defaulting to
+            // `Public`) rather than an expression, since `Public`/`Dim` are
+            // themselves keyword tokens, not values `parse_expression` can read.
+            if let &TokenKind::Keyword(modifier) = &self.peek().kind
+                && (modifier == "Public" || modifier == "Dim")
+            {
+                let modifier_token = self.advance();
+                Some(vec![Expression::Identifier {
+                    name: modifier.to_string(),
+                    span: modifier_token.span,
+                }])
+            } else {
+                None
+            }
         } else if keyword == "Return" {
             if !matches!(self.peek().kind, TokenKind::LeftParen) {
                 return Err(ParseError {
@@ -7198,6 +7218,128 @@ mod tests {
             } else {
                 panic!("Expected an if statement");
             }
+        }
+    }
+
+    mod telemetry_and_communication_program_structure {
+        use super::*;
+
+        #[test]
+        fn parses_webpageend_closing_a_webpagebegin_block() {
+            let source =
+                "WebPageBegin(\"Page1\", 1)\n  HTTPOut(\"Hello\", \"text/html\")\nWebPageEnd"
+                    .to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::FunctionCall { name, .. } if name == "WebPageBegin"
+            ));
+            assert!(matches!(
+                &program.statements[2],
+                Statement::ProgramStructure { keyword, .. } if keyword == "WebPageEnd"
+            ));
+        }
+
+        #[test]
+        fn parses_endmodemhangup_closing_a_modemhangup_block() {
+            let source = "ModemHangup(ComC1)\n  SerialClose(ComC1)\nEndModemHangup".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::FunctionCall { name, .. } if name == "ModemHangup"
+            ));
+            assert!(matches!(
+                &program.statements[2],
+                Statement::ProgramStructure { keyword, .. } if keyword == "EndModemHangup"
+            ));
+        }
+
+        #[test]
+        fn parses_voicebeg_endvoice_block() {
+            let source =
+                "VoiceBeg\n  SerialOut(ComC1, \"Hello\", \"\", 0, 0)\nEndVoice".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::ProgramStructure { keyword, .. } if keyword == "VoiceBeg"
+            ));
+            assert!(matches!(
+                &program.statements[2],
+                Statement::ProgramStructure { keyword, .. } if keyword == "EndVoice"
+            ));
+        }
+
+        #[test]
+        fn parses_bare_essvariables_with_no_modifier() {
+            let source = "ESSVariables\nBeginProg\nEndProg".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::ProgramStructure { keyword, arguments: None, .. } if keyword == "ESSVariables"
+            ));
+        }
+
+        #[test]
+        fn parses_essvariables_with_public_modifier() {
+            let source = "ESSVariables Public\nBeginProg\nEndProg".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::ProgramStructure { keyword, arguments: Some(args), .. }
+                    if keyword == "ESSVariables"
+                        && matches!(&args[0], Expression::Identifier { name, .. } if name == "Public")
+            ));
+        }
+
+        #[test]
+        fn essvariables_dim_modifier_no_longer_corrupts_the_surrounding_program() {
+            // Regression test: Campbell Scientific's own ESSVariables example
+            // combines `ESSVariables Dim` with an ordinary `Public` declaration
+            // on the very next line -- before this fix, `Dim` (a real keyword)
+            // was misread as the start of a new statement with no identifier
+            // after it, producing a hard parse error for the whole file.
+            let source = "ESSVariables Dim\nPublic BattV\nBeginProg\nEndProg".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 4);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::ProgramStructure { keyword, arguments: Some(args), .. }
+                    if keyword == "ESSVariables"
+                        && matches!(&args[0], Expression::Identifier { name, .. } if name == "Dim")
+            ));
+            assert!(matches!(
+                &program.statements[1],
+                Statement::VarDeclaration { name, .. } if name == "BattV"
+            ));
         }
     }
 
