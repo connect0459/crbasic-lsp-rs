@@ -1387,9 +1387,12 @@ Not flagged as gaps (verified during the same comparison):
 - `Restore`: 404s on help.campbellsci.com, only in one reference grammar --
   looks like a VB6 `DATA`-statement leftover, dismissed on the same basis
 - Hex/octal/binary numeric literals: no such syntax documented on the
-  master Operators page; CRBasic instead exposes `HexToDec`/`DecToHex` as
+  master Operators page; CRBasic instead exposes `HexToDec`/`Hex` as
   string-conversion functions, consistent with the lexer's decimal-only
-  `scan_number`
+  `scan_number`. Correction (Round 17): this note originally named the
+  companion function `DecToHex`, which turned out to be fabricated --
+  `HexToDec`'s own official page names its inverse `Hex`, not `DecToHex`;
+  see Round 17 below
 - Array-of-`StructureType` declarations (e.g. `Dim CS215(4) As
   CS215Data`): already parse correctly -- `parse_var_declaration` parses
   array dimensions generically before the `As` type name, independent of
@@ -2242,6 +2245,149 @@ Not flagged as gaps (verified during the same comparison):
   instruction and a printf-style format string, respectively, both
   confirmed genuinely correct as single/two-parameter shapes, not
   under-specified)
+
+### Reference Implementation & Official Docs Comparison, Round 17 (2026-08-10)
+
+Found during a seventeenth comparison round, tackling the two items Round 12
+and Round 13 had explicitly deferred (a full line-by-line accuracy sweep of
+`hover.rs`'s ~70 keyword descriptions and `completion.rs`'s keyword snippet
+text) plus a fresh sweep for gaps the prior sixteen rounds hadn't caught,
+using three parallel research passes. Each finding independently
+re-verified against help.campbellsci.com before fixing (not just taken from
+the research pass's own citation).
+
+- [x] `Mod` hover text claimed "integer division" (bug) ✅ Resolved
+  - `Mod`'s operands can be any number, not just integers -- confirmed at
+    [mod.htm](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/mod.htm),
+    whose own worked example (`19 MOD 6.7` = `5.6`) uses a non-integer
+    operand and produces a non-integer result. Reworded to describe it as
+    the remainder of `A / B` with that example
+- [x] `ApplyAndRestartSequence` placement/semantics wrong in both `hover.rs`
+  and `completion.rs` (bug) ✅ Resolved
+  - Both files claimed it's "placed before `ConstTable`" and passively
+    "validates a field before it is applied at runtime". The official
+    example
+    ([applyandrestartsequence.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/applyandrestartsequence.htm))
+    declares it *after* the `ConstTable`/`EndConstTable` block it applies
+    to (it needs to reference the table's already-declared fields), and
+    it's arbitrary code that runs when the table's `ApplyAndRestart`
+    setting is externally set (e.g. via `SetSetting`) -- the block itself
+    is what triggers the restart, not a passive gate in front of one
+  - Corrected the ordering, wording, and worked example in both files
+- [x] `ConstTable`'s second parameter named `Enabled` instead of `Hidden`,
+  with inverted meaning (bug) ✅ Resolved
+  - Confirmed at
+    [consttableendconsttable.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/consttableendconsttable.htm):
+    the real parameter is `Hidden` (1 = visible only at the highest
+    security level, 0/omitted = standard visible table) -- a user filling
+    in `Enabled = True` per the old placeholder name would have requested
+    the opposite of what "Enabled" implies. Fixed in both `hover.rs`'s
+    `consttable`/`applyandrestartsequence` examples and `completion.rs`'s
+    `ConstTable` snippet
+- [x] `FillStop` hover claimed it must be "placed immediately after the
+  DataTable statement" (bug) ✅ Resolved
+  - The official example
+    ([fillstop.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/fillstop.htm))
+    places it after `DataInterval(...)`, not immediately after `DataTable`;
+    no such ordering rule exists in the docs. Reworded to "used within the
+    DataTable declaration" (`completion.rs`'s `FillStop` detail had no such
+    claim, so nothing to fix there)
+- [x] `ExitScan` completion detail read identically to `ContinueScan`'s,
+  losing the loop-exit-vs-iteration-skip distinction (bug) ✅ Resolved
+  - `ExitScan` breaks out of the entire `Scan`/`NextScan` loop regardless of
+    `Count`; `ContinueScan` only skips to the next iteration. Confirmed at
+    [scannextscan.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/scannextscan.htm),
+    which explicitly contrasts the two. Reworded `ExitScan`'s detail to name
+    the loop-exit behavior explicitly
+  - 4 new `hover.rs` tests + 3 new `completion.rs` tests (one per finding
+    above, `documentation_accuracy` submodules) added Red-first; full
+    workspace `build`/`test`/`clippy`/`fmt` gate passes
+- [x] `Asc`, `DecToHex`, `FreqCount`, `Thermocouple`, `Variance`, `UDPClose`
+  -- fabricated, not real CRBasic (bug) ✅ Resolved (removed)
+  - Same fabrication bar Round 9 used for `Sqrt`/`LCase`/`UCase`/
+    `TableName`/`IsNaN`: absent from both reference repos' grammars and
+    404 on help.campbellsci.com's otherwise-reliable slug pattern (verified
+    working for every real function confirmed below). Each has a real
+    counterpart this project was missing entirely: `ASCII`
+    ([ascii.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/ascii.htm)),
+    `Hex`
+    ([hex.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/hex.htm),
+    also `HexToDec`'s own page names `Hex` as its inverse, not
+    `DecToHex`), real frequency measurement via the already-present
+    `PulseCount`, real thermocouple measurement via the already-present
+    `TCDiff`/`TCSE`, `Moment` (deferred -- falls in the existing
+    output-processing content-volume backlog), and the newer
+    `UDPSocketOpen`/`UDPSocketSend`/`UDPSocketRecv`/`UDPSocketClose` family
+    (confirmed at
+    [udpsocketopen.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/udpsocketopen.htm);
+    `UDPOpen`'s own page confirms that older API has no `UDPClose`
+    counterpart at all)
+  - None of the six had any `completion.rs`/`hover.rs`/`signature.rs`
+    coverage, so removal was a pure `keywords.json` edit
+- [x] `ASCII`, `Hex`, `Sinh`, `Cosh`, `Tanh`, `Frac`, `Sprintf`,
+  `UDPSocketOpen`/`UDPSocketSend`/`UDPSocketRecv`/`UDPSocketClose` missing
+  entirely ✅ Resolved
+  - `Sinh`/`Cosh`/`Tanh`/`Frac` are direct siblings of the already-present
+    `Sin`/`Cos`/`Tan`/`Sqr` (confirmed at
+    [sinh.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/sinh.htm)
+    and equivalent `cosh`/`tanh`/`frac` pages). `Sprintf` is a
+    general-purpose formatted-string function (confirmed at
+    [sprintf.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/sprintf.htm)),
+    the same string-building use case Round 3 cited as the motivation for
+    the `&` concatenation operator
+  - Added to `keywords.json` (`string`/`math`/`communication` categories
+    matching their siblings) and regenerated `keywords_generated.rs` and
+    `client/syntaxes/crbasic.tmLanguage.json`. Per Round 2's Codebase
+    Survey Candidates' standing content-volume decision, no
+    `completion.rs`/`hover.rs`/`signature.rs` entries were added for these
+    (matches how most of the ~117 `BUILTIN_FUNCTIONS` entries already have
+    no rich snippet)
+- [x] `AngleDegrees` missing entirely, and its absence hid a real parser
+  bug (bug) ✅ Resolved
+  - Confirmed at
+    [angledegrees.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/angledegrees.htm):
+    a bare declaration (no parentheses/arguments), placed before
+    `BeginProg`, that switches `ATN`/`ATN2`/`ACOS`/`ASIN`/`RectPolar` to
+    return degrees and `COS`/`TAN`/`SIN` to interpret their arguments as
+    degrees
+  - Because it wasn't registered anywhere, it lexed as a plain identifier
+    and silently parsed as an inert `Statement::Expression` instead of a
+    real declaration or a parse error -- the same "bare keyword becomes a
+    phantom statement" bug class already fixed 8+ times in Rounds 4-7 for
+    `Restart`/`PreserveVariables`/`SequentialMode`/`PipeLineMode`/etc, just
+    never caught because it wasn't in either reference grammar's name list
+    those rounds diffed against
+  - Added to `keywords.json`'s `program` category and to the bare-keyword
+    dispatch list in `parse_program_structure`'s caller
+    (`crates/crbasic-parser/src/parser.rs`), alongside matching
+    `hover.rs`/`completion.rs` coverage
+  - 1 new parser test (`parses_angledegrees_before_beginprog`) added
+    Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass
+
+Not flagged as gaps (verified during the same comparison):
+
+- `Optional`'s completion snippet example (`Function Scale(a, Optional b)`
+  with no default value) -- `optional.htm`'s fetched content was
+  self-contradictory about whether a default value is required in the
+  declaration; left unflagged per this project's own standard of only
+  fixing claims confirmed wrong, not claims merely unverifiable
+- `TableHide`'s "immediately after the DataTable statement" claim -- unlike
+  `FillStop`, its official example does place it as the very first
+  statement in the block, so this one is not contradicted
+- The remaining ~65 `hover.rs`/`completion.rs` keyword entries (`If`/
+  `Then`/`Else`/`Do`/`Loop`/`While`/`Until`/`Select`/`Case`/`Public`/`Dim`/
+  `Const`/`BeginProg`/`Function`/`Sub`/`Return`/`AND`/`OR`/`NOT`/`XOR`/`#If`/
+  `#IfDef`/etc, plus every already-passing `completion.rs` snippet from
+  `If` through `True`/`False`): each claim checked against official docs or
+  a reference repo, no further discrepancy found
+- `Randomize` and `TypeOf`: real CRBasic functions, but already explicitly
+  swept and deliberately deferred to the content-volume backlog in Rounds 7
+  and 10 respectively -- not a new finding
+- `Case Else`, data types after `As`, `Eqv`/`Imp`/`IntDv`, `RectPolar` and
+  the rest of the `Sample`/`Average` output-processing family,
+  `ArrayIndex`, `Status`, `StationName`, `NaN`, `EndStructureType`: all
+  explicitly checked and already resolved/dismissed in Rounds 1-16
 
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
