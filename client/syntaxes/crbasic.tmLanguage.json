@@ -52,6 +52,9 @@
       "include": "#builtin-functions-data"
     },
     {
+      "include": "#builtin-functions-menu"
+    },
+    {
       "include": "#builtin-functions-general"
     },
     {
@@ -149,6 +152,10 @@
       "name": "support.function.data.crbasic",
       "match": "(?i)\\b(Sample|Average|StdDev|Minimum|Maximum|Totalize|WindVector|Histogram|FieldNames|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval)\\b"
     },
+    "builtin-functions-menu": {
+      "name": "support.function.menu.crbasic",
+      "match": "(?i)\\b(DisplayMenu|SubMenu|MenuItem|MenuPick|MenuRecompile|DisplayValue|DisplayLine)\\b"
+    },
     "builtin-functions-general": {
       "patterns": [
         {
@@ -161,7 +168,7 @@
         },
         {
           "name": "support.function.time.crbasic",
-          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|SetStatus|MoveBytes|ArrayLength|NaN)\\b"
+          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|SetStatus|SetSetting|MoveBytes|ArrayLength|NaN)\\b"
         },
         {
           "name": "support.function.logical.crbasic",

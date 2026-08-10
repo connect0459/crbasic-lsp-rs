@@ -208,10 +208,19 @@
     { "name": "Timer", "category": "time" },
     { "name": "Delay", "category": "time" },
     { "name": "SetStatus", "category": "time" },
+    { "name": "SetSetting", "category": "time" },
     { "name": "MoveBytes", "category": "time" },
     { "name": "ArrayLength", "category": "time" },
     { "name": "NaN", "category": "time" },
 
-    { "name": "IIf", "category": "logical" }
+    { "name": "IIf", "category": "logical" },
+
+    { "name": "DisplayMenu", "category": "menu" },
+    { "name": "SubMenu", "category": "menu" },
+    { "name": "MenuItem", "category": "menu" },
+    { "name": "MenuPick", "category": "menu" },
+    { "name": "MenuRecompile", "category": "menu" },
+    { "name": "DisplayValue", "category": "menu" },
+    { "name": "DisplayLine", "category": "menu" }
   ]
 }

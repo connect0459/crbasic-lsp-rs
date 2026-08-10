@@ -34,4 +34,20 @@ mod tests {
         assert!(BUILTIN_FUNCTIONS.contains(&("Scan", "scan")));
         assert!(BUILTIN_FUNCTIONS.contains(&("DataInterval", "data")));
     }
+
+    #[test]
+    fn builtin_functions_include_custom_menu_entries() {
+        assert!(BUILTIN_FUNCTIONS.contains(&("DisplayMenu", "menu")));
+        assert!(BUILTIN_FUNCTIONS.contains(&("SubMenu", "menu")));
+        assert!(BUILTIN_FUNCTIONS.contains(&("MenuItem", "menu")));
+        assert!(BUILTIN_FUNCTIONS.contains(&("MenuPick", "menu")));
+        assert!(BUILTIN_FUNCTIONS.contains(&("MenuRecompile", "menu")));
+        assert!(BUILTIN_FUNCTIONS.contains(&("DisplayValue", "menu")));
+        assert!(BUILTIN_FUNCTIONS.contains(&("DisplayLine", "menu")));
+    }
+
+    #[test]
+    fn builtin_functions_include_set_setting_entry() {
+        assert!(BUILTIN_FUNCTIONS.contains(&("SetSetting", "time")));
+    }
 }

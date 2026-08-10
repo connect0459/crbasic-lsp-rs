@@ -114,6 +114,7 @@ function generateGrammar(keywords) {
       { include: "#builtin-functions-measurement" },
       { include: "#builtin-functions-communication" },
       { include: "#builtin-functions-data" },
+      { include: "#builtin-functions-menu" },
       { include: "#builtin-functions-general" },
       { include: "#operators" },
       { include: "#identifiers" },
@@ -205,6 +206,10 @@ function generateGrammar(keywords) {
       "builtin-functions-data": {
         name: "support.function.data.crbasic",
         match: alternation(fn.get("data")),
+      },
+      "builtin-functions-menu": {
+        name: "support.function.menu.crbasic",
+        match: alternation(fn.get("menu")),
       },
       "builtin-functions-general": {
         patterns: [
