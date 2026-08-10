@@ -1678,6 +1678,136 @@ entry had named in passing but never turned into its own tracked item.
   `BeginBurstTrigger`/`EndBurstTrigger`, `ArrayIndex`, `Status`,
   `StationName`, `Debug`, `RunProgram`, etc.)
 
+### Reference Implementation & Official Docs Comparison, Round 11 (2026-08-10)
+
+Found during an eleventh comparison round, this time auditing angles the
+first ten hadn't covered: the file-extension-to-datalogger-model mapping's
+own correctness (Rounds 1-10 only ever audited extension *coverage*, never
+whether the mapping itself was right), the LSP layer's outstanding provider
+gaps, and string/numeric-literal edge cases. Each finding verified against
+an official help.campbellsci.com page (or, for the extension mapping,
+cross-referenced against multiple independent sources since no single page
+enumerates every extension) and a real repro before fixing.
+
+- [x] `.cr1`/`.cr1x` misclassified as CR200X; `.crb` misclassified as a
+  GRANITE-specific extension (bug) ✅ Resolved
+  - `DataloggerModel::from_extension` (`crates/crbasic-parser/src/semantic.rs`)
+    grouped `.cr1`/`.cr1x` with CR200X's 16-char profile, but confirmed via
+    Campbell Scientific's own
+    [Program File Extension](https://help.campbellsci.com/crbasic/landing/Content/Info/Program_File_Extension.htm)
+    page and independent corroboration (a CR1000 manual's reference to
+    `Default.cr1`, a CR1000X getting-started guide's `default.CR1X`, and a
+    Campbell forum thread instructing `Temp.CR1`→`Temp.CR1X` when upgrading
+    CR1000→CR1000X): `.cr1` is CR1000's own extension and `.cr1x` is
+    CR1000X's, both in the 39-char group. Only `.cr2` is CR200(X)'s
+    extension. This was also the exact example `AGENTS.md`/`CLAUDE.md`
+    itself documented (`.cr1` → CR200X) -- the original assumption was
+    simply wrong, not merely under-audited
+  - `.crb` was mapped to a dedicated `GRANITE` model, but the same official
+    page shows `.crb` is valid across CR1000/CR1000X/CR6/CR300/CR350/GRANITE
+    alike -- a generic extension playing the same role `.dld` already does,
+    not GRANITE-specific. Since GRANITE's validation profile was otherwise
+    identical to CR6's and no dedicated extension triggers it anymore, the
+    `GRANITE` variant is removed and folded into `CR6` (confirmed with the
+    user rather than decided unilaterally, since it changes a documented
+    enum shape)
+  - Real-world impact: legitimate 17-39 char variable names in actual
+    CR1000/CR1000X programs were getting false `MaxLengthExceeded` errors
+  - Renamed `docs/examples/03-cr200x-length-pitfalls.CR1` to `.CR2`, since
+    the whole point of that example is to trigger CR200X's diagnostics --
+    the old name would silently stop demonstrating them once opened in the
+    actual extension
+  - Updated `AGENTS.md`/`CLAUDE.md`, `README.md`, and `docs/ARCHITECTURE.md`,
+    which had either repeated the same wrong assumption or (README.md's
+    case) already documented the correct mapping while the code contradicted
+    it
+  - Test fixtures across `semantic.rs`, `document.rs` (crbasic-lsp),
+    `lib.rs` (crbasic-wasm), and `sample_files.rs` updated; two existing
+    sample-file regression tests (`sample-cr1000.CR1`,
+    `sample-cr1000x-series.CR1X`) had been silently exercising this exact
+    bug, asserting zero errors under the wrong (CR200X) model the whole
+    time -- switched to CR6
+- [x] `scan_string` implemented fabricated C-style backslash escapes (`\n`,
+  `\t`, `\r`, `\\`, `\"`) (bug) ✅ Resolved
+  - CRBasic has no backslash-escape syntax in string literals at all --
+    confirmed via a Campbell Scientific user forum thread ("Double quote in
+    a string") stating explicitly that `Chr(34)` concatenation is the only
+    way to embed a quote, since there is no escape mechanism, not even
+    VB-style doubled quotes. `scan_string`
+    (`crates/crbasic-parser/src/lexer/scanner.rs`) had no basis for this
+    C-family behavior -- confirmed via repro: a literal Windows path like
+    `"C:\network\path"` had its `\n` silently converted to a real newline,
+    corrupting the string value
+  - `scan_string` now copies every character up to the closing `"`
+    verbatim; a backslash has no special meaning
+  - 2 lexer tests rewritten Red-first
+    (`treats_backslash_as_a_literal_character`,
+    `does_not_merge_adjacent_string_literals`), replacing the two tests that
+    had baked in the fabricated escape behavior as intended
+- [x] `&H` (hexadecimal) / `&B` (binary) integer-literal prefixes entirely
+  unhandled ✅ Resolved
+  - Confirmed real at help.campbellsci.com's
+    [endword parameter page](https://help.campbellsci.com/crbasic/cr6/Content/parameters/endword.htm)
+    (`&H80000000`), with `&B` corroborated by both reference tmLanguage
+    grammars' `constant.numeric` patterns. The lexer's `&` handling only
+    ever emitted `Ampersand`/`AmpersandEqual`, so `&HFF` lexed as
+    string-concatenation followed by a bare `HFF` identifier
+  - The lexer now recognizes `&H`/`&h`/`&B`/`&b` as literal prefixes, but
+    only when a valid digit immediately follows -- otherwise `&` stays the
+    concatenation operator, so `A&Bvar` (concatenation with a variable
+    starting with B or H) still lexes correctly. The parser strips the
+    prefix and radix-parses the digits into the literal's `i64` value
+    (new `parse_integer_literal` helper, `crates/crbasic-parser/src/parser.rs`)
+  - 4 new lexer tests + 2 new parser tests added Red-first
+- [x] Truncation-collision diagnostics never populated `related_information`
+  (a loose end noted but not acted on in the Codebase Survey Candidates
+  section above) ✅ Resolved
+  - `check_truncation_collisions` (`semantic.rs`) already grouped every
+    colliding symbol (each with its own `declaration_span`) before emitting
+    one `SemanticError` per member, but only ever kept that member's own
+    name -- the other colliding symbol's location was computed and then
+    discarded instead of being surfaced to the client
+  - `SemanticErrorKind::TruncationCollision` gained a
+    `colliding_with: Vec<(String, Span)>` field; `backend.rs` builds each
+    diagnostic's `related_information` from it, letting editors jump
+    directly to the other declaration causing the collision
+  - 1 new semantic-analyzer test + 2 new backend tests added Red-first
+
+Not flagged as gaps (verified during the same comparison):
+
+- Remaining unimplemented LSP capabilities (`selection_range`,
+  `linked_editing_range`, `type_definition`, `implementation`,
+  `declaration`, `document_link`, `color`, `execute_command`, `moniker`,
+  `inline_value`, the pull-model `diagnostic` request,
+  `textDocument/formatting`): audited against tower-lsp-server's full
+  capability surface and the LSP 3.17 spec. `type_definition`/
+  `implementation`/`declaration`/`document_link`/`color`/`moniker`/
+  `inline_value` don't semantically apply to CRBasic (no type hierarchy, no
+  URLs/color literals in source, single-file server, no debug adapter).
+  `execute_command` and the pull-model `diagnostic` request have no
+  concrete need yet (push-based `publish_diagnostics` already works).
+  `selection_range`/`linked_editing_range` are plausible future work -- AST
+  spans and the existing `document_highlight`/`rename` identifier-occurrence
+  logic could support them -- but not urgent enough to act on now.
+  Whole-document `textDocument/formatting` was re-evaluated and confirmed
+  still out of scope: the parser discards comments as trivia
+  (`parser.rs`'s `skip_whitespace_and_comments`), and the AST has no
+  comment-carrying nodes, so an AST-driven formatter would silently delete
+  every comment on "Format Document" -- a real fix would need a second,
+  token-based (not AST-based) code-generation pass, a bigger undertaking
+  than the rest of this round
+- Full CRBasic string/numeric literal edge-case sweep (line-continuation
+  inside multi-line constructs, comment forms besides `'`, numeric type
+  suffixes like VB-style `L`/`UL`): no further gaps found clearing this
+  project's repro-plus-official-docs bar. `REM`-style comments don't exist
+  in CRBasic; numeric type suffixes have no official-docs corroboration and
+  resemble a copy-pasted C-family artifact in one reference grammar
+- CR9000X's officially-documented OS-version-dependent length limit (16
+  chars pre-2011-OS release, 39 chars after) can't be expressed by
+  extension-based detection alone, since the file extension carries no OS
+  version -- an inherent limitation of this project's detection strategy,
+  not a bug to fix
+
 ### Packaging Gap (discovered while designing the release workflow)
 
 - [x] Multi-platform `.vsix` packaging ✅ Resolved
