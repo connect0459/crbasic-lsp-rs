@@ -547,6 +547,12 @@ impl CompletionProvider {
                 "Begins a slow sequence scan block",
             ),
             Self::create_keyword_completion("EndSequence", "Ends a slow sequence scan block"),
+            Self::create_keyword_snippet(
+                "StructureType",
+                "StructureType ${1:TypeName}\n\t$0\nEndStructureType",
+                "Define a reusable data structure",
+            ),
+            Self::create_keyword_completion("EndStructureType", "Terminates StructureType block"),
         ]
     }
 
@@ -673,6 +679,8 @@ mod tests {
             assert!(labels.contains(&"EndTable"));
             assert!(labels.contains(&"ConstTable"));
             assert!(labels.contains(&"EndConstTable"));
+            assert!(labels.contains(&"StructureType"));
+            assert!(labels.contains(&"EndStructureType"));
         }
 
         #[test]

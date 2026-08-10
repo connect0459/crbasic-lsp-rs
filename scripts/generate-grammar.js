@@ -177,6 +177,10 @@ function generateGrammar(keywords) {
             match: alternation(kw.get("consttable")),
           },
           {
+            name: "keyword.control.structuretype.crbasic",
+            match: alternation(kw.get("structuretype")),
+          },
+          {
             name: "keyword.control.function.crbasic",
             match: alternation(kw.get("function")),
           },

@@ -319,6 +319,11 @@ impl<'a> Scanner<'a> {
                 let span = Span::new(start_pos, end_pos);
                 Some(Token::new(TokenKind::Colon, ":", span))
             }
+            '.' => {
+                let end_pos = Position::new(self.line, self.column);
+                let span = Span::new(start_pos, end_pos);
+                Some(Token::new(TokenKind::Dot, ".", span))
+            }
             '@' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
@@ -1232,6 +1237,30 @@ mod tests {
             assert_eq!(tokens.len(), 2);
 
             assert_eq!(tokens[0].kind, TokenKind::Colon);
+            assert_eq!(tokens[1].kind, TokenKind::Eof);
+        }
+
+        #[test]
+        fn recognizes_dot_for_member_access() {
+            let mut scanner = Scanner::new("CS215.Temp");
+            let tokens = scanner.scan_tokens();
+
+            assert_eq!(tokens.len(), 4);
+
+            assert_eq!(tokens[0].kind, TokenKind::Identifier("CS215"));
+            assert_eq!(tokens[1].kind, TokenKind::Dot);
+            assert_eq!(tokens[2].kind, TokenKind::Identifier("Temp"));
+            assert_eq!(tokens[3].kind, TokenKind::Eof);
+        }
+
+        #[test]
+        fn dot_does_not_interfere_with_float_literals() {
+            let mut scanner = Scanner::new("3.14");
+            let tokens = scanner.scan_tokens();
+
+            assert_eq!(tokens.len(), 2);
+
+            assert_eq!(tokens[0].kind, TokenKind::Float("3.14"));
             assert_eq!(tokens[1].kind, TokenKind::Eof);
         }
     }

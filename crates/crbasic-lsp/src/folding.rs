@@ -106,6 +106,9 @@ impl FoldingRangeProvider {
                     Self::push_range(ranges, span.start, span.end);
                     Self::collect_from_statements(body, ranges);
                 }
+                Statement::StructureType { span, .. } => {
+                    Self::push_range(ranges, span.start, span.end);
+                }
                 Statement::SelectCase {
                     cases,
                     else_branch,
@@ -258,6 +261,21 @@ mod tests {
                 parameters: Vec::new(),
                 body: Vec::new(),
                 span: span(1, 1, 4, 7),
+            }]);
+
+            let ranges = FoldingRangeProvider::get_folding_ranges(&program);
+
+            assert_eq!(ranges.len(), 1);
+            assert_eq!(ranges[0].start_line, 0);
+            assert_eq!(ranges[0].end_line, 3);
+        }
+
+        #[test]
+        fn folds_a_structure_type_block() {
+            let program = program(vec![Statement::StructureType {
+                name: "TempRHSensor".to_string(),
+                members: Vec::new(),
+                span: span(1, 1, 4, 16),
             }]);
 
             let ranges = FoldingRangeProvider::get_folding_ranges(&program);

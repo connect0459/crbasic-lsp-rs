@@ -2,7 +2,7 @@
 //!
 //! This module provides the parser that converts a stream of tokens into an Abstract Syntax Tree (AST).
 
-use crate::ast::{Expression, Program, Statement};
+use crate::ast::{Expression, Program, Statement, StructureMember};
 use crate::lexer::token::{Token, TokenKind};
 
 /// The `condition`, `then_branch`, and `else_branch` parsed from an `If` or
@@ -167,6 +167,12 @@ impl<'a> Parser<'a> {
             && kw == "ReadOnly"
         {
             return self.parse_readonly_statement();
+        }
+
+        if let &TokenKind::Keyword(kw) = &self.peek().kind
+            && kw == "StructureType"
+        {
+            return self.parse_structure_type();
         }
 
         if let &TokenKind::Keyword(kw) = &self.peek().kind
@@ -872,6 +878,161 @@ impl<'a> Parser<'a> {
 
         Ok(Statement::ReadOnly {
             variables,
+            span: crate::lexer::token::Span::new(start, end),
+        })
+    }
+
+    /// Parses a `StructureType`/`EndStructureType` block.
+    /// Syntax: `StructureType Name` `[member declaration]...` `EndStructureType`
+    fn parse_structure_type(&mut self) -> Result<Statement, ParseError> {
+        let structure_type_token = self.advance();
+        let start = structure_type_token.span.start;
+
+        let name = if let &TokenKind::Identifier(name) = &self.peek().kind {
+            let type_name = name.to_string();
+            self.advance();
+            type_name
+        } else {
+            return Err(ParseError {
+                message: "Expected structure type name after 'StructureType'".to_string(),
+                span: self.peek().span,
+            });
+        };
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        let mut members = Vec::new();
+        self.skip_whitespace_and_comments();
+        while !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndStructureType")
+            && !self.is_at_end()
+        {
+            members.push(self.parse_structure_member()?);
+            self.skip_whitespace_and_comments();
+        }
+
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "EndStructureType") {
+            return Err(ParseError {
+                message: "Expected 'EndStructureType' to close StructureType definition"
+                    .to_string(),
+                span: self.peek().span,
+            });
+        }
+        let end_structure_type_token = self.advance();
+        let end = end_structure_type_token.span.end;
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        Ok(Statement::StructureType {
+            name,
+            members,
+            span: crate::lexer::token::Span::new(start, end),
+        })
+    }
+
+    /// Parses a single member declaration or `Units`/`ReadOnly` modifier
+    /// inside a `StructureType` block.
+    /// Syntax: `Name [(size)] As Type [* length]`, `Units ...`, or `ReadOnly ...`
+    fn parse_structure_member(&mut self) -> Result<StructureMember, ParseError> {
+        if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Units") {
+            return Ok(StructureMember::Modifier(self.parse_units_statement()?));
+        }
+
+        if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "ReadOnly") {
+            return Ok(StructureMember::Modifier(self.parse_readonly_statement()?));
+        }
+
+        let name_token = if matches!(self.peek().kind, TokenKind::Identifier(_)) {
+            self.advance()
+        } else {
+            return Err(ParseError {
+                message: format!(
+                    "Expected member name, 'Units', or 'ReadOnly' inside StructureType, got {:?}",
+                    self.peek().kind
+                ),
+                span: self.peek().span,
+            });
+        };
+        let name = if let &TokenKind::Identifier(name) = &name_token.kind {
+            name.to_string()
+        } else {
+            unreachable!()
+        };
+        let start = name_token.span.start;
+
+        let array_dimensions = if matches!(self.peek().kind, TokenKind::LeftParen) {
+            self.advance();
+
+            let mut dimensions = Vec::new();
+
+            if !matches!(self.peek().kind, TokenKind::RightParen) {
+                dimensions.push(self.parse_expression()?);
+
+                while matches!(self.peek().kind, TokenKind::Comma) {
+                    self.advance();
+                    dimensions.push(self.parse_expression()?);
+                }
+            }
+
+            if !matches!(self.peek().kind, TokenKind::RightParen) {
+                return Err(ParseError {
+                    message: "Expected ')' after array dimensions".to_string(),
+                    span: self.peek().span,
+                });
+            }
+            self.advance();
+
+            Some(dimensions)
+        } else {
+            None
+        };
+
+        if !matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "As") {
+            return Err(ParseError {
+                message: "Expected 'As' after structure member name".to_string(),
+                span: self.peek().span,
+            });
+        }
+        self.advance();
+
+        if !matches!(self.peek().kind, TokenKind::Identifier(_)) {
+            return Err(ParseError {
+                message: "Expected type name after 'As'".to_string(),
+                span: self.peek().span,
+            });
+        }
+        let type_token = self.advance();
+        let mut end = type_token.span.end;
+        let type_annotation = if let &TokenKind::Identifier(type_name) = &type_token.kind {
+            type_name.to_string()
+        } else {
+            unreachable!()
+        };
+
+        // Fixed-length string size (`As String * 110`). See
+        // `parse_var_declaration` for why this uses `parse_primary` rather
+        // than `parse_expression`.
+        let type_size = if matches!(self.peek().kind, TokenKind::Star) {
+            self.advance();
+            let size_expr = self.parse_primary()?;
+            end = size_expr.span().end;
+            Some(size_expr)
+        } else {
+            None
+        };
+
+        if matches!(self.peek().kind, TokenKind::Newline) {
+            self.advance();
+        }
+
+        Ok(StructureMember::Declaration {
+            name,
+            array_dimensions,
+            type_annotation,
+            type_size,
             span: crate::lexer::token::Span::new(start, end),
         })
     }
@@ -2095,6 +2256,36 @@ impl<'a> Parser<'a> {
                                         span,
                                     };
                                 }
+                                TokenKind::Dot => {
+                                    self.advance();
+
+                                    let member_token =
+                                        if matches!(self.peek().kind, TokenKind::Identifier(_)) {
+                                            self.advance()
+                                        } else {
+                                            return Err(ParseError {
+                                                message: "Expected member name after '.'"
+                                                    .to_string(),
+                                                span: self.peek().span,
+                                            });
+                                        };
+                                    let member =
+                                        if let &TokenKind::Identifier(name) = &member_token.kind {
+                                            name.to_string()
+                                        } else {
+                                            unreachable!()
+                                        };
+
+                                    let span = crate::lexer::token::Span::new(
+                                        expr.span().start,
+                                        member_token.span.end,
+                                    );
+                                    expr = Expression::MemberAccess {
+                                        object: Box::new(expr),
+                                        member,
+                                        span,
+                                    };
+                                }
                                 _ => {
                                     break;
                                 }
@@ -2183,6 +2374,7 @@ impl Statement {
             Statement::Alias { span, .. } => *span,
             Statement::Units { span, .. } => *span,
             Statement::ReadOnly { span, .. } => *span,
+            Statement::StructureType { span, .. } => *span,
         }
     }
 }
@@ -3625,6 +3817,66 @@ mod tests {
         }
     }
 
+    mod member_access_expressions {
+        use super::*;
+
+        #[test]
+        fn parses_member_access_on_a_plain_identifier() {
+            let mut scanner = Scanner::new("Print(CS215.Temp)");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                match &arguments[0] {
+                    Expression::MemberAccess { object, member, .. } => {
+                        assert_eq!(member, "Temp");
+                        assert!(
+                            matches!(&**object, Expression::Identifier { name, .. } if name == "CS215")
+                        );
+                    }
+                    other => panic!("Expected member access expression, got {:?}", other),
+                }
+            } else {
+                panic!(
+                    "Expected FunctionCall statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_member_access_on_an_indexed_structure_array_element() {
+            let mut scanner = Scanner::new("Print(CS215(1).Temp)");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
+                match &arguments[0] {
+                    Expression::MemberAccess { object, member, .. } => {
+                        assert_eq!(member, "Temp");
+                        assert!(matches!(
+                            &**object,
+                            Expression::FunctionCall { name, arguments, .. }
+                                if name == "CS215" && arguments.len() == 1
+                        ));
+                    }
+                    other => panic!("Expected member access expression, got {:?}", other),
+                }
+            } else {
+                panic!(
+                    "Expected FunctionCall statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+    }
+
     mod assignment_statements {
         use super::*;
 
@@ -4520,6 +4772,149 @@ mod tests {
             assert!(matches!(
                 &program.statements[1],
                 Statement::VarDeclaration { name, .. } if name == "i"
+            ));
+        }
+    }
+
+    mod structure_type_block {
+        use super::*;
+
+        #[test]
+        fn parses_structure_type_with_a_single_member() {
+            let source = "StructureType Foo\nBar As Float\nEndStructureType";
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::StructureType { name, members, .. } = &program.statements[0] {
+                assert_eq!(name, "Foo");
+                assert_eq!(members.len(), 1);
+                match &members[0] {
+                    StructureMember::Declaration {
+                        name,
+                        array_dimensions,
+                        type_annotation,
+                        type_size,
+                        ..
+                    } => {
+                        assert_eq!(name, "Bar");
+                        assert!(array_dimensions.is_none());
+                        assert_eq!(type_annotation, "Float");
+                        assert!(type_size.is_none());
+                    }
+                    other => panic!("Expected member declaration, got {:?}", other),
+                }
+            } else {
+                panic!(
+                    "Expected StructureType statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_structure_type_with_an_array_member_and_fixed_length_string() {
+            let source =
+                "StructureType Foo\nNMEASentences(2) As String * 110\nEndStructureType".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::StructureType { members, .. } = &program.statements[0] {
+                assert_eq!(members.len(), 1);
+                match &members[0] {
+                    StructureMember::Declaration {
+                        name,
+                        array_dimensions,
+                        type_annotation,
+                        type_size,
+                        ..
+                    } => {
+                        assert_eq!(name, "NMEASentences");
+                        assert_eq!(array_dimensions.as_ref().map(Vec::len), Some(1));
+                        assert_eq!(type_annotation, "String");
+                        assert!(type_size.is_some());
+                    }
+                    other => panic!("Expected member declaration, got {:?}", other),
+                }
+            } else {
+                panic!(
+                    "Expected StructureType statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_structure_type_with_units_and_readonly_modifiers() {
+            let source = "StructureType TempRHSensor\nTemp As Float\nRH As Float\nReadOnly Temp, RH\nUnits Temp = degC\nUnits RH = Percent\nEndStructureType";
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::StructureType { members, .. } = &program.statements[0] {
+                assert_eq!(members.len(), 5);
+                assert!(matches!(
+                    &members[0],
+                    StructureMember::Declaration { name, .. } if name == "Temp"
+                ));
+                assert!(matches!(
+                    &members[1],
+                    StructureMember::Declaration { name, .. } if name == "RH"
+                ));
+                assert!(matches!(
+                    &members[2],
+                    StructureMember::Modifier(Statement::ReadOnly { .. })
+                ));
+                assert!(matches!(
+                    &members[3],
+                    StructureMember::Modifier(Statement::Units { .. })
+                ));
+                assert!(matches!(
+                    &members[4],
+                    StructureMember::Modifier(Statement::Units { .. })
+                ));
+            } else {
+                panic!(
+                    "Expected StructureType statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn structure_type_requires_end_structure_type_to_close() {
+            let source = "StructureType Foo\nBar As Float";
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let result = parser.parse();
+            assert!(result.is_err(), "Expected a parse error");
+        }
+
+        #[test]
+        fn declares_a_public_variable_of_a_structure_type() {
+            let source = "Public CS215(3) As TempRHSensor";
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::VarDeclaration { name, type_annotation, .. }
+                    if name == "CS215" && type_annotation.as_deref() == Some("TempRHSensor")
             ));
         }
     }

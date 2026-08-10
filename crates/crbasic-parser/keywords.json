@@ -45,6 +45,8 @@
     { "name": "EndTable", "category": "datatable" },
     { "name": "ConstTable", "category": "consttable" },
     { "name": "EndConstTable", "category": "consttable" },
+    { "name": "StructureType", "category": "structuretype" },
+    { "name": "EndStructureType", "category": "structuretype" },
     { "name": "Function", "category": "function" },
     { "name": "EndFunction", "category": "function" },
     { "name": "Return", "category": "function" },

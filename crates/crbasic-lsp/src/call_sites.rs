@@ -150,6 +150,10 @@ fn walk_statements<'a>(
             // subscripted names, never real calls, even when a subscript
             // happens to parse as `Expression::FunctionCall` (e.g. `TCTemp(1)`).
             Statement::Alias { .. } | Statement::Units { .. } | Statement::ReadOnly { .. } => {}
+            // A `StructureType` block defines a type's shape: its members
+            // are declarations, not expressions, so there are no calls to
+            // collect inside one.
+            Statement::StructureType { .. } => {}
         }
     }
 }
@@ -202,6 +206,9 @@ fn walk_expression<'a>(
         Expression::ArrayAccess { array, index, .. } => {
             walk_expression(array, enclosing, sites);
             walk_expression(index, enclosing, sites);
+        }
+        Expression::MemberAccess { object, .. } => {
+            walk_expression(object, enclosing, sites);
         }
         Expression::IntegerLiteral { .. }
         | Expression::FloatLiteral { .. }

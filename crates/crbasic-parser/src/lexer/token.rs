@@ -118,6 +118,8 @@ pub enum TokenKind<'a> {
     Comma,
     /// Statement separator (:), allowing multiple statements on one line
     Colon,
+    /// Member access on a structure instance (.)
+    Dot,
     /// Address-of pointer operator (@)
     At,
     /// Dereference pointer operator (!)

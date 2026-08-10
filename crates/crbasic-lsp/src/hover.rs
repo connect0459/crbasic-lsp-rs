@@ -240,6 +240,10 @@ impl HoverProvider {
             "consttable" => Some(
                 "**ConstTable**\n\nDefines a block of constants that field technicians can edit and recompile without touching the constants' use sites.\n\n```crbasic\nConstTable(TableName, Enabled)\n  Const A = 1\nEndConstTable\n```",
             ),
+            "structuretype" => Some(
+                "**StructureType**\n\nDefines a reusable data structure. Instances are declared with `Public`/`Dim ... As TypeName` and members are accessed with dot notation.\n\n```crbasic\nStructureType TempRHSensor\n  Temp As Float\n  RH As Float\nEndStructureType\n\nPublic CS215(3) As TempRHSensor\n' CS215(1).Temp\n```",
+            ),
+            "endstructuretype" => Some("**EndStructureType**\n\nTerminates a StructureType block."),
             "endconsttable" => Some("**EndConstTable**\n\nTerminates a ConstTable block."),
 
             "function" => Some(
@@ -392,6 +396,8 @@ mod tests {
                     "EndTable",
                     "ConstTable",
                     "EndConstTable",
+                    "StructureType",
+                    "EndStructureType",
                 ];
 
                 for keyword in keywords {

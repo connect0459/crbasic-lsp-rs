@@ -120,6 +120,10 @@
           "match": "(?i)\\b(ConstTable|EndConstTable)\\b"
         },
         {
+          "name": "keyword.control.structuretype.crbasic",
+          "match": "(?i)\\b(StructureType|EndStructureType)\\b"
+        },
+        {
           "name": "keyword.control.function.crbasic",
           "match": "(?i)\\b(Function|EndFunction|Return|ExitFunction|Call|Sub|EndSub|Exit)\\b"
         },

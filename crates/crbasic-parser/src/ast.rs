@@ -238,6 +238,47 @@ pub enum Statement {
         /// The source code span
         span: Span,
     },
+
+    /// `StructureType`/`EndStructureType` block: defines a reusable data
+    /// structure. Instances are declared via `Public`/`Dim ... As
+    /// StructureTypeName` (an ordinary `VarDeclaration` with a
+    /// `type_annotation` naming the structure type) and members are read
+    /// via dot notation (`StructureName.MemberName`, see
+    /// `Expression::MemberAccess`).
+    /// See <https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/structuretype.htm>
+    StructureType {
+        /// The structure type's name
+        name: String,
+        /// The member declarations and modifiers, in source order
+        members: Vec<StructureMember>,
+        /// The source code span
+        span: Span,
+    },
+}
+
+/// A single member declaration or modifier inside a `StructureType` block.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum StructureMember {
+    /// A bare `Name [(size)] As Type [* length]` member declaration -- no
+    /// `Public`/`Dim`/`Const` prefix, since a `StructureType` block defines
+    /// a type's shape, not a variable instance.
+    Declaration {
+        /// The member name
+        name: String,
+        /// Array dimensions if this member is an array (e.g. `NMEASentences(2)`)
+        array_dimensions: Option<Vec<Expression>>,
+        /// The member's type annotation (e.g. "Float", "String")
+        type_annotation: String,
+        /// Optional fixed size for a `String` type annotation
+        /// (e.g. the `110` in `As String * 110`)
+        type_size: Option<Expression>,
+        /// The source code span
+        span: Span,
+    },
+    /// A nested `Units`/`ReadOnly` modifier applying to one of this
+    /// structure's members, parsed via the same statement grammar used at
+    /// the top level.
+    Modifier(Statement),
 }
 
 /// A single `Case` clause within a `Select Case` statement
@@ -366,6 +407,18 @@ pub enum Expression {
         /// The source code span
         span: Span,
     },
+
+    /// Member access on a `StructureType` instance: `object.member`
+    /// (e.g. `CS215.Temp`, `CS215(1).Temp`).
+    /// See <https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/structuretype.htm>
+    MemberAccess {
+        /// The structure instance expression (identifier or indexed element)
+        object: Box<Expression>,
+        /// The member name being accessed
+        member: String,
+        /// The source code span
+        span: Span,
+    },
 }
 
 /// Binary operators
@@ -484,6 +537,7 @@ impl Expression {
             Expression::UnaryOp { span, .. } => *span,
             Expression::FunctionCall { span, .. } => *span,
             Expression::ArrayAccess { span, .. } => *span,
+            Expression::MemberAccess { span, .. } => *span,
         }
     }
 }
