@@ -201,6 +201,12 @@ impl HoverProvider {
                 "**Is**\n\nUsed with a comparison operator in a Case clause (e.g. `Case Is > 10`).",
             ),
             "endselect" => Some("**EndSelect**\n\nTerminates a Select block."),
+            "endmenu" => Some(
+                "**EndMenu**\n\nTerminates a `DisplayMenu` block.\n\n```crbasic\nDisplayMenu(\"MenuName\", 1, 1)\n  ' menu items\nEndMenu\n```",
+            ),
+            "endsubmenu" => Some(
+                "**EndSubMenu**\n\nTerminates a `SubMenu` block nested inside a `DisplayMenu`.",
+            ),
             "nextscan" => Some("**NextScan**\n\nMarks the end of a Scan loop."),
             "continuescan" => Some(
                 "**ContinueScan**\n\nJumps to `NextScan`, skipping the remaining instructions in the current scan.",

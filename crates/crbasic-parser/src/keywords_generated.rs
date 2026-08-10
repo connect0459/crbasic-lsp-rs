@@ -55,6 +55,8 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("EndConstTable", "consttable"),
     ("StructureType", "structuretype"),
     ("EndStructureType", "structuretype"),
+    ("EndMenu", "menu"),
+    ("EndSubMenu", "menu"),
     ("Function", "function"),
     ("EndFunction", "function"),
     ("Return", "function"),

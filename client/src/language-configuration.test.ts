@@ -72,6 +72,8 @@ describe("language-configuration.json indentationRules", () => {
       "#IfDef FINAL Then",
       "#ElseIf LoggerType = CR1000",
       "#Else",
+      'DisplayMenu("Menu1", 1, 1)',
+      'SubMenu("Sub1")',
     ])("matches block-opening line: %s", (line) => {
       expect(increase.test(line)).toBe(true);
     });
@@ -84,6 +86,9 @@ describe("language-configuration.json indentationRules", () => {
       "NextSubScan",
       "ContinueScan",
       "ScanValue = 5",
+      "EndMenu",
+      "EndSubMenu",
+      'MenuItem("Item1")',
     ])("does not match non-block-opening line: %s", (line) => {
       expect(increase.test(line)).toBe(false);
     });
@@ -113,6 +118,8 @@ describe("language-configuration.json indentationRules", () => {
       "#EndIf",
       "#ElseIf LoggerType = CR1000",
       "#Else",
+      "EndMenu",
+      "EndSubMenu",
     ])("matches block-closing line: %s", (line) => {
       expect(decrease.test(line)).toBe(true);
     });
@@ -123,6 +130,8 @@ describe("language-configuration.json indentationRules", () => {
       "ContinueScan",
       "Scan(1, Sec, 0, 0)",
       "SubScan(0.1, Sec, 5)",
+      'DisplayMenu("Menu1", 1, 1)',
+      'SubMenu("Sub1")',
     ])("does not match non-block-closing line: %s", (line) => {
       expect(decrease.test(line)).toBe(false);
     });
@@ -152,6 +161,8 @@ describe("language-configuration.json folding.markers", () => {
       "Select Case x",
       "#If LoggerType = GRANITE6",
       "#IfDef FINAL Then",
+      'DisplayMenu("Menu1", 1, 1)',
+      'SubMenu("Sub1")',
     ])("matches block-opening line: %s", (line) => {
       expect(start.test(line)).toBe(true);
     });
@@ -170,6 +181,9 @@ describe("language-configuration.json folding.markers", () => {
       "IfCondition = True",
       "SubTotal = 1",
       "ScanValue = 5",
+      "EndMenu",
+      "EndSubMenu",
+      'MenuItem("Item1")',
     ])("does not match non-block-opening line: %s", (line) => {
       expect(start.test(line)).toBe(false);
     });
@@ -193,6 +207,8 @@ describe("language-configuration.json folding.markers", () => {
       "Wend",
       "EndSelect",
       "#EndIf",
+      "EndMenu",
+      "EndSubMenu",
     ])("matches block-closing line: %s", (line) => {
       expect(end.test(line)).toBe(true);
     });
@@ -207,6 +223,8 @@ describe("language-configuration.json folding.markers", () => {
       "Scan(1, Sec, 0, 0)",
       "SubScan(0.1, Sec, 5)",
       "Loopback = 1",
+      'DisplayMenu("Menu1", 1, 1)',
+      'SubMenu("Sub1")',
     ])("does not match non-block-closing line: %s", (line) => {
       expect(end.test(line)).toBe(false);
     });

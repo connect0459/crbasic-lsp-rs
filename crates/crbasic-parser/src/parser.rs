@@ -196,7 +196,9 @@ impl<'a> Parser<'a> {
                 || kw == "ExitDo"
                 || kw == "ExitFunction"
                 || kw == "Return"
-                || kw == "DebugBreak")
+                || kw == "DebugBreak"
+                || kw == "EndMenu"
+                || kw == "EndSubMenu")
         {
             return self.parse_program_structure();
         }
@@ -6434,6 +6436,48 @@ mod tests {
             assert!(matches!(
                 &program.statements[0],
                 Statement::ProgramStructure { keyword, .. } if keyword == "PipeLineMode"
+            ));
+        }
+
+        #[test]
+        fn parses_endmenu_closing_a_display_menu_block() {
+            let source = "DisplayMenu(\"Menu1\", 1, 1)\n  MenuItem(\"Item1\")\nEndMenu".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::FunctionCall { name, .. } if name == "DisplayMenu"
+            ));
+            assert!(matches!(
+                &program.statements[2],
+                Statement::ProgramStructure { keyword, .. } if keyword == "EndMenu"
+            ));
+        }
+
+        #[test]
+        fn parses_endsubmenu_nested_inside_display_menu() {
+            let source = "DisplayMenu(\"Menu1\", 1, 1)\n  SubMenu(\"Sub1\")\n    MenuItem(\"Item1\")\n  EndSubMenu\nEndMenu".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 5);
+            assert!(matches!(
+                &program.statements[1],
+                Statement::FunctionCall { name, .. } if name == "SubMenu"
+            ));
+            assert!(matches!(
+                &program.statements[3],
+                Statement::ProgramStructure { keyword, .. } if keyword == "EndSubMenu"
+            ));
+            assert!(matches!(
+                &program.statements[4],
+                Statement::ProgramStructure { keyword, .. } if keyword == "EndMenu"
             ));
         }
 

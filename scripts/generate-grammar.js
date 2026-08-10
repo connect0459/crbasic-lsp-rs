@@ -181,6 +181,10 @@ function generateGrammar(keywords) {
             match: alternation(kw.get("structuretype")),
           },
           {
+            name: "keyword.control.menu.crbasic",
+            match: alternation(kw.get("menu")),
+          },
+          {
             name: "keyword.control.function.crbasic",
             match: alternation(kw.get("function")),
           },

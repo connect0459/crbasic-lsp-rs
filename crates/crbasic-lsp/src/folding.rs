@@ -28,7 +28,8 @@ impl FoldingRangeProvider {
     /// Walks a statement list, recursing into block bodies and pairing up
     /// the flat `BeginProg`/`EndProg`, `DataTable`/`EndTable`,
     /// `ConstTable`/`EndConstTable`, `Scan`/`NextScan`, `SubScan`/
-    /// `NextSubScan`, and `SlowSequence`/`EndSequence` markers
+    /// `NextSubScan`, `SlowSequence`/`EndSequence`, and `DisplayMenu`/
+    /// `EndMenu`/`SubMenu`/`EndSubMenu` markers
     fn collect_from_statements(statements: &[Statement], ranges: &mut Vec<FoldingRange>) {
         let mut begin_prog_stack: Vec<Position> = Vec::new();
         let mut data_table_stack: Vec<Position> = Vec::new();
@@ -36,6 +37,8 @@ impl FoldingRangeProvider {
         let mut scan_stack: Vec<Position> = Vec::new();
         let mut subscan_stack: Vec<Position> = Vec::new();
         let mut slow_sequence_stack: Vec<Position> = Vec::new();
+        let mut display_menu_stack: Vec<Position> = Vec::new();
+        let mut sub_menu_stack: Vec<Position> = Vec::new();
 
         for statement in statements {
             match statement {
@@ -74,11 +77,23 @@ impl FoldingRangeProvider {
                             Self::push_range(ranges, start, span.end);
                         }
                     }
+                    "EndSubMenu" => {
+                        if let Some(start) = sub_menu_stack.pop() {
+                            Self::push_range(ranges, start, span.end);
+                        }
+                    }
+                    "EndMenu" => {
+                        if let Some(start) = display_menu_stack.pop() {
+                            Self::push_range(ranges, start, span.end);
+                        }
+                    }
                     _ => {}
                 },
                 Statement::FunctionCall { name, span, .. } => match name.as_str() {
                     "Scan" => scan_stack.push(span.start),
                     "SubScan" => subscan_stack.push(span.start),
+                    "DisplayMenu" => display_menu_stack.push(span.start),
+                    "SubMenu" => sub_menu_stack.push(span.start),
                     _ => {}
                 },
                 Statement::IfStatement {
@@ -424,6 +439,36 @@ mod tests {
             assert_eq!(ranges.len(), 2);
             assert_eq!((ranges[0].start_line, ranges[0].end_line), (1, 7));
             assert_eq!((ranges[1].start_line, ranges[1].end_line), (0, 8));
+        }
+
+        #[test]
+        fn pairs_display_menu_with_the_matching_end_menu() {
+            let program = program(vec![
+                function_call("DisplayMenu", 1),
+                program_structure("EndMenu", 6),
+            ]);
+
+            let ranges = FoldingRangeProvider::get_folding_ranges(&program);
+
+            assert_eq!(ranges.len(), 1);
+            assert_eq!(ranges[0].start_line, 0);
+            assert_eq!(ranges[0].end_line, 5);
+        }
+
+        #[test]
+        fn pairs_sub_menu_with_the_matching_end_sub_menu() {
+            let program = program(vec![
+                function_call("DisplayMenu", 1),
+                function_call("SubMenu", 2),
+                program_structure("EndSubMenu", 4),
+                program_structure("EndMenu", 5),
+            ]);
+
+            let ranges = FoldingRangeProvider::get_folding_ranges(&program);
+
+            assert_eq!(ranges.len(), 2);
+            assert_eq!((ranges[0].start_line, ranges[0].end_line), (1, 3));
+            assert_eq!((ranges[1].start_line, ranges[1].end_line), (0, 4));
         }
 
         #[test]

@@ -469,6 +469,8 @@ impl CompletionProvider {
             Self::create_keyword_completion("Case", "Branch in Select statement"),
             Self::create_keyword_completion("Is", "Comparison operator in a Case clause"),
             Self::create_keyword_completion("EndSelect", "Terminates Select block"),
+            Self::create_keyword_completion("EndMenu", "Terminates a DisplayMenu block"),
+            Self::create_keyword_completion("EndSubMenu", "Terminates a SubMenu block"),
             Self::create_keyword_completion("NextScan", "Terminates a Scan loop"),
             Self::create_keyword_completion(
                 "ContinueScan",

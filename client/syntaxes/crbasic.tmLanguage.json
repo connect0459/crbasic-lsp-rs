@@ -124,6 +124,10 @@
           "match": "(?i)\\b(StructureType|EndStructureType)\\b"
         },
         {
+          "name": "keyword.control.menu.crbasic",
+          "match": "(?i)\\b(EndMenu|EndSubMenu)\\b"
+        },
+        {
           "name": "keyword.control.function.crbasic",
           "match": "(?i)\\b(Function|EndFunction|Return|ExitFunction|Call|Sub|EndSub|Exit)\\b"
         },
