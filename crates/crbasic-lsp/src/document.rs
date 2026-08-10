@@ -4,7 +4,7 @@
 //! version tracking, and model detection.
 
 use crbasic_parser::ast::Program;
-use crbasic_parser::{DataloggerModel, Parser, SemanticAnalyzer, SemanticError};
+use crbasic_parser::{DataloggerModel, ParseError, Parser, SemanticAnalyzer, SemanticError};
 use std::collections::HashMap;
 use tower_lsp_server::ls_types::Uri;
 
@@ -76,15 +76,13 @@ impl Document {
     ///
     /// # Returns
     /// * `Ok(())` - Parse and analysis succeeded
-    /// * `Err(String)` - Parse error message
-    pub fn analyze(&mut self) -> Result<(), String> {
+    /// * `Err(ParseError)` - The parse error, including its source location
+    pub fn analyze(&mut self) -> Result<(), ParseError> {
         let mut scanner = crbasic_parser::lexer::Scanner::new(&self.text);
         let tokens = scanner.scan_tokens();
 
         let mut parser = Parser::new(tokens);
-        let program = parser
-            .parse()
-            .map_err(|e| format!("Parse error: {:?}", e))?;
+        let program = parser.parse()?;
 
         let mut analyzer = SemanticAnalyzer::new(self.model);
         let errors = analyzer.analyze(&program);
@@ -266,6 +264,20 @@ mod tests {
                     .iter()
                     .any(|e| e.message.contains("exceeds maximum length"))
             );
+        }
+
+        #[test]
+        fn analyze_returns_the_parse_errors_own_source_location() {
+            let uri = create_test_uri("cr6");
+            let mut doc = Document::new(
+                uri,
+                "BeginProg\nPublic\nEndProg".to_string(), // missing variable name on line 2
+                1,
+            );
+
+            let error = doc.analyze().expect_err("Analysis should fail to parse");
+
+            assert_eq!(error.span.start.line, 2);
         }
 
         #[test]

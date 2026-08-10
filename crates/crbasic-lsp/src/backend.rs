@@ -104,6 +104,26 @@ impl CRBasicLanguageServer {
             .collect()
     }
 
+    /// Converts a parser [`ParseError`](crbasic_parser::ParseError) into an
+    /// LSP diagnostic at its own source location, rather than a fixed
+    /// (0, 0) position
+    fn parse_error_to_diagnostic(error: &crbasic_parser::ParseError) -> Diagnostic {
+        Diagnostic {
+            range: Range {
+                start: Self::position_to_lsp(error.span.start),
+                end: Self::position_to_lsp(error.span.end),
+            },
+            severity: Some(DiagnosticSeverity::ERROR),
+            code: None,
+            code_description: None,
+            source: Some("crbasic-lsp".to_string()),
+            message: error.message.clone(),
+            related_information: None,
+            tags: None,
+            data: None,
+        }
+    }
+
     /// Builds the `related_information` locations pointing at the other
     /// variable(s) a [`SemanticErrorKind::TruncationCollision`] collides
     /// with, if any
@@ -187,26 +207,7 @@ impl CRBasicLanguageServer {
 
         if let Some(doc) = manager.get_mut(&uri) {
             if let Err(e) = doc.analyze() {
-                let diagnostic = Diagnostic {
-                    range: Range {
-                        start: tower_lsp_server::ls_types::Position {
-                            line: 0,
-                            character: 0,
-                        },
-                        end: tower_lsp_server::ls_types::Position {
-                            line: 0,
-                            character: 0,
-                        },
-                    },
-                    severity: Some(DiagnosticSeverity::ERROR),
-                    code: None,
-                    code_description: None,
-                    source: Some("crbasic-lsp".to_string()),
-                    message: e,
-                    related_information: None,
-                    tags: None,
-                    data: None,
-                };
+                let diagnostic = Self::parse_error_to_diagnostic(&e);
 
                 self.client
                     .publish_diagnostics(uri, vec![diagnostic], None)
@@ -660,6 +661,24 @@ mod tests {
 
     fn test_uri() -> Uri {
         "file:///test.cr2".parse::<Uri>().expect("Valid URL")
+    }
+
+    #[test]
+    fn converts_a_parse_error_to_a_diagnostic_at_its_own_source_location() {
+        let error = crbasic_parser::ParseError {
+            message: "Expected identifier after variable declaration keyword".to_string(),
+            span: Span::new(Position::new(2, 1), Position::new(2, 7)),
+        };
+
+        let diagnostic = CRBasicLanguageServer::parse_error_to_diagnostic(&error);
+
+        assert_eq!(diagnostic.range.start.line, 1); // parser line 2, 0-indexed
+        assert_eq!(diagnostic.range.end.line, 1);
+        assert_eq!(diagnostic.severity, Some(DiagnosticSeverity::ERROR));
+        assert_eq!(
+            diagnostic.message,
+            "Expected identifier after variable declaration keyword"
+        );
     }
 
     #[test]
