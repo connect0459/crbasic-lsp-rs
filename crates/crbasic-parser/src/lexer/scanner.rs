@@ -438,10 +438,14 @@ impl<'a> Scanner<'a> {
     /// and there is no way to embed a `"` inside a string literal at all
     /// (Campbell Scientific's own user forum guidance is to break out of the
     /// string and concatenate `Chr(34)` instead).
+    ///
+    /// Stops at the end of the line even without a closing `"`: CRBasic
+    /// string literals are single-line, so a forgotten closing quote must
+    /// not swallow the rest of the file up to the next stray `"` (or EOF).
     fn scan_string(&mut self) -> String {
         let mut value = String::new();
 
-        while !self.is_at_end() && self.peek() != '"' {
+        while !self.is_at_end() && self.peek() != '"' && self.peek() != '\n' {
             if let Some(ch) = self.advance() {
                 value.push(ch);
             }
@@ -811,6 +815,34 @@ mod tests {
             );
             assert_eq!(tokens[0].kind, TokenKind::String("a".to_string()));
             assert_eq!(tokens[1].kind, TokenKind::String("b".to_string()));
+        }
+
+        #[test]
+        fn unterminated_string_does_not_swallow_the_rest_of_the_file() {
+            // Regression test: CRBasic string literals are single-line, but
+            // `scan_string` used to keep consuming past the end of the line
+            // -- including further lines' real code -- looking for the next
+            // `"` anywhere in the file (or EOF). A forgotten closing quote
+            // must not corrupt every line after it.
+            let source = "x = \"abc\nDim y = 1\ny = \"end\"\n";
+            let mut scanner = Scanner::new(source);
+            let tokens = scanner.scan_tokens();
+
+            let token_kinds: Vec<_> = tokens.iter().map(|t| &t.kind).collect();
+
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::Keyword(kw) if *kw == "Dim")),
+                "The second line's `Dim` keyword should still be tokenized as itself, \
+                 not swallowed into the unterminated string's value"
+            );
+            assert!(
+                token_kinds
+                    .iter()
+                    .any(|k| matches!(k, TokenKind::String(value) if value == "abc")),
+                "The unterminated string should stop at the end of its own line"
+            );
         }
 
         #[test]
