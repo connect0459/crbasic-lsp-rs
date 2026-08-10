@@ -234,24 +234,42 @@ function generateGrammar(keywords) {
       operators: {
         patterns: [
           {
+            // Must precede comparison/arithmetic so e.g. `+=` isn't split
+            // into a bare `+` followed by a bare `=`.
+            name: "keyword.operator.assignment.compound.crbasic",
+            match: "(\\+=|-=|\\*=|/=|\\^=|&=|\\\\=)",
+          },
+          {
+            // Must precede comparison so `<<`/`>>` aren't split into two
+            // single-character comparison matches.
+            name: "keyword.operator.bitwise.crbasic",
+            match: "(<<|>>)",
+          },
+          {
+            // Two-character alternatives must precede their single-character
+            // prefixes (`<=` before `<`, etc.) so each is matched whole.
             name: "keyword.operator.comparison.crbasic",
-            match: "(=|<>|<|>|<=|>=)",
+            match: "(<>|<=|>=|=|<|>)",
           },
           {
             name: "keyword.operator.arithmetic.crbasic",
-            match: "(\\+|-|\\*|/|\\^|MOD)",
+            match: "(\\+|-|\\*|/|\\\\|\\^)",
+          },
+          {
+            name: "keyword.operator.string.crbasic",
+            match: "&",
+          },
+          {
+            name: "keyword.operator.pointer.crbasic",
+            match: "(@|!)",
           },
           {
             name: "keyword.operator.logical.crbasic",
-            match: "(?i)\\b(AND|OR|NOT|XOR)\\b",
+            match: "(?i)\\b(AND|OR|NOT|XOR|MOD|IMP)\\b",
           },
           {
             name: "constant.language.boolean.crbasic",
             match: "(?i)\\b(True|False)\\b",
-          },
-          {
-            name: "keyword.operator.assignment.crbasic",
-            match: "=",
           },
         ],
       },

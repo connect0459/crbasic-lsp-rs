@@ -1,0 +1,93 @@
+/**
+ * Tests for the CRBasic operator syntax highlighting patterns in
+ * crbasic.tmLanguage.json's "operators" repository entry.
+ *
+ * TextMate grammars use Oniguruma regex, which supports inline `(?i)`
+ * case-insensitivity groups that JS's RegExp engine doesn't parse directly --
+ * this loader strips a leading `(?i)` and applies it as the "i" flag
+ * instead, so the same case-insensitive matching semantics can be exercised
+ * here against Node's regex engine.
+ */
+
+import { describe, test, expect } from "vitest";
+import * as fs from "fs";
+import * as path from "path";
+
+interface TmPattern {
+  name: string;
+  match: string;
+}
+
+interface TmGrammar {
+  repository: {
+    operators: { patterns: TmPattern[] };
+  };
+}
+
+function loadGrammar(): TmGrammar {
+  const grammarPath = path.join(__dirname, "..", "syntaxes", "crbasic.tmLanguage.json");
+  const raw = fs.readFileSync(grammarPath, "utf-8");
+  return JSON.parse(raw) as TmGrammar;
+}
+
+function toRegExp(match: string): RegExp {
+  if (match.startsWith("(?i)")) {
+    return new RegExp(match.slice("(?i)".length), "i");
+  }
+  return new RegExp(match);
+}
+
+function operatorPatterns(): TmPattern[] {
+  return loadGrammar().repository.operators.patterns;
+}
+
+/**
+ * True only if some pattern matches `text` as one complete token, not just
+ * a substring -- e.g. `+=` must be recognized as a single compound-assignment
+ * operator, not merely contain a `+` that happens to match the plain
+ * addition pattern.
+ */
+function isHighlightedAsOperator(text: string): boolean {
+  return operatorPatterns().some((pattern) => {
+    const match = toRegExp(pattern.match).exec(text);
+    return match !== null && match.index === 0 && match[0].length === text.length;
+  });
+}
+
+describe("crbasic.tmLanguage.json operator highlighting", () => {
+  test.each(["=", "<>", "<", ">", "<=", ">=", "+", "-", "*", "/", "^"])(
+    "highlights the already-covered %s operator as one complete token",
+    (text) => {
+      expect(isHighlightedAsOperator(text)).toBe(true);
+    }
+  );
+
+  test.each(["AND", "and", "OR", "or", "NOT", "not", "XOR", "xor"])(
+    "highlights the already-covered %s operator case-insensitively",
+    (text) => {
+      expect(isHighlightedAsOperator(text)).toBe(true);
+    }
+  );
+
+  test.each([
+    ["&", "string concatenation"],
+    ["\\", "integer division"],
+    ["<<", "bit-shift left"],
+    [">>", "bit-shift right"],
+    ["@", "address-of pointer"],
+    ["!", "dereference pointer"],
+    ["Mod", "remainder"],
+    ["mod", "remainder (lowercase)"],
+    ["Imp", "logical implication"],
+    ["imp", "logical implication (lowercase)"],
+    ["+=", "compound add-assign"],
+    ["-=", "compound subtract-assign"],
+    ["*=", "compound multiply-assign"],
+    ["/=", "compound divide-assign"],
+    ["^=", "compound power-assign"],
+    ["&=", "compound concatenate-assign"],
+    ["\\=", "compound integer-divide-assign"],
+  ])("highlights the %s operator (%s)", (text) => {
+    expect(isHighlightedAsOperator(text)).toBe(true);
+  });
+});
