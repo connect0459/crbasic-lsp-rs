@@ -5,7 +5,7 @@
 //! - Function vs Subroutine distinction
 //! - Model-dependent variable name validation
 
-use crate::ast::{Program, Statement};
+use crate::ast::{AssignmentTarget, Program, Statement};
 use crate::lexer::token::Span;
 use std::collections::HashMap;
 
@@ -59,6 +59,9 @@ pub struct Symbol {
     pub declaration_span: Span,
     /// Optional type annotation (e.g., "Float", "String")
     pub type_annotation: Option<String>,
+    /// Whether this symbol was declared with `Const`, and therefore cannot
+    /// be reassigned
+    pub is_const: bool,
 }
 
 /// Severity level for semantic errors
@@ -98,6 +101,17 @@ pub enum SemanticErrorKind {
         /// The other variable name(s) and declaration span(s) it collides
         /// with, for use as a diagnostic's `related_information`
         colliding_with: Vec<(String, Span)>,
+    },
+    /// Assignment to a `Const`-declared variable
+    ///
+    /// See <https://help.campbellsci.com/crbasic/cr6/Content/Instructions/const1.htm>:
+    /// "Unlike variables, constants cannot be changed while the program is
+    /// running."
+    ConstReassignment {
+        /// The offending variable name
+        variable_name: String,
+        /// Where the variable was declared `Const`
+        declared_at: Span,
     },
 }
 
@@ -216,6 +230,9 @@ impl SemanticAnalyzer {
             } => {
                 self.analyze_variable_declaration(keyword, name, type_annotation.as_deref(), *span);
             }
+            Statement::Assignment { target, span, .. } => {
+                self.check_const_reassignment(target, *span);
+            }
             Statement::IfStatement {
                 then_branch,
                 else_branch,
@@ -288,6 +305,7 @@ impl SemanticAnalyzer {
         } else {
             VariableScope::Local
         };
+        let is_const = keyword == "Const";
 
         let profile = self.model.profile();
 
@@ -330,8 +348,37 @@ impl SemanticAnalyzer {
                 scope,
                 declaration_span: span,
                 type_annotation: type_annotation.map(|s| s.to_string()),
+                is_const,
             },
         );
+    }
+
+    /// Checks whether an assignment targets a `Const`-declared variable,
+    /// which CRBasic forbids reassigning at runtime
+    fn check_const_reassignment(&mut self, target: &AssignmentTarget, span: Span) {
+        let AssignmentTarget::Identifier { name, .. } = target else {
+            // Const declarations are always scalar, so only a plain
+            // identifier target can ever refer to one.
+            return;
+        };
+
+        let Some(symbol) = self.symbols.get(name) else {
+            return;
+        };
+
+        if symbol.is_const {
+            self.errors.push(SemanticError {
+                message: format!(
+                    "Cannot assign to '{name}': it is declared as Const and cannot be reassigned"
+                ),
+                span,
+                severity: ErrorSeverity::Error,
+                kind: SemanticErrorKind::ConstReassignment {
+                    variable_name: name.clone(),
+                    declared_at: symbol.declaration_span,
+                },
+            });
+        }
     }
 
     /// Checks for truncation collisions in CR200X model
@@ -889,6 +936,121 @@ mod tests {
                 .filter(|e| e.message.contains("collision"))
                 .collect();
             assert_eq!(collision_errors.len(), 0);
+        }
+    }
+
+    mod const_reassignment_detection {
+        use super::*;
+        use crate::ast::{AssignmentTarget, Expression};
+        use crate::lexer::token::Position;
+
+        fn create_test_span() -> Span {
+            Span::new(Position::new(1, 1), Position::new(1, 10))
+        }
+
+        #[test]
+        fn reassigning_a_const_variable_is_a_semantic_error() {
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+            let const_span = Span::new(Position::new(1, 1), Position::new(1, 15));
+            let assignment_span = Span::new(Position::new(2, 1), Position::new(2, 10));
+            let program = Program::new(
+                vec![
+                    Statement::VarDeclaration {
+                        keyword: "Const".to_string(),
+                        name: "PI".to_string(),
+                        array_dimensions: None,
+                        type_annotation: None,
+                        type_size: None,
+                        initializer: None,
+                        span: const_span,
+                    },
+                    Statement::Assignment {
+                        target: AssignmentTarget::Identifier {
+                            name: "PI".to_string(),
+                            span: assignment_span,
+                        },
+                        value: Expression::FloatLiteral {
+                            value: 99.0,
+                            span: assignment_span,
+                        },
+                        span: assignment_span,
+                    },
+                ],
+                create_test_span(),
+            );
+
+            let errors = analyzer.analyze(&program);
+
+            assert_eq!(errors.len(), 1);
+            assert_eq!(errors[0].severity, ErrorSeverity::Error);
+            assert!(errors[0].message.contains("Cannot assign to 'PI'"));
+            assert_eq!(
+                errors[0].kind,
+                SemanticErrorKind::ConstReassignment {
+                    variable_name: "PI".to_string(),
+                    declared_at: const_span,
+                }
+            );
+        }
+
+        #[test]
+        fn assigning_to_a_public_variable_is_not_a_semantic_error() {
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+            let program = Program::new(
+                vec![
+                    Statement::VarDeclaration {
+                        keyword: "Public".to_string(),
+                        name: "Temp_C".to_string(),
+                        array_dimensions: None,
+                        type_annotation: None,
+                        type_size: None,
+                        initializer: None,
+                        span: create_test_span(),
+                    },
+                    Statement::Assignment {
+                        target: AssignmentTarget::Identifier {
+                            name: "Temp_C".to_string(),
+                            span: create_test_span(),
+                        },
+                        value: Expression::FloatLiteral {
+                            value: 25.0,
+                            span: create_test_span(),
+                        },
+                        span: create_test_span(),
+                    },
+                ],
+                create_test_span(),
+            );
+
+            let errors = analyzer.analyze(&program);
+
+            assert_eq!(errors, vec![]);
+        }
+
+        #[test]
+        fn assigning_to_an_undeclared_identifier_is_not_flagged_here() {
+            // Undeclared-variable use is a different, unimplemented check
+            // (see docs/todo.md); this analyzer must not panic or
+            // misclassify it as a Const reassignment.
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+            let program = Program::new(
+                vec![Statement::Assignment {
+                    target: AssignmentTarget::Identifier {
+                        name: "Undeclared".to_string(),
+                        span: create_test_span(),
+                    },
+                    value: Expression::FloatLiteral {
+                        value: 1.0,
+                        span: create_test_span(),
+                    },
+                    span: create_test_span(),
+                }],
+                create_test_span(),
+            );
+
+            let errors = analyzer.analyze(&program);
+
+            assert_eq!(errors, vec![]);
         }
     }
 

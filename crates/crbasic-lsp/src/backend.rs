@@ -187,6 +187,7 @@ impl CRBasicLanguageServer {
                 },
             ),
             SemanticErrorKind::TruncationCollision { .. } => return (None, None),
+            SemanticErrorKind::ConstReassignment { .. } => return (None, None),
         };
 
         let data = serde_json::to_value(payload).ok();
@@ -831,6 +832,27 @@ mod tests {
 
         assert_eq!(diagnostics[0].code, None);
         assert_eq!(diagnostics[0].data, None);
+    }
+
+    #[test]
+    fn omits_quick_fix_data_for_const_reassignment() {
+        let error = SemanticError {
+            message: "Cannot assign to 'PI': it is declared as Const and cannot be reassigned"
+                .to_string(),
+            span: Span::new(Position::new(2, 1), Position::new(2, 10)),
+            severity: ErrorSeverity::Error,
+            kind: SemanticErrorKind::ConstReassignment {
+                variable_name: "PI".to_string(),
+                declared_at: Span::new(Position::new(1, 1), Position::new(1, 15)),
+            },
+        };
+
+        let diagnostics =
+            CRBasicLanguageServer::semantic_errors_to_diagnostics(&test_uri(), &[error]);
+
+        assert_eq!(diagnostics[0].code, None);
+        assert_eq!(diagnostics[0].data, None);
+        assert_eq!(diagnostics[0].related_information, None);
     }
 
     #[test]
