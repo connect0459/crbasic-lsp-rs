@@ -169,7 +169,7 @@ impl CallHierarchyProvider {
         let kind = match definition.kind {
             DefinitionSymbolKind::Function => SymbolKind::FUNCTION,
             DefinitionSymbolKind::Subroutine => SymbolKind::METHOD,
-            DefinitionSymbolKind::Variable => return None,
+            DefinitionSymbolKind::Variable | DefinitionSymbolKind::Struct => return None,
         };
         let range = Self::span_to_range(definition.span);
 
@@ -334,6 +334,24 @@ mod tests {
             let position = Position {
                 line: 0,
                 character: 8,
+            };
+
+            let item = CallHierarchyProvider::prepare(&tokens, &program, &uri("a"), position);
+
+            assert!(item.is_none());
+        }
+
+        #[test]
+        fn returns_none_for_a_structure_type() {
+            let program = program(vec![Statement::StructureType {
+                name: "CS215Data".to_string(),
+                members: vec![],
+                span: span(1, 1, 3, 17),
+            }]);
+            let tokens = vec![identifier_token("CS215Data", 1, 15)];
+            let position = Position {
+                line: 0,
+                character: 15,
             };
 
             let item = CallHierarchyProvider::prepare(&tokens, &program, &uri("a"), position);

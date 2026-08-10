@@ -3,7 +3,7 @@
 //! This module extracts symbols from the AST to provide document outline
 //! functionality (VSCode's outline view).
 
-use crbasic_parser::ast::{Program, Statement};
+use crbasic_parser::ast::{Program, Statement, StructureMember};
 use crbasic_parser::lexer::token::Position;
 use tower_lsp_server::ls_types::{DocumentSymbol, Range, SymbolKind};
 
@@ -119,6 +119,42 @@ fn extract_symbol(statement: &Statement) -> Option<DocumentSymbol> {
             };
 
             Some(create_symbol(full_name, kind, *span, *span, Vec::new()))
+        }
+        Statement::StructureType {
+            name,
+            members,
+            span,
+        } => {
+            let children = members
+                .iter()
+                .filter_map(|member| match member {
+                    StructureMember::Declaration {
+                        name,
+                        span,
+                        type_annotation,
+                        ..
+                    } => Some(create_symbol(
+                        format!("{} As {}", name, type_annotation),
+                        SymbolKind::FIELD,
+                        *span,
+                        *span,
+                        Vec::new(),
+                    )),
+                    // `Units`/`ReadOnly` modifiers describe an existing
+                    // member rather than declaring a new one, matching how
+                    // the top-level `Units`/`ReadOnly` statements also
+                    // don't contribute their own document symbol above.
+                    StructureMember::Modifier(_) => None,
+                })
+                .collect();
+
+            Some(create_symbol(
+                name.clone(),
+                SymbolKind::STRUCT,
+                *span,
+                *span,
+                children,
+            ))
         }
         _ => None, // Other statements don't contribute to document symbols
     }
@@ -282,6 +318,24 @@ mod tests {
         let children = symbols[0].children.as_ref().expect("Should have children");
         assert_eq!(children.len(), 1);
         assert_eq!(children[0].name, "local_var");
+    }
+
+    #[test]
+    fn extracts_structure_type_symbol_with_member_children() {
+        let program = parse(
+            "StructureType TempRHSensor\nTemp As Float\nRH As Float\nReadOnly Temp, RH\nUnits Temp = degC\nUnits RH = Percent\nEndStructureType",
+        );
+        let symbols = extract_document_symbols(&program);
+
+        assert_eq!(symbols.len(), 1);
+        assert_eq!(symbols[0].name, "TempRHSensor");
+        assert_eq!(symbols[0].kind, SymbolKind::STRUCT);
+
+        let children = symbols[0].children.as_ref().expect("Should have children");
+        assert_eq!(children.len(), 2);
+        assert_eq!(children[0].name, "Temp As Float");
+        assert_eq!(children[0].kind, SymbolKind::FIELD);
+        assert_eq!(children[1].name, "RH As Float");
     }
 
     #[test]

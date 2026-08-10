@@ -17,6 +17,8 @@ pub enum SymbolKind {
     Function,
     /// Subroutine symbol
     Subroutine,
+    /// `StructureType` symbol
+    Struct,
 }
 
 /// Symbol definition information
@@ -24,7 +26,7 @@ pub enum SymbolKind {
 pub struct SymbolDefinition {
     /// The symbol name
     pub name: String,
-    /// The kind of symbol (Variable, Function, or Subroutine)
+    /// The kind of symbol (Variable, Function, Subroutine, or Struct)
     pub kind: SymbolKind,
     /// The source code location of the definition
     pub span: Span,
@@ -96,6 +98,16 @@ impl DefinitionProvider {
                 for stmt in body {
                     Self::extract_from_statement(stmt, definitions);
                 }
+            }
+            Statement::StructureType { name, span, .. } => {
+                definitions.insert(
+                    name.clone(),
+                    SymbolDefinition {
+                        name: name.clone(),
+                        kind: SymbolKind::Struct,
+                        span: *span,
+                    },
+                );
             }
             Statement::IfStatement {
                 then_branch,
@@ -290,6 +302,24 @@ mod tests {
                 .get("Initialize")
                 .expect("Should find Initialize");
             assert_eq!(def.kind, SymbolKind::Subroutine);
+        }
+
+        #[test]
+        fn extracts_structure_type_definitions() {
+            let ast = Program::new(
+                vec![Statement::StructureType {
+                    name: "CS215Data".to_string(),
+                    members: vec![],
+                    span: create_span(1, 1, 3, 17),
+                }],
+                create_span(1, 1, 3, 17),
+            );
+
+            let definitions = DefinitionProvider::extract_definitions(&ast);
+
+            assert_eq!(definitions.len(), 1);
+            let def = definitions.get("CS215Data").expect("Should find CS215Data");
+            assert_eq!(def.kind, SymbolKind::Struct);
         }
 
         #[test]
