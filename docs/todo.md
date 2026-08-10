@@ -2630,6 +2630,95 @@ cited when each operator/literal was originally implemented.
   matching `fn.get(...)` call. No further orphaned category exists after
   this round's fix
 
+### LSP-Layer Consumer Completeness Audit, Round 21 (2026-08-10)
+
+Found during a twenty-first round, this time targeting an angle the twenty
+keyword/grammar-diffing rounds above never covered: whether every named,
+span-carrying `Statement` variant is registered by *every* LSP provider that
+walks declarations, rather than diffing against the two reference
+TextMate-only grammars again (which have no semantic layer and can't reveal
+this class of gap). Checked by grepping every `Statement::` match arm across
+`crates/crbasic-lsp/src/*.rs` and cross-referencing against the full list of
+`Statement` variants in `ast.rs`, then verifying the one gap found with a
+real parse before fixing -- consistent with every prior round's verify-before-fix
+bar, just against this project's own code as ground truth instead of an
+external grammar or official docs page.
+
+- [x] `StructureType` declarations invisible to Go to Definition and the
+  Outline view (bug) ✅ Resolved
+  - `StructureType` (added in Round 5) is a named, span-carrying declaration
+    exactly like `Function`/`Sub`/`Public`/`Dim`/`Const` -- but
+    `definition.rs::extract_from_statement` and
+    `symbols.rs::extract_symbol` both match on `Statement` variants with a
+    catch-all `_ => {}`/`_ => None` arm, and neither had a `StructureType`
+    case. Confirmed via a real repro: in `Dim CS215(4) As CS215Data`, go to
+    definition on `CS215Data` returned nothing, and `CS215Data`'s own
+    `StructureType CS215Data ... EndStructureType` block never appeared in
+    the Outline view, even though clicking the same name in a `Function`
+    call or `Public` declaration works correctly
+  - Same "feature shipped, one consumer missed" bug class as the many
+    already-resolved keyword-registration gaps (Rounds 1-20), just found at
+    the LSP-provider layer instead of the lexer/parser/grammar layer
+  - Added a `Struct` variant to `definition.rs`'s `SymbolKind` (its own
+    internal enum, distinct from the LSP protocol's `SymbolKind`) and a
+    `Statement::StructureType` arm inserting it into the definitions map.
+    Rust's exhaustiveness checking then surfaced the one other consumer that
+    matches on this enum: `call_hierarchy.rs`'s `item_for_definition`, which
+    now explicitly keeps `Struct` (like `Variable`) out of the call
+    hierarchy, since a type declaration isn't a callable symbol
+  - Added a `Statement::StructureType` arm to `symbols.rs::extract_symbol`
+    producing a `SymbolKind::STRUCT` `DocumentSymbol`, with each
+    `StructureMember::Declaration` member as a `SymbolKind::FIELD` child --
+    mirroring how `Function`/`Sub` already list their nested declarations.
+    `StructureMember::Modifier` (a nested `Units`/`ReadOnly`) deliberately
+    contributes no child, consistent with how the top-level `Units`/
+    `ReadOnly` statements already don't get their own document symbol
+    either
+  - `code_lens.rs`'s "N references" lens and `crbasic-lsp/src/backend.rs`'s
+    diagnostic wiring both needed no changes: both already iterate
+    generically over every entry `DefinitionProvider::extract_definitions`
+    returns, so `StructureType` declarations picked up a references lens
+    for free once the definitions-map gap was closed
+  - Every other `Statement::` match site was cross-checked against the full
+    18-variant list the same way: `call_sites.rs` (shared by inlay hints and
+    call hierarchy's outgoing-calls walk) already has all 18 variants;
+    `folding.rs`/`semantic_tokens.rs`/`completion.rs`'s user-defined-symbol
+    extraction/`workspace_symbol.rs` (which delegates to `symbols.rs`
+    entirely rather than matching `Statement` itself) omit variants that
+    genuinely don't need handling there (e.g. `Alias`/`Units`/`ReadOnly`
+    have no nested body to fold or recurse into), each already consistent
+    with a design decision documented in an earlier round -- no further gap
+    found
+  - 1 new `definition.rs` test (`extracts_structure_type_definitions`) + 1
+    new `call_hierarchy.rs` test (`returns_none_for_a_structure_type`) + 1
+    new `symbols.rs` test
+    (`extracts_structure_type_symbol_with_member_children`) added Red-first;
+    full workspace `build`/`test`/`clippy`/`fmt`/`coverage` gate and client
+    `lint`/`format:check`/`test` gate pass
+
+Not flagged as gaps (verified during the same audit):
+
+- Cross-diffed `cr-basic-ms-vscode`'s 514-name keyword list (extracted to
+  `syntaxes/cr-basic.tmLanguage.json.names.txt`) against this project's
+  `keywords.json` in full: ~300 unmatched names, but every one checked
+  individually (`Debug`, `Read`, `ArrayIndex`, and a further sample) is
+  either parenthesized/optional-argument-shaped (already parses correctly
+  via the generic `FunctionCall` grammar, e.g. `Debug`'s own syntax diagram
+  is `Debug [(DebugSequence, HistorySize, Control, LineBreak,
+  TraceHistory)]`) or a bare keyword already registered under a different
+  match path -- falls entirely inside the already-accepted, deliberately
+  deferred ~126-vs-~420 `builtinFunctions` content-volume backlog (Round 2),
+  not a new bug class
+  - `End` (a bare keyword in `cr-basic-ms-vscode`'s grammar): re-checked
+    against `crbasic-vscode-support`'s grammar and found absent there,
+    same single-grammar-only status Round 4 already dismissed it for; no
+    new corroborating evidence surfaced this round
+- `crbasic-lsp/src/hover.rs`, `references.rs`, `document_highlight.rs`, and
+  `code_action.rs` have zero `Statement::` match arms by design -- each
+  operates on the token stream or on diagnostics rather than walking the
+  AST, confirmed by reading each file rather than assumed from the grep
+  count alone
+
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
 Found while auditing `crbasic-lsp`'s diagnostic-publishing path for
