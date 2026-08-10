@@ -109,7 +109,7 @@
       "patterns": [
         {
           "name": "keyword.control.program.crbasic",
-          "match": "(?i)\\b(BeginProg|EndProg|SequentialMode|PipeLineMode|PreserveVariables|ApplyAndRestartSequence|EndApplyAndRestartSequence)\\b"
+          "match": "(?i)\\b(BeginProg|EndProg|SequentialMode|PipeLineMode|PreserveVariables|ApplyAndRestartSequence|EndApplyAndRestartSequence|ShutDownBegin|ShutDownEnd)\\b"
         },
         {
           "name": "keyword.control.datatable.crbasic",

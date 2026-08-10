@@ -50,6 +50,8 @@
     { "name": "PreserveVariables", "category": "program" },
     { "name": "ApplyAndRestartSequence", "category": "program" },
     { "name": "EndApplyAndRestartSequence", "category": "program" },
+    { "name": "ShutDownBegin", "category": "program" },
+    { "name": "ShutDownEnd", "category": "program" },
     { "name": "DataTable", "category": "datatable" },
     { "name": "EndTable", "category": "datatable" },
     { "name": "ConstTable", "category": "consttable" },

@@ -53,6 +53,8 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("PreserveVariables", "program"),
     ("ApplyAndRestartSequence", "program"),
     ("EndApplyAndRestartSequence", "program"),
+    ("ShutDownBegin", "program"),
+    ("ShutDownEnd", "program"),
     ("DataTable", "datatable"),
     ("EndTable", "datatable"),
     ("ConstTable", "consttable"),

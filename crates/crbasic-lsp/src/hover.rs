@@ -264,6 +264,10 @@ impl HoverProvider {
             "endapplyandrestartsequence" => Some(
                 "**EndApplyAndRestartSequence**\n\nTerminates an ApplyAndRestartSequence block.",
             ),
+            "shutdownbegin" => Some(
+                "**ShutDownBegin**\n\nRuns cleanup code (e.g. closing a serial port) when the program stops normally. Placed before `BeginProg`.\n\n```crbasic\nShutDownBegin\n  SerialClose(ComC1)\nShutDownEnd\n```",
+            ),
+            "shutdownend" => Some("**ShutDownEnd**\n\nTerminates a ShutDownBegin block."),
             "datatable" => Some(
                 "**DataTable**\n\nDefines a data table for storing measurements.\n\n```crbasic\nDataTable(TableName, TriggerCondition, Size)\n  ' output instructions\nEndTable\n```",
             ),
@@ -433,6 +437,8 @@ mod tests {
                     "PreserveVariables",
                     "ApplyAndRestartSequence",
                     "EndApplyAndRestartSequence",
+                    "ShutDownBegin",
+                    "ShutDownEnd",
                 ];
 
                 for keyword in keywords {

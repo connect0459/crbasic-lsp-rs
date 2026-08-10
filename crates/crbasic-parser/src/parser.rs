@@ -183,6 +183,8 @@ impl<'a> Parser<'a> {
                 || kw == "PreserveVariables"
                 || kw == "ApplyAndRestartSequence"
                 || kw == "EndApplyAndRestartSequence"
+                || kw == "ShutDownBegin"
+                || kw == "ShutDownEnd"
                 || kw == "DataTable"
                 || kw == "EndTable"
                 || kw == "ConstTable"
@@ -6474,6 +6476,26 @@ mod tests {
             assert!(matches!(
                 &program.statements[2],
                 Statement::ProgramStructure { keyword, .. } if keyword == "EndApplyAndRestartSequence"
+            ));
+        }
+
+        #[test]
+        fn parses_shutdownbegin_shutdownend_block_before_beginprog() {
+            let source =
+                "ShutDownBegin\n  SerialClose(ComC1)\nShutDownEnd\nBeginProg\nEndProg".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 5);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::ProgramStructure { keyword, .. } if keyword == "ShutDownBegin"
+            ));
+            assert!(matches!(
+                &program.statements[2],
+                Statement::ProgramStructure { keyword, .. } if keyword == "ShutDownEnd"
             ));
         }
 

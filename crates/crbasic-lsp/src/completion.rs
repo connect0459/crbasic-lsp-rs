@@ -558,6 +558,12 @@ impl CompletionProvider {
                 "Terminates an ApplyAndRestartSequence block",
             ),
             Self::create_keyword_snippet(
+                "ShutDownBegin",
+                "ShutDownBegin\n\t$0\nShutDownEnd",
+                "Runs cleanup code when the program stops normally; placed before BeginProg",
+            ),
+            Self::create_keyword_completion("ShutDownEnd", "Terminates a ShutDownBegin block"),
+            Self::create_keyword_snippet(
                 "DataTable",
                 "DataTable(${1:TableName}, ${2:TriggerCondition}, ${3:Size})\n\t$0\nEndTable",
                 "Define data storage table",
