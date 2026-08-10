@@ -244,6 +244,7 @@ impl<'a> Parser<'a> {
                 || kw == "EndApplyAndRestartSequence"
                 || kw == "ShutDownBegin"
                 || kw == "ShutDownEnd"
+                || kw == "ESSInitialize"
                 || kw == "ESSVariables"
                 || kw == "WebPageEnd"
                 || kw == "EndModemHangup"
@@ -822,70 +823,71 @@ impl<'a> Parser<'a> {
             });
         };
 
-        let arguments = if (keyword == "DataTable" || keyword == "ConstTable")
-            && matches!(self.peek().kind, TokenKind::LeftParen)
-        {
-            self.advance();
-
-            let mut args = Vec::new();
-
-            while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
-                args.push(self.parse_expression()?);
-
-                if matches!(self.peek().kind, TokenKind::Comma) {
-                    self.advance();
-                }
-            }
-
-            if !matches!(self.peek().kind, TokenKind::RightParen) {
-                return Err(ParseError {
-                    message: format!("Expected ')' after {keyword} arguments"),
-                    span: self.peek().span,
-                });
-            }
-            self.advance();
-
-            Some(args)
-        } else if keyword == "#UnDef" {
-            Some(vec![self.parse_expression()?])
-        } else if keyword == "ESSVariables" {
-            // `ESSVariables [Public|Dim]`: an optional modifier (defaulting to
-            // `Public`) rather than an expression, since `Public`/`Dim` are
-            // themselves keyword tokens, not values `parse_expression` can read.
-            if let &TokenKind::Keyword(modifier) = &self.peek().kind
-                && (modifier == "Public" || modifier == "Dim")
+        let arguments =
+            if (keyword == "DataTable" || keyword == "ConstTable" || keyword == "ESSInitialize")
+                && matches!(self.peek().kind, TokenKind::LeftParen)
             {
-                let modifier_token = self.advance();
-                Some(vec![Expression::Identifier {
-                    name: modifier.to_string(),
-                    span: modifier_token.span,
-                }])
+                self.advance();
+
+                let mut args = Vec::new();
+
+                while !matches!(self.peek().kind, TokenKind::RightParen) && !self.is_at_end() {
+                    args.push(self.parse_expression()?);
+
+                    if matches!(self.peek().kind, TokenKind::Comma) {
+                        self.advance();
+                    }
+                }
+
+                if !matches!(self.peek().kind, TokenKind::RightParen) {
+                    return Err(ParseError {
+                        message: format!("Expected ')' after {keyword} arguments"),
+                        span: self.peek().span,
+                    });
+                }
+                self.advance();
+
+                Some(args)
+            } else if keyword == "#UnDef" {
+                Some(vec![self.parse_expression()?])
+            } else if keyword == "ESSVariables" {
+                // `ESSVariables [Public|Dim]`: an optional modifier (defaulting to
+                // `Public`) rather than an expression, since `Public`/`Dim` are
+                // themselves keyword tokens, not values `parse_expression` can read.
+                if let &TokenKind::Keyword(modifier) = &self.peek().kind
+                    && (modifier == "Public" || modifier == "Dim")
+                {
+                    let modifier_token = self.advance();
+                    Some(vec![Expression::Identifier {
+                        name: modifier.to_string(),
+                        span: modifier_token.span,
+                    }])
+                } else {
+                    None
+                }
+            } else if keyword == "Return" {
+                if !matches!(self.peek().kind, TokenKind::LeftParen) {
+                    return Err(ParseError {
+                        message: "Expected '(' after 'Return'".to_string(),
+                        span: self.peek().span,
+                    });
+                }
+                self.advance();
+
+                let value = self.parse_expression()?;
+
+                if !matches!(self.peek().kind, TokenKind::RightParen) {
+                    return Err(ParseError {
+                        message: "Expected ')' after Return expression".to_string(),
+                        span: self.peek().span,
+                    });
+                }
+                self.advance();
+
+                Some(vec![value])
             } else {
                 None
-            }
-        } else if keyword == "Return" {
-            if !matches!(self.peek().kind, TokenKind::LeftParen) {
-                return Err(ParseError {
-                    message: "Expected '(' after 'Return'".to_string(),
-                    span: self.peek().span,
-                });
-            }
-            self.advance();
-
-            let value = self.parse_expression()?;
-
-            if !matches!(self.peek().kind, TokenKind::RightParen) {
-                return Err(ParseError {
-                    message: "Expected ')' after Return expression".to_string(),
-                    span: self.peek().span,
-                });
-            }
-            self.advance();
-
-            Some(vec![value])
-        } else {
-            None
-        };
+            };
 
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
@@ -7339,6 +7341,38 @@ mod tests {
             assert!(matches!(
                 &program.statements[1],
                 Statement::VarDeclaration { name, .. } if name == "BattV"
+            ));
+        }
+
+        #[test]
+        fn parses_bare_essinitialize_with_no_arguments() {
+            let source = "ESSInitialize\nBeginProg\nEndProg".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::ProgramStructure { keyword, arguments: None, .. } if keyword == "ESSInitialize"
+            ));
+        }
+
+        #[test]
+        fn parses_essinitialize_with_community_string_argument() {
+            let source = "ESSInitialize(\"private, public\")\nBeginProg\nEndProg".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[0],
+                Statement::ProgramStructure { keyword, arguments: Some(args), .. }
+                    if keyword == "ESSInitialize"
+                        && matches!(&args[0], Expression::StringLiteral { value, .. } if value == "private, public")
             ));
         }
     }

@@ -601,6 +601,10 @@ impl CompletionProvider {
                 "Runs cleanup code when the program stops normally; placed before BeginProg",
             ),
             Self::create_keyword_completion("ShutDownEnd", "Terminates a ShutDownBegin block"),
+            Self::create_keyword_completion(
+                "ESSInitialize",
+                "Initializes the NTCIP Environmental Sensor Station SNMP agent; placed directly after BeginProg",
+            ),
             Self::create_keyword_snippet(
                 "ESSVariables",
                 "ESSVariables ${1:Public}",

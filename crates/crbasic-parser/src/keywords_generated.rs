@@ -57,6 +57,7 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("EndApplyAndRestartSequence", "program"),
     ("ShutDownBegin", "program"),
     ("ShutDownEnd", "program"),
+    ("ESSInitialize", "program"),
     ("ESSVariables", "program"),
     ("WebPageEnd", "program"),
     ("EndModemHangup", "program"),

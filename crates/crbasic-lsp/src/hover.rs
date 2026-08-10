@@ -326,6 +326,9 @@ impl HoverProvider {
                 "**ShutDownBegin**\n\nRuns cleanup code (e.g. closing a serial port) when the program stops normally. Placed before `BeginProg`.\n\n```crbasic\nShutDownBegin\n  SerialClose(ComC1)\nShutDownEnd\n```",
             ),
             "shutdownend" => Some("**ShutDownEnd**\n\nTerminates a ShutDownBegin block."),
+            "essinitialize" => Some(
+                "**ESSInitialize**\n\nInitializes the NTCIP Environmental Sensor Station SNMP agent for roadway-weather/DOT telemetry programs. Takes an optional SNMP read/write community string. Placed directly after `BeginProg`.\n\n```crbasic\nBeginProg\n  ESSInitialize(\"private, public\")\nEndProg\n```",
+            ),
             "essvariables" => Some(
                 "**ESSVariables**\n\nAuto-declares the standard set of NTCIP Environmental Sensor Station variables (used with `ESSInitialize` for roadway-weather/DOT telemetry programs). Takes an optional `Public` or `Dim` modifier (defaults to `Public`).\n\n```crbasic\nESSVariables Dim\n```",
             ),

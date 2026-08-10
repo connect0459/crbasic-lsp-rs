@@ -54,6 +54,7 @@
     { "name": "EndApplyAndRestartSequence", "category": "program" },
     { "name": "ShutDownBegin", "category": "program" },
     { "name": "ShutDownEnd", "category": "program" },
+    { "name": "ESSInitialize", "category": "program" },
     { "name": "ESSVariables", "category": "program" },
     { "name": "WebPageEnd", "category": "program" },
     { "name": "EndModemHangup", "category": "program" },

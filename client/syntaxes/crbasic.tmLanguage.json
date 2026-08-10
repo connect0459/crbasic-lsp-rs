@@ -114,7 +114,7 @@
       "patterns": [
         {
           "name": "keyword.control.program.crbasic",
-          "match": "(?i)\\b(BeginProg|EndProg|SequentialMode|PipeLineMode|PreserveVariables|AngleDegrees|ApplyAndRestartSequence|EndApplyAndRestartSequence|ShutDownBegin|ShutDownEnd|ESSVariables|WebPageEnd|EndModemHangup|VoiceBeg|EndVoice)\\b"
+          "match": "(?i)\\b(BeginProg|EndProg|SequentialMode|PipeLineMode|PreserveVariables|AngleDegrees|ApplyAndRestartSequence|EndApplyAndRestartSequence|ShutDownBegin|ShutDownEnd|ESSInitialize|ESSVariables|WebPageEnd|EndModemHangup|VoiceBeg|EndVoice)\\b"
         },
         {
           "name": "keyword.control.datatable.crbasic",
