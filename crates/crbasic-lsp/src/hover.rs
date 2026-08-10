@@ -213,6 +213,9 @@ impl HoverProvider {
             "waittriggersequence" => Some(
                 "**WaitTriggerSequence**\n\nMarks a resume-point inside a `SlowSequence`, suspending execution there until the trigger condition is met again.",
             ),
+            "exitscan" => Some(
+                "**ExitScan**\n\nExits the current Scan loop immediately, regardless of the scan Count.",
+            ),
 
             "public" => Some(
                 "**Public**\n\nDeclares a public (global) variable that can be monitored and logged.\n\n```crbasic\nPublic Temp_C As Float\n```",

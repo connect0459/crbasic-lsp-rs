@@ -129,7 +129,7 @@
         },
         {
           "name": "keyword.control.scan.crbasic",
-          "match": "(?i)\\b(Scan|SubScan|NextScan|ContinueScan|NextSubScan|SlowSequence|EndSequence|WaitTriggerSequence)\\b"
+          "match": "(?i)\\b(Scan|SubScan|NextScan|ContinueScan|NextSubScan|SlowSequence|EndSequence|WaitTriggerSequence|ExitScan)\\b"
         }
       ]
     },
@@ -157,7 +157,7 @@
         },
         {
           "name": "support.function.time.crbasic",
-          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|ExitScan|CallTable|SetStatus|Watch|MoveBytes|ArrayLength|NaN|IsNaN)\\b"
+          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|CallTable|SetStatus|Watch|MoveBytes|ArrayLength|NaN|IsNaN)\\b"
         },
         {
           "name": "support.function.logical.crbasic",

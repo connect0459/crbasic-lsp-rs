@@ -184,6 +184,7 @@ impl<'a> Parser<'a> {
                 || kw == "EndConstTable"
                 || kw == "NextScan"
                 || kw == "ContinueScan"
+                || kw == "ExitScan"
                 || kw == "NextSubScan"
                 || kw == "SlowSequence"
                 || kw == "EndSequence"
@@ -6382,6 +6383,26 @@ mod tests {
                 &program.statements[1],
                 Statement::ProgramStructure { keyword, .. } if keyword == "ContinueScan"
             ));
+        }
+
+        #[test]
+        fn parses_exitscan_inside_scan_loop() {
+            let source = "Scan(1, Sec, 0, 0)\n  If x > 5 Then ExitScan\nNextScan".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            if let Statement::IfStatement { then_branch, .. } = &program.statements[1] {
+                assert_eq!(then_branch.len(), 1);
+                assert!(matches!(
+                    &then_branch[0],
+                    Statement::ProgramStructure { keyword, .. } if keyword == "ExitScan"
+                ));
+            } else {
+                panic!("Expected an if statement");
+            }
         }
 
         #[test]

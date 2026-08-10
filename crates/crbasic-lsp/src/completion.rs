@@ -270,11 +270,6 @@ impl CompletionProvider {
                 "Delay(${1:Duration}, ${2:Units})",
                 "Pauses execution for a specified time.",
             ),
-            Self::create_function_completion(
-                "ExitScan",
-                "ExitScan",
-                "Exits the current scan immediately.",
-            ),
         ]
     }
 
@@ -484,6 +479,7 @@ impl CompletionProvider {
                 "WaitTriggerSequence",
                 "Marks a resume-point inside a SlowSequence, waiting for the trigger condition",
             ),
+            Self::create_keyword_completion("ExitScan", "Exits the current scan immediately"),
             Self::create_keyword_completion("Return", "Returns a value from a Function"),
             Self::create_keyword_completion("ExitFunction", "Exit Function immediately"),
             Self::create_keyword_completion(
