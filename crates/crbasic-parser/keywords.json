@@ -88,7 +88,6 @@
 
     { "name": "Battery", "category": "measurement" },
     { "name": "PanelTemp", "category": "measurement" },
-    { "name": "Voltage", "category": "measurement" },
     { "name": "VoltSe", "category": "measurement" },
     { "name": "VoltDiff", "category": "measurement" },
     { "name": "BrHalf", "category": "measurement" },
@@ -202,7 +201,6 @@
     { "name": "Timer", "category": "time" },
     { "name": "Delay", "category": "time" },
     { "name": "SetStatus", "category": "time" },
-    { "name": "Watch", "category": "time" },
     { "name": "MoveBytes", "category": "time" },
     { "name": "ArrayLength", "category": "time" },
     { "name": "NaN", "category": "time" },

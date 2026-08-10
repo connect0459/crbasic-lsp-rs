@@ -139,7 +139,7 @@
     },
     "builtin-functions-measurement": {
       "name": "support.function.measurement.crbasic",
-      "match": "(?i)\\b(Battery|PanelTemp|Voltage|VoltSe|VoltDiff|BrHalf|BrFull|Therm107|Therm108|Therm109|TCDiff|Resistance|PeriodAvg|PulseCount|FreqCount|Thermocouple|PortSet|PulsePort|ExciteV|BrHalf3W|BrHalf4W|BrFull6W|TCSE)\\b"
+      "match": "(?i)\\b(Battery|PanelTemp|VoltSe|VoltDiff|BrHalf|BrFull|Therm107|Therm108|Therm109|TCDiff|Resistance|PeriodAvg|PulseCount|FreqCount|Thermocouple|PortSet|PulsePort|ExciteV|BrHalf3W|BrHalf4W|BrFull6W|TCSE)\\b"
     },
     "builtin-functions-communication": {
       "name": "support.function.communication.crbasic",
@@ -161,7 +161,7 @@
         },
         {
           "name": "support.function.time.crbasic",
-          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|SetStatus|Watch|MoveBytes|ArrayLength|NaN)\\b"
+          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|SetStatus|MoveBytes|ArrayLength|NaN)\\b"
         },
         {
           "name": "support.function.logical.crbasic",
