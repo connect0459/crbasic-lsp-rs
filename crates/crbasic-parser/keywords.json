@@ -54,6 +54,8 @@
     { "name": "ShutDownEnd", "category": "program" },
     { "name": "DataTable", "category": "datatable" },
     { "name": "EndTable", "category": "datatable" },
+    { "name": "TableHide", "category": "datatable" },
+    { "name": "OpenInterval", "category": "datatable" },
     { "name": "ConstTable", "category": "consttable" },
     { "name": "EndConstTable", "category": "consttable" },
     { "name": "StructureType", "category": "structuretype" },

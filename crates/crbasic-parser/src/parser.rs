@@ -185,6 +185,8 @@ impl<'a> Parser<'a> {
                 || kw == "EndApplyAndRestartSequence"
                 || kw == "ShutDownBegin"
                 || kw == "ShutDownEnd"
+                || kw == "TableHide"
+                || kw == "OpenInterval"
                 || kw == "DataTable"
                 || kw == "EndTable"
                 || kw == "ConstTable"
@@ -5241,6 +5243,38 @@ mod tests {
                 program.statements.last().unwrap(),
                 Statement::ProgramStructure { keyword, arguments, .. }
                     if keyword == "EndSequence" && arguments.is_none()
+            ));
+        }
+
+        #[test]
+        fn parses_tablehide_inside_datatable_body() {
+            let source = "DataTable(Test,True,-1)\n  TableHide\nEndTable".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 3);
+            assert!(matches!(
+                &program.statements[1],
+                Statement::ProgramStructure { keyword, .. } if keyword == "TableHide"
+            ));
+        }
+
+        #[test]
+        fn parses_openinterval_inside_datatable_body() {
+            let source =
+                "DataTable(Test,True,-1)\n  DataInterval(0,10,Sec,10)\n  OpenInterval\nEndTable"
+                    .to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 4);
+            assert!(matches!(
+                &program.statements[2],
+                Statement::ProgramStructure { keyword, .. } if keyword == "OpenInterval"
             ));
         }
 

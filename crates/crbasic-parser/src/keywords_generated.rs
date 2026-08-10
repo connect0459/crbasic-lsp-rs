@@ -57,6 +57,8 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("ShutDownEnd", "program"),
     ("DataTable", "datatable"),
     ("EndTable", "datatable"),
+    ("TableHide", "datatable"),
+    ("OpenInterval", "datatable"),
     ("ConstTable", "consttable"),
     ("EndConstTable", "consttable"),
     ("StructureType", "structuretype"),

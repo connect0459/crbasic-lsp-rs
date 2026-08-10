@@ -113,7 +113,7 @@
         },
         {
           "name": "keyword.control.datatable.crbasic",
-          "match": "(?i)\\b(DataTable|EndTable)\\b"
+          "match": "(?i)\\b(DataTable|EndTable|TableHide|OpenInterval)\\b"
         },
         {
           "name": "keyword.control.consttable.crbasic",

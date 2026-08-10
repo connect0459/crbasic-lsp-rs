@@ -569,6 +569,14 @@ impl CompletionProvider {
                 "Define data storage table",
             ),
             Self::create_keyword_completion("EndTable", "Terminates DataTable block"),
+            Self::create_keyword_completion(
+                "TableHide",
+                "Suppresses the display and data collection of this DataTable",
+            ),
+            Self::create_keyword_completion(
+                "OpenInterval",
+                "Includes all measurements since the last data storage, spanning missed output intervals",
+            ),
             Self::create_keyword_snippet(
                 "ConstTable",
                 "ConstTable(${1:TableName}, ${2:Enabled})\n\tConst $0\nEndConstTable",

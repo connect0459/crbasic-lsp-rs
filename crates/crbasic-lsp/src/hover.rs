@@ -272,6 +272,12 @@ impl HoverProvider {
                 "**DataTable**\n\nDefines a data table for storing measurements.\n\n```crbasic\nDataTable(TableName, TriggerCondition, Size)\n  ' output instructions\nEndTable\n```",
             ),
             "endtable" => Some("**EndTable**\n\nTerminates a DataTable block."),
+            "tablehide" => Some(
+                "**TableHide**\n\nSuppresses the display and data collection of this DataTable in datalogger memory. Placed immediately after the DataTable statement.",
+            ),
+            "openinterval" => Some(
+                "**OpenInterval**\n\nMakes time series processing include all measurements since the last data storage, spanning any missed output intervals, instead of only the current interval.",
+            ),
             "consttable" => Some(
                 "**ConstTable**\n\nDefines a block of constants that field technicians can edit and recompile without touching the constants' use sites.\n\n```crbasic\nConstTable(TableName, Enabled)\n  Const A = 1\nEndConstTable\n```",
             ),
@@ -430,6 +436,8 @@ mod tests {
                     "EndProg",
                     "DataTable",
                     "EndTable",
+                    "TableHide",
+                    "OpenInterval",
                     "ConstTable",
                     "EndConstTable",
                     "StructureType",
