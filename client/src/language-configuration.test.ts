@@ -22,6 +22,9 @@ interface FoldingMarkers {
 }
 
 interface LanguageConfiguration {
+  brackets: [string, string][];
+  autoClosingPairs: { open: string; close: string }[];
+  surroundingPairs: [string, string][];
   indentationRules: {
     increaseIndentPattern: IndentPattern;
     decreaseIndentPattern: IndentPattern;
@@ -236,5 +239,27 @@ describe("language-configuration.json folding.markers", () => {
     ])("does not match non-block-closing line: %s", (line) => {
       expect(end.test(line)).toBe(false);
     });
+  });
+});
+
+describe("language-configuration.json bracket configuration", () => {
+  const config = loadConfig();
+
+  // CRBasic has no bracket-array syntax -- array access and function calls
+  // both use `Name(...)`, and `[`/`]` have no meaning in the language at all.
+  test("does not pair square brackets", () => {
+    expect(config.brackets).not.toContainEqual(["[", "]"]);
+  });
+
+  test("does not auto-close square brackets", () => {
+    expect(config.autoClosingPairs).not.toContainEqual({ open: "[", close: "]" });
+  });
+
+  test("does not surround selections with square brackets", () => {
+    expect(config.surroundingPairs).not.toContainEqual(["[", "]"]);
+  });
+
+  test("still pairs parentheses", () => {
+    expect(config.brackets).toContainEqual(["(", ")"]);
   });
 });
