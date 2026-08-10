@@ -3013,6 +3013,75 @@ Not flagged as gaps (verified during the same round):
   is already a boxed `Expression`, so array-indexed and chained member
   targets already compose correctly -- no gap found.
 
+### Reference Implementation & Official Docs Comparison, Round 25 (2026-08-10)
+
+Found while re-surveying `.connect0459/ref-repos/`'s two reference extensions
+and help.campbellsci.com for gaps the prior 24 rounds hadn't covered. One new
+instance of the same "advertised via a real docs page but silently mis-lexed"
+bug class fixed 10+ times in Rounds 1-8/24, confirmed by actually parsing a
+repro before fixing, not just by reading the docs.
+
+- [x] `ESSInitialize` entirely unregistered bare keyword (bug) ✅ Resolved
+  - Confirmed at
+    [essinitialize.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/essinitialize.htm):
+    initializes the NTCIP Environmental Sensor Station SNMP agent, with two
+    documented forms -- bare `ESSInitialize` or `ESSInitialize ("private,
+    public")` (an optional SNMP read/write community string) -- and "should
+    be placed directly after the `BeginProg` instruction." Present in both
+    reference grammars, and this project's own `ESSVariables` hover/
+    completion text (fixed in Round 24) already cross-references it by name,
+    so a reader following that text's own reference would have found no
+    matching coverage.
+  - `ESSInitialize` was absent from `keywords.json`, so the bare form lexed
+    as a plain `Identifier` and silently fell through to the
+    assignment/expression path, corrupting into a dead
+    `Statement::Expression { Identifier("ESSInitialize") }` no-op instead of
+    a real declaration. Confirmed via a throwaway `cargo run --example`
+    repro before fixing. The parenthesized form already parsed fine via the
+    generic `Statement::FunctionCall` grammar, the same
+    "only the bare closer needs a fix" shape as `WebPageBegin`/`ModemHangup`
+    in Round 24.
+  - Added to `keywords.json`'s `program` category and the bare-keyword
+    dispatch list in `parse_program_structure`
+    (`crates/crbasic-parser/src/parser.rs`); its optional parenthesized
+    community-string argument reuses the same comma-separated
+    expression-list parsing already shared by `DataTable`/`ConstTable`,
+    rather than a new one-off branch
+  - Added matching completion snippet/hover text (required to keep the
+    existing `every_language_keyword_has_a_completion_item`/
+    `every_language_keyword_has_hover_info` completeness tests green)
+  - 2 new parser tests (`parses_bare_essinitialize_with_no_arguments`,
+    `parses_essinitialize_with_community_string_argument`) added Red-first;
+    full workspace `build`/`test`/`clippy`/`fmt` and client
+    `lint`/`format:check`/`test` gates pass
+
+Not flagged as gaps (verified during the same round):
+
+- `ExitSub` (appears fused as one word in `cr-basic-ms-vscode`'s bare-keyword
+  regex): confirmed this is the reference grammar's own bug -- its regex
+  requires a single token with no internal whitespace, which never matches
+  real source's two-token `Exit Sub` (already independently verified via two
+  fetches of the official syntax diagram in Round 2). Not a gap here.
+- `StationName`, `FileManage`, `TimedControl`: each confirmed parenthesized
+  via their own docs pages, already parsing correctly via the generic
+  `FunctionCall` grammar. Re-confirms Rounds 4/8's dismissal pattern.
+- `Status` (used as `Status.FieldName`): ordinary `Expression::MemberAccess`
+  on a plain identifier, already generically supported since Round 5's `Dot`
+  token addition. Re-confirms Rounds 4/8/10's dismissal.
+- `ArrayIndex`, `LoggerType`, `NewFieldNames`, `RunProgram`,
+  `SemaphoreGet`/`SemaphoreRelease`, `TriggerSequence`, `WaitDigTrig`,
+  `Delay`, `IfTime`, `IIF`: re-confirmed function-shaped/already-handled, no
+  new evidence found.
+- Full re-diff of `cr-basic-ms-vscode`'s ~514-name keyword list against
+  `keywords.json` (295 unmatched names): every other unmatched name resolves
+  to either the already-accepted content-volume `builtinFunctions` backlog
+  (Round 2) or an individually-dismissed name from a prior round (`Eqv`,
+  `IntDv`, `Restore`, `BeginBurstTrigger`/`EndBurstTrigger`,
+  `EndDialSequence`, `NULL`, etc.).
+- `docs/researches/research-001-crbasic-for-vscode.md` re-read in full for a
+  statement-level construct not yet implemented: none found, consistent with
+  Rounds 6/19's "already fully mined" conclusion.
+
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
 Found while auditing `crbasic-lsp`'s diagnostic-publishing path for
