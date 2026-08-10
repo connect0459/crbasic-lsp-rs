@@ -9,6 +9,10 @@ use crate::ast::{AssignmentTarget, Program, Statement};
 use crate::lexer::token::Span;
 use std::collections::HashMap;
 
+/// The only type names Campbell Scientific's own docs allow after `As` in a
+/// `Const` declaration; see [`SemanticErrorKind::InvalidConstType`].
+const CONST_ALLOWED_TYPES: [&str; 4] = ["Long", "Float", "Double", "String"];
+
 /// Datalogger model types with specific validation rules
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DataloggerModel {
@@ -112,6 +116,18 @@ pub enum SemanticErrorKind {
         variable_name: String,
         /// Where the variable was declared `Const`
         declared_at: Span,
+    },
+    /// A `Const` declaration's `As` type annotation names a type that
+    /// Campbell Scientific's own docs do not allow for constants
+    ///
+    /// See <https://help.campbellsci.com/crbasic/cr6/Content/Instructions/const1.htm>:
+    /// "Valid data types for constants are: Long..., Float..., Double, and
+    /// String... Other data types return a compile error."
+    InvalidConstType {
+        /// The offending constant's name
+        variable_name: String,
+        /// The disallowed type name as written in the source
+        type_name: String,
     },
 }
 
@@ -306,6 +322,26 @@ impl SemanticAnalyzer {
             VariableScope::Local
         };
         let is_const = keyword == "Const";
+
+        if is_const
+            && let Some(type_name) = type_annotation
+            && !CONST_ALLOWED_TYPES
+                .iter()
+                .any(|allowed| allowed.eq_ignore_ascii_case(type_name))
+        {
+            self.errors.push(SemanticError {
+                message: format!(
+                    "Const '{name}' has an invalid type annotation '{type_name}'; \
+                     constants may only be Long, Float, Double, or String"
+                ),
+                span,
+                severity: ErrorSeverity::Error,
+                kind: SemanticErrorKind::InvalidConstType {
+                    variable_name: name.to_string(),
+                    type_name: type_name.to_string(),
+                },
+            });
+        }
 
         let profile = self.model.profile();
 
@@ -1046,6 +1082,147 @@ mod tests {
                     span: create_test_span(),
                 }],
                 create_test_span(),
+            );
+
+            let errors = analyzer.analyze(&program);
+
+            assert_eq!(errors, vec![]);
+        }
+    }
+
+    mod const_type_validation {
+        use super::*;
+        use crate::ast::Expression;
+        use crate::lexer::token::Position;
+
+        fn create_test_span() -> Span {
+            Span::new(Position::new(1, 1), Position::new(1, 10))
+        }
+
+        #[test]
+        fn const_with_a_boolean_type_annotation_is_a_semantic_error() {
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+            let span = create_test_span();
+            let program = Program::new(
+                vec![Statement::VarDeclaration {
+                    keyword: "Const".to_string(),
+                    name: "Enabled".to_string(),
+                    array_dimensions: None,
+                    type_annotation: Some("Boolean".to_string()),
+                    type_size: None,
+                    initializer: Some(Expression::BooleanLiteral { value: true, span }),
+                    span,
+                }],
+                span,
+            );
+
+            let errors = analyzer.analyze(&program);
+
+            assert_eq!(errors.len(), 1);
+            assert_eq!(errors[0].severity, ErrorSeverity::Error);
+            assert_eq!(
+                errors[0].kind,
+                SemanticErrorKind::InvalidConstType {
+                    variable_name: "Enabled".to_string(),
+                    type_name: "Boolean".to_string(),
+                }
+            );
+        }
+
+        #[test]
+        fn const_with_a_uint1_type_annotation_is_a_semantic_error() {
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+            let span = create_test_span();
+            let program = Program::new(
+                vec![Statement::VarDeclaration {
+                    keyword: "Const".to_string(),
+                    name: "Retries".to_string(),
+                    array_dimensions: None,
+                    type_annotation: Some("UINT1".to_string()),
+                    type_size: None,
+                    initializer: Some(Expression::IntegerLiteral { value: 3, span }),
+                    span,
+                }],
+                span,
+            );
+
+            let errors = analyzer.analyze(&program);
+
+            assert_eq!(errors.len(), 1);
+            assert_eq!(
+                errors[0].kind,
+                SemanticErrorKind::InvalidConstType {
+                    variable_name: "Retries".to_string(),
+                    type_name: "UINT1".to_string(),
+                }
+            );
+        }
+
+        #[test]
+        fn const_with_each_documented_valid_type_is_not_a_semantic_error() {
+            for type_name in ["Long", "Float", "Double", "String"] {
+                let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+                let span = create_test_span();
+                let program = Program::new(
+                    vec![Statement::VarDeclaration {
+                        keyword: "Const".to_string(),
+                        name: "SampleValue".to_string(),
+                        array_dimensions: None,
+                        type_annotation: Some(type_name.to_string()),
+                        type_size: None,
+                        initializer: Some(Expression::FloatLiteral { value: 1.5, span }),
+                        span,
+                    }],
+                    span,
+                );
+
+                let errors = analyzer.analyze(&program);
+
+                assert_eq!(
+                    errors,
+                    vec![],
+                    "expected {type_name} to be a valid Const type"
+                );
+            }
+        }
+
+        #[test]
+        fn const_type_validation_is_case_insensitive() {
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+            let span = create_test_span();
+            let program = Program::new(
+                vec![Statement::VarDeclaration {
+                    keyword: "Const".to_string(),
+                    name: "PI".to_string(),
+                    array_dimensions: None,
+                    type_annotation: Some("long".to_string()),
+                    type_size: None,
+                    initializer: Some(Expression::FloatLiteral { value: 3.0, span }),
+                    span,
+                }],
+                span,
+            );
+
+            let errors = analyzer.analyze(&program);
+
+            assert_eq!(errors, vec![]);
+        }
+
+        #[test]
+        fn public_with_a_boolean_type_annotation_is_not_a_semantic_error() {
+            let mut analyzer = SemanticAnalyzer::new(DataloggerModel::CR6);
+            let span = create_test_span();
+            let program = Program::new(
+                vec![Statement::VarDeclaration {
+                    keyword: "Public".to_string(),
+                    name: "Enabled".to_string(),
+                    array_dimensions: None,
+                    type_annotation: Some("Boolean".to_string()),
+                    type_size: None,
+                    initializer: None,
+                    span,
+                }],
+                span,
             );
 
             let errors = analyzer.analyze(&program);

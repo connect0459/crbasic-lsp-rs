@@ -188,6 +188,7 @@ impl CRBasicLanguageServer {
             ),
             SemanticErrorKind::TruncationCollision { .. } => return (None, None),
             SemanticErrorKind::ConstReassignment { .. } => return (None, None),
+            SemanticErrorKind::InvalidConstType { .. } => return (None, None),
         };
 
         let data = serde_json::to_value(payload).ok();
@@ -844,6 +845,27 @@ mod tests {
             kind: SemanticErrorKind::ConstReassignment {
                 variable_name: "PI".to_string(),
                 declared_at: Span::new(Position::new(1, 1), Position::new(1, 15)),
+            },
+        };
+
+        let diagnostics =
+            CRBasicLanguageServer::semantic_errors_to_diagnostics(&test_uri(), &[error]);
+
+        assert_eq!(diagnostics[0].code, None);
+        assert_eq!(diagnostics[0].data, None);
+        assert_eq!(diagnostics[0].related_information, None);
+    }
+
+    #[test]
+    fn omits_quick_fix_data_for_invalid_const_type() {
+        let error = SemanticError {
+            message: "Const 'Enabled' has an invalid type annotation 'Boolean'; constants may only be Long, Float, Double, or String"
+                .to_string(),
+            span: Span::new(Position::new(1, 1), Position::new(1, 25)),
+            severity: ErrorSeverity::Error,
+            kind: SemanticErrorKind::InvalidConstType {
+                variable_name: "Enabled".to_string(),
+                type_name: "Boolean".to_string(),
             },
         };
 
