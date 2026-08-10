@@ -19,6 +19,7 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("Until", "control"),
     ("ExitFor", "control"),
     ("ExitDo", "control"),
+    ("DebugBreak", "control"),
     ("Case", "control"),
     ("Is", "control"),
     ("Select", "control"),

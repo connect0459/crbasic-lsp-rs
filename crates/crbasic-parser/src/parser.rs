@@ -192,7 +192,8 @@ impl<'a> Parser<'a> {
                 || kw == "ExitFor"
                 || kw == "ExitDo"
                 || kw == "ExitFunction"
-                || kw == "Return")
+                || kw == "Return"
+                || kw == "DebugBreak")
         {
             return self.parse_program_structure();
         }
@@ -6401,6 +6402,27 @@ mod tests {
                 ));
             } else {
                 panic!("Expected a do-loop statement");
+            }
+        }
+
+        #[test]
+        fn parses_debugbreak_inside_if_statement() {
+            let source = "If x > 5 Then\n  DebugBreak\nEndIf".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::IfStatement { then_branch, .. } = &program.statements[0] {
+                assert_eq!(then_branch.len(), 1);
+                assert!(matches!(
+                    &then_branch[0],
+                    Statement::ProgramStructure { keyword, .. } if keyword == "DebugBreak"
+                ));
+            } else {
+                panic!("Expected an if statement");
             }
         }
     }

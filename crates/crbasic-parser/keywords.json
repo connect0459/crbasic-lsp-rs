@@ -16,6 +16,7 @@
     { "name": "Until", "category": "control" },
     { "name": "ExitFor", "category": "control" },
     { "name": "ExitDo", "category": "control" },
+    { "name": "DebugBreak", "category": "control" },
     { "name": "Case", "category": "control" },
     { "name": "Is", "category": "control" },
     { "name": "Select", "category": "control" },

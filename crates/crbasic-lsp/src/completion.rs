@@ -461,6 +461,10 @@ impl CompletionProvider {
             Self::create_keyword_completion("Until", "Loop condition (inverse of While)"),
             Self::create_keyword_completion("ExitFor", "Exit For loop immediately"),
             Self::create_keyword_completion("ExitDo", "Exit Do loop immediately"),
+            Self::create_keyword_completion(
+                "DebugBreak",
+                "Suspends execution at this line when running under the CRBasic debugger",
+            ),
             Self::create_keyword_snippet(
                 "Select Case",
                 "Select Case ${1:expression}\n\tCase ${2:value}\n\t\t$0\n\tCase Else\n\t\t\nEndSelect",

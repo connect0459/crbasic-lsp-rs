@@ -190,6 +190,9 @@ impl HoverProvider {
             ),
             "exitfor" => Some("**ExitFor**\n\nImmediately exits a For loop."),
             "exitdo" => Some("**ExitDo**\n\nImmediately exits a Do loop."),
+            "debugbreak" => Some(
+                "**DebugBreak**\n\nSuspends program execution at this line when running under the CRBasic debugger.",
+            ),
             "select" => Some(
                 "**Select**\n\nMulti-way branch statement.\n\n```crbasic\nSelect Case expression\n  Case value1\n    ' statements\n  Case Else\n    ' default\nEndSelect\n```",
             ),
