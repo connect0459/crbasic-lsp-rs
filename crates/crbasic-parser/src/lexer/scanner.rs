@@ -421,30 +421,19 @@ impl<'a> Scanner<'a> {
         &self.source[start..self.current]
     }
 
+    /// Scans a string literal's contents, advancing the cursor past its
+    /// closing `"`.
+    ///
+    /// CRBasic has no backslash-escape syntax: a `\` is a literal character,
+    /// and there is no way to embed a `"` inside a string literal at all
+    /// (Campbell Scientific's own user forum guidance is to break out of the
+    /// string and concatenate `Chr(34)` instead).
     fn scan_string(&mut self) -> String {
         let mut value = String::new();
 
         while !self.is_at_end() && self.peek() != '"' {
-            let ch = self.peek();
-
-            if ch == '\\' {
-                self.advance();
-                if let Some(escaped_char) = self.advance() {
-                    match escaped_char {
-                        'n' => value.push('\n'),
-                        't' => value.push('\t'),
-                        'r' => value.push('\r'),
-                        '\\' => value.push('\\'),
-                        '"' => value.push('"'),
-                        _ => {
-                            value.push('\\');
-                            value.push(escaped_char);
-                        }
-                    }
-                }
-            } else {
+            if let Some(ch) = self.advance() {
                 value.push(ch);
-                self.advance();
             }
         }
 
@@ -721,8 +710,13 @@ mod tests {
         }
 
         #[test]
-        fn recognizes_string_with_escape_sequences() {
-            let mut scanner = Scanner::new("\"Hello\\nWorld\"");
+        fn treats_backslash_as_a_literal_character() {
+            // CRBasic has no backslash-escape syntax in string literals (confirmed
+            // against Campbell Scientific's own user forum guidance: embedding a
+            // quote requires breaking out of the string and concatenating
+            // `Chr(34)`, since there is no in-string escape mechanism at all) --
+            // a literal Windows path like this must pass through unchanged.
+            let mut scanner = Scanner::new("\"C:\\network\\path\"");
             let tokens = scanner.scan_tokens();
 
             assert_eq!(tokens.len(), 2);
@@ -730,8 +724,8 @@ mod tests {
             match &tokens[0].kind {
                 TokenKind::String(value) => {
                     assert_eq!(
-                        value, "Hello\nWorld",
-                        "String should contain actual newline character"
+                        value, "C:\\network\\path",
+                        "Backslashes should be preserved literally, not interpreted as escapes"
                     );
                 }
                 _ => panic!("Expected String token, got {:?}", tokens[0].kind),
@@ -739,18 +733,21 @@ mod tests {
         }
 
         #[test]
-        fn recognizes_string_with_escaped_quotes() {
-            let mut scanner = Scanner::new("\"He said \\\"Hi\\\"\"");
+        fn does_not_merge_adjacent_string_literals() {
+            // Unlike VB's doubled-quote (`""`) escape, CRBasic has no way to embed
+            // a quote inside a string literal, so two adjacent string literals
+            // stay separate tokens rather than merging into one string containing
+            // an embedded quote.
+            let mut scanner = Scanner::new("\"a\"\"b\"");
             let tokens = scanner.scan_tokens();
 
-            assert_eq!(tokens.len(), 2);
-
-            match &tokens[0].kind {
-                TokenKind::String(value) => {
-                    assert_eq!(value, "He said \"Hi\"", "String should contain quote marks");
-                }
-                _ => panic!("Expected String token, got {:?}", tokens[0].kind),
-            }
+            assert_eq!(
+                tokens.len(),
+                3,
+                "Should produce two separate string tokens and EOF"
+            );
+            assert_eq!(tokens[0].kind, TokenKind::String("a".to_string()));
+            assert_eq!(tokens[1].kind, TokenKind::String("b".to_string()));
         }
 
         #[test]
