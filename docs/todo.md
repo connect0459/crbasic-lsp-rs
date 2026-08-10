@@ -1074,6 +1074,135 @@ Not flagged as gaps (verified during the same comparison):
 - Multi-dimensional array declarations (`Dim arr(3,4)`) already parse
   correctly.
 
+### Reference Implementation & Official Docs Comparison, Round 5 (2026-08-10)
+
+Found during a fifth comparison round, prompted by re-surveying
+`.connect0459/ref-repos/` (particularly `crbasic-vscode-support/src/`,
+`snippets/`, and `sources/`, not closely read in Rounds 1-4) and
+help.campbellsci.com for gaps the first four rounds missed. Each finding
+verified against an official docs page and a real parse repro, not just a
+reference grammar.
+
+- [x] `ReadOnly Var1, Var2, ...` statement -- hard parse error (bug)
+  ✅ Resolved
+  - Round 4's "Not flagged" note dismissed `ReadOnly` as appearing in only
+    one reference grammar (this project's own corroboration bar from
+    Round 1). A fresh grep of both reference grammars' actual files this
+    round found it in **both**, and it's independently confirmed real at
+    [ReadOnly](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/readonly.htm)
+    -- a comma-separated identifier list, typically paired right after a
+    `Public` declaration to make a calculated variable visible-but-not-
+    externally-editable. A common idiom, not niche.
+  - Same "advertised-shape-but-unparseable" bug class as the
+    already-resolved `Mod`/`Select Case`/`Alias`/`Units` gaps, except here
+    it wasn't even advertised -- `ReadOnly` had zero keyword, parser,
+    completion, or hover coverage at all, confirmed via repro:
+    `Public Mult, Offset` / `ReadOnly Mult, Offset` failed with
+    `Unexpected token: Comma`.
+  - New `Statement::ReadOnly` AST variant, parsed the same way as the
+    existing `Alias`/`Units` statements: a comma-separated list of
+    `parse_primary`-parsed expressions (supporting both plain identifiers
+    and the parenthesized-subscript form, e.g. `ReadOnly Cal(1)`)
+  - 4 new parser tests added Red-first
+- [x] `StructureType`/`EndStructureType` block -- entirely unregistered,
+  hard parse error (bug) ✅ Resolved
+  - Confirmed at
+    [StructureType/EndStructureType](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/structuretype.htm):
+    defines a reusable data structure (member declarations, no
+    `Public`/`Dim`/`Const` prefix), instantiated via the existing
+    `Public`/`Dim ... As StructureTypeName` grammar and accessed via dot
+    notation (`CS215(1).Temp`). Explicitly recommended by Campbell
+    Scientific to shorten programs using `AVW200()`, `GPS()`,
+    `SDI12Recorder()`, and similar multi-value instructions -- a real,
+    moderately common pattern in modern CR6/GRANITE programs. Confirmed
+    via repro before fixing: `StructureType Foo` / `Bar As Float` /
+    `EndStructureType` failed with `Unexpected token: Keyword("As")`.
+  - Added a `Dot` token (previously any `.` not part of a number literal
+    was silently dropped by the scanner's unknown-character fallback) and
+    `Expression::MemberAccess`, parsed as a postfix in the same loop that
+    already builds `FunctionCall`/`ArrayAccess` from a leading identifier
+  - New `Statement::StructureType`/`StructureMember` AST types. Member
+    declarations reuse the same array-dimension and fixed-length-string
+    parsing as `parse_var_declaration` (`As Type [* length]`); nested
+    `Units`/`ReadOnly` modifiers reuse those statements' own parsers
+    unchanged rather than duplicating their grammar
+  - **Deliberately scoped to reading members only**: `object.member` is
+    not extended to assignment targets in this pass, mirroring how
+    `Alias`/`Units` already only support the read side of their own
+    parenthesized-subscript operands -- extending the existing
+    identifier/array-element assignment-target fast path in
+    `parse_statement` to a third, dot-chained target shape is a larger,
+    separable change than the block-parsing gap this entry tracks
+  - `generate-grammar.js` needed its own fix alongside this: adding a new
+    `keywords.json` category (`structuretype`) without a matching
+    hardcoded scope block in the codegen script silently dropped those
+    keywords from the generated TextMate grammar (they still reached
+    `LANGUAGE_KEYWORDS` for the parser/lexer, just not
+    `crbasic.tmLanguage.json`) -- caught by manually grepping the
+    generated file for the new keyword after regenerating, not by any
+    existing check. Fixed by adding a `structuretype` scope block
+    alongside the existing `consttable` one
+  - `client/language-configuration.json`'s indentation and folding rules
+    extended the same way `ConstTable`/`EndConstTable` already are, with
+    matching Vitest cases added; `folding.rs` pairs `StructureType`'s own
+    span directly (no stack needed, unlike `ConstTable`, since this
+    block parses as one AST node spanning both keywords rather than two
+    independent flat statements)
+  - 1 new lexer test (`Dot` token, plus a regression test confirming
+    float literals like `3.14` are unaffected), 7 new parser tests, 1 new
+    folding test, and 8 new Vitest cases added Red-first
+- [x] `WaitTriggerSequence` bare keyword -- silently corrupted the
+  statement list (bug) ✅ Resolved
+  - Confirmed at
+    [TriggerSequence, WaitTriggerSequence](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/triggersequencewaittriggersequence.htm):
+    a bare keyword marking a resume-point inside a `SlowSequence`/
+    `Do...Loop`, a direct companion feature to `SlowSequence`/`NextScan`
+    folding support added in Round 4 but missed there
+  - Same silent-corruption bug class Round 4 found and fixed for
+    `ContinueScan`/`Next i`: lexed as a plain identifier, parsing as an
+    inert no-op expression statement inside the enclosing loop body
+  - Parses the same way as the already-supported `ContinueScan`: a bare
+    keyword handled by `parse_program_structure`
+  - 1 new parser test added Red-first
+- [x] `DebugBreak` bare keyword -- silently corrupted the statement list
+  (bug) ✅ Resolved
+  - Round 4's "Not flagged" note dismissed `Debug`/`DebugBreak` as
+    appearing in only one reference grammar. Independently confirmed real
+    this round at
+    [Debug, DebugBreak](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/debugdebugbreak.htm):
+    a bare, argument-less breakpoint marker placed inline in code
+  - Same silent-corruption bug class as `WaitTriggerSequence` above.
+    Lower real-world impact than the other three findings this round
+    since it's a debug-only instruction, not something production
+    programs depend on at runtime
+  - Parses the same way as `ExitFor`/`ExitDo`: a bare keyword handled by
+    `parse_program_structure`
+  - 1 new parser test added Red-first
+
+Not flagged as gaps (verified during the same comparison):
+
+- `ArrayIndex`, `TableFile`, `GetRecord`, `AvgSpa`, `PulseCountReset`,
+  `NewFieldNames`, `TriggerSequence`, `SemaphoreGet`/`SemaphoreRelease`,
+  `RunProgram`, `LoggerType`, `WaitDigTrig` -- all function-call-shaped,
+  parse correctly today via the generic `FunctionCall` grammar
+  (repro-verified for `ArrayIndex`). Part of the same already-deferred
+  ~126-vs-~420 `builtinFunctions` content backlog from Round 2 (each
+  needs real per-parameter completion snippets/hover prose authored, not
+  a parser fix); worth prioritizing these specific names first whenever
+  that backlog is tackled, since they're core/common rather than
+  telemetry-module-specific, but not acted on here.
+- `crbasic-vscode-support/src/extension.js`: only the file-import/
+  PC400-launch commands already noted (and dismissed) in Round 1; nothing
+  new.
+- `crbasic-vscode-support/sources/`: icon images only, no content.
+- `crbasic-vscode-support/snippets/crbasic.json`: 11 basic snippets; the
+  only name not already in `keywords.json` was `CallTable`, which turned
+  out to already be present (`time` category) -- a stale assumption, not
+  a gap.
+- `Eqv`/`IntDv`/a stray `|` operator seen in one grammar's operator
+  regex -- still no official-docs corroboration (Round 3's bar), looks
+  like a VB6-list/regex-escaping artifact; correctly left dismissed.
+
 ### Packaging Gap (discovered while designing the release workflow)
 
 - [x] Multi-platform `.vsix` packaging ✅ Resolved
