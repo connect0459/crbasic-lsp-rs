@@ -207,8 +207,8 @@ mod tests {
         }
 
         #[test]
-        fn detects_cr200x_model_from_cr1_extension() {
-            let uri = create_test_uri("cr1");
+        fn detects_cr200x_model_from_cr2_extension() {
+            let uri = create_test_uri("cr2");
             let doc = Document::new(uri, "".to_string(), 1);
             assert_eq!(doc.model, DataloggerModel::CR200X);
         }
@@ -221,10 +221,19 @@ mod tests {
         }
 
         #[test]
-        fn detects_granite_model_from_crb_extension() {
+        fn detects_cr6_model_from_cr1_extension() {
+            // .cr1 is CR1000's own extension, not CR200(X)'s.
+            let uri = create_test_uri("cr1");
+            let doc = Document::new(uri, "".to_string(), 1);
+            assert_eq!(doc.model, DataloggerModel::CR6);
+        }
+
+        #[test]
+        fn detects_unknown_model_from_crb_extension() {
+            // .crb is a generic extension shared across many models, not GRANITE-specific.
             let uri = create_test_uri("crb");
             let doc = Document::new(uri, "".to_string(), 1);
-            assert_eq!(doc.model, DataloggerModel::GRANITE);
+            assert_eq!(doc.model, DataloggerModel::Unknown);
         }
 
         #[test]
@@ -242,7 +251,7 @@ mod tests {
 
         #[test]
         fn analyze_detects_variable_length_errors() {
-            let uri = create_test_uri("cr1"); // CR200X model
+            let uri = create_test_uri("cr2"); // CR200X model
             let mut doc = Document::new(
                 uri,
                 "Public Temperature_Sensor_1\n".to_string(), // 22 characters, exceeds 16
@@ -261,7 +270,7 @@ mod tests {
 
         #[test]
         fn analyze_detects_truncation_collisions() {
-            let uri = create_test_uri("cr1"); // CR200X model
+            let uri = create_test_uri("cr2"); // CR200X model
             let mut doc = Document::new(
                 uri,
                 "Public Temperature_S1\nPublic Temperature_S2\n".to_string(),

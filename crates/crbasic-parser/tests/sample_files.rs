@@ -333,8 +333,9 @@ mod semantic_analysis {
     }
 
     #[test]
-    fn cr1000_sample_analyzed_with_cr200x_model() {
-        let errors = analyze_sample("sample-cr1000.CR1", DataloggerModel::CR200X);
+    fn cr1000_sample_analyzed_with_cr6_model() {
+        // .cr1 is CR1000's own extension, which shares CR6's 39-char validation profile.
+        let errors = analyze_sample("sample-cr1000.CR1", DataloggerModel::CR6);
         let error_count = errors
             .iter()
             .filter(|e| e.severity == ErrorSeverity::Error)
@@ -362,18 +363,17 @@ mod semantic_analysis {
 
     #[test]
     fn model_detection_works_for_sample_extensions() {
-        assert_eq!(
-            DataloggerModel::from_extension("cr1"),
-            DataloggerModel::CR200X
-        );
+        // .cr1 is CR1000's own extension, not CR200(X)'s.
+        assert_eq!(DataloggerModel::from_extension("cr1"), DataloggerModel::CR6);
         assert_eq!(
             DataloggerModel::from_extension("cr2"),
             DataloggerModel::CR200X
         );
         assert_eq!(DataloggerModel::from_extension("cr6"), DataloggerModel::CR6);
+        // .crb is a generic extension shared across many models, not GRANITE-specific.
         assert_eq!(
             DataloggerModel::from_extension("crb"),
-            DataloggerModel::GRANITE
+            DataloggerModel::Unknown
         );
         assert_eq!(DataloggerModel::from_extension("cr9"), DataloggerModel::CR6);
         assert_eq!(DataloggerModel::from_extension("c9x"), DataloggerModel::CR6);
@@ -387,10 +387,10 @@ mod real_world_validation {
     #[test]
     fn all_sample_files_pass_complete_validation() {
         let sample_files = [
-            ("sample-cr1000.CR1", crbasic_parser::DataloggerModel::CR200X),
+            ("sample-cr1000.CR1", crbasic_parser::DataloggerModel::CR6),
             (
                 "sample-cr1000x-series.CR1X",
-                crbasic_parser::DataloggerModel::CR200X,
+                crbasic_parser::DataloggerModel::CR6,
             ),
             (
                 "sample-cr200-series.CR2",

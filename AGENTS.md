@@ -61,11 +61,12 @@ parser depending on `tower-lsp`).
 - Keywords are case-insensitive (`BeginProg` = `BEGINPROG` = `beginprog`);
   normalize to canonical form (e.g., `BeginProg`) and match case-insensitively
   in the lexer.
-- Detect the datalogger model from the file extension (e.g., `.cr1` → CR200X)
+- Detect the datalogger model from the file extension (e.g., `.cr2` → CR200X)
   and apply model-specific variable name length validation:
   - CR200X: error if >16 chars, warn if >12 chars; also detect 12-char
     truncation collisions between field names.
-  - CR6/GRANITE: error if >39 chars, warn if >35 chars.
+  - CR6 (also covers CR1000/CR1000X/CR300-series/GRANITE-series): error if
+    >39 chars, warn if >35 chars.
 - Treat `Public` variables as global regardless of declaration location;
   distinguish `Public` (monitored) from `Dim` (scratch) variables.
 

@@ -71,7 +71,7 @@ mod cr200x_length_pitfalls {
 
     #[test]
     fn demonstrates_the_documented_diagnostics() {
-        let source = read_example_file("03-cr200x-length-pitfalls.CR1");
+        let source = read_example_file("03-cr200x-length-pitfalls.CR2");
         let errors = analyze(&source, DataloggerModel::CR200X);
 
         let error_count = errors

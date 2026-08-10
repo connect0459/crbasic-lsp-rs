@@ -12,13 +12,11 @@ use std::collections::HashMap;
 /// Datalogger model types with specific validation rules
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DataloggerModel {
-    /// CR200X series: 16 char max, 12 char truncation for output processing
+    /// CR200(X) series: 16 char max, 12 char truncation for output processing
     CR200X,
-    /// CR6 series: 39 char max, 35 char recommended
+    /// CR6/CR1000/CR1000X/CR300-series/GRANITE-series and other modern models: 39 char max, 35 char recommended
     CR6,
-    /// GRANITE series: 39 char max, 35 char recommended
-    GRANITE,
-    /// Unknown or generic model
+    /// Unknown model, or a generic extension (e.g. `.dld`, `.crb`) shared across multiple models
     Unknown,
 }
 
@@ -130,11 +128,12 @@ impl DataloggerModel {
     /// The corresponding DataloggerModel
     pub fn from_extension(file_extension: &str) -> Self {
         match file_extension.to_lowercase().as_str() {
-            "cr1" | "cr1x" | "cr2" => DataloggerModel::CR200X,
-            "cr3" | "cr5" | "cr6" | "cr8" | "cr9" | "cr9x" | "c9x" | "cr300" => {
+            "cr2" => DataloggerModel::CR200X,
+            "cr1" | "cr1x" | "cr3" | "cr5" | "cr6" | "cr8" | "cr9" | "cr9x" | "c9x" | "cr300" => {
                 DataloggerModel::CR6
             }
-            "crb" => DataloggerModel::GRANITE,
+            // `.crb` (like `.dld`) is a generic extension shared across many models
+            // (CR1000/CR1000X/CR6/CR300/CR350/GRANITE), not model-specific.
             _ => DataloggerModel::Unknown,
         }
     }
@@ -151,13 +150,6 @@ impl DataloggerModel {
             },
             DataloggerModel::CR6 => ValidationProfile {
                 model_name: "CR6",
-                max_variable_length: 39,
-                recommended_variable_length: Some(35),
-                recommended_length_reason: "Leave room for output processing suffix",
-                truncation_length: None,
-            },
-            DataloggerModel::GRANITE => ValidationProfile {
-                model_name: "GRANITE",
                 max_variable_length: 39,
                 recommended_variable_length: Some(35),
                 recommended_length_reason: "Leave room for output processing suffix",
@@ -382,15 +374,17 @@ mod tests {
         use super::*;
 
         #[test]
-        fn detects_cr200x_from_cr1_extension() {
+        fn detects_cr6_from_cr1_extension() {
+            // .cr1 is CR1000's own extension, not CR200(X)'s.
             let model = DataloggerModel::from_extension("cr1");
-            assert_eq!(model, DataloggerModel::CR200X);
+            assert_eq!(model, DataloggerModel::CR6);
         }
 
         #[test]
-        fn detects_cr200x_from_cr1x_extension() {
+        fn detects_cr6_from_cr1x_extension() {
+            // .cr1x is CR1000X's own extension, not CR200(X)'s.
             let model = DataloggerModel::from_extension("cr1x");
-            assert_eq!(model, DataloggerModel::CR200X);
+            assert_eq!(model, DataloggerModel::CR6);
         }
 
         #[test]
@@ -400,9 +394,11 @@ mod tests {
         }
 
         #[test]
-        fn detects_granite_from_crb_extension() {
+        fn detects_unknown_from_crb_extension() {
+            // .crb is a generic extension shared across many models (like .dld),
+            // not GRANITE-specific.
             let model = DataloggerModel::from_extension("crb");
-            assert_eq!(model, DataloggerModel::GRANITE);
+            assert_eq!(model, DataloggerModel::Unknown);
         }
 
         #[test]
@@ -480,16 +476,6 @@ mod tests {
                     DataloggerModel::CR6,
                     ValidationProfile {
                         model_name: "CR6",
-                        max_variable_length: 39,
-                        recommended_variable_length: Some(35),
-                        recommended_length_reason: "Leave room for output processing suffix",
-                        truncation_length: None,
-                    },
-                ),
-                (
-                    DataloggerModel::GRANITE,
-                    ValidationProfile {
-                        model_name: "GRANITE",
                         max_variable_length: 39,
                         recommended_variable_length: Some(35),
                         recommended_length_reason: "Leave room for output processing suffix",

@@ -307,8 +307,8 @@ All commits are validated by pre-commit hooks:
 ### CRBasic Language Constraints
 
 1. **Variable Name Length Limits** (model-dependent):
-   - CR200(X) series: 16 chars max, truncated to 12 chars in output tables
-   - CR6/CR1000X/GRANITE series: 39 chars max, recommended ≤ 35 chars
+   - CR200(X) series (`.cr2`): 16 chars max, truncated to 12 chars in output tables
+   - CR6/CR1000/CR1000X/CR300-series/GRANITE-series: 39 chars max, recommended ≤ 35 chars
 
 2. **Scope Rules**:
    - `Public` variables are always global (even when declared in subroutines)
@@ -369,8 +369,10 @@ All commits are validated by pre-commit hooks:
 **Model-Specific Validation**:
 
 - ✅ CR200X: 16-char max, 12-char truncation warnings, collision detection
-- ✅ CR6/GRANITE: 39-char max, 35-char recommendations
-- ✅ 10 datalogger models supported via file extension detection
+- ✅ CR6 (also covers CR1000/CR1000X/CR300-series/GRANITE-series): 39-char
+  max, 35-char recommendations
+- ✅ File extension detection across CR200(X), CR1000(X), CR3000, CR5000,
+  CR6, CR800, CR9000(X), CR300 program files
 
 ## Extension Points
 

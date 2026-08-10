@@ -300,7 +300,7 @@ mod tests {
 
         #[test]
         fn detects_variable_name_length_error_for_cr200x() {
-            let result = analyze("Public Temperature_Sensor_1", "test.cr1");
+            let result = analyze("Public Temperature_Sensor_1", "test.cr2");
             let parsed: AnalysisResult =
                 serde_json::from_str(&result).expect("Result should be valid AnalysisResult JSON");
 
@@ -319,7 +319,7 @@ mod tests {
 
         #[test]
         fn returns_warning_for_cr200x_truncation() {
-            let result = analyze("Public Temperature_1", "test.cr1"); // 13 chars
+            let result = analyze("Public Temperature_1", "test.cr2"); // 13 chars
             let parsed: AnalysisResult =
                 serde_json::from_str(&result).expect("Result should be valid AnalysisResult JSON");
 
@@ -367,8 +367,8 @@ mod tests {
         use super::*;
 
         #[test]
-        fn detects_cr200x_from_cr1_extension() {
-            let model = detect_model_from_path("program.cr1");
+        fn detects_cr200x_from_cr2_extension() {
+            let model = detect_model_from_path("program.cr2");
             assert_eq!(model, DataloggerModel::CR200X);
         }
 
@@ -379,15 +379,23 @@ mod tests {
         }
 
         #[test]
-        fn detects_granite_from_crb_extension() {
+        fn detects_cr6_from_cr1_extension() {
+            // .cr1 is CR1000's own extension, not CR200(X)'s.
+            let model = detect_model_from_path("program.cr1");
+            assert_eq!(model, DataloggerModel::CR6);
+        }
+
+        #[test]
+        fn detects_unknown_from_crb_extension() {
+            // .crb is a generic extension shared across many models, not GRANITE-specific.
             let model = detect_model_from_path("program.crb");
-            assert_eq!(model, DataloggerModel::GRANITE);
+            assert_eq!(model, DataloggerModel::Unknown);
         }
 
         #[test]
         fn handles_path_with_directories() {
             let model = detect_model_from_path("/path/to/program.cr1");
-            assert_eq!(model, DataloggerModel::CR200X);
+            assert_eq!(model, DataloggerModel::CR6);
         }
 
         #[test]

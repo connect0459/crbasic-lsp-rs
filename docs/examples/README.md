@@ -16,11 +16,11 @@ so they stay in sync with the analyzer.
 | :--- | :--- | :--- |
 | [`01-getting-started.CR6`](./01-getting-started.CR6) | The basic program shape: declarations, a `DataTable`, and the main `Scan` loop | Hover over `BeginProg`/`Scan`/`DataTable`; trigger completion for the `ScanLoop`/`NewProgram` pattern snippets; Go to Definition / Find All References on `BattVolt` |
 | [`02-scope-and-copyback.CR6`](./02-scope-and-copyback.CR6) | `Public` variables are global even when declared inside a `Sub`; `Function` parameters are not copied back, `Sub` parameters are | Go to Definition / Find All References on `RunningTotal` from inside `AddSample`; hover over `Function`/`Sub` |
-| [`03-cr200x-length-pitfalls.CR1`](./03-cr200x-length-pitfalls.CR1) | CR200X's 12-character output-name truncation, and the field-name collision it causes | Open as `.CR1` (targets the CR200X model) and check the Problems panel for the predicted max-length, recommended-length, and truncation-collision diagnostics |
+| [`03-cr200x-length-pitfalls.CR2`](./03-cr200x-length-pitfalls.CR2) | CR200X's 12-character output-name truncation, and the field-name collision it causes | Open as `.CR2` (targets the CR200X model) and check the Problems panel for the predicted max-length, recommended-length, and truncation-collision diagnostics |
 
-## Why `.CR1`/`.CR6`?
+## Why `.CR2`/`.CR6`?
 
 The extension detects the datalogger model from the file extension and
 applies model-specific variable name length rules (see the main
-[README](../../README.md#supported-file-extensions)). Example 3 uses `.CR1`
+[README](../../README.md#supported-file-extensions)). Example 3 uses `.CR2`
 specifically to trigger the stricter CR200X rules.

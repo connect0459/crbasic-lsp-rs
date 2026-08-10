@@ -15,14 +15,15 @@ A Visual Studio Code extension providing comprehensive language support for CRBa
 
 ## Supported File Extensions
 
-- `.cr1`, `.cr1x` - CR1000 series
-- `.cr2`, `.cr3`, `.cr5` - CR200, CR3000, CR5000 series
+- `.cr2` - CR200(X) series (16-char variable name limit)
+- `.cr1`, `.cr1x` - CR1000, CR1000X series
+- `.cr3`, `.cr5` - CR3000, CR5000 series
 - `.cr6` - CR6 series
 - `.cr8` - CR800 series
 - `.cr9`, `.cr9x`, `.c9x` - CR9000 series
 - `.cr300` - CR300 series
-- `.crb` - GRANITE series
-- `.dld` - Generic datalogger programs
+- `.crb`, `.dld` - Generic datalogger programs (extension shared across
+  multiple models, including GRANITE-series; no model-specific validation)
 
 ## Technology Stack
 
