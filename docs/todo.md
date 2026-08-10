@@ -2519,6 +2519,117 @@ Not flagged as gaps (verified during the same comparison):
   `.crb`/`.dld` extension list: every extension already has a matching,
   tested `from_extension` arm; no gap since Round 11's fix
 
+### Reference Implementation & Official Docs Comparison, Round 20 (2026-08-10)
+
+Found during a twentieth comparison round, following up directly on Round
+19's discovery that `client/language-configuration.json` can drift out of
+sync with the lexer/parser without anyone noticing. This round audited the
+other hand-maintained highlighting surface with the same risk --
+`scripts/generate-grammar.js`'s hard-coded `operators`/`numbers`/`strings`
+blocks in `crbasic.tmLanguage.json`'s codegen, which (unlike the rest of the
+grammar) are **not** sourced from `keywords.json` and so never benefited
+from any of Rounds 1-18's keyword-list diffing. Each finding verified by
+reading the current lexer/parser source directly (the ground truth these
+blocks are supposed to mirror), not by re-fetching official docs already
+cited when each operator/literal was originally implemented.
+
+- [x] `&`, `\`, `<<`, `>>`, `@`, `!`, `Imp`, and every compound assignment
+  operator (`+=`, `-=`, `*=`, `/=`, `^=`, `&=`, `\=`) rendered as unstyled
+  plain text; `Mod` matched only the literal uppercase spelling with no word
+  boundary (bug) ✅ Resolved
+  - `generate-grammar.js`'s `operators` object is hand-written, not derived
+    from `keywords.json` -- confirmed by reading the codegen: `languageKeywords`
+    entries categorized `logical` (`AND`, `OR`, `NOT`, `XOR`, `MOD`, `IMP`)
+    are the *only* language-keyword category with no corresponding
+    `kw.get("logical")` call anywhere in the script (every other category --
+    `scan`, `preprocessor`, `control`, `declaration`, `program`, `datatable`,
+    `consttable`, `structuretype`, `menu`, `function` -- is wired in), so
+    these six keywords depend entirely on the separate hand-written block
+    ever being kept current. It wasn't: every operator added in Round 3
+    (`&`, `\`, `<<`/`>>`, compound assignment, `@`/`!`) and Round 3's later
+    `Imp` addition shipped with zero matching grammar update. `Mod` was
+    present but broken -- filed under the arithmetic pattern as a bare,
+    case-sensitive, non-word-bounded `MOD` alternative instead of the
+    logical pattern's `(?i)\b...\b` treatment `AND`/`OR`/`NOT`/`XOR` already
+    got, so the `Mod`/`mod` spelling used in real code (and in this
+    project's own hover/completion examples) never highlighted at all
+  - Also fixed, found while rewriting the block: the comparison pattern's
+    alternation order (`=|<>|<|>|<=|>=`) tried the single-character `<`/`>`
+    alternatives before their two-character `<=`/`>=`/`<>` counterparts, so
+    a real `<=`/`>=` matched as two separate single-character tokens instead
+    of one -- reordered to try the longer alternatives first. Removed the
+    trailing bare `=` assignment pattern as confirmed-unreachable dead code
+    (the comparison pattern, listed earlier in the array, already consumes
+    every `=` first)
+  - New dedicated patterns added ahead of comparison/arithmetic in the
+    array (so two-character operators win the position tie instead of being
+    split by an earlier-listed single-character alternative):
+    `keyword.operator.assignment.compound.crbasic`,
+    `keyword.operator.bitwise.crbasic` (`<<`/`>>`),
+    `keyword.operator.string.crbasic` (`&`),
+    `keyword.operator.pointer.crbasic` (`@`/`!`); `MOD`/`IMP` moved into
+    `keyword.operator.logical.crbasic` alongside `AND`/`OR`/`NOT`/`XOR`
+  - New `client/src/syntax-highlighting.test.ts` (project's first Vitest
+    coverage of `crbasic.tmLanguage.json`'s patterns -- no prior test file
+    touched this grammar at all): loads the generated JSON directly and
+    exercises each pattern as a real JS `RegExp`, stripping TextMate's
+    Oniguruma-only inline `(?i)` prefix and applying it as the `i` flag
+    instead (confirmed necessary: Node's `RegExp` throws `Invalid group` on
+    a literal `(?i)` even on current Node). 20 new test cases added
+    Red-first; client `lint`/`format:check`/`test` gate passes
+- [x] `&H`/`&B` hexadecimal/binary integer literal prefixes (added in Round
+  11) had no matching `numbers` pattern at all (bug) ✅ Resolved
+  - Confirmed via repro-equivalent regex testing: `&HFF` matched no pattern
+    in the `numbers` repository entry, so `&` fell through to (after the
+    fix above) the new string-concatenation operator pattern, coloring a
+    single hex/binary literal as an operator followed by a bare, unstyled
+    identifier instead of one numeric constant -- a regression this round's
+    own operator fix would otherwise have introduced by making the bare `&`
+    pattern newly present and eager to match first
+  - Added `constant.numeric.hex.crbasic` (`(?i)&h[0-9a-f]+\b`) and
+    `constant.numeric.binary.crbasic` (`(?i)&b[01]+\b`) ahead of the
+    existing float/integer patterns; `#numbers` is already included before
+    `#operators` in the grammar's top-level pattern list (confirmed by
+    reading the generated JSON), so the longer numeric match wins the
+    position tie against the bare `&` operator, mirroring the lexer's own
+    "prefix only counts with a digit immediately after" rule exactly
+    (`A&Bvar` without a following digit must still highlight as
+    concatenation, not a broken hex/binary literal)
+  - 5 new test cases (`syntax-highlighting.test.ts`) added Red-first,
+    including a regression case for the no-following-digit fallback
+- [x] TextMate string-literal highlighting still modeled a backslash-escape
+  mechanism CRBasic doesn't have, and let an unterminated string span past
+  the end of its line (bug) ✅ Resolved
+  - Round 11 fixed the real lexer (`scan_string`) to treat `\` as a plain
+    character with no escape meaning, and Round 12 fixed it to stop at
+    end-of-line for an unterminated string -- but `generate-grammar.js`'s
+    `strings` block was never updated to match either fix: it still
+    declared a `constant.character.escape.crbasic` sub-pattern matching
+    `\\.`, and its `end` pattern was a bare `"` with no line-boundary
+    fallback. A literal Windows path like `"C:\network\path"` still
+    rendered with `\n`/`\p` colored as if they were escape sequences, and a
+    forgotten closing quote would still visually swallow every following
+    line up to the next stray `"` in the file -- the exact editor-vs-lexer
+    divergence Round 19 named as this round's motivating risk, just not
+    caught until actually auditing the `strings` block specifically
+  - Removed the escape sub-pattern entirely; changed `end` from `"` to
+    `"|$` so an unterminated string stops highlighting at its own line's
+    end, matching `scan_string` exactly
+  - 2 new test cases added Red-first, checking the pattern's *structure*
+    (no `patterns` array; `end` contains a `$` alternative) rather than
+    running a real tokenizer -- no `vscode-textmate`/Oniguruma engine is a
+    dependency of this project, and adding one solely to test this one
+    property would be a disproportionately large dependency for what it
+    verifies
+- Verified, not a gap: re-ran the same "is every `languageKeywords`/
+  `builtinFunctions` category wired into the codegen" check that surfaced
+  the orphaned `logical` category above, this time for every category in
+  both lists. `logical` was the only orphaned `languageKeywords` category;
+  every `builtinFunctions` category (`communication`, `data`, `logical`,
+  `math`, `measurement`, `menu`, `scan`, `string`, `time`) already has a
+  matching `fn.get(...)` call. No further orphaned category exists after
+  this round's fix
+
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
 Found while auditing `crbasic-lsp`'s diagnostic-publishing path for
