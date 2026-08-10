@@ -2790,6 +2790,131 @@ weak to act on yet):
   diagnostic -- meaningfully more design work than a mechanical check,
   deferred rather than rushed
 
+### Declaration-Keyword Semantic Rule Audit, Round 23 (2026-08-10)
+
+Found while re-surveying `.connect0459/ref-repos/`'s two reference
+extensions and help.campbellsci.com for gaps the prior 22 rounds hadn't
+covered. Rounds 1-22 had already exhausted keyword/grammar diffing,
+operator coverage, and LSP-provider/AST-consumer wiring, so this round
+targeted the one remaining unswept angle: sibling constraints on the same
+`Const`/`Dim` documentation pages that Round 22 (and Round 9, for the
+comma-list and brace-initializer rules) had already partially mined but
+not read to completion. All three gaps below were confirmed by reading
+the actual parser/semantic code paths, not just by reading the docs.
+
+- [x] `Const` without an initializer never diagnosed as an error (bug)
+  ✅ Resolved
+  - Campbell Scientific's own
+    [`Const` page](https://help.campbellsci.com/crbasic/cr6/Content/Instructions/const1.htm)
+    gives `Const ConstantName = Expression` as the syntax, with no
+    "optional" language around `= Expression` (unlike `Public`/`Dim`,
+    where an initializer genuinely is optional). `ast.rs`'s own doc
+    comment on `VarDeclaration::initializer` already said "required for
+    Const, optional for Public/Dim," but nothing enforced it:
+    `parse_var_declaration` applied the same optional-`=` logic to all
+    three keywords, so `Const PI` (no value) parsed successfully with a
+    silently discarded `None` initializer. Confirmed via repro before
+    fixing.
+  - Fixed with a single check in `parse_var_declaration`
+    (`crates/crbasic-parser/src/parser.rs`): after parsing the optional
+    initializer, `keyword == "Const" && initializer.is_none()` returns a
+    `ParseError` rather than a new AST variant or field, since this is
+    purely a required-syntax check, the same class as "Expected identifier
+    after variable declaration keyword" a few lines above
+  - 1 new parser test (`const_without_an_initializer_is_a_parse_error`)
+    added Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate
+    passes
+- [x] `Const` type annotation accepts types Campbell Scientific's docs
+  explicitly disallow for constants (bug) ✅ Resolved
+  - The same `Const` page states outright: "Valid data types for
+    constants are: Long..., Float..., Double, and String... Other data
+    types return a compile error" -- narrower than the six-type set
+    (`Float`/`Double`/`Long`/`Boolean`/`String`/`UINT1`) already validated
+    for `Public`/`Dim`'s `As` clause (the "Data type completions" Future
+    Enhancement above). `Boolean` and `UINT1` are valid there but not for
+    `Const`. `semantic.rs` had zero type-annotation validation of any
+    kind before this fix -- `type_annotation` was stored on `Symbol` but
+    never checked against any allowed set -- so `Const Enabled As Boolean
+    = True` was silently accepted.
+  - Added a `CONST_ALLOWED_TYPES` constant and a check in
+    `analyze_variable_declaration` (`crates/crbasic-parser/src/semantic.rs`):
+    only runs when `keyword == "Const"` and a type annotation is present,
+    matched case-insensitively (type annotations are lexed as plain
+    identifiers, not keywords, so no case normalization happens upstream).
+    New `SemanticErrorKind::InvalidConstType { variable_name, type_name }`
+    variant; `backend.rs::code_action_data` gained a matching arm
+    returning `(None, None)` (like `ConstReassignment`), since there's no
+    single mechanically-correct type to suggest as a fix
+  - Deliberately **not** fixed in this round: `completion.rs`'s
+    `data_type_completions` still suggests all six types unconditionally
+    after `Const X As`, including the two now-invalid ones. This is the
+    same pre-existing, accepted limitation the "Data type completions"
+    Future Enhancement above already noted for `Public`/`Dim` --
+    `get_all_completions` has no position-sensitive filtering at all (it
+    doesn't know what keyword or clause precedes the cursor), so scoping
+    completions to the declaring keyword would be a new completion-model
+    capability, not a mechanical fix
+  - 5 new `semantic.rs` tests (`const_type_validation` module) covering
+    both rejected types, all 4 documented-valid types (table-driven),
+    case-insensitive matching, and a `Public`-with-`Boolean` control case
+    confirming the new check doesn't leak, + 1 new `backend.rs` test
+    (`omits_quick_fix_data_for_invalid_const_type`) added Red-first; full
+    workspace `build`/`test`/`clippy`/`fmt` gate passes
+- [x] Array declarations beyond CRBasic's dimension-count limit silently
+  accepted (bug) ✅ Resolved
+  - Campbell Scientific's
+    [`Dim` page](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/dim.htm)
+    states verbatim: "The maximum number of array dimensions allowed in a
+    Dim statement is three. If you attempt to dimension a variable higher
+    than three dimensional, an error occurs," plus a stricter sub-rule:
+    "Strings can be dimensioned only up to 2 dimensions instead of the 3
+    allowed for other data types." `parse_var_declaration`'s
+    dimension-parsing loop pushed onto an unbounded `Vec` on every comma
+    with no count check, and `analyze_statement`'s `VarDeclaration` match
+    arm destructured `array_dimensions` with `..` and discarded it
+    entirely -- confirmed by reading the full call path -- so `Dim
+    Matrix(1,2,3,4)` and a 3-dimensional `Dim S(2,2,2) As String` both
+    parsed and analyzed with zero diagnostics. Lowest priority of the
+    three findings this round: multi-dimensional arrays beyond 2D are
+    already uncommon in real CRBasic programs, and 4+-dimensional arrays
+    are rarer still.
+  - `analyze_variable_declaration` (`crates/crbasic-parser/src/semantic.rs`)
+    gained an `array_dimension_count: Option<usize>` parameter (the call
+    site passes `array_dimensions.as_ref().map(Vec::len)` rather than the
+    full `Vec<Expression>`, since only the count is needed); checks
+    `dimension_count > max_dimensions` where `max_dimensions` is 2 for a
+    case-insensitive `String` type annotation, 3 otherwise. New
+    `SemanticErrorKind::TooManyArrayDimensions { variable_name,
+    dimension_count, max_dimensions }` variant; `backend.rs`'s
+    `code_action_data` gained a matching `(None, None)` arm, same
+    reasoning as the other two non-mechanically-fixable kinds above. This
+    shared parsing/analysis path also feeds `StructureType` member
+    declarations (Round 5), so the fix applies there too, though no
+    dedicated `StructureType` test was added since the underlying check is
+    identical
+  - 5 new `semantic.rs` tests (`array_dimension_limits` module): a
+    4-dimensional array error, a 3-dimensional array as the non-`String`
+    boundary control case, a 3-dimensional `String` array error, a
+    2-dimensional `String` array as its boundary control case, and a
+    non-array declaration control case, + 1 new `backend.rs` test
+    (`omits_quick_fix_data_for_too_many_array_dimensions`) added
+    Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate passes
+
+Not flagged as gaps (investigated during the same round):
+
+- `signature.rs` built-in function parameter correctness (counts,
+  names, ordering, optionality), statement-level grammar for
+  `Alias`/`Units`/`CallTable`/`Route`/`Pipeline`, and any
+  reference-grammar keyword still absent from `keywords.json` were all
+  re-checked and found already exhausted by Rounds 13-21 -- no new
+  findings along those angles.
+- `ReadOnly`'s documented array/alias placement rule (`ReadOnly` must
+  target the `Alias`, not the underlying `Public` variable, for arrays)
+  is real per its own docs page, but the page never states what happens
+  if violated (no "compile error" language) -- same weak-corroboration
+  bar that caused Round 22 to defer the general variable-redeclaration
+  check; not acted on for the same reason.
+
 ### Diagnostic Position Accuracy Audit (2026-08-10)
 
 Found while auditing `crbasic-lsp`'s diagnostic-publishing path for
