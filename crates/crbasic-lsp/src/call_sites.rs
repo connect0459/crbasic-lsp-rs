@@ -212,6 +212,11 @@ fn walk_expression<'a>(
         Expression::MemberAccess { object, .. } => {
             walk_expression(object, enclosing, sites);
         }
+        Expression::ArrayLiteral { elements, .. } => {
+            for element in elements {
+                walk_expression(element, enclosing, sites);
+            }
+        }
         Expression::IntegerLiteral { .. }
         | Expression::FloatLiteral { .. }
         | Expression::StringLiteral { .. }

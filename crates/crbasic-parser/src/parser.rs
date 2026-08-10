@@ -440,6 +440,42 @@ impl<'a> Parser<'a> {
     /// Parses a single variable declaration with a given keyword
     /// Used for comma-separated declarations (e.g., Public a, b, c)
     /// Syntax: identifier [(dimensions)] [As type] [= initializer]
+    /// Parses a `Dim`/`Public`/`Const` initializer, after the `=` has
+    /// already been consumed: either a brace-list array literal
+    /// (`{1, 2, 3}`, e.g. `Public Array(3) = {1, 2, 3}`) or an ordinary
+    /// expression. See
+    /// <https://help.campbellsci.com/crbasic/cr6/Content/Instructions/public.htm>.
+    fn parse_var_initializer(&mut self) -> Result<Expression, ParseError> {
+        if !matches!(self.peek().kind, TokenKind::LeftBrace) {
+            return self.parse_expression();
+        }
+
+        let start_span = self.advance().span;
+
+        let mut elements = Vec::new();
+        if !matches!(self.peek().kind, TokenKind::RightBrace) {
+            elements.push(self.parse_expression()?);
+
+            while matches!(self.peek().kind, TokenKind::Comma) {
+                self.advance();
+                elements.push(self.parse_expression()?);
+            }
+        }
+
+        if !matches!(self.peek().kind, TokenKind::RightBrace) {
+            return Err(ParseError {
+                message: "Expected '}' after array initializer elements".to_string(),
+                span: self.peek().span,
+            });
+        }
+        let end_span = self.advance().span;
+
+        Ok(Expression::ArrayLiteral {
+            elements,
+            span: crate::lexer::token::Span::new(start_span.start, end_span.end),
+        })
+    }
+
     fn parse_single_var_with_keyword(&mut self, keyword: String) -> Result<Statement, ParseError> {
         let start_pos = self.peek().span.start;
 
@@ -531,7 +567,7 @@ impl<'a> Parser<'a> {
         let initializer = if matches!(self.peek().kind, TokenKind::Equal) {
             self.advance();
 
-            let init_expr = self.parse_expression()?;
+            let init_expr = self.parse_var_initializer()?;
             end_span = init_expr.span();
 
             Some(init_expr)
@@ -654,7 +690,7 @@ impl<'a> Parser<'a> {
         let initializer = if matches!(self.peek().kind, TokenKind::Equal) {
             self.advance();
 
-            let init_expr = self.parse_expression()?;
+            let init_expr = self.parse_var_initializer()?;
             end_span = init_expr.span();
 
             Some(init_expr)
@@ -4635,6 +4671,76 @@ mod tests {
                     "Expected variable declaration, got {:?}",
                     program.statements[0]
                 );
+            }
+        }
+
+        #[test]
+        fn parses_brace_list_array_initializer() {
+            let mut scanner = Scanner::new("Public MyArray(3) = {3, 6, 9}");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::VarDeclaration { initializer, .. } = &program.statements[0] {
+                if let Some(Expression::ArrayLiteral { elements, .. }) = initializer {
+                    assert_eq!(elements.len(), 3);
+                    assert!(matches!(
+                        elements[0],
+                        Expression::IntegerLiteral { value: 3, .. }
+                    ));
+                    assert!(matches!(
+                        elements[2],
+                        Expression::IntegerLiteral { value: 9, .. }
+                    ));
+                } else {
+                    panic!("Expected an array literal initializer, got {initializer:?}");
+                }
+            } else {
+                panic!(
+                    "Expected variable declaration, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_multi_dimensional_brace_list_array_initializer() {
+            let mut scanner = Scanner::new("Dim Grid(2, 2) = {1, 2, 3, 4}");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::VarDeclaration { initializer, .. } = &program.statements[0] {
+                if let Some(Expression::ArrayLiteral { elements, .. }) = initializer {
+                    assert_eq!(elements.len(), 4);
+                } else {
+                    panic!("Expected an array literal initializer, got {initializer:?}");
+                }
+            } else {
+                panic!("Expected variable declaration");
+            }
+        }
+
+        #[test]
+        fn parses_brace_list_array_initializer_on_a_second_comma_separated_variable() {
+            let mut scanner = Scanner::new("Public First(2) = {1, 2}, Second(2) = {3, 4}");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 2);
+
+            if let Statement::VarDeclaration { initializer, .. } = &program.statements[1] {
+                if let Some(Expression::ArrayLiteral { elements, .. }) = initializer {
+                    assert_eq!(elements.len(), 2);
+                } else {
+                    panic!("Expected an array literal initializer, got {initializer:?}");
+                }
+            } else {
+                panic!("Expected variable declaration");
             }
         }
 

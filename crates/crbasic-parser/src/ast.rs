@@ -433,6 +433,16 @@ pub enum Expression {
         /// The source code span
         span: Span,
     },
+
+    /// Brace-list array initializer: `{1, 2, 3}`
+    /// (e.g. `Public Array(3) = {1, 2, 3}`).
+    /// See <https://help.campbellsci.com/crbasic/cr6/Content/Instructions/public.htm>
+    ArrayLiteral {
+        /// The initializer elements, in order
+        elements: Vec<Expression>,
+        /// The source code span
+        span: Span,
+    },
 }
 
 /// Binary operators
@@ -552,6 +562,7 @@ impl Expression {
             Expression::FunctionCall { span, .. } => *span,
             Expression::ArrayAccess { span, .. } => *span,
             Expression::MemberAccess { span, .. } => *span,
+            Expression::ArrayLiteral { span, .. } => *span,
         }
     }
 }

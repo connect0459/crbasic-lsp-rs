@@ -309,6 +309,16 @@ impl<'a> Scanner<'a> {
                 let span = Span::new(start_pos, end_pos);
                 Some(Token::new(TokenKind::RightBracket, "]", span))
             }
+            '{' => {
+                let end_pos = Position::new(self.line, self.column);
+                let span = Span::new(start_pos, end_pos);
+                Some(Token::new(TokenKind::LeftBrace, "{", span))
+            }
+            '}' => {
+                let end_pos = Position::new(self.line, self.column);
+                let span = Span::new(start_pos, end_pos);
+                Some(Token::new(TokenKind::RightBrace, "}", span))
+            }
             ',' => {
                 let end_pos = Position::new(self.line, self.column);
                 let span = Span::new(start_pos, end_pos);
@@ -1215,6 +1225,18 @@ mod tests {
 
             assert_eq!(tokens[0].kind, TokenKind::LeftBracket);
             assert_eq!(tokens[1].kind, TokenKind::RightBracket);
+            assert_eq!(tokens[2].kind, TokenKind::Eof);
+        }
+
+        #[test]
+        fn recognizes_braces() {
+            let mut scanner = Scanner::new("{}");
+            let tokens = scanner.scan_tokens();
+
+            assert_eq!(tokens.len(), 3);
+
+            assert_eq!(tokens[0].kind, TokenKind::LeftBrace);
+            assert_eq!(tokens[1].kind, TokenKind::RightBrace);
             assert_eq!(tokens[2].kind, TokenKind::Eof);
         }
 

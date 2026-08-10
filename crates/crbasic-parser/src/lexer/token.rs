@@ -114,6 +114,10 @@ pub enum TokenKind<'a> {
     LeftBracket,
     /// Right bracket ]
     RightBracket,
+    /// Left brace { (array literal initializer, e.g. `= {1, 2, 3}`)
+    LeftBrace,
+    /// Right brace } (array literal initializer)
+    RightBrace,
     /// Comma ,
     Comma,
     /// Statement separator (:), allowing multiple statements on one line
