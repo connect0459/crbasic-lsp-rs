@@ -779,6 +779,13 @@ impl<'a> Parser<'a> {
             None
         };
 
+        if keyword == "Const" && initializer.is_none() {
+            return Err(ParseError {
+                message: "Const requires an initializer (e.g. 'Const PI = 3.14')".to_string(),
+                span: self.peek().span,
+            });
+        }
+
         if matches!(self.peek().kind, TokenKind::Newline) {
             self.advance();
         }
@@ -4900,6 +4907,19 @@ mod tests {
             assert!(
                 result.is_err(),
                 "CRBasic does not allow multiple constants in one Const declaration"
+            );
+        }
+
+        #[test]
+        fn const_without_an_initializer_is_a_parse_error() {
+            let mut scanner = Scanner::new("Const PI");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let result = parser.parse();
+            assert!(
+                result.is_err(),
+                "Const requires an initializer per Campbell Scientific's own syntax diagram"
             );
         }
 
