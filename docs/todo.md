@@ -1808,6 +1808,44 @@ Not flagged as gaps (verified during the same comparison):
   version -- an inherent limitation of this project's detection strategy,
   not a bug to fix
 
+### Diagnostic Position Accuracy Audit (2026-08-10)
+
+Found while auditing `crbasic-lsp`'s diagnostic-publishing path for
+consistency with the WASM layer, prompted by a fresh look at
+`crates/crbasic-parser/src/semantic.rs` and its callers -- an angle the
+eleven reference/keyword comparison rounds above hadn't covered, since it's
+an LSP-layer bug rather than a parser-grammar gap.
+
+- [x] Syntax error diagnostics always reported at a hardcoded `(0, 0)`
+  position instead of the real error location (bug) ✅ Resolved
+  - `crbasic_parser::ParseError` already carries a real `span: Span` with
+    the exact source location, and `crbasic-wasm`'s `parse()`/`analyze()`
+    already surface it correctly via `ErrorLocation { line, column }` --
+    but `crbasic-lsp`'s `Document::analyze()` discarded it, collapsing the
+    error to a plain `String` via `format!("Parse error: {:?}", e)`, and
+    `backend.rs::analyze_and_publish_diagnostics` then hardcoded the
+    diagnostic's `range` to `(0, 0)-(0, 0)` regardless of where the syntax
+    error actually was. Confirmed via repro: a syntax error anywhere in a
+    multi-line file (e.g. a bare `Public` with no variable name) was
+    reported at the very first character of the document instead of its
+    real line/column
+  - No existing test caught this: `publishes_error_diagnostics_for_invalid_syntax`
+    (`crbasic-lsp/tests/lsp_integration.rs`) only asserted that `did_open`
+    doesn't panic, never inspecting the published diagnostic's range or
+    message content
+  - `Document::analyze()` now returns `Result<(), ParseError>` instead of
+    `Result<(), String>`, preserving the span; a new
+    `CRBasicLanguageServer::parse_error_to_diagnostic` builds the
+    diagnostic's range from that span via the same `position_to_lsp`
+    conversion already used for semantic-error diagnostics, and uses the
+    error's own `message` directly instead of a debug-formatted string
+  - 1 new `document.rs` test
+    (`analyze_returns_the_parse_errors_own_source_location`) + 1 new
+    `backend.rs` test
+    (`converts_a_parse_error_to_a_diagnostic_at_its_own_source_location`)
+    added Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate
+    passes
+
 ### Packaging Gap (discovered while designing the release workflow)
 
 - [x] Multi-platform `.vsix` packaging ✅ Resolved
