@@ -1285,6 +1285,121 @@ Not flagged as gaps (verified during the same comparison):
 - `crbasic-vscode-support/snippets/crbasic.json` (exhaustively checked in
   Round 5) and `src/extension.js` (dismissed in Round 1) had nothing new
 
+### Reference Implementation & Official Docs Comparison, Round 7 (2026-08-10)
+
+Found during a seventh comparison round, this time driven by a fresh sweep
+for bare (no-parenthesis) declaration-section instructions and
+`DataTable`-body modifiers -- a vein Rounds 1-6 hadn't specifically targeted
+(they focused on control flow, operators, and scan/menu block keywords).
+Each finding verified against an official help.campbellsci.com page and a
+real parse repro before fixing; all six follow the same "advertised-shape
+bare keyword silently corrupts the statement list" bug class as the
+already-resolved `ContinueScan`/`WaitTriggerSequence`/`SequentialMode`/
+`PipeLineMode`/`EndMenu`/`EndSubMenu` gaps from Rounds 4-6.
+
+- [x] `Restart` bare keyword -- silently corrupted the statement list
+  (bug) ✅ Resolved
+  - Confirmed at [Scan, NextScan](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/restart.htm):
+    forces the datalogger to stop and restart the running program,
+    documented inside an `If ProgramRestart = True ... EndIf` fault-recovery
+    idiom within a `Scan` loop. Zero prior coverage anywhere in this project
+  - Parses the same way as the already-supported `DebugBreak`: a bare
+    keyword handled by `parse_program_structure`
+  - 1 new parser test (`parses_restart_inside_if_statement`) added
+    Red-first
+- [x] `PreserveVariables` bare keyword -- silently corrupted the statement
+  list (bug) ✅ Resolved
+  - Confirmed at
+    [PreserveVariables](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/preservevariables.htm):
+    placed before `BeginProg`, retains `Dim`/`Public` variable values in
+    memory across a power loss -- a common production requirement for
+    field dataloggers. Same declarations-section placement as the
+    already-supported `SequentialMode`/`PipeLineMode`, but itself missed
+  - 1 new parser test (`parses_preservevariables_before_beginprog`) added
+    Red-first
+- [x] `ApplyAndRestartSequence`/`EndApplyAndRestartSequence` block --
+  entirely unregistered, same silent-corruption bug class ✅ Resolved
+  - Confirmed at
+    [ApplyAndRestartSequence, EndApplyAndRestartSequence](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/applyandrestartsequence.htm):
+    a declarations-section block, placed immediately before `ConstTable`,
+    that validates a `ConstTable` field before it's applied at runtime --
+    the official example program pairs the two directly. Both keywords
+    were completely absent from this project despite `ConstTable` itself
+    (Round 3) already being supported
+  - Parsed the same flat-statement way `ConstTable`/`EndConstTable` already
+    are, rather than a single spanning AST node
+  - Folding support added: `folding.rs` pairs the two the same way it
+    already pairs `ConstTable`/`EndConstTable`, via a new stack;
+    `client/language-configuration.json`'s indentation and
+    `folding.markers` regexes extended to match, with matching Vitest
+    cases
+  - 1 new parser test
+    (`parses_applyandrestartsequence_block_before_beginprog`) + 1 new
+    folding test (`pairs_apply_and_restart_sequence_with_its_matching_end`)
+    - 4 new Vitest cases added Red-first
+- [x] `ShutDownBegin`/`ShutDownEnd` block -- entirely unregistered, same
+  silent-corruption bug class ✅ Resolved
+  - Confirmed at
+    [ShutDownBegin, ShutDownEnd](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/shutdownbeginshutdownend.htm):
+    a declarations-section block that runs cleanup code (e.g. closing a
+    serial port) when the program stops normally -- common in
+    serial/telemetry-heavy programs
+  - Same treatment as `ApplyAndRestartSequence`/`EndApplyAndRestartSequence`
+    above: flat-statement parsing, `folding.rs` stack-based pairing,
+    `client/language-configuration.json` indentation/folding-marker
+    coverage with matching Vitest cases
+  - 1 new parser test
+    (`parses_shutdownbegin_shutdownend_block_before_beginprog`) + 1 new
+    folding test (`pairs_shutdownbegin_with_its_matching_shutdownend`) + 4
+    new Vitest cases added Red-first
+- [x] `TableHide`/`OpenInterval` `DataTable`-body keywords -- silently
+  corrupted the statement list (bug) ✅ Resolved
+  - Confirmed at
+    [TableHide](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/tablehide.htm)
+    (suppresses a table's display and data collection, placed immediately
+    after the `DataTable` statement) and
+    [OpenInterval](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/openinterval.htm)
+    (makes time series processing include all measurements since the last
+    data storage, spanning missed output intervals, instead of only the
+    current one). Both are bare keywords inside a `DataTable(...) ...
+    EndTable` body, which -- like `ConstTable`'s body -- parses as an
+    ordinary flat statement list, so an unrecognized bare keyword there
+    vanishes as an inert identifier statement the same way `ContinueScan`
+    did before its Round 4 fix
+  - 2 new parser tests (`parses_tablehide_inside_datatable_body`,
+    `parses_openinterval_inside_datatable_body`) added Red-first
+
+Not flagged as gaps (verified during the same comparison):
+
+- `DialSequence(...)`/`EndDialSequence(...)` (PakBus dial-modem routing
+  block): both keywords are parenthesized calls, so they already parse
+  correctly today via the generic `FunctionCall` grammar -- no parser bug.
+  Editor-level folding/indentation pairing is a real but low-priority gap
+  (legacy dial-modem telemetry, rare in modern deployments), deferred
+  rather than acted on this round
+- `BeginBurstTrigger`/`EndBurstTrigger`: appears in only one reference
+  grammar (tied to old CR9032-era hardware), no live official-docs page
+  found -- does not clear this project's corroboration bar, consistent
+  with how `Eqv`/`IntDv` were dismissed in Rounds 1/3
+- `Restore`: 404s on help.campbellsci.com, only in one reference grammar --
+  looks like a VB6 `DATA`-statement leftover, dismissed on the same basis
+- Hex/octal/binary numeric literals: no such syntax documented on the
+  master Operators page; CRBasic instead exposes `HexToDec`/`DecToHex` as
+  string-conversion functions, consistent with the lexer's decimal-only
+  `scan_number`
+- Array-of-`StructureType` declarations (e.g. `Dim CS215(4) As
+  CS215Data`): already parse correctly -- `parse_var_declaration` parses
+  array dimensions generically before the `As` type name, independent of
+  whether the type name resolves to a `StructureType`
+- Full re-diff of both reference grammars' keyword lists against
+  `keywords.json` (250 shared names): everything else unmatched falls
+  inside the already-deferred ~126-vs-~420 `builtinFunctions` content
+  backlog (Round 2/5); spot-checked several likely bare-keyword
+  candidates individually (`Erase`, `Randomize`, `Broadcast`,
+  `ClockReport`, `DaylightSaving(US)`, `EncryptExempt`, `DataEvent`,
+  `WorstCase`) to rule out parser bugs specifically -- all parenthesized,
+  all already parse correctly via the generic `FunctionCall` grammar
+
 ### Packaging Gap (discovered while designing the release workflow)
 
 - [x] Multi-platform `.vsix` packaging ✅ Resolved
