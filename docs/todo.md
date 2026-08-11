@@ -3677,3 +3677,118 @@ complete; none of these were previously tracked anywhere in this file.
     unrelated, see Phase 8 CI/CD note above), `cargo fmt --all --check`,
     and `cargo clippy --all-targets --all-features -- -D warnings` all
     pass
+
+### Reference Implementation & Official Docs Comparison, Round 26 (2026-08-11)
+
+Found while re-auditing operator *semantics* rather than mere
+recognition: prior rounds hunted for missing/unparseable operators and
+keywords, but had not verified that already-implemented operators bind in
+the order Campbell Scientific actually documents. Both findings below were
+verified directly against the raw HTML of help.campbellsci.com's Operators
+page (fetched via `curl`, not just a summarizing fetch tool) after Rounds
+2/8's prior claims that this page "doesn't specify shift precedence" and
+"doesn't state precedence explicitly" for `Imp` turned out to be wrong --
+the page has always had an explicit "Precedence/Order of Operation" table,
+apparently missed by earlier passes.
+
+- [x] Operator precedence chain contradicted the documented precedence
+  table (bug) ✅ Resolved
+  - [help.campbellsci.com's Operators page](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/operators1.htm)
+    states, verbatim, highest-to-lowest: `(^)`, `(+ [positive], –
+    [negative], NOT)`, `(*, /, INTDV, MOD)`, `(+ [addition], –
+    [subtraction], string concatenation [+,&])`, `(=, <>, <, <=, >, >=,
+    Is)`, `(<<, >>, And, Or, Xor, Eqv, Imp)` -- with same-tier operators
+    "evaluated in the order they are written". This project's parser
+    diverged in two ways, both built from generic "common BASIC-family
+    convention" assumptions per the original Round 2/8 commit notes
+    rather than from this table:
+    - `parse_power` called `parse_unary` for its operand, making unary
+      `+`/`-`/`NOT` bind *tighter* than `^` -- the opposite of the
+      documented tightest-binding tier. `-2 ^ 2` parsed as `(-2) ^ 2 = 4`
+      instead of the documented `-(2 ^ 2) = -4`.
+    - `<<`/`>>`/`AND`/`OR`/`XOR`/`IMP` were each given their own nested
+      precedence tier (shift tighter than comparison; AND tighter than
+      XOR tighter than OR tighter than IMP) instead of the documented
+      single flat, left-to-right tier. `x OR y AND z` parsed as `x OR (y
+      AND z)` instead of the documented `(x OR y) AND z`, and `x + 1 <<
+      2 = 5` parsed as `((x + 1) << 2) = 5` instead of `(x + 1) << (2 =
+      5)`.
+  - `Eqv` remains unimplemented and undismissed as before (Round 1): it
+    appears only inside the page's illustrative logical-operator truth
+    table, never as its own row in the main operator list or the
+    precedence table's own text -- unlike `Imp`, which has both. Not
+    acted on without that same evidentiary bar being met.
+  - Fixed by swapping `parse_power`/`parse_unary`'s call order (`parse_unary`'s
+    non-prefix fallthrough now goes to `parse_power`, and `parse_power`'s
+    right operand recurses through `parse_unary` so a sign can still
+    attach directly to an exponent, e.g. `2 ^ -3`) and collapsing the four
+    nested logical functions (`parse_logical_imp`/`_or`/`_xor`/`_and`)
+    plus the standalone `parse_shift` into one flat, left-associative
+    `parse_shift_and_logical` tier
+  - While rewriting the precedence tests to prove this red-first, found a
+    second, unrelated defect that had been masking confidence in this
+    exact area: roughly 30 pre-existing tests across the
+    arithmetic/comparison/shift/logical/unary/parenthesized-expression
+    test modules matched `if let Statement::FunctionCall { arguments, ..
+    }` against inputs that are not actually function calls (e.g. `"1 +
+    2"`, `"x AND y"`, `"-5"`). A bare top-level expression like this
+    parses to `Statement::Expression` (or `Statement::Assignment` when it
+    starts with `identifier =`), so the `if let` body silently never ran
+    and the test passed without checking anything -- including, ironically,
+    the very `logical_and_has_higher_precedence_than_or` /
+    `imp_has_lower_precedence_than_or` /
+    `shift_binds_tighter_than_comparison_but_looser_than_addition` tests
+    that should have caught this precedence bug outright. Rewrote all of
+    them to match the statement shape the parser actually produces, with
+    an else-branch panic so a future mismatch fails loudly instead of
+    vanishing again. Two tests (`parses_equality`,
+    `comparison_has_higher_precedence_than_logical`) needed their source
+    changed too (wrapped in a call, e.g. `Invoke(x = 5)`), since a bare
+    `x = 5` is unconditionally an assignment and can never exercise `=`
+    as a comparison operator at statement level.
+  - **Not fully resolved**: this audit and fix was scoped to the
+    expression/operator-precedence test modules only. Whether the same
+    `Statement::FunctionCall`-for-a-non-call vacuous-match pattern recurs
+    elsewhere across the other ~270 tests in `parser.rs`'s wider test
+    suite was not checked here -- flagged for a future round rather than
+    guessed at.
+  - 2 new parser tests (`power_binds_tighter_than_unary_minus`,
+    `power_exponent_may_carry_a_unary_sign`) + 3 renamed/rewritten
+    precedence tests (`logical_operators_share_precedence_evaluated_left_to_right`,
+    `implication_shares_precedence_with_or_evaluated_left_to_right`,
+    `shift_shares_the_loosest_precedence_tier_with_logical_operators`)
+    added/updated Red-first; full workspace `build`/`test`/`clippy`/`fmt`
+    gate passes (all 303 `crbasic-parser` tests, including the ~30
+    rewritten ones, now genuinely assert instead of vacuously passing)
+- [x] `INTDV` keyword-form integer-division operator not implemented
+  ✅ Resolved
+  - Same Operators page lists `INTDV` as its own named entry in the main
+    operator list (alongside `AND`/`MOD`/`NOT`/`OR`/`XOR`, all already
+    implemented) and again in the precedence table's multiplicative tier
+    next to `*`/`/`/`MOD` -- a keyword-form synonym for `\`, meeting the
+    same evidentiary bar as the already-accepted `\`/`MOD`/`IMP`, unlike
+    the still-unconfirmed `Eqv`/`IntDv`-as-VB6-copy-paste dismissal from
+    Round 1 (that dismissal covered a casual mention of `IntDv`'s *name*
+    without checking whether the page had a dedicated operator-list
+    entry for it, which it does)
+  - Registered in `keywords.json`'s `logical` category, parsed in
+    `parse_multiplicative` alongside `Backslash` (same
+    `BinaryOperator::IntegerDivide`, same precedence tier), with matching
+    hover/completion coverage and TextMate highlighting (added to the
+    hand-written `keyword.operator.logical.crbasic` regex in
+    `generate-grammar.js`, alongside `AND`/`OR`/`NOT`/`XOR`/`MOD`/`IMP` --
+    that regex is hand-authored rather than derived from `keywords.json`,
+    per the Round 2 "Keyword/instruction list unification" note)
+  - 1 new parser test (`parses_intdv_as_a_keyword_synonym_for_integer_division`)
+    added Red-first; full workspace `build`/`test`/`clippy`/`fmt` and
+    client `lint`/`format:check`/`test` gates pass
+
+Not flagged as gaps (verified during the same round):
+
+- Numeric literal formats (`&H`/`&B` hex/binary prefixes, scientific
+  notation), string literal escape handling, fixed-length string
+  declarations (`As String * N`), and `Const`'s restricted type list: all
+  re-confirmed already correct against their respective docs pages: no
+  new gaps.
+- No new statement-level construct found in the two reference repos'
+  snippet/source directories beyond what Rounds 24/25 already exhausted.
