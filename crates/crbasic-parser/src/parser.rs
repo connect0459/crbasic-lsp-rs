@@ -2222,6 +2222,9 @@ impl<'a> Parser<'a> {
                 TokenKind::Star => crate::ast::BinaryOperator::Multiply,
                 TokenKind::Slash => crate::ast::BinaryOperator::Divide,
                 TokenKind::Backslash => crate::ast::BinaryOperator::IntegerDivide,
+                TokenKind::Keyword(kw) if *kw == "INTDV" => {
+                    crate::ast::BinaryOperator::IntegerDivide
+                }
                 TokenKind::Keyword(kw) if *kw == "MOD" => crate::ast::BinaryOperator::Modulo,
                 _ => break,
             };
@@ -2816,6 +2819,31 @@ mod tests {
         #[test]
         fn parses_integer_division() {
             let source = r"10 \ 3".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::BinaryOp { operator, .. } => {
+                        assert_eq!(*operator, BinaryOperator::IntegerDivide);
+                    }
+                    _ => panic!("Expected binary operation"),
+                }
+            } else {
+                panic!("Expected expression statement");
+            }
+        }
+
+        #[test]
+        fn parses_intdv_as_a_keyword_synonym_for_integer_division() {
+            // Campbell Scientific's Operators page lists INTDV as its own
+            // named operator (alongside AND/MOD/NOT/OR/XOR), a keyword-form
+            // synonym for `\`, at the same multiplicative precedence tier.
+            let source = "10 INTDV 3".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);

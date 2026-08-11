@@ -687,6 +687,7 @@ impl CompletionProvider {
             Self::create_keyword_completion("XOR", "Logical XOR operator"),
             Self::create_keyword_completion("MOD", "Modulo operator"),
             Self::create_keyword_completion("IMP", "Logical implication operator"),
+            Self::create_keyword_completion("INTDV", "Integer division operator (synonym for \\)"),
             Self::create_keyword_completion("True", "Boolean true (-1)"),
             Self::create_keyword_completion("False", "Boolean false (0)"),
         ]

@@ -400,6 +400,9 @@ impl HoverProvider {
             "imp" => Some(
                 "**IMP**\n\nLogical implication operator. `A IMP B` is equivalent to `(NOT A) OR B`.",
             ),
+            "intdv" => Some(
+                "**INTDV**\n\nInteger division operator. Keyword-form synonym for `\\`: `A INTDV B` divides A by B and truncates to an integer.",
+            ),
 
             "true" => Some("**True**\n\nBoolean literal representing true (-1 in CRBasic)."),
             "false" => Some("**False**\n\nBoolean literal representing false (0 in CRBasic)."),
