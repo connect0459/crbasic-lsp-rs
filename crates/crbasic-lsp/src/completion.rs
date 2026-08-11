@@ -420,6 +420,86 @@ impl CompletionProvider {
                 "HTTPPut(${1:URI}, ${2:Contents}, ${3:Response}, ${4:Header}, ${5:NumRecsOrTimeIntoInterval}, ${6:Interval}, ${7:IntervalUnits}, ${8:FileOption}, ${9:TimeOut})",
                 "Sends files or text to a URL via an HTTP PUT request.",
             ),
+            Self::create_function_completion(
+                "WindVector",
+                "WindVector(${1:Reps}, ${2:SpeedOrEast}, ${3:DirectionOrNorth}, ${4:DataType}, ${5:DisableVar}, ${6:Subinterval}, ${7:SensorType}, ${8:OutputOpt})",
+                "Calculates and stores the mean wind speed, wind vector magnitude, and direction statistics.",
+            ),
+            Self::create_function_completion(
+                "Histogram",
+                "Histogram(${1:BinSelect}, ${2:DataType}, ${3:DisableVar}, ${4:Bins}, ${5:Form}, ${6:WtVal}, ${7:LoLim}, ${8:UpLim})",
+                "Stores a frequency distribution of input data across a set of bins.",
+            ),
+            Self::create_function_completion(
+                "FieldNames",
+                "FieldNames(${1:FieldNameDescriptionList})",
+                "Overrides the default field names for the preceding output-processing instruction.",
+            ),
+            Self::create_function_completion(
+                "CardOut",
+                "CardOut(${1:StopRing}, ${2:Size})",
+                "Creates a new data table that is stored on a memory card.",
+            ),
+            Self::create_function_completion(
+                "NewFile",
+                "NewFile(${1:NewFileVar}, ${2:FileName}, ${3:NewFileName})",
+                "Determines whether a monitored file has been newly written since this instruction last ran.",
+            ),
+            Self::create_function_completion(
+                "FileManage",
+                "FileManage(${1:DeviceFileName}, ${2:Attribute})",
+                "Performs a management operation, such as delete, hide, run, or format, on a file or device.",
+            ),
+            Self::create_function_completion(
+                "FileOpen",
+                "FileOpen(${1:FileName}, ${2:Mode}, ${3:SeekPoint})",
+                "Opens a file for reading or writing and returns a file handle.",
+            ),
+            Self::create_function_completion(
+                "FileClose",
+                "FileClose(${1:FileHandle})",
+                "Closes a file previously opened with FileOpen.",
+            ),
+            Self::create_function_completion(
+                "FileRead",
+                "FileRead(${1:FileHandle}, ${2:Destination}, ${3:Length})",
+                "Reads data from an open file into a variable or array.",
+            ),
+            Self::create_function_completion(
+                "FileWrite",
+                "FileWrite(${1:FileHandle}, ${2:Source}, ${3:Length})",
+                "Writes data from a variable or array to an open file.",
+            ),
+            Self::create_function_completion(
+                "FileCopy",
+                "FileCopy(${1:FromFileName}, ${2:ToFileName})",
+                "Copies a file from one drive on the datalogger to another.",
+            ),
+            Self::create_function_completion(
+                "FileRename",
+                "FileRename(${1:OldFileName}, ${2:NewFileName})",
+                "Renames a file stored on the datalogger.",
+            ),
+            Self::create_function_completion(
+                "FileSize",
+                "FileSize(${1:FileHandle})",
+                "Returns the size, in bytes, of a specified file.",
+            ),
+            Self::create_function_completion(
+                "FileTime",
+                "FileTime(${1:FileHandle})",
+                "Returns the last-modified timestamp of a specified file.",
+            ),
+            Self::create_function_completion(
+                "FileList",
+                "FileList(${1:Device}, ${2:Dest})",
+                "Writes the list of file names on a device into a destination array.",
+            ),
+            Self::create_function_completion(
+                "DataInterval",
+                "DataInterval(${1:TintoInt}, ${2:Interval}, ${3:Units}, ${4:Lapses})",
+                "Sets the real-time-clock-based interval on which a data table's records are generated.",
+            ),
         ]
     }
 
@@ -1750,6 +1830,173 @@ mod tests {
                 "HTTPPut(${1:URI}, ${2:Contents}, ${3:Response}, ${4:Header}, \
                  ${5:NumRecsOrTimeIntoInterval}, ${6:Interval}, ${7:IntervalUnits}, \
                  ${8:FileOption}, ${9:TimeOut})"
+            );
+        }
+
+        #[test]
+        fn windvector_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "WindVector"),
+                "WindVector(${1:Reps}, ${2:SpeedOrEast}, ${3:DirectionOrNorth}, \
+                 ${4:DataType}, ${5:DisableVar}, ${6:Subinterval}, ${7:SensorType}, \
+                 ${8:OutputOpt})"
+            );
+        }
+
+        #[test]
+        fn histogram_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Histogram"),
+                "Histogram(${1:BinSelect}, ${2:DataType}, ${3:DisableVar}, ${4:Bins}, \
+                 ${5:Form}, ${6:WtVal}, ${7:LoLim}, ${8:UpLim})"
+            );
+        }
+
+        #[test]
+        fn fieldnames_snippet_takes_a_single_comma_separated_string_parameter() {
+            // Confirmed at https://help.campbellsci.com/crbasic/cr6/Content/Instructions/fieldnames.htm:
+            // FieldNames takes exactly one quoted, comma-separated string
+            // ("Fieldname1:Description1,Fieldname2:Description2..."), not a
+            // multi-parameter list.
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FieldNames"),
+                "FieldNames(${1:FieldNameDescriptionList})"
+            );
+        }
+
+        #[test]
+        fn cardout_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CardOut"),
+                "CardOut(${1:StopRing}, ${2:Size})"
+            );
+        }
+
+        #[test]
+        fn newfile_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "NewFile"),
+                "NewFile(${1:NewFileVar}, ${2:FileName}, ${3:NewFileName})"
+            );
+        }
+
+        #[test]
+        fn filemanage_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FileManage"),
+                "FileManage(${1:DeviceFileName}, ${2:Attribute})"
+            );
+        }
+
+        #[test]
+        fn fileopen_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FileOpen"),
+                "FileOpen(${1:FileName}, ${2:Mode}, ${3:SeekPoint})"
+            );
+        }
+
+        #[test]
+        fn fileclose_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FileClose"),
+                "FileClose(${1:FileHandle})"
+            );
+        }
+
+        #[test]
+        fn fileread_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FileRead"),
+                "FileRead(${1:FileHandle}, ${2:Destination}, ${3:Length})"
+            );
+        }
+
+        #[test]
+        fn filewrite_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FileWrite"),
+                "FileWrite(${1:FileHandle}, ${2:Source}, ${3:Length})"
+            );
+        }
+
+        #[test]
+        fn filecopy_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FileCopy"),
+                "FileCopy(${1:FromFileName}, ${2:ToFileName})"
+            );
+        }
+
+        #[test]
+        fn filerename_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FileRename"),
+                "FileRename(${1:OldFileName}, ${2:NewFileName})"
+            );
+        }
+
+        #[test]
+        fn filesize_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FileSize"),
+                "FileSize(${1:FileHandle})"
+            );
+        }
+
+        #[test]
+        fn filetime_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FileTime"),
+                "FileTime(${1:FileHandle})"
+            );
+        }
+
+        #[test]
+        fn filelist_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FileList"),
+                "FileList(${1:Device}, ${2:Dest})"
+            );
+        }
+
+        #[test]
+        fn datainterval_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DataInterval"),
+                "DataInterval(${1:TintoInt}, ${2:Interval}, ${3:Units}, ${4:Lapses})"
             );
         }
     }
