@@ -610,6 +610,41 @@ impl CompletionProvider {
                 "NaN",
                 "Represents the IEEE-754 Not-a-Number value used to flag an invalid measurement.",
             ),
+            Self::create_function_completion(
+                "DisplayMenu",
+                "DisplayMenu(${1:MenuName}, ${2:AddToSystem}, ${3:Cursor})",
+                "Marks the beginning of a custom on-screen menu definition.",
+            ),
+            Self::create_function_completion(
+                "SubMenu",
+                "SubMenu(${1:MenuName}, ${2:Cursor})",
+                "Marks the beginning of a nested custom menu within a DisplayMenu block.",
+            ),
+            Self::create_function_completion(
+                "MenuItem",
+                "MenuItem(${1:MenuItemName}, ${2:Variable})",
+                "Defines an editable custom-menu entry showing the name and value of a variable.",
+            ),
+            Self::create_function_completion(
+                "MenuPick",
+                "MenuPick(${1:Item1}, ${2:Item2})",
+                "Creates a fixed pick-list of selectable values for the preceding MenuItem.",
+            ),
+            Self::create_function_completion(
+                "MenuRecompile",
+                "MenuRecompile(${1:CompileString}, ${2:CompileVar})",
+                "Creates a custom menu item that triggers a program recompile after Constant Table edits.",
+            ),
+            Self::create_function_completion(
+                "DisplayValue",
+                "DisplayValue(${1:MenuItemName}, ${2:MenuExpression})",
+                "Defines a read-only custom-menu entry showing a data-table field, variable, or expression.",
+            ),
+            Self::create_function_completion(
+                "DisplayLine",
+                "DisplayLine(${1:Value})",
+                "Displays a single line of read-only text in a custom menu.",
+            ),
         ]
     }
 
@@ -2309,6 +2344,80 @@ mod tests {
             let completions = CompletionProvider::get_builtin_function_completions();
 
             assert_eq!(insert_text_for(&completions, "NaN"), "NaN");
+        }
+
+        #[test]
+        fn displaymenu_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DisplayMenu"),
+                "DisplayMenu(${1:MenuName}, ${2:AddToSystem}, ${3:Cursor})"
+            );
+        }
+
+        #[test]
+        fn submenu_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SubMenu"),
+                "SubMenu(${1:MenuName}, ${2:Cursor})"
+            );
+        }
+
+        #[test]
+        fn menuitem_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MenuItem"),
+                "MenuItem(${1:MenuItemName}, ${2:Variable})"
+            );
+        }
+
+        #[test]
+        fn menupick_snippet_represents_its_variadic_item_list() {
+            // Confirmed at https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/menupick.htm:
+            // MenuPick takes an unbounded comma-separated list of pick
+            // values (Item1, Item2, Item3...), not a fixed arity -- two
+            // placeholders are given as a representative starting point.
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MenuPick"),
+                "MenuPick(${1:Item1}, ${2:Item2})"
+            );
+        }
+
+        #[test]
+        fn menurecompile_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MenuRecompile"),
+                "MenuRecompile(${1:CompileString}, ${2:CompileVar})"
+            );
+        }
+
+        #[test]
+        fn displayvalue_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DisplayValue"),
+                "DisplayValue(${1:MenuItemName}, ${2:MenuExpression})"
+            );
+        }
+
+        #[test]
+        fn displayline_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DisplayLine"),
+                "DisplayLine(${1:Value})"
+            );
         }
     }
 
