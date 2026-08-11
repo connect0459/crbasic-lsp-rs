@@ -325,6 +325,101 @@ impl CompletionProvider {
                 "TCSE(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:SEChan}, ${5:TCType}, ${6:TRef}, ${7:MeasOff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})",
                 "Measures a thermocouple on a single-ended channel and converts the reading to degrees Celsius.",
             ),
+            Self::create_function_completion(
+                "SerialInRecord",
+                "SerialInRecord(${1:COMPort}, ${2:Dest}, ${3:BeginWord}, ${4:NBytes}, ${5:EndWord}, ${6:NBytesReturned}, ${7:SerialInRecOption})",
+                "Reads and parses incoming serial data using begin/end markers.",
+            ),
+            Self::create_function_completion(
+                "SerialOutBlock",
+                "SerialOutBlock(${1:ComPort}, ${2:Expression}, ${3:NumberBytes})",
+                "Sends binary data out a serial port.",
+            ),
+            Self::create_function_completion(
+                "SerialFlush",
+                "SerialFlush(${1:ComPort})",
+                "Clears any characters in the serial input buffer.",
+            ),
+            Self::create_function_completion(
+                "ModbusMaster",
+                "ModbusMaster(${1:ResultCode}, ${2:ComPort}, ${3:BaudRate}, ${4:ModbusAddr}, ${5:Function}, ${6:Variable}, ${7:Start}, ${8:Length}, ${9:Tries}, ${10:TimeOut}, ${11:ModbusOption})",
+                "Sets up the datalogger as a Modbus client to send or retrieve data from a Modbus server.",
+            ),
+            Self::create_function_completion(
+                "SDI12Recorder",
+                "SDI12Recorder(${1:Dest}, ${2:SDIPort}, ${3:SDIAddress}, ${4:SDICommand}, ${5:Multiplier}, ${6:Offset}, ${7:FillNAN}, ${8:WaitonTimeout})",
+                "Retrieves measurement results from an SDI-12 sensor.",
+            ),
+            Self::create_function_completion(
+                "TCPOpen",
+                "TCPOpen(${1:IPAddr}, ${2:TCPPort}, ${3:IPBuffer}, ${4:IPTimeOut}, ${5:ConnectHandle}, ${6:MaxConnect})",
+                "Sets up a TCP/IP socket for communication.",
+            ),
+            Self::create_function_completion(
+                "TCPClose",
+                "TCPClose(${1:TCPSocket})",
+                "Closes a TCP/IP socket that was set up for communication.",
+            ),
+            Self::create_function_completion(
+                "UDPOpen",
+                "UDPOpen(${1:IPAddr}, ${2:UDPPort}, ${3:IPBuffer}, ${4:IPVersion})",
+                "Opens a port for transferring UDP packets.",
+            ),
+            Self::create_function_completion(
+                "UDPSocketOpen",
+                "UDPSocketOpen(${1:SocketID}, ${2:Port}, ${3:RecvQueueSize}, ${4:Interface})",
+                "Opens a UDP socket, relating a UDP source port to an ID.",
+            ),
+            Self::create_function_completion(
+                "UDPSocketSend",
+                "UDPSocketSend(${1:BytesSent}, ${2:SocketID}, ${3:IPAddr}, ${4:Port}, ${5:Payload}, ${6:PayLoadLen})",
+                "Sends a UDP datagram to a remote device via an opened UDP socket.",
+            ),
+            Self::create_function_completion(
+                "UDPSocketRecv",
+                "UDPSocketRecv(${1:BytesReceived}, ${2:SocketID}, ${3:InDatagram}, ${4:InDatagramLen}, ${5:RemoteIPAdd}, ${6:RemotePort}, ${7:Timeout})",
+                "Retrieves incoming UDP packets sent to a socket's listening port.",
+            ),
+            Self::create_function_completion(
+                "UDPSocketClose",
+                "UDPSocketClose(${1:SocketID})",
+                "Closes an opened UDP socket and frees its associated memory.",
+            ),
+            Self::create_function_completion(
+                "EmailRelay",
+                "EmailRelay(${1:ToAddr}, ${2:Subject}, ${3:Message}, ${4:ServerResponse}, ${5:Attach}, ${6:NumRecsOrTimeIntoInterval}, ${7:Interval}, ${8:IntervalUnits}, ${9:FileOption}, ${10:TimeOut})",
+                "Sends an email message to one or more addresses via a Campbell Scientific relay service.",
+            ),
+            Self::create_function_completion(
+                "PPPOpen",
+                "PPPOpen(${1:Option})",
+                "Enables a PPP network connection through an external modem and returns its IP address.",
+            ),
+            Self::create_function_completion(
+                "PPPClose",
+                "PPPClose()",
+                "Closes an open PPP connection with a server.",
+            ),
+            Self::create_function_completion(
+                "FTPClient",
+                "FTPClient(${1:IPAddress}, ${2:User}, ${3:Password}, ${4:LocalFileName}, ${5:RemoteFileName}, ${6:PutGetOption}, ${7:NumRecsOrTimeIntoInterval}, ${8:Interval}, ${9:IntervalUnits}, ${10:FileOption}, ${11:TimeOut})",
+                "Manages files on a server using FTP, FTPS, or SFTP.",
+            ),
+            Self::create_function_completion(
+                "HTTPGet",
+                "HTTPGet(${1:URI}, ${2:Response}, ${3:Header}, ${4:TimeOut})",
+                "Sends a GET request to an HTTP server.",
+            ),
+            Self::create_function_completion(
+                "HTTPPost",
+                "HTTPPost(${1:URI}, ${2:Contents}, ${3:Response}, ${4:Header}, ${5:NumRecsOrTimeIntoInterval}, ${6:Interval}, ${7:IntervalUnits}, ${8:FileOption}, ${9:TimeOut})",
+                "Sends files or text to a URL via an HTTP POST request.",
+            ),
+            Self::create_function_completion(
+                "HTTPPut",
+                "HTTPPut(${1:URI}, ${2:Contents}, ${3:Response}, ${4:Header}, ${5:NumRecsOrTimeIntoInterval}, ${6:Interval}, ${7:IntervalUnits}, ${8:FileOption}, ${9:TimeOut})",
+                "Sends files or text to a URL via an HTTP PUT request.",
+            ),
         ]
     }
 
@@ -1447,6 +1542,214 @@ mod tests {
                 insert_text_for(&completions, "TCSE"),
                 "TCSE(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:SEChan}, ${5:TCType}, ${6:TRef}, \
                  ${7:MeasOff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})"
+            );
+        }
+
+        #[test]
+        fn serialinrecord_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SerialInRecord"),
+                "SerialInRecord(${1:COMPort}, ${2:Dest}, ${3:BeginWord}, ${4:NBytes}, \
+                 ${5:EndWord}, ${6:NBytesReturned}, ${7:SerialInRecOption})"
+            );
+        }
+
+        #[test]
+        fn serialoutblock_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SerialOutBlock"),
+                "SerialOutBlock(${1:ComPort}, ${2:Expression}, ${3:NumberBytes})"
+            );
+        }
+
+        #[test]
+        fn serialflush_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SerialFlush"),
+                "SerialFlush(${1:ComPort})"
+            );
+        }
+
+        #[test]
+        fn modbusmaster_snippet_matches_the_current_modbusclient_signature() {
+            // Campbell Scientific renamed this instruction ModbusClient;
+            // ModbusMaster still compiles for backward compatibility with the
+            // same parameter list. Confirmed at
+            // https://help.campbellsci.com/crbasic/cr6/Content/Instructions/modbusclient.htm
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ModbusMaster"),
+                "ModbusMaster(${1:ResultCode}, ${2:ComPort}, ${3:BaudRate}, ${4:ModbusAddr}, \
+                 ${5:Function}, ${6:Variable}, ${7:Start}, ${8:Length}, ${9:Tries}, \
+                 ${10:TimeOut}, ${11:ModbusOption})"
+            );
+        }
+
+        #[test]
+        fn sdi12recorder_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDI12Recorder"),
+                "SDI12Recorder(${1:Dest}, ${2:SDIPort}, ${3:SDIAddress}, ${4:SDICommand}, \
+                 ${5:Multiplier}, ${6:Offset}, ${7:FillNAN}, ${8:WaitonTimeout})"
+            );
+        }
+
+        #[test]
+        fn tcpopen_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TCPOpen"),
+                "TCPOpen(${1:IPAddr}, ${2:TCPPort}, ${3:IPBuffer}, ${4:IPTimeOut}, \
+                 ${5:ConnectHandle}, ${6:MaxConnect})"
+            );
+        }
+
+        #[test]
+        fn tcpclose_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TCPClose"),
+                "TCPClose(${1:TCPSocket})"
+            );
+        }
+
+        #[test]
+        fn udpopen_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "UDPOpen"),
+                "UDPOpen(${1:IPAddr}, ${2:UDPPort}, ${3:IPBuffer}, ${4:IPVersion})"
+            );
+        }
+
+        #[test]
+        fn udpsocketopen_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "UDPSocketOpen"),
+                "UDPSocketOpen(${1:SocketID}, ${2:Port}, ${3:RecvQueueSize}, ${4:Interface})"
+            );
+        }
+
+        #[test]
+        fn udpsocketsend_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "UDPSocketSend"),
+                "UDPSocketSend(${1:BytesSent}, ${2:SocketID}, ${3:IPAddr}, ${4:Port}, \
+                 ${5:Payload}, ${6:PayLoadLen})"
+            );
+        }
+
+        #[test]
+        fn udpsocketrecv_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "UDPSocketRecv"),
+                "UDPSocketRecv(${1:BytesReceived}, ${2:SocketID}, ${3:InDatagram}, \
+                 ${4:InDatagramLen}, ${5:RemoteIPAdd}, ${6:RemotePort}, ${7:Timeout})"
+            );
+        }
+
+        #[test]
+        fn udpsocketclose_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "UDPSocketClose"),
+                "UDPSocketClose(${1:SocketID})"
+            );
+        }
+
+        #[test]
+        fn emailrelay_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "EmailRelay"),
+                "EmailRelay(${1:ToAddr}, ${2:Subject}, ${3:Message}, ${4:ServerResponse}, \
+                 ${5:Attach}, ${6:NumRecsOrTimeIntoInterval}, ${7:Interval}, \
+                 ${8:IntervalUnits}, ${9:FileOption}, ${10:TimeOut})"
+            );
+        }
+
+        #[test]
+        fn pppopen_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PPPOpen"),
+                "PPPOpen(${1:Option})"
+            );
+        }
+
+        #[test]
+        fn pppclose_snippet_has_no_parameters() {
+            // Confirmed at https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/pppclose.htm:
+            // the syntax diagram shows `variable = PPPClose` with no arguments.
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "PPPClose"), "PPPClose()");
+        }
+
+        #[test]
+        fn ftpclient_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FTPClient"),
+                "FTPClient(${1:IPAddress}, ${2:User}, ${3:Password}, ${4:LocalFileName}, \
+                 ${5:RemoteFileName}, ${6:PutGetOption}, ${7:NumRecsOrTimeIntoInterval}, \
+                 ${8:Interval}, ${9:IntervalUnits}, ${10:FileOption}, ${11:TimeOut})"
+            );
+        }
+
+        #[test]
+        fn httpget_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "HTTPGet"),
+                "HTTPGet(${1:URI}, ${2:Response}, ${3:Header}, ${4:TimeOut})"
+            );
+        }
+
+        #[test]
+        fn httppost_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "HTTPPost"),
+                "HTTPPost(${1:URI}, ${2:Contents}, ${3:Response}, ${4:Header}, \
+                 ${5:NumRecsOrTimeIntoInterval}, ${6:Interval}, ${7:IntervalUnits}, \
+                 ${8:FileOption}, ${9:TimeOut})"
+            );
+        }
+
+        #[test]
+        fn httpput_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "HTTPPut"),
+                "HTTPPut(${1:URI}, ${2:Contents}, ${3:Response}, ${4:Header}, \
+                 ${5:NumRecsOrTimeIntoInterval}, ${6:Interval}, ${7:IntervalUnits}, \
+                 ${8:FileOption}, ${9:TimeOut})"
             );
         }
     }
