@@ -500,6 +500,46 @@ impl CompletionProvider {
                 "DataInterval(${1:TintoInt}, ${2:Interval}, ${3:Units}, ${4:Lapses})",
                 "Sets the real-time-clock-based interval on which a data table's records are generated.",
             ),
+            Self::create_function_completion(
+                "FormatLong",
+                "FormatLong(${1:LongVar}, ${2:FormatString})",
+                "Converts a Long value to a decimal, hexadecimal, or octal string.",
+            ),
+            Self::create_function_completion(
+                "Chr",
+                "Chr(${1:Code})",
+                "Returns a character in the extended ASCII character set.",
+            ),
+            Self::create_function_completion(
+                "ASCII",
+                "ASCII(${1:ASCIIString})",
+                "Returns the ASCII value of a character in a string.",
+            ),
+            Self::create_function_completion(
+                "StrComp",
+                "StrComp(${1:String1}, ${2:String2})",
+                "Compares two strings to determine if they are identical or their sort order.",
+            ),
+            Self::create_function_completion(
+                "CheckSum",
+                "CheckSum(${1:ChkSumString}, ${2:ChkSumType}, ${3:CheckSumSize}, ${4:ChkSumOption1}, ${5:ChkSumOption2}, ${6:ChkSumOption3})",
+                "Returns a checksum signature for the characters in a string.",
+            ),
+            Self::create_function_completion(
+                "HexToDec",
+                "HexToDec(${1:Expression})",
+                "Converts a hexadecimal string to a float or integer.",
+            ),
+            Self::create_function_completion(
+                "Hex",
+                "Hex(${1:Expression})",
+                "Returns a hexadecimal string representation of a Long value.",
+            ),
+            Self::create_function_completion(
+                "Sprintf",
+                "Sprintf(${1:Dest}, ${2:Format}, ${3:Argument1})",
+                "Writes a formatted output string to a destination variable.",
+            ),
         ]
     }
 
@@ -1997,6 +2037,85 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "DataInterval"),
                 "DataInterval(${1:TintoInt}, ${2:Interval}, ${3:Units}, ${4:Lapses})"
+            );
+        }
+
+        #[test]
+        fn formatlong_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FormatLong"),
+                "FormatLong(${1:LongVar}, ${2:FormatString})"
+            );
+        }
+
+        #[test]
+        fn chr_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Chr"), "Chr(${1:Code})");
+        }
+
+        #[test]
+        fn ascii_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ASCII"),
+                "ASCII(${1:ASCIIString})"
+            );
+        }
+
+        #[test]
+        fn strcomp_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "StrComp"),
+                "StrComp(${1:String1}, ${2:String2})"
+            );
+        }
+
+        #[test]
+        fn checksum_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CheckSum"),
+                "CheckSum(${1:ChkSumString}, ${2:ChkSumType}, ${3:CheckSumSize}, \
+                 ${4:ChkSumOption1}, ${5:ChkSumOption2}, ${6:ChkSumOption3})"
+            );
+        }
+
+        #[test]
+        fn hextodec_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "HexToDec"),
+                "HexToDec(${1:Expression})"
+            );
+        }
+
+        #[test]
+        fn hex_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Hex"), "Hex(${1:Expression})");
+        }
+
+        #[test]
+        fn sprintf_snippet_matches_official_signature() {
+            // Confirmed at https://help.campbellsci.com/crbasic/cr6/Content/Instructions/sprintf.htm:
+            // Sprintf takes 1-10 variadic value arguments after the format
+            // string; only the first is placeholder'd here, matching how a
+            // call site is typically extended by hand.
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Sprintf"),
+                "Sprintf(${1:Dest}, ${2:Format}, ${3:Argument1})"
             );
         }
     }
