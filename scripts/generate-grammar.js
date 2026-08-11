@@ -275,7 +275,7 @@ function generateGrammar(keywords) {
           },
           {
             name: "keyword.operator.logical.crbasic",
-            match: "(?i)\\b(AND|OR|NOT|XOR|MOD|IMP|INTDV)\\b",
+            match: "(?i)\\b(AND|OR|NOT|XOR|MOD|IMP|EQV|INTDV)\\b",
           },
           {
             name: "constant.language.boolean.crbasic",

@@ -1407,8 +1407,10 @@ impl<'a> Parser<'a> {
         Ok(left)
     }
 
-    /// Parses a single `Case` condition term: either `Is comparison-operator
-    /// Expression`, or a plain value/range (`Expression [To Expression]`).
+    /// Parses a single `Case` condition term: `Is comparison-operator
+    /// Expression`, the same form with `Is` implied (e.g. `Case < 10`, per
+    /// help.campbellsci.com: "If the Is keyword is omitted ... it is
+    /// implied"), or a plain value/range (`Expression [To Expression]`).
     fn parse_case_condition_term(&mut self) -> Result<crate::ast::CaseCondition, ParseError> {
         let saw_is_keyword = matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Is");
         if saw_is_keyword {
@@ -2131,8 +2133,8 @@ impl<'a> Parser<'a> {
 
     /// Parses the loosest precedence tier documented by Campbell Scientific's
     /// Operators page (help.campbellsci.com/crbasic/cr1000x/Content/Instructions/operators1.htm):
-    /// `<<`, `>>`, `AND`, `OR`, `XOR`, and `IMP` all share one precedence,
-    /// evaluated left to right rather than nested tier-by-tier.
+    /// `<<`, `>>`, `AND`, `OR`, `XOR`, `EQV`, and `IMP` all share one
+    /// precedence, evaluated left to right rather than nested tier-by-tier.
     fn parse_shift_and_logical(&mut self) -> Result<Expression, ParseError> {
         let mut left = self.parse_comparison()?;
 
@@ -2143,6 +2145,7 @@ impl<'a> Parser<'a> {
                 TokenKind::Keyword(kw) if *kw == "AND" => crate::ast::BinaryOperator::And,
                 TokenKind::Keyword(kw) if *kw == "OR" => crate::ast::BinaryOperator::Or,
                 TokenKind::Keyword(kw) if *kw == "XOR" => crate::ast::BinaryOperator::Xor,
+                TokenKind::Keyword(kw) if *kw == "EQV" => crate::ast::BinaryOperator::Equivalence,
                 TokenKind::Keyword(kw) if *kw == "IMP" => crate::ast::BinaryOperator::Implication,
                 _ => break,
             };
@@ -3556,6 +3559,64 @@ mod tests {
             if let Statement::Expression { expression, .. } = &program.statements[0] {
                 if let Expression::BinaryOp { left, operator, .. } = expression {
                     assert_eq!(*operator, BinaryOperator::Implication);
+
+                    if let Expression::BinaryOp { operator, .. } = &**left {
+                        assert_eq!(*operator, BinaryOperator::Or);
+                    } else {
+                        panic!("Expected OR for left operand");
+                    }
+                } else {
+                    panic!("Expected binary operation");
+                }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_eqv_operation() {
+            let source = "x EQV y".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::BinaryOp { operator, .. } => {
+                        assert_eq!(*operator, BinaryOperator::Equivalence);
+                    }
+                    _ => panic!("Expected binary operation"),
+                }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn equivalence_shares_precedence_with_or_evaluated_left_to_right() {
+            // EQV shares its precedence tier with OR/IMP (see
+            // logical_operators_share_precedence_evaluated_left_to_right), so
+            // x OR y EQV z parses left to right as (x OR y) EQV z.
+            let source = "x OR y EQV z".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                if let Expression::BinaryOp { left, operator, .. } = expression {
+                    assert_eq!(*operator, BinaryOperator::Equivalence);
 
                     if let Expression::BinaryOp { operator, .. } = &**left {
                         assert_eq!(*operator, BinaryOperator::Or);

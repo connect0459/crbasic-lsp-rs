@@ -89,6 +89,7 @@ pub const LANGUAGE_KEYWORDS: &[(&str, &str)] = &[
     ("XOR", "logical"),
     ("MOD", "logical"),
     ("IMP", "logical"),
+    ("EQV", "logical"),
     ("INTDV", "logical"),
     ("True", "logical"),
     ("False", "logical"),

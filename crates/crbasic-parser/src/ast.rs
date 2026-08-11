@@ -511,6 +511,8 @@ pub enum BinaryOperator {
     Xor,
     /// Logical implication operator (IMP)
     Implication,
+    /// Logical equivalence operator (EQV)
+    Equivalence,
 }
 
 /// Unary operators
