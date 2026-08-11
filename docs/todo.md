@@ -3892,3 +3892,59 @@ Not flagged as gaps (verified during the same round):
   pattern.
 - LSP provider capability surface unchanged since Rounds 11/21's
   exhaustive audits: no applicable LSP 3.17 provider missing.
+
+### Builtin Function Completion Parity (2026-08-11)
+
+Closes the scope gap the "Keyword/instruction list unification" entry
+above deliberately deferred: `completion.rs::get_builtin_function_completions`
+only covered 52 of `BUILTIN_FUNCTIONS`' 130 entries (78 missing, not the
+"~35" estimated at the time -- that count undercounted the real gap).
+
+- [x] Full completion-snippet parity with `BUILTIN_FUNCTIONS` ✅ Resolved
+  - Added snippets for all 78 previously-uncompleted functions, grouped
+    into 7 commits by category (measurement, communication, data,
+    string, math, time, menu) plus a standalone one for `IIf`. Every
+    parameter name and order was verified against
+    help.campbellsci.com's own syntax diagram for that instruction
+    (not inferred from generic BASIC-family conventions), following
+    the same evidentiary bar as the Reference Implementation & Official
+    Docs Comparison rounds above
+  - Notable signature findings surfaced during verification:
+    - `Rnd` and `NaN` take no parentheses at all (`variable = RND`,
+      bare `NAN`) -- confirmed via their docs' own syntax diagrams,
+      unlike every other entry in this batch
+    - `FieldNames` takes exactly one comma-separated string parameter,
+      not a multi-parameter list
+    - `ModbusMaster` has no live doc page of its own; Campbell
+      Scientific renamed it `ModbusClient` and the current page states
+      the parameter list is unchanged, so that page's signature was
+      used
+    - `MenuPick` has an unbounded variadic item list; represented with
+      two placeholders as a starting point rather than a fixed arity
+    - `Resistance`, `BrHalf4W`, `BrFull6W`, `MoveBytes`, `DisplayMenu`,
+      and `SubMenu` each have one documented-optional trailing
+      parameter, included in the snippet per the existing project
+      convention of listing the full documented parameter set (see the
+      `Resistance`/`BrHalf4W`/`BrFull6W`/`PortSet` entries in Round 26's
+      measurement research)
+    - `EmailRelay`/`FTPClient`/`HTTPPost`/`HTTPPut` share a compound
+      `NumRecs/TimeIntoInterval` parameter in Campbell's own docs;
+      spelled `NumRecsOrTimeIntoInterval` in the snippet since a literal
+      `/` in a placeholder name is unconventional
+  - Added `every_canonical_builtin_function_has_a_completion_item`, the
+    reverse of the pre-existing
+    `every_builtin_function_completion_is_a_known_canonical_name` check,
+    so this parity is now enforced going forward rather than a one-time
+    fix
+  - 79 new tests (one exact-`insert_text` assertion per function, plus
+    the coverage test) added across the 8 commits; full workspace
+    `build`/`test`/`clippy`/`fmt` gate passes after each
+
+Not flagged as gaps (out of scope for this pass):
+
+- `hover.rs` and `signature.rs` still only cover a small subset of
+  `BUILTIN_FUNCTIONS` (hover has no builtin-function coverage at all;
+  signature help covers 33) -- both are separate, larger content
+  efforts than the completion-snippet parity closed here, consistent
+  with how the "Keyword/instruction list unification" entry already
+  scoped `hover.rs`/`signature.rs` prose out of that round too.
