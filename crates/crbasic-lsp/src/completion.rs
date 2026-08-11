@@ -645,6 +645,11 @@ impl CompletionProvider {
                 "DisplayLine(${1:Value})",
                 "Displays a single line of read-only text in a custom menu.",
             ),
+            Self::create_function_completion(
+                "IIf",
+                "IIf(${1:Expression}, ${2:TrueValue}, ${3:FalseValue})",
+                "Evaluates a Boolean expression and returns TrueValue if true, otherwise FalseValue.",
+            ),
         ]
     }
 
@@ -2417,6 +2422,16 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "DisplayLine"),
                 "DisplayLine(${1:Value})"
+            );
+        }
+
+        #[test]
+        fn iif_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "IIf"),
+                "IIf(${1:Expression}, ${2:TrueValue}, ${3:FalseValue})"
             );
         }
     }
