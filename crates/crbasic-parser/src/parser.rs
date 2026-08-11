@@ -1410,29 +1410,24 @@ impl<'a> Parser<'a> {
     /// Parses a single `Case` condition term: either `Is comparison-operator
     /// Expression`, or a plain value/range (`Expression [To Expression]`).
     fn parse_case_condition_term(&mut self) -> Result<crate::ast::CaseCondition, ParseError> {
-        if matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Is") {
+        let saw_is_keyword = matches!(self.peek().kind, TokenKind::Keyword(kw) if kw == "Is");
+        if saw_is_keyword {
             self.advance();
+        }
 
-            let operator = match &self.peek().kind {
-                TokenKind::Equal => crate::ast::BinaryOperator::Equal,
-                TokenKind::NotEqual => crate::ast::BinaryOperator::NotEqual,
-                TokenKind::LessThan => crate::ast::BinaryOperator::LessThan,
-                TokenKind::GreaterThan => crate::ast::BinaryOperator::GreaterThan,
-                TokenKind::LessThanOrEqual => crate::ast::BinaryOperator::LessThanOrEqual,
-                TokenKind::GreaterThanOrEqual => crate::ast::BinaryOperator::GreaterThanOrEqual,
-                _ => {
-                    return Err(ParseError {
-                        message: "Expected a comparison operator after 'Is'".to_string(),
-                        span: self.peek().span,
-                    });
-                }
-            };
+        if let Some(operator) = self.match_case_comparison_operator() {
             self.advance();
-
             let expression = self.parse_additive()?;
             return Ok(crate::ast::CaseCondition::Compare {
                 operator,
                 expression,
+            });
+        }
+
+        if saw_is_keyword {
+            return Err(ParseError {
+                message: "Expected a comparison operator after 'Is'".to_string(),
+                span: self.peek().span,
             });
         }
 
@@ -1444,6 +1439,20 @@ impl<'a> Parser<'a> {
             Ok(crate::ast::CaseCondition::Range(expression, end))
         } else {
             Ok(crate::ast::CaseCondition::Value(expression))
+        }
+    }
+
+    /// Matches a `Case` clause's comparison operator (`=`, `<>`, `<`, `<=`,
+    /// `>`, `>=`) at the current position without consuming it.
+    fn match_case_comparison_operator(&self) -> Option<crate::ast::BinaryOperator> {
+        match &self.peek().kind {
+            TokenKind::Equal => Some(crate::ast::BinaryOperator::Equal),
+            TokenKind::NotEqual => Some(crate::ast::BinaryOperator::NotEqual),
+            TokenKind::LessThan => Some(crate::ast::BinaryOperator::LessThan),
+            TokenKind::GreaterThan => Some(crate::ast::BinaryOperator::GreaterThan),
+            TokenKind::LessThanOrEqual => Some(crate::ast::BinaryOperator::LessThanOrEqual),
+            TokenKind::GreaterThanOrEqual => Some(crate::ast::BinaryOperator::GreaterThanOrEqual),
+            _ => None,
         }
     }
 
@@ -7138,6 +7147,31 @@ mod tests {
                     cases[0].conditions[0],
                     CaseCondition::Compare {
                         operator: crate::ast::BinaryOperator::GreaterThan,
+                        ..
+                    }
+                ));
+            } else {
+                panic!("Expected a select-case statement");
+            }
+        }
+
+        #[test]
+        fn parses_case_comparison_with_implied_is() {
+            // Per help.campbellsci.com's Select Case page: "If the Is keyword
+            // is omitted (for example, Case < 10), it is implied."
+            let source = "Select Case x\nCase < 10\n  y = 1\nEndSelect".to_string();
+            let mut scanner = Scanner::new(&source);
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+
+            if let Statement::SelectCase { cases, .. } = &program.statements[0] {
+                assert_eq!(cases[0].conditions.len(), 1);
+                assert!(matches!(
+                    cases[0].conditions[0],
+                    CaseCondition::Compare {
+                        operator: crate::ast::BinaryOperator::LessThan,
                         ..
                     }
                 ));
