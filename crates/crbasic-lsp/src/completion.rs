@@ -260,6 +260,71 @@ impl CompletionProvider {
                 "Delay(${1:Option}, ${2:Duration}, ${3:Units})",
                 "Pauses execution for a specified time.",
             ),
+            Self::create_function_completion(
+                "Battery",
+                "Battery(${1:Dest})",
+                "Measures the voltage of the battery powering the datalogger.",
+            ),
+            Self::create_function_completion(
+                "PanelTemp",
+                "PanelTemp(${1:Dest}, ${2:fN1})",
+                "Measures the temperature of the datalogger wiring panel in degrees Celsius.",
+            ),
+            Self::create_function_completion(
+                "BrHalf",
+                "BrHalf(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:SEChan}, ${5:ExChan}, ${6:MeasPEx}, ${7:ExmV}, ${8:RevEx}, ${9:SettlingTime}, ${10:fN1}, ${11:Mult}, ${12:Offset})",
+                "Applies an excitation voltage to a half bridge and measures the single-ended voltage output.",
+            ),
+            Self::create_function_completion(
+                "BrFull",
+                "BrFull(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:DiffChan}, ${5:ExChan}, ${6:MeasPEx}, ${7:ExmV}, ${8:RevEx}, ${9:RevDiff}, ${10:SettlingTime}, ${11:fN1}, ${12:Mult}, ${13:Offset})",
+                "Applies an excitation voltage to a full bridge and measures the differential voltage output.",
+            ),
+            Self::create_function_completion(
+                "Resistance",
+                "Resistance(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:DiffChan}, ${5:IexChan}, ${6:MeasPEx}, ${7:EXuA}, ${8:RevEx}, ${9:RevDiff}, ${10:SettlingTime}, ${11:fN1}, ${12:Mult}, ${13:Offset}, ${14:MeasCurrent})",
+                "Applies a known excitation current and measures the resistance of a bridge or resistive circuit.",
+            ),
+            Self::create_function_completion(
+                "PeriodAvg",
+                "PeriodAvg(${1:Dest}, ${2:Reps}, ${3:Chan}, ${4:Option}, ${5:Cycles}, ${6:Timeout}, ${7:Mult}, ${8:Offset})",
+                "Measures the period or frequency of a signal on a single-ended channel.",
+            ),
+            Self::create_function_completion(
+                "PortSet",
+                "PortSet(${1:Port}, ${2:State}, ${3:Option})",
+                "Sets a control port to a high or low state.",
+            ),
+            Self::create_function_completion(
+                "PulsePort",
+                "PulsePort(${1:Port}, ${2:Delay})",
+                "Toggles a port, delays, toggles it back, and delays again to generate a clocking pulse.",
+            ),
+            Self::create_function_completion(
+                "ExciteV",
+                "ExciteV(${1:ExChan}, ${2:ExmV}, ${3:Delay})",
+                "Sets an excitation channel output to a specified voltage for a specified duration.",
+            ),
+            Self::create_function_completion(
+                "BrHalf3W",
+                "BrHalf3W(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:SEChan}, ${5:ExChan}, ${6:MeasPEx}, ${7:ExmV}, ${8:RevEx}, ${9:SettlingTime}, ${10:fN1}, ${11:Mult}, ${12:Offset})",
+                "Applies an excitation voltage and measures a 3-wire half bridge to calculate the resistance ratio.",
+            ),
+            Self::create_function_completion(
+                "BrHalf4W",
+                "BrHalf4W(${1:Dest}, ${2:Reps}, ${3:Range1}, ${4:Range2}, ${5:DiffChan}, ${6:ExChan}, ${7:MeasPEx}, ${8:ExmV}, ${9:RevEx}, ${10:RevDiff}, ${11:SettlingTime}, ${12:fN1}, ${13:Mult}, ${14:Offset}, ${15:ReturnV1})",
+                "Applies an excitation voltage and makes two differential voltage measurements to measure a 4-wire half bridge.",
+            ),
+            Self::create_function_completion(
+                "BrFull6W",
+                "BrFull6W(${1:Dest}, ${2:Reps}, ${3:Range1}, ${4:Range2}, ${5:DiffChan}, ${6:ExChan}, ${7:MeasPEx}, ${8:ExmV}, ${9:RevEx}, ${10:RevDiff}, ${11:SettlingTime}, ${12:fN1}, ${13:Mult}, ${14:Offset}, ${15:ReturnV1})",
+                "Applies an excitation voltage and makes two differential voltage measurements to measure a 6-wire full bridge.",
+            ),
+            Self::create_function_completion(
+                "TCSE",
+                "TCSE(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:SEChan}, ${5:TCType}, ${6:TRef}, ${7:MeasOff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})",
+                "Measures a thermocouple on a single-ended channel and converts the reading to degrees Celsius.",
+            ),
         ]
     }
 
@@ -1224,6 +1289,165 @@ mod tests {
             let scan = completions.iter().find(|c| c.label == "Scan").unwrap();
 
             assert!(scan.documentation.is_some());
+        }
+
+        fn insert_text_for<'a>(completions: &'a [CompletionItem], label: &str) -> &'a str {
+            completions
+                .iter()
+                .find(|c| c.label == label)
+                .unwrap_or_else(|| panic!("no completion found for {label}"))
+                .insert_text
+                .as_deref()
+                .unwrap_or_else(|| panic!("{label} completion has no insert_text"))
+        }
+
+        #[test]
+        fn battery_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Battery"),
+                "Battery(${1:Dest})"
+            );
+        }
+
+        #[test]
+        fn paneltemp_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PanelTemp"),
+                "PanelTemp(${1:Dest}, ${2:fN1})"
+            );
+        }
+
+        #[test]
+        fn brhalf_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "BrHalf"),
+                "BrHalf(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:SEChan}, ${5:ExChan}, \
+                 ${6:MeasPEx}, ${7:ExmV}, ${8:RevEx}, ${9:SettlingTime}, ${10:fN1}, \
+                 ${11:Mult}, ${12:Offset})"
+            );
+        }
+
+        #[test]
+        fn brfull_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "BrFull"),
+                "BrFull(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:DiffChan}, ${5:ExChan}, \
+                 ${6:MeasPEx}, ${7:ExmV}, ${8:RevEx}, ${9:RevDiff}, ${10:SettlingTime}, \
+                 ${11:fN1}, ${12:Mult}, ${13:Offset})"
+            );
+        }
+
+        #[test]
+        fn resistance_snippet_includes_the_optional_trailing_meascurrent_parameter() {
+            // Confirmed at https://help.campbellsci.com/crbasic/cr6/Content/Instructions/resistance.htm:
+            // `MeasCurrent` is documented as an optional trailing parameter,
+            // not a separate overload.
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Resistance"),
+                "Resistance(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:DiffChan}, ${5:IexChan}, \
+                 ${6:MeasPEx}, ${7:EXuA}, ${8:RevEx}, ${9:RevDiff}, ${10:SettlingTime}, \
+                 ${11:fN1}, ${12:Mult}, ${13:Offset}, ${14:MeasCurrent})"
+            );
+        }
+
+        #[test]
+        fn periodavg_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PeriodAvg"),
+                "PeriodAvg(${1:Dest}, ${2:Reps}, ${3:Chan}, ${4:Option}, ${5:Cycles}, \
+                 ${6:Timeout}, ${7:Mult}, ${8:Offset})"
+            );
+        }
+
+        #[test]
+        fn portset_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PortSet"),
+                "PortSet(${1:Port}, ${2:State}, ${3:Option})"
+            );
+        }
+
+        #[test]
+        fn pulseport_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PulsePort"),
+                "PulsePort(${1:Port}, ${2:Delay})"
+            );
+        }
+
+        #[test]
+        fn excitev_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ExciteV"),
+                "ExciteV(${1:ExChan}, ${2:ExmV}, ${3:Delay})"
+            );
+        }
+
+        #[test]
+        fn brhalf3w_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "BrHalf3W"),
+                "BrHalf3W(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:SEChan}, ${5:ExChan}, \
+                 ${6:MeasPEx}, ${7:ExmV}, ${8:RevEx}, ${9:SettlingTime}, ${10:fN1}, \
+                 ${11:Mult}, ${12:Offset})"
+            );
+        }
+
+        #[test]
+        fn brhalf4w_snippet_includes_the_optional_trailing_returnv1_parameter() {
+            // Confirmed at https://help.campbellsci.com/crbasic/cr6/Content/Instructions/brhalf4w.htm:
+            // `ReturnV1` is documented as an optional trailing parameter.
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "BrHalf4W"),
+                "BrHalf4W(${1:Dest}, ${2:Reps}, ${3:Range1}, ${4:Range2}, ${5:DiffChan}, \
+                 ${6:ExChan}, ${7:MeasPEx}, ${8:ExmV}, ${9:RevEx}, ${10:RevDiff}, \
+                 ${11:SettlingTime}, ${12:fN1}, ${13:Mult}, ${14:Offset}, ${15:ReturnV1})"
+            );
+        }
+
+        #[test]
+        fn brfull6w_snippet_includes_the_optional_trailing_returnv1_parameter() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "BrFull6W"),
+                "BrFull6W(${1:Dest}, ${2:Reps}, ${3:Range1}, ${4:Range2}, ${5:DiffChan}, \
+                 ${6:ExChan}, ${7:MeasPEx}, ${8:ExmV}, ${9:RevEx}, ${10:RevDiff}, \
+                 ${11:SettlingTime}, ${12:fN1}, ${13:Mult}, ${14:Offset}, ${15:ReturnV1})"
+            );
+        }
+
+        #[test]
+        fn tcse_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TCSE"),
+                "TCSE(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:SEChan}, ${5:TCType}, ${6:TRef}, \
+                 ${7:MeasOff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})"
+            );
         }
     }
 
