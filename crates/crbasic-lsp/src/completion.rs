@@ -585,6 +585,31 @@ impl CompletionProvider {
                 "Floor(${1:Value})",
                 "Rounds a number down to the nearest integer.",
             ),
+            Self::create_function_completion(
+                "SetStatus",
+                "SetStatus(${1:FieldName}, ${2:Value})",
+                "Changes the value of a field in the datalogger's Status table.",
+            ),
+            Self::create_function_completion(
+                "SetSetting",
+                "SetSetting(${1:FieldName}, ${2:Value})",
+                "Changes the value of a field in the datalogger's Settings table.",
+            ),
+            Self::create_function_completion(
+                "MoveBytes",
+                "MoveBytes(${1:Destination}, ${2:DestOffset}, ${3:Source}, ${4:SourceOffset}, ${5:NumBytes}, ${6:Transfer})",
+                "Moves binary bytes of data from one memory location to another.",
+            ),
+            Self::create_function_completion(
+                "ArrayLength",
+                "ArrayLength(${1:ArrayLenVar})",
+                "Returns the total number of elements across all dimensions of an array.",
+            ),
+            Self::create_function_completion(
+                "NaN",
+                "NaN",
+                "Represents the IEEE-754 Not-a-Number value used to flag an invalid measurement.",
+            ),
         ]
     }
 
@@ -2232,6 +2257,58 @@ mod tests {
             let completions = CompletionProvider::get_builtin_function_completions();
 
             assert_eq!(insert_text_for(&completions, "Floor"), "Floor(${1:Value})");
+        }
+
+        #[test]
+        fn setstatus_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SetStatus"),
+                "SetStatus(${1:FieldName}, ${2:Value})"
+            );
+        }
+
+        #[test]
+        fn setsetting_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SetSetting"),
+                "SetSetting(${1:FieldName}, ${2:Value})"
+            );
+        }
+
+        #[test]
+        fn movebytes_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MoveBytes"),
+                "MoveBytes(${1:Destination}, ${2:DestOffset}, ${3:Source}, ${4:SourceOffset}, \
+                 ${5:NumBytes}, ${6:Transfer})"
+            );
+        }
+
+        #[test]
+        fn arraylength_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ArrayLength"),
+                "ArrayLength(${1:ArrayLenVar})"
+            );
+        }
+
+        #[test]
+        fn nan_snippet_takes_no_parentheses() {
+            // Confirmed via Campbell Scientific's NAN/INF troubleshooting
+            // page (help.campbellsci.com/CR6/Content/shared/Maintain/Troubleshooting/NAN_and_INF.htm):
+            // NaN is a bare constant (e.g. `WindDir = NAN`), not a callable
+            // instruction with its own syntax page.
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "NaN"), "NaN");
         }
     }
 
