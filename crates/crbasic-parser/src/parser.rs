@@ -2117,128 +2117,30 @@ impl<'a> Parser<'a> {
 
     /// Parses an expression
     fn parse_expression(&mut self) -> Result<Expression, ParseError> {
-        self.parse_logical_imp()
+        self.parse_shift_and_logical()
     }
 
-    /// Parses logical IMP (implication) expressions -- the loosest-binding
-    /// logical operator, per the common BASIC-family convention
-    fn parse_logical_imp(&mut self) -> Result<Expression, ParseError> {
-        let mut left = self.parse_logical_or()?;
-
-        loop {
-            if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if *kw == "IMP") {
-                break;
-            }
-
-            self.advance();
-
-            let right = self.parse_logical_or()?;
-
-            let span = crate::lexer::token::Span::new(left.span().start, right.span().end);
-            left = Expression::BinaryOp {
-                left: Box::new(left),
-                operator: crate::ast::BinaryOperator::Implication,
-                right: Box::new(right),
-                span,
-            };
-        }
-
-        Ok(left)
-    }
-
-    /// Parses logical OR expressions
-    fn parse_logical_or(&mut self) -> Result<Expression, ParseError> {
-        let mut left = self.parse_logical_xor()?;
-
-        loop {
-            if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if *kw == "OR") {
-                break;
-            }
-
-            self.advance();
-
-            let right = self.parse_logical_xor()?;
-
-            let span = crate::lexer::token::Span::new(left.span().start, right.span().end);
-            left = Expression::BinaryOp {
-                left: Box::new(left),
-                operator: crate::ast::BinaryOperator::Or,
-                right: Box::new(right),
-                span,
-            };
-        }
-
-        Ok(left)
-    }
-
-    /// Parses logical XOR expressions
-    fn parse_logical_xor(&mut self) -> Result<Expression, ParseError> {
-        let mut left = self.parse_logical_and()?;
-
-        loop {
-            if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if *kw == "XOR") {
-                break;
-            }
-
-            self.advance();
-
-            let right = self.parse_logical_and()?;
-
-            let span = crate::lexer::token::Span::new(left.span().start, right.span().end);
-            left = Expression::BinaryOp {
-                left: Box::new(left),
-                operator: crate::ast::BinaryOperator::Xor,
-                right: Box::new(right),
-                span,
-            };
-        }
-
-        Ok(left)
-    }
-
-    /// Parses logical AND expressions
-    fn parse_logical_and(&mut self) -> Result<Expression, ParseError> {
+    /// Parses the loosest precedence tier documented by Campbell Scientific's
+    /// Operators page (help.campbellsci.com/crbasic/cr1000x/Content/Instructions/operators1.htm):
+    /// `<<`, `>>`, `AND`, `OR`, `XOR`, and `IMP` all share one precedence,
+    /// evaluated left to right rather than nested tier-by-tier.
+    fn parse_shift_and_logical(&mut self) -> Result<Expression, ParseError> {
         let mut left = self.parse_comparison()?;
 
         loop {
-            if !matches!(&self.peek().kind, TokenKind::Keyword(kw) if *kw == "AND") {
-                break;
-            }
-
-            self.advance();
-
-            let right = self.parse_comparison()?;
-
-            let span = crate::lexer::token::Span::new(left.span().start, right.span().end);
-            left = Expression::BinaryOp {
-                left: Box::new(left),
-                operator: crate::ast::BinaryOperator::And,
-                right: Box::new(right),
-                span,
-            };
-        }
-
-        Ok(left)
-    }
-
-    /// Parses comparison expressions (=, <>, <, >, <=, >=)
-    fn parse_comparison(&mut self) -> Result<Expression, ParseError> {
-        let mut left = self.parse_shift()?;
-
-        loop {
             let operator = match &self.peek().kind {
-                TokenKind::Equal => crate::ast::BinaryOperator::Equal,
-                TokenKind::NotEqual => crate::ast::BinaryOperator::NotEqual,
-                TokenKind::LessThan => crate::ast::BinaryOperator::LessThan,
-                TokenKind::GreaterThan => crate::ast::BinaryOperator::GreaterThan,
-                TokenKind::LessThanOrEqual => crate::ast::BinaryOperator::LessThanOrEqual,
-                TokenKind::GreaterThanOrEqual => crate::ast::BinaryOperator::GreaterThanOrEqual,
+                TokenKind::LeftShift => crate::ast::BinaryOperator::LeftShift,
+                TokenKind::RightShift => crate::ast::BinaryOperator::RightShift,
+                TokenKind::Keyword(kw) if *kw == "AND" => crate::ast::BinaryOperator::And,
+                TokenKind::Keyword(kw) if *kw == "OR" => crate::ast::BinaryOperator::Or,
+                TokenKind::Keyword(kw) if *kw == "XOR" => crate::ast::BinaryOperator::Xor,
+                TokenKind::Keyword(kw) if *kw == "IMP" => crate::ast::BinaryOperator::Implication,
                 _ => break,
             };
 
             self.advance();
 
-            let right = self.parse_shift()?;
+            let right = self.parse_comparison()?;
 
             let span = crate::lexer::token::Span::new(left.span().start, right.span().end);
             left = Expression::BinaryOp {
@@ -2252,14 +2154,18 @@ impl<'a> Parser<'a> {
         Ok(left)
     }
 
-    /// Parses bit-shift expressions (<<, >>)
-    fn parse_shift(&mut self) -> Result<Expression, ParseError> {
+    /// Parses comparison expressions (=, <>, <, >, <=, >=)
+    fn parse_comparison(&mut self) -> Result<Expression, ParseError> {
         let mut left = self.parse_additive()?;
 
         loop {
             let operator = match &self.peek().kind {
-                TokenKind::LeftShift => crate::ast::BinaryOperator::LeftShift,
-                TokenKind::RightShift => crate::ast::BinaryOperator::RightShift,
+                TokenKind::Equal => crate::ast::BinaryOperator::Equal,
+                TokenKind::NotEqual => crate::ast::BinaryOperator::NotEqual,
+                TokenKind::LessThan => crate::ast::BinaryOperator::LessThan,
+                TokenKind::GreaterThan => crate::ast::BinaryOperator::GreaterThan,
+                TokenKind::LessThanOrEqual => crate::ast::BinaryOperator::LessThanOrEqual,
+                TokenKind::GreaterThanOrEqual => crate::ast::BinaryOperator::GreaterThanOrEqual,
                 _ => break,
             };
 
@@ -2309,7 +2215,7 @@ impl<'a> Parser<'a> {
 
     /// Parses multiplicative expressions (*, /, \, Mod)
     fn parse_multiplicative(&mut self) -> Result<Expression, ParseError> {
-        let mut left = self.parse_power()?;
+        let mut left = self.parse_unary()?;
 
         loop {
             let operator = match &self.peek().kind {
@@ -2322,7 +2228,7 @@ impl<'a> Parser<'a> {
 
             self.advance();
 
-            let right = self.parse_power()?;
+            let right = self.parse_unary()?;
 
             let span = crate::lexer::token::Span::new(left.span().start, right.span().end);
             left = Expression::BinaryOp {
@@ -2336,28 +2242,11 @@ impl<'a> Parser<'a> {
         Ok(left)
     }
 
-    /// Parses power expressions (^)
-    fn parse_power(&mut self) -> Result<Expression, ParseError> {
-        let mut left = self.parse_unary()?;
-
-        // Power is right-associative (2^3^4 = 2^(3^4))
-        if matches!(self.peek().kind, TokenKind::Caret) {
-            self.advance();
-            let right = self.parse_power()?;
-
-            let span = crate::lexer::token::Span::new(left.span().start, right.span().end);
-            left = Expression::BinaryOp {
-                left: Box::new(left),
-                operator: crate::ast::BinaryOperator::Power,
-                right: Box::new(right),
-                span,
-            };
-        }
-
-        Ok(left)
-    }
-
-    /// Parses unary expressions (-, NOT, @, !)
+    /// Parses unary expressions (-, NOT, @, !) -- per Campbell Scientific's
+    /// documented precedence table, these bind looser than power (^), so a
+    /// prefix operator's operand recurses through `parse_unary` (to allow
+    /// chaining, e.g. `--5`) and falls through to `parse_power` once no more
+    /// prefix operators remain.
     fn parse_unary(&mut self) -> Result<Expression, ParseError> {
         let operator = match &self.peek().kind {
             TokenKind::Minus => Some(crate::ast::UnaryOperator::Negate),
@@ -2382,7 +2271,32 @@ impl<'a> Parser<'a> {
             });
         }
 
-        self.parse_primary()
+        self.parse_power()
+    }
+
+    /// Parses power expressions (^) -- the single tightest-binding operator
+    /// per Campbell Scientific's documented precedence table, so `-2 ^ 2`
+    /// parses as `-(2 ^ 2)`, not `(-2) ^ 2`.
+    fn parse_power(&mut self) -> Result<Expression, ParseError> {
+        let left = self.parse_primary()?;
+
+        // Power is right-associative (2^3^4 = 2^(3^4)); the right operand
+        // recurses through `parse_unary` so a unary sign may attach directly
+        // to the exponent (e.g. `2^-3`).
+        if matches!(self.peek().kind, TokenKind::Caret) {
+            self.advance();
+            let right = self.parse_unary()?;
+
+            let span = crate::lexer::token::Span::new(left.span().start, right.span().end);
+            return Ok(Expression::BinaryOp {
+                left: Box::new(left),
+                operator: crate::ast::BinaryOperator::Power,
+                right: Box::new(right),
+                span,
+            });
+        }
+
+        Ok(left)
     }
 
     /// Parses a primary expression (literals, identifiers, parentheses, etc.)
@@ -2599,13 +2513,18 @@ mod tests {
 
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::FloatLiteral { value, .. } => {
                         assert!((value - 25.5).abs() < 0.001);
                     }
                     _ => panic!("Expected float literal"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -2619,13 +2538,18 @@ mod tests {
 
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::StringLiteral { value, .. } => {
                         assert_eq!(value, "Hello");
                     }
                     _ => panic!("Expected string literal"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -2639,13 +2563,18 @@ mod tests {
 
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::Identifier { name, .. } => {
                         assert_eq!(name, "Temp_C");
                     }
                     _ => panic!("Expected identifier"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -2735,8 +2664,8 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp {
                         left,
                         operator,
@@ -2759,6 +2688,11 @@ mod tests {
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -2771,13 +2705,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::Subtract);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -2790,13 +2729,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::Multiply);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -2809,13 +2753,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::Divide);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -2828,13 +2777,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::Power);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -2999,8 +2953,8 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp {
                         left,
                         operator,
@@ -3023,6 +2977,11 @@ mod tests {
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
     }
@@ -3033,7 +2992,10 @@ mod tests {
 
         #[test]
         fn parses_equality() {
-            let mut scanner = Scanner::new("x = 5");
+            // A bare `x = 5` statement is an assignment, not an equality
+            // comparison -- wrap in a call so `=` is unambiguously parsed as
+            // the comparison operator.
+            let mut scanner = Scanner::new("Invoke(x = 5)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3047,6 +3009,11 @@ mod tests {
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected function call statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3059,13 +3026,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::NotEqual);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3078,13 +3050,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::LessThan);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3097,13 +3074,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::GreaterThan);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3116,13 +3098,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::LessThanOrEqual);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3135,13 +3122,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::GreaterThanOrEqual);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3155,8 +3147,8 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp {
                         left,
                         operator,
@@ -3179,6 +3171,11 @@ mod tests {
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
     }
@@ -3196,13 +3193,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::LeftShift);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3215,19 +3217,28 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::RightShift);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
         #[test]
-        fn shift_binds_tighter_than_comparison_but_looser_than_addition() {
-            // x + 1 << 2 = 5 should parse as ((x + 1) << 2) = 5
+        fn shift_shares_the_loosest_precedence_tier_with_logical_operators() {
+            // Per Campbell Scientific's documented precedence table
+            // (help.campbellsci.com/crbasic/cr1000x/Content/Instructions/operators1.htm),
+            // << and >> share the loosest precedence tier with AND/OR/XOR/IMP,
+            // looser than comparison. x + 1 << 2 = 5 should parse as
+            // (x + 1) << (2 = 5), not ((x + 1) << 2) = 5.
             let source = "x + 1 << 2 = 5".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3237,19 +3248,25 @@ mod tests {
             assert_eq!(program.statements.len(), 1);
 
             if let Statement::Expression { expression, .. } = &program.statements[0] {
-                if let Expression::BinaryOp { left, operator, .. } = expression {
-                    assert_eq!(*operator, BinaryOperator::Equal);
+                if let Expression::BinaryOp {
+                    left,
+                    operator,
+                    right,
+                    ..
+                } = expression
+                {
+                    assert_eq!(*operator, BinaryOperator::LeftShift);
 
-                    if let Expression::BinaryOp { left, operator, .. } = &**left {
-                        assert_eq!(*operator, BinaryOperator::LeftShift);
-
-                        if let Expression::BinaryOp { operator, .. } = &**left {
-                            assert_eq!(*operator, BinaryOperator::Add);
-                        } else {
-                            panic!("Expected addition inside the shift's left operand");
-                        }
+                    if let Expression::BinaryOp { operator, .. } = &**left {
+                        assert_eq!(*operator, BinaryOperator::Add);
                     } else {
-                        panic!("Expected a left shift inside the equality's left operand");
+                        panic!("Expected addition for the shift's left operand");
+                    }
+
+                    if let Expression::BinaryOp { operator, .. } = &**right {
+                        assert_eq!(*operator, BinaryOperator::Equal);
+                    } else {
+                        panic!("Expected equality for the shift's right operand");
                     }
                 } else {
                     panic!("Expected binary operation");
@@ -3276,13 +3293,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::And);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3295,13 +3317,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::Or);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3314,19 +3341,27 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp { operator, .. } => {
                         assert_eq!(*operator, BinaryOperator::Xor);
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
         #[test]
-        fn logical_and_has_higher_precedence_than_or() {
-            // x OR y AND z should parse as x OR (y AND z), not (x OR y) AND z
+        fn logical_operators_share_precedence_evaluated_left_to_right() {
+            // Per Campbell Scientific's documented precedence table, AND/OR/XOR/IMP
+            // (and shift) all share one precedence tier, evaluated in written
+            // order -- not a nested tier per operator. x OR y AND z should parse
+            // as (x OR y) AND z, not x OR (y AND z).
             let mut scanner = Scanner::new("x OR y AND z");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
@@ -3334,37 +3369,44 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp {
                         left,
                         operator,
                         right,
                         ..
                     } => {
-                        assert_eq!(*operator, BinaryOperator::Or);
+                        assert_eq!(*operator, BinaryOperator::And);
 
-                        if let Expression::Identifier { name, .. } = &**left {
-                            assert_eq!(name, "x");
+                        if let Expression::BinaryOp { operator, .. } = &**left {
+                            assert_eq!(*operator, BinaryOperator::Or);
                         } else {
-                            panic!("Expected identifier for left operand");
+                            panic!("Expected OR for left operand");
                         }
 
-                        if let Expression::BinaryOp { operator, .. } = &**right {
-                            assert_eq!(*operator, BinaryOperator::And);
+                        if let Expression::Identifier { name, .. } = &**right {
+                            assert_eq!(name, "z");
                         } else {
-                            panic!("Expected AND for right operand");
+                            panic!("Expected identifier for right operand");
                         }
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
         #[test]
         fn comparison_has_higher_precedence_than_logical() {
-            // x = 5 AND y = 10 should parse as (x = 5) AND (y = 10)
-            let mut scanner = Scanner::new("x = 5 AND y = 10");
+            // x = 5 AND y = 10 should parse as (x = 5) AND (y = 10). Wrapped
+            // in a call so the leading `x =` is unambiguously a comparison,
+            // not a bare-statement assignment.
+            let mut scanner = Scanner::new("Invoke(x = 5 AND y = 10)");
             let tokens = scanner.scan_tokens();
             let mut parser = Parser::new(tokens);
 
@@ -3395,6 +3437,11 @@ mod tests {
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected function call statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3424,8 +3471,10 @@ mod tests {
         }
 
         #[test]
-        fn imp_has_lower_precedence_than_or() {
-            // x OR y IMP z should parse as (x OR y) IMP z, not x OR (y IMP z)
+        fn implication_shares_precedence_with_or_evaluated_left_to_right() {
+            // IMP shares its precedence tier with OR (see
+            // logical_operators_share_precedence_evaluated_left_to_right), so
+            // x OR y IMP z parses left to right as (x OR y) IMP z.
             let source = "x OR y IMP z".to_string();
             let mut scanner = Scanner::new(&source);
             let tokens = scanner.scan_tokens();
@@ -3468,8 +3517,8 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::UnaryOp {
                         operator, operand, ..
                     } => {
@@ -3483,6 +3532,11 @@ mod tests {
                     }
                     _ => panic!("Expected unary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3495,8 +3549,8 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::UnaryOp {
                         operator, operand, ..
                     } => {
@@ -3510,6 +3564,11 @@ mod tests {
                     }
                     _ => panic!("Expected unary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3523,8 +3582,8 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp {
                         left,
                         operator,
@@ -3550,6 +3609,80 @@ mod tests {
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn power_binds_tighter_than_unary_minus() {
+            // Per Campbell Scientific's documented precedence table, ^ is the
+            // single tightest-binding operator, tighter than unary +/-/NOT.
+            // -2 ^ 2 should parse as -(2 ^ 2), not (-2) ^ 2.
+            let mut scanner = Scanner::new("-2 ^ 2");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::UnaryOp {
+                        operator, operand, ..
+                    } => {
+                        assert_eq!(*operator, UnaryOperator::Negate);
+
+                        if let Expression::BinaryOp { operator, .. } = &**operand {
+                            assert_eq!(*operator, BinaryOperator::Power);
+                        } else {
+                            panic!("Expected power for the negation's operand");
+                        }
+                    }
+                    _ => panic!("Expected unary operation, got {expression:?}"),
+                }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn power_exponent_may_carry_a_unary_sign() {
+            // 2 ^ -3 should parse as 2 ^ (-3), the common convention for
+            // letting a unary sign attach directly to an exponent.
+            let mut scanner = Scanner::new("2 ^ -3");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::BinaryOp {
+                        operator, right, ..
+                    } => {
+                        assert_eq!(*operator, BinaryOperator::Power);
+
+                        if let Expression::UnaryOp { operator, .. } = &**right {
+                            assert_eq!(*operator, UnaryOperator::Negate);
+                        } else {
+                            panic!("Expected negation for the power's right operand");
+                        }
+                    }
+                    _ => panic!("Expected binary operation, got {expression:?}"),
+                }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3563,8 +3696,8 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::UnaryOp {
                         operator, operand, ..
                     } => {
@@ -3578,6 +3711,11 @@ mod tests {
                     }
                     _ => panic!("Expected unary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3649,13 +3787,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::IntegerLiteral { value, .. } => {
                         assert_eq!(*value, 5);
                     }
                     _ => panic!("Expected integer literal"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3669,8 +3812,8 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::BinaryOp {
                         left,
                         operator,
@@ -3693,6 +3836,11 @@ mod tests {
                     }
                     _ => panic!("Expected binary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3706,13 +3854,18 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::IntegerLiteral { value, .. } => {
                         assert_eq!(*value, 5);
                     }
                     _ => panic!("Expected integer literal"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
 
@@ -3726,8 +3879,8 @@ mod tests {
             let program = parser.parse().expect("Should parse successfully");
             assert_eq!(program.statements.len(), 1);
 
-            if let Statement::FunctionCall { arguments, .. } = &program.statements[0] {
-                match &arguments[0] {
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
                     Expression::UnaryOp {
                         operator, operand, ..
                     } => {
@@ -3742,6 +3895,11 @@ mod tests {
                     }
                     _ => panic!("Expected unary operation"),
                 }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
             }
         }
     }
