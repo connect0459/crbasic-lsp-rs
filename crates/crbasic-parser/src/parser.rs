@@ -2281,25 +2281,58 @@ impl<'a> Parser<'a> {
     /// per Campbell Scientific's documented precedence table, so `-2 ^ 2`
     /// parses as `-(2 ^ 2)`, not `(-2) ^ 2`.
     fn parse_power(&mut self) -> Result<Expression, ParseError> {
-        let left = self.parse_primary()?;
+        let mut left = self.parse_primary()?;
 
-        // Power is right-associative (2^3^4 = 2^(3^4)); the right operand
-        // recurses through `parse_unary` so a unary sign may attach directly
-        // to the exponent (e.g. `2^-3`).
-        if matches!(self.peek().kind, TokenKind::Caret) {
+        // Same-tier operators are "evaluated in the order they are written"
+        // per the documented precedence table, so a chain of ^ is
+        // left-associative (2^3^2 = (2^3)^2, not 2^(3^2)); each right
+        // operand goes through `parse_power_exponent` rather than
+        // recursing back into `parse_power`, since that would re-introduce
+        // right-associative chaining.
+        while matches!(self.peek().kind, TokenKind::Caret) {
             self.advance();
-            let right = self.parse_unary()?;
+            let right = self.parse_power_exponent()?;
 
             let span = crate::lexer::token::Span::new(left.span().start, right.span().end);
-            return Ok(Expression::BinaryOp {
+            left = Expression::BinaryOp {
                 left: Box::new(left),
                 operator: crate::ast::BinaryOperator::Power,
                 right: Box::new(right),
                 span,
-            });
+            };
         }
 
         Ok(left)
+    }
+
+    /// Parses the right-hand operand of `^`, allowing a unary sign to attach
+    /// directly to the exponent (e.g. `2 ^ -3`) without recursing back into
+    /// `parse_power` -- chained `^` is left-associative and handled entirely
+    /// by `parse_power`'s own loop.
+    fn parse_power_exponent(&mut self) -> Result<Expression, ParseError> {
+        let operator = match &self.peek().kind {
+            TokenKind::Minus => Some(crate::ast::UnaryOperator::Negate),
+            TokenKind::Keyword(kw) if *kw == "NOT" => Some(crate::ast::UnaryOperator::Not),
+            TokenKind::At => Some(crate::ast::UnaryOperator::AddressOf),
+            TokenKind::Bang => Some(crate::ast::UnaryOperator::Dereference),
+            _ => None,
+        };
+
+        if let Some(op) = operator {
+            let op_token = self.advance();
+            let start = op_token.span.start;
+
+            let operand = self.parse_power_exponent()?;
+
+            let span = crate::lexer::token::Span::new(start, operand.span().end);
+            return Ok(Expression::UnaryOp {
+                operator: op,
+                operand: Box::new(operand),
+                span,
+            });
+        }
+
+        self.parse_primary()
     }
 
     /// Parses a primary expression (literals, identifiers, parentheses, etc.)
@@ -3703,6 +3736,52 @@ mod tests {
                         } else {
                             panic!("Expected negation for the power's right operand");
                         }
+                    }
+                    _ => panic!("Expected binary operation, got {expression:?}"),
+                }
+            } else {
+                panic!(
+                    "Expected expression statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn power_chains_left_to_right() {
+            // Per Campbell Scientific's documented precedence table, operators
+            // sharing a tier are "evaluated in the order they are written" --
+            // ^ is alone in its tier, so a chain of ^ is left-associative:
+            // 2 ^ 3 ^ 2 should parse as (2 ^ 3) ^ 2, not 2 ^ (3 ^ 2).
+            let mut scanner = Scanner::new("2 ^ 3 ^ 2");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(program.statements.len(), 1);
+
+            if let Statement::Expression { expression, .. } = &program.statements[0] {
+                match expression {
+                    Expression::BinaryOp {
+                        operator,
+                        left,
+                        right,
+                        ..
+                    } => {
+                        assert_eq!(*operator, BinaryOperator::Power);
+
+                        if let Expression::BinaryOp { operator, .. } = &**left {
+                            assert_eq!(*operator, BinaryOperator::Power);
+                        } else {
+                            panic!(
+                                "Expected the outer power's left operand to itself be a power expression, got {left:?}"
+                            );
+                        }
+
+                        assert!(
+                            matches!(**right, Expression::IntegerLiteral { value: 2, .. }),
+                            "Expected the outer power's right operand to be the trailing literal 2, got {right:?}"
+                        );
                     }
                     _ => panic!("Expected binary operation, got {expression:?}"),
                 }
