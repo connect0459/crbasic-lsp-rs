@@ -1462,6 +1462,24 @@ mod tests {
         }
 
         #[test]
+        fn every_canonical_builtin_function_has_a_completion_item() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+            let labels: Vec<&str> = completions.iter().map(|c| c.label.as_str()).collect();
+
+            let uncompleted: Vec<&str> = crbasic_parser::BUILTIN_FUNCTIONS
+                .iter()
+                .map(|(name, _)| *name)
+                .filter(|name| !labels.contains(name))
+                .collect();
+
+            assert!(
+                uncompleted.is_empty(),
+                "BUILTIN_FUNCTIONS entries missing a completion item: {:?}",
+                uncompleted
+            );
+        }
+
+        #[test]
         fn builtin_functions_have_snippet_format() {
             let completions = CompletionProvider::get_builtin_function_completions();
             let scan = completions.iter().find(|c| c.label == "Scan").unwrap();
