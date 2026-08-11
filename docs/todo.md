@@ -3792,3 +3792,103 @@ Not flagged as gaps (verified during the same round):
   new gaps.
 - No new statement-level construct found in the two reference repos'
   snippet/source directories beyond what Rounds 24/25 already exhausted.
+
+### Reference Implementation & Official Docs Comparison, Round 27 (2026-08-11)
+
+Found while re-auditing operator *associativity* (not just tier
+membership/precedence, which Round 26 already fixed) and re-verifying
+Round 26's own dismissal reasoning for `Eqv` against a fresh raw-HTML
+fetch of help.campbellsci.com's Operators page.
+
+- [x] Chained `^` (power) was right-associative; documented rule says
+  left-to-right ✅ Resolved
+  - `parse_power`'s right operand recursed through `parse_unary` (i.e.
+    right-recursive), making `2 ^ 3 ^ 2` parse as `2 ^ (3 ^ 2) = 512`.
+    [operators1.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/operators1.htm)
+    (re-fetched via raw `curl`, per Round 26's own lesson that a
+    summarizing fetch tool misses this page's table content) lists `(^)`
+    as its own sole-member precedence tier, followed by the blanket rule:
+    "Operators with the same precedence are evaluated in the order they
+    are written inside the expression." Since `^` is alone in its tier,
+    this rule can only describe chained-`^` evaluation order --
+    left-to-right, i.e. `(2 ^ 3) ^ 2 = 64` -- the same left-associative
+    convention VB documents for its own `^`. This is the one sub-case
+    Round 26's `-2 ^ 2` fix didn't itself test (repeated `^`, vs. `^`
+    combined with unary).
+  - Fixed by changing `parse_power` from a single `if` (one application)
+    to a `while` loop that accumulates left-associatively, with a new
+    `parse_power_exponent` helper for the right operand -- it still
+    allows a unary sign to attach directly to the exponent (e.g. `2^-3`,
+    the existing documented convention) but, unlike `parse_unary`, does
+    not fall through to `parse_power` itself, which would have
+    re-introduced right-associative chaining
+  - 1 new parser test (`power_chains_left_to_right`) added Red-first;
+    full workspace `build`/`test`/`clippy`/`fmt` gate passes
+- [x] `Select Case`'s "Is omitted" bare-comparison form (`Case < 10`)
+  was unparseable ✅ Resolved
+  - [selectcase.htm](https://help.campbellsci.com/crbasic/cr1000x/Content/Instructions/selectcase.htm),
+    verbatim: "The Case Is statement is a keyword that is used before a
+    comparison operator ... If the Is keyword is omitted (for example,
+    `Case < 10`), it is implied." `parse_case_condition_term` only
+    recognized the explicit `Is <op> Expression` form; a bare leading
+    comparison operator fell through to `parse_additive`, which has no
+    path to consume it, producing a hard `Unexpected token` parse error
+    on valid, officially documented syntax.
+  - Fixed by extracting the operator-matching arm into
+    `match_case_comparison_operator` and checking for it before falling
+    back to plain-value/range parsing, regardless of whether `Is` was
+    written; the explicit-`Is`-with-no-operator-following case still
+    errors the same as before
+  - 1 new parser test (`parses_case_comparison_with_implied_is`) added
+    Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate passes
+- [x] `Eqv` logical operator: Round 26's dismissal reasoning contained a
+  factual error; reassessed and implemented ✅ Resolved
+  - Round 26 justified continuing to dismiss `Eqv` by claiming it
+    "appears only inside the page's illustrative logical-operator truth
+    table, never as its own row in the main operator list or **the
+    precedence table's own text** -- unlike `Imp`, which has both." A
+    fresh raw-HTML fetch of the same page shows this is false: the
+    Precedence/Order of Operation section's own text reads `(<<, >>,
+    And, Or, Xor, Eqv, Imp)` -- `Eqv` sits in the identical sentence and
+    tier as `Imp`. It still lacks a dedicated named row in the main
+    operator list (unlike `Imp`/`INTDV`, which both have one), so it
+    didn't clear the *stricter* dual-bar Round 26 used for `INTDV` -- but
+    it does clear the *weaker* bar Round 3 used to accept `Imp` (tier
+    membership in the precedence table's own text).
+  - Consulted the user given the judgment call on which bar applies;
+    decided to implement `Eqv` now
+  - Added `BinaryOperator::Equivalence`, parsed in
+    `parse_shift_and_logical` alongside `Imp` (same precedence tier,
+    same left-to-right evaluation), registered in `keywords.json`'s
+    `logical` category, with matching completion/hover coverage and the
+    hand-authored TextMate operator regex (`generate-grammar.js`,
+    alongside `AND`/`OR`/`NOT`/`XOR`/`MOD`/`IMP`/`INTDV`)
+  - 2 new parser tests (`parses_eqv_operation`,
+    `equivalence_shares_precedence_with_or_evaluated_left_to_right`)
+    added Red-first; full workspace `build`/`test`/`clippy`/`fmt` and
+    client `lint`/`format:check`/`test` gates pass
+
+Not flagged as gaps (verified during the same round):
+
+- Swept all 17 remaining `if let Statement::FunctionCall { .. } = ...`
+  sites in `parser.rs` that Round 26's own vacuous-match fix didn't
+  itself rewrite: every one uses a genuinely function-call-shaped source
+  with a panicking `else` branch -- no further instance of that bug.
+- Mechanically cross-checked all `keywords.json` `languageKeywords`
+  entries against `parser.rs`'s dispatch sites: zero misses, no new
+  instance of the "advertised via `keywords.json` but absent from the
+  parser" bug class (`Mod`/`ElseIf`/`Select Case`/`Exit` statements were
+  prior instances).
+- `Is` as a general/standalone comparison operator: `selectcase.htm`
+  confirms `Is` is exclusively a `Case`-clause keyword, not usable as an
+  ordinary binary operator in `If`/assignment expressions -- the current
+  scoping of `Is`-handling to `parse_case_condition_term` only is
+  correct as-is.
+- Every other precedence tier (`parse_shift_and_logical`/
+  `parse_comparison`/`parse_additive`/`parse_multiplicative`) already
+  uses a left-to-right accumulating loop matching the documented
+  "evaluated in the order they are written" rule -- `parse_power`'s
+  former right-recursion was the only tier that diverged from this
+  pattern.
+- LSP provider capability surface unchanged since Rounds 11/21's
+  exhaustive audits: no applicable LSP 3.17 provider missing.
