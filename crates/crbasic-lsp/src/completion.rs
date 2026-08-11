@@ -540,6 +540,51 @@ impl CompletionProvider {
                 "Sprintf(${1:Dest}, ${2:Format}, ${3:Argument1})",
                 "Writes a formatted output string to a destination variable.",
             ),
+            Self::create_function_completion(
+                "Sgn",
+                "Sgn(${1:Value})",
+                "Returns the sign of a number as -1, 0, or 1.",
+            ),
+            Self::create_function_completion(
+                "Ln",
+                "Ln(${1:Value})",
+                "Returns the natural logarithm.",
+            ),
+            Self::create_function_completion(
+                "Sinh",
+                "Sinh(${1:Value})",
+                "Returns the hyperbolic sine.",
+            ),
+            Self::create_function_completion(
+                "Cosh",
+                "Cosh(${1:Value})",
+                "Returns the hyperbolic cosine.",
+            ),
+            Self::create_function_completion(
+                "Tanh",
+                "Tanh(${1:Value})",
+                "Returns the hyperbolic tangent.",
+            ),
+            Self::create_function_completion(
+                "Frac",
+                "Frac(${1:Value})",
+                "Returns the fractional portion of a number.",
+            ),
+            Self::create_function_completion(
+                "Rnd",
+                "Rnd",
+                "Returns a random value between 0 (inclusive) and 1 (exclusive).",
+            ),
+            Self::create_function_completion(
+                "Ceiling",
+                "Ceiling(${1:Value})",
+                "Rounds a number up to the nearest integer.",
+            ),
+            Self::create_function_completion(
+                "Floor",
+                "Floor(${1:Value})",
+                "Rounds a number down to the nearest integer.",
+            ),
         ]
     }
 
@@ -2117,6 +2162,76 @@ mod tests {
                 insert_text_for(&completions, "Sprintf"),
                 "Sprintf(${1:Dest}, ${2:Format}, ${3:Argument1})"
             );
+        }
+
+        #[test]
+        fn sgn_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Sgn"), "Sgn(${1:Value})");
+        }
+
+        #[test]
+        fn ln_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Ln"), "Ln(${1:Value})");
+        }
+
+        #[test]
+        fn sinh_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Sinh"), "Sinh(${1:Value})");
+        }
+
+        #[test]
+        fn cosh_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Cosh"), "Cosh(${1:Value})");
+        }
+
+        #[test]
+        fn tanh_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Tanh"), "Tanh(${1:Value})");
+        }
+
+        #[test]
+        fn frac_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Frac"), "Frac(${1:Value})");
+        }
+
+        #[test]
+        fn rnd_snippet_takes_no_parentheses() {
+            // Confirmed at https://help.campbellsci.com/crbasic/cr6/Content/Instructions/rnd.htm:
+            // the documented syntax is `variable = RND` with no arguments
+            // and no parentheses at all -- seeding is a separate `Randomize`
+            // instruction, not a parameter to `RND`.
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Rnd"), "Rnd");
+        }
+
+        #[test]
+        fn ceiling_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Ceiling"),
+                "Ceiling(${1:Value})"
+            );
+        }
+
+        #[test]
+        fn floor_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Floor"), "Floor(${1:Value})");
         }
     }
 
