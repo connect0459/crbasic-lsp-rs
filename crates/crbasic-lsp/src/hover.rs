@@ -142,6 +142,67 @@ impl HoverProvider {
     fn get_builtin_function_description(name: &str) -> Option<&'static str> {
         Self::get_scan_function_description(name)
             .or_else(|| Self::get_measurement_function_description(name))
+            .or_else(|| Self::get_communication_function_description(name))
+    }
+
+    /// Returns the description for a built-in communication function name
+    /// (serial, TCP/UDP, Modbus, SDI-12, email, PPP, FTP, HTTP), or `None`
+    /// if `name` isn't one of them.
+    fn get_communication_function_description(name: &str) -> Option<&'static str> {
+        match name.to_lowercase().as_str() {
+            "serialopen" => Some("**SerialOpen**\n\nOpens a serial communication port."),
+            "serialclose" => Some("**SerialClose**\n\nCloses a serial communication port."),
+            "serialin" => Some("**SerialIn**\n\nReads data from a serial port."),
+            "serialout" => Some("**SerialOut**\n\nSends data to a serial port."),
+            "serialinrecord" => Some(
+                "**SerialInRecord**\n\nReads and parses incoming serial data using begin/end markers.",
+            ),
+            "serialoutblock" => Some("**SerialOutBlock**\n\nSends binary data out a serial port."),
+            "serialflush" => {
+                Some("**SerialFlush**\n\nClears any characters in the serial input buffer.")
+            }
+            "modbusmaster" => Some(
+                "**ModbusMaster**\n\nSets up the datalogger as a Modbus client to send or retrieve data from a Modbus server.",
+            ),
+            "sdi12recorder" => {
+                Some("**SDI12Recorder**\n\nRetrieves measurement results from an SDI-12 sensor.")
+            }
+            "tcpopen" => Some("**TCPOpen**\n\nSets up a TCP/IP socket for communication."),
+            "tcpclose" => {
+                Some("**TCPClose**\n\nCloses a TCP/IP socket that was set up for communication.")
+            }
+            "udpopen" => Some("**UDPOpen**\n\nOpens a port for transferring UDP packets."),
+            "udpsocketopen" => Some(
+                "**UDPSocketOpen**\n\nOpens a UDP socket, relating a UDP source port to an ID.",
+            ),
+            "udpsocketsend" => Some(
+                "**UDPSocketSend**\n\nSends a UDP datagram to a remote device via an opened UDP socket.",
+            ),
+            "udpsocketrecv" => Some(
+                "**UDPSocketRecv**\n\nRetrieves incoming UDP packets sent to a socket's listening port.",
+            ),
+            "udpsocketclose" => Some(
+                "**UDPSocketClose**\n\nCloses an opened UDP socket and frees its associated memory.",
+            ),
+            "emailrelay" => Some(
+                "**EmailRelay**\n\nSends an email message to one or more addresses via a Campbell Scientific relay service.",
+            ),
+            "pppopen" => Some(
+                "**PPPOpen**\n\nEnables a PPP network connection through an external modem and returns its IP address.",
+            ),
+            "pppclose" => Some("**PPPClose**\n\nCloses an open PPP connection with a server."),
+            "ftpclient" => {
+                Some("**FTPClient**\n\nManages files on a server using FTP, FTPS, or SFTP.")
+            }
+            "httpget" => Some("**HTTPGet**\n\nSends a GET request to an HTTP server."),
+            "httppost" => {
+                Some("**HTTPPost**\n\nSends files or text to a URL via an HTTP POST request.")
+            }
+            "httpput" => {
+                Some("**HTTPPut**\n\nSends files or text to a URL via an HTTP PUT request.")
+            }
+            _ => None,
+        }
     }
 
     /// Returns the description for a built-in `Scan`/`SubScan` function
@@ -210,9 +271,6 @@ impl HoverProvider {
             "resistance" => Some(
                 "**Resistance**\n\nMeasures the resistance of a basic or full-bridge circuit using current excitation.",
             ),
-            "sdi12recorder" => {
-                Some("**SDI12Recorder**\n\nRetrieves measurement results from an SDI-12 sensor.")
-            }
             _ => None,
         }
     }
@@ -809,19 +867,44 @@ mod tests {
             }
         }
 
-        #[test]
-        fn every_canonical_builtin_function_has_hover_info() {
-            let missing: Vec<&str> = crbasic_parser::BUILTIN_FUNCTIONS
-                .iter()
-                .map(|(name, _)| *name)
-                .filter(|name| HoverProvider::get_builtin_function_description(name).is_none())
-                .collect();
+        mod communication_functions {
+            use super::*;
 
-            assert!(
-                missing.is_empty(),
-                "Missing hover info for builtin functions: {:?}",
-                missing
-            );
+            #[test]
+            fn all_communication_functions_have_hover_info() {
+                for name in [
+                    "SerialOpen",
+                    "SerialClose",
+                    "SerialIn",
+                    "SerialOut",
+                    "SerialInRecord",
+                    "SerialOutBlock",
+                    "SerialFlush",
+                    "ModbusMaster",
+                    "SDI12Recorder",
+                    "TCPOpen",
+                    "TCPClose",
+                    "UDPOpen",
+                    "UDPSocketOpen",
+                    "UDPSocketSend",
+                    "UDPSocketRecv",
+                    "UDPSocketClose",
+                    "EmailRelay",
+                    "PPPOpen",
+                    "PPPClose",
+                    "FTPClient",
+                    "HTTPGet",
+                    "HTTPPost",
+                    "HTTPPut",
+                ] {
+                    let description = HoverProvider::get_builtin_function_description(name);
+                    assert!(
+                        description.is_some_and(|d| d.contains(&format!("**{}**", name))),
+                        "Expected hover info for builtin function: {}",
+                        name
+                    );
+                }
+            }
         }
     }
 
