@@ -726,6 +726,21 @@ impl CompletionProvider {
                 "Writes bytes to an I2C peripheral device.",
             ),
             Self::create_function_completion(
+                "SPIOpen",
+                "SPIOpen(${1:BeginPort}, ${2:BitRate}, ${3:Option})",
+                "Configures the datalogger as an SPI controller for communication with peripheral devices.",
+            ),
+            Self::create_function_completion(
+                "SPIRead",
+                "SPIRead(${1:BeginPort}, ${2:Dest}, ${3:NumBytes})",
+                "Synchronously reads a specified number of bytes from an SPI peripheral device.",
+            ),
+            Self::create_function_completion(
+                "SPIWrite",
+                "SPIWrite(${1:BeginPort}, ${2:Source}, ${3:NumBytes})",
+                "Synchronously transmits a specified number of bytes to an SPI peripheral device.",
+            ),
+            Self::create_function_completion(
                 "AcceptDataRecords",
                 "AcceptDataRecords(${1:PakBusAddr}, ${2:TableNo}, ${3:DestTableName})",
                 "Configures the datalogger to receive and store data records pushed from a remote PakBus datalogger.",
@@ -911,6 +926,11 @@ impl CompletionProvider {
                 "Enables or disables the relay ports of an SDM-CD16AC relay control device.",
             ),
             Self::create_function_completion(
+                "SDMCD16Mask",
+                "SDMCD16Mask(${1:Source}, ${2:SDMCD16Mask}, ${3:SDMAddress})",
+                "Enables or disables specific relay ports of an SDM-CD16AC device via a bit-mask filter.",
+            ),
+            Self::create_function_completion(
                 "SDMCVO4",
                 "SDMCVO4(${1:CVO4Source}, ${2:CVO4Reps}, ${3:SDMAddress}, ${4:CVO4Mode})",
                 "Controls the SDM-CVO4 four-channel current/voltage output device.",
@@ -939,6 +959,11 @@ impl CompletionProvider {
                 "SDMSpeed",
                 "SDMSpeed(${1:BitPeriod})",
                 "Changes the bit period the datalogger uses to clock SDM bus communication.",
+            ),
+            Self::create_function_completion(
+                "SDMSW8A",
+                "SDMSW8A(${1:Dest}, ${2:Reps}, ${3:SDMAddress}, ${4:FunctOp}, ${5:SW8AStartChan}, ${6:Mult}, ${7:Offset})",
+                "Reads channels from an SDM-SW8A eight-channel switch closure module.",
             ),
             Self::create_function_completion(
                 "SDMTrigger",
@@ -3637,6 +3662,36 @@ mod tests {
         }
 
         #[test]
+        fn spiopen_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SPIOpen"),
+                "SPIOpen(${1:BeginPort}, ${2:BitRate}, ${3:Option})"
+            );
+        }
+
+        #[test]
+        fn spiread_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SPIRead"),
+                "SPIRead(${1:BeginPort}, ${2:Dest}, ${3:NumBytes})"
+            );
+        }
+
+        #[test]
+        fn spiwrite_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SPIWrite"),
+                "SPIWrite(${1:BeginPort}, ${2:Source}, ${3:NumBytes})"
+            );
+        }
+
+        #[test]
         fn acceptdatarecords_snippet_matches_official_signature() {
             let completions = CompletionProvider::get_builtin_function_completions();
 
@@ -4004,6 +4059,16 @@ mod tests {
         }
 
         #[test]
+        fn sdmcd16mask_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMCD16Mask"),
+                "SDMCD16Mask(${1:Source}, ${2:SDMCD16Mask}, ${3:SDMAddress})"
+            );
+        }
+
+        #[test]
         fn sdmcvo4_snippet_matches_official_signature() {
             let completions = CompletionProvider::get_builtin_function_completions();
 
@@ -4060,6 +4125,16 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "SDMSpeed"),
                 "SDMSpeed(${1:BitPeriod})"
+            );
+        }
+
+        #[test]
+        fn sdmsw8a_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMSW8A"),
+                "SDMSW8A(${1:Dest}, ${2:Reps}, ${3:SDMAddress}, ${4:FunctOp}, ${5:SW8AStartChan}, ${6:Mult}, ${7:Offset})"
             );
         }
 
