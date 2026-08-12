@@ -145,6 +145,43 @@ impl HoverProvider {
             .or_else(|| Self::get_communication_function_description(name))
             .or_else(|| Self::get_data_function_description(name))
             .or_else(|| Self::get_string_function_description(name))
+            .or_else(|| Self::get_math_function_description(name))
+    }
+
+    /// Returns the description for a built-in math function name, or
+    /// `None` if `name` isn't one of them.
+    fn get_math_function_description(name: &str) -> Option<&'static str> {
+        match name.to_lowercase().as_str() {
+            "abs" => Some("**Abs**\n\nReturns the absolute value."),
+            "sgn" => Some("**Sgn**\n\nReturns the sign of a number as -1, 0, or 1."),
+            "sqr" => Some("**Sqr**\n\nReturns the square root."),
+            "exp" => Some("**Exp**\n\nReturns e raised to a power."),
+            "ln" => Some("**Ln**\n\nReturns the natural logarithm."),
+            "log" => Some("**Log**\n\nReturns the natural logarithm."),
+            "log10" => Some("**Log10**\n\nReturns the base-10 logarithm."),
+            "sin" => Some("**Sin**\n\nReturns the sine."),
+            "cos" => Some("**Cos**\n\nReturns the cosine."),
+            "tan" => Some("**Tan**\n\nReturns the tangent."),
+            "sinh" => Some("**Sinh**\n\nReturns the hyperbolic sine."),
+            "cosh" => Some("**Cosh**\n\nReturns the hyperbolic cosine."),
+            "tanh" => Some("**Tanh**\n\nReturns the hyperbolic tangent."),
+            "asin" => Some("**Asin**\n\nReturns the arc sine."),
+            "acos" => Some("**Acos**\n\nReturns the arc cosine."),
+            "atn" => Some("**Atn**\n\nReturns the arc tangent."),
+            "atn2" => Some("**Atn2**\n\nReturns the arc tangent of Y/X."),
+            "int" => {
+                Some("**Int**\n\nReturns the integer part (truncates toward negative infinity).")
+            }
+            "fix" => Some("**Fix**\n\nReturns the integer part (truncates toward zero)."),
+            "frac" => Some("**Frac**\n\nReturns the fractional portion of a number."),
+            "round" => Some("**Round**\n\nRounds to specified decimal places."),
+            "rnd" => Some(
+                "**Rnd**\n\nReturns a random value between 0 (inclusive) and 1 (exclusive). Takes no parentheses.",
+            ),
+            "ceiling" => Some("**Ceiling**\n\nRounds a number up to the nearest integer."),
+            "floor" => Some("**Floor**\n\nRounds a number down to the nearest integer."),
+            _ => None,
+        }
     }
 
     /// Returns the description for a built-in string-manipulation function
@@ -1072,6 +1109,26 @@ mod tests {
                     "HexToDec",
                     "Hex",
                     "Sprintf",
+                ] {
+                    let description = HoverProvider::get_builtin_function_description(name);
+                    assert!(
+                        description.is_some_and(|d| d.contains(&format!("**{}**", name))),
+                        "Expected hover info for builtin function: {}",
+                        name
+                    );
+                }
+            }
+        }
+
+        mod math_functions {
+            use super::*;
+
+            #[test]
+            fn all_math_functions_have_hover_info() {
+                for name in [
+                    "Abs", "Sgn", "Sqr", "Exp", "Ln", "Log", "Log10", "Sin", "Cos", "Tan", "Sinh",
+                    "Cosh", "Tanh", "Asin", "Acos", "Atn", "Atn2", "Int", "Fix", "Frac", "Round",
+                    "Rnd", "Ceiling", "Floor",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
