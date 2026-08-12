@@ -238,6 +238,12 @@
     { "name": "SDMTrigger", "category": "communication" },
     { "name": "SDMX50", "category": "communication" },
 
+    { "name": "CPIAddModule", "category": "communication" },
+    { "name": "CPIFileSend", "category": "communication" },
+    { "name": "CPISpeed", "category": "communication" },
+    { "name": "MQTTPublishTable", "category": "communication" },
+    { "name": "MQTTPublishConstTable", "category": "communication" },
+
     { "name": "Sample", "category": "data" },
     { "name": "Average", "category": "data" },
     { "name": "StdDev", "category": "data" },
