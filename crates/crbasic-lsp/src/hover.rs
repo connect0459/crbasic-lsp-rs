@@ -526,6 +526,45 @@ impl HoverProvider {
             "goestable" => Some(
                 "**GOESTable**\n\nFormats and outputs a data table's records to a TX325/TX326 GOES satellite transmitter.",
             ),
+            "sdmao4" => Some(
+                "**SDMAO4**\n\nSets the output voltage on an SDM-AO4 four-channel analog output device.",
+            ),
+            "sdmao4a" => Some(
+                "**SDMAO4A**\n\nSets the output voltage on an SDM-AO4A four-channel analog output device.",
+            ),
+            "sdmbeginport" => Some(
+                "**SDMBeginPort**\n\nDesignates an alternate set of datalogger terminals to use as an SDM port.",
+            ),
+            "sdmcan" => Some(
+                "**SDMCAN**\n\nConfigures and operates the SDM-CAN interface between a CAN-bus network and the datalogger.",
+            ),
+            "sdmcd16ac" => Some(
+                "**SDMCD16AC**\n\nEnables or disables the relay ports of an SDM-CD16AC relay control device.",
+            ),
+            "sdmcvo4" => Some(
+                "**SDMCVO4**\n\nControls the SDM-CVO4 four-channel current/voltage output device.",
+            ),
+            "sdmgeneric" => Some(
+                "**SDMGeneric**\n\nSends raw commands to an SDM device with no dedicated CRBasic instruction support.",
+            ),
+            "sdmint8" => Some(
+                "**SDMINT8**\n\nPrograms and controls the SDM-INT8 eight-channel interval timer.",
+            ),
+            "sdmio16" => Some(
+                "**SDMIO16**\n\nSets up and operates an SDM-IO16 16-port digital I/O expansion device.",
+            ),
+            "sdmsio4" => Some(
+                "**SDMSIO4**\n\nControls and transfers data with a legacy SDM-SIO4 four-port serial I/O device.",
+            ),
+            "sdmspeed" => Some(
+                "**SDMSpeed**\n\nChanges the bit period the datalogger uses to clock SDM bus communication.",
+            ),
+            "sdmtrigger" => Some(
+                "**SDMTrigger**\n\nBroadcasts a simultaneous \"measure now\" group trigger to all SDM devices that support it.",
+            ),
+            "sdmx50" => {
+                Some("**SDMX50**\n\nSwitches an SDMX50 coaxial multiplexer to a specified channel.")
+            }
             _ => None,
         }
     }
@@ -1298,6 +1337,19 @@ mod tests {
                     "GOESSetup",
                     "GOESStatus",
                     "GOESTable",
+                    "SDMAO4",
+                    "SDMAO4A",
+                    "SDMBeginPort",
+                    "SDMCAN",
+                    "SDMCD16AC",
+                    "SDMCVO4",
+                    "SDMGeneric",
+                    "SDMINT8",
+                    "SDMIO16",
+                    "SDMSIO4",
+                    "SDMSpeed",
+                    "SDMTrigger",
+                    "SDMX50",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
