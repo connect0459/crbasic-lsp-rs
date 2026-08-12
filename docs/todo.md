@@ -4142,3 +4142,49 @@ Not flagged as gaps (out of scope for this pass):
   the "Keyword/instruction list unification" round above -- each would
   need its own per-function docs verification before being added, not
   a mechanical list sync.
+
+### Reference Implementation & Official Docs Comparison, Round 29 (2026-08-12)
+
+Picked one category out of Round 28's ~345-name deferred backlog to close:
+the CSAT3/LI-COR eddy-covariance sensor family (sonic anemometer plus
+closed/open-path gas analyzers), the smallest and best-documented of the
+candidate categories surveyed (PakBus, CDM_\*/SDM\*, GOES/ARGOS were the
+others). Each of the 7 functions below was verified directly against
+help.campbellsci.com (CSAT3, LI7200, LI7700) or, where no live help page
+exists for the instrument, the official PDF manual (CSAT3B/CSAT3BMonitor in
+the CSAT3B manual; EC100/EC100Configure in the IRGASON manual) -- the same
+evidentiary bar as the Therm107/108/109 precedent from the signature-help
+parity round above.
+
+- [x] `CSAT3`, `CSAT3B`, `CSAT3BMonitor`, `EC100`, `EC100Configure`,
+  `LI7200`, `LI7700` missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 7 are real, documented CRBasic instructions for controlling and
+    reading SDM-connected sensors common in micrometeorology/eddy-covariance
+    programs; none existed anywhere in `keywords.json`,
+    `completion.rs`/`hover.rs`/`signature.rs`, or the reference extensions'
+    correctly-spelled form (one reference repo's list had `CSAT3b`, a
+    case-variant typo of `CSAT3B` not added as a separate entry, since
+    CRBasic function names are matched case-insensitively)
+  - Added all 7 to `keywords.json` under the `measurement` category
+    (matching the closest existing sibling functions, e.g. `Therm107`),
+    regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 7, taking every parameter name/order directly
+    from each function's own official syntax line/manual page (not
+    inferred), following the same evidentiary bar as prior rounds
+  - `EC100Configure`'s `ConfigCmd` parameter's option table (referenced by
+    the manual as "TABLE 10-4") was not itself transcribed into the
+    parameter documentation -- out of scope for a syntax/parameter-name
+    verification pass, consistent with how `signature.rs` documents what a
+    parameter *is* rather than enumerating every valid value across this
+    file
+  - 7 new completion tests (one exact-`insert_text` test per function,
+    following the Round 28 convention) plus additions to the existing
+    `measurement` category spot-check lists in `hover.rs`/`signature.rs`
+    added across 3 commits (one per LSP layer, following the file-by-file
+    commit convention used since the signature-help parity round); full
+    workspace `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (386 `crbasic-lsp` lib tests, up
+    from 379)
