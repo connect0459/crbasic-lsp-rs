@@ -2414,6 +2414,469 @@ impl SignatureProvider {
                 ],
             }),
 
+            "acceptdatarecords" => Some(FunctionSignature {
+                name: "AcceptDataRecords".to_string(),
+                documentation: "Configures the datalogger to receive and store data records pushed from a remote PakBus datalogger.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "PakBusAddr".to_string(),
+                        documentation: "The PakBus address of the remote datalogger allowed to push data records.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TableNo".to_string(),
+                        documentation: "The table number (position in the remote datalogger's table list) whose records will be pushed.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DestTableName".to_string(),
+                        documentation: "The name of the local table in which to store the received records.".to_string(),
+                    },
+                ],
+            }),
+
+            "broadcast" => Some(FunctionSignature {
+                name: "Broadcast".to_string(),
+                documentation: "Sends a broadcast message to all devices on a PakBus network.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communication port on which to send the broadcast.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Message".to_string(),
+                        documentation: "The numeric code identifying which broadcast message to send (e.g. beacon, routing-table reset, goodbye, or hello request).".to_string(),
+                    },
+                ],
+            }),
+
+            "clockreport" => Some(FunctionSignature {
+                name: "ClockReport".to_string(),
+                documentation: "Sends this datalogger's clock value to a specified PakBus device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communication port on which to send the clock value.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NeighborAddr".to_string(),
+                        documentation: "The PakBus address of the neighbor used to route this transmission.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PakBusAddr".to_string(),
+                        documentation: "The PakBus address of the destination device to receive the clock value.".to_string(),
+                    },
+                ],
+            }),
+
+            "datagram" => Some(FunctionSignature {
+                name: "DataGram".to_string(),
+                documentation: "Initializes a SerialServer/DataGram application that tunnels serial traffic through a PakBus network.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communication port carrying the tunneled serial data.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BaudRate".to_string(),
+                        documentation: "The baud rate of the tunneled serial data.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PakBusAddr".to_string(),
+                        documentation: "The PakBus address of the destination device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DestAppID".to_string(),
+                        documentation: "The application ID of the DataGram application at the destination device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SrcAppID".to_string(),
+                        documentation: "The application ID of this DataGram application.".to_string(),
+                    },
+                ],
+            }),
+
+            "encryptexempt" => Some(FunctionSignature {
+                name: "EncryptExempt".to_string(),
+                documentation: "Declares a PakBus address range exempt from PakBus encryption.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "BeginPakBusAddr".to_string(),
+                        documentation: "The first PakBus address in the exempt range.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EndPakBusAddr".to_string(),
+                        documentation: "The last PakBus address in the exempt range.".to_string(),
+                    },
+                ],
+            }),
+
+            "getdatarecord" => Some(FunctionSignature {
+                name: "GetDataRecord".to_string(),
+                documentation: "Retrieves the most recent record(s) from a table on a remote PakBus datalogger into a local table.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "Variable that receives 0 on success, or a positive timeout/negative error code otherwise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communication port used to reach the remote datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NeighborAddr".to_string(),
+                        documentation: "The PakBus address of the neighbor used to route this transmission.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PakBusAddr".to_string(),
+                        documentation: "The PakBus address of the remote datalogger holding the table.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Security".to_string(),
+                        documentation: "The security code required by the remote datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, to wait for a response.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Tries".to_string(),
+                        documentation: "The number of attempts to make before giving up.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TableNo".to_string(),
+                        documentation: "The table number (position in the remote datalogger's table list) to read from.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DestTableName".to_string(),
+                        documentation: "The name of the local table in which to store the retrieved record(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxRecords".to_string(),
+                        documentation: "Optional. The maximum number of records to retrieve; defaults to the single most recent record if omitted.".to_string(),
+                    },
+                ],
+            }),
+
+            "getfile" => Some(FunctionSignature {
+                name: "GetFile".to_string(),
+                documentation: "Retrieves a file from a remote PakBus datalogger and stores it locally.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "Variable that receives 0 on success, or a positive timeout/negative error code otherwise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communication port used to reach the remote datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NeighborAddr".to_string(),
+                        documentation: "The PakBus address of the neighbor used to route this transmission.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PakBusAddr".to_string(),
+                        documentation: "The PakBus address of the remote datalogger holding the file.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Security".to_string(),
+                        documentation: "The security code required by the remote datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, to wait for a response.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LocalFile".to_string(),
+                        documentation: "The path at which to store the file on this datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RemoteFile".to_string(),
+                        documentation: "The path of the file on the remote datalogger.".to_string(),
+                    },
+                ],
+            }),
+
+            "getvariables" => Some(FunctionSignature {
+                name: "GetVariables".to_string(),
+                documentation: "Retrieves one or more variable values from a data table on a remote PakBus device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "Variable that receives 0 on success, or a positive timeout/negative error code otherwise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communication port used to reach the remote device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NeighborAddr".to_string(),
+                        documentation: "The PakBus address of the neighbor used to route this transmission.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PakBusAddr".to_string(),
+                        documentation: "The PakBus address of the remote device holding the table.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Security".to_string(),
+                        documentation: "The security code required by the remote device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, to wait for a response.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TableName".to_string(),
+                        documentation: "The name of the remote table containing the field(s) to retrieve.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FieldName".to_string(),
+                        documentation: "The field name(s) to retrieve; must be a string array when Swath is greater than 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Variable".to_string(),
+                        documentation: "The local variable or array in which to store the retrieved value(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Swath".to_string(),
+                        documentation: "The number of contiguous values to retrieve.".to_string(),
+                    },
+                ],
+            }),
+
+            "pakbusclock" => Some(FunctionSignature {
+                name: "PakBusClock".to_string(),
+                documentation: "Configures the datalogger to accept and synchronize its clock from time broadcasts sent by a specified PakBus device.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "PakBusAddr".to_string(),
+                    documentation: "The PakBus address of the device whose clock broadcasts should be accepted.".to_string(),
+                }],
+            }),
+
+            "route" => Some(FunctionSignature {
+                name: "Route".to_string(),
+                documentation: "Returns the neighbor address of, or the route to, a PakBus datalogger.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "PakBusAddr".to_string(),
+                    documentation: "The PakBus address of the destination device to look up a route for.".to_string(),
+                }],
+            }),
+
+            "routes" => Some(FunctionSignature {
+                name: "Routes".to_string(),
+                documentation: "Retrieves the datalogger's list of known dynamic PakBus routes into an array.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Dest".to_string(),
+                    documentation: "Array to receive route data, dimensioned to (4 * number of routes) + 1: ComPort, neighbor address, destination address, and expected response time per route, terminated by -1.".to_string(),
+                }],
+            }),
+
+            "senddata" => Some(FunctionSignature {
+                name: "SendData".to_string(),
+                documentation: "Sends the most recent record from a data table to a destination PakBus device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communication port used to reach the destination device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NeighborAddr".to_string(),
+                        documentation: "The PakBus address of the neighbor used to route this transmission.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PakBusAddr".to_string(),
+                        documentation: "The PakBus address of the destination device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataTable".to_string(),
+                        documentation: "The name of the table whose most recent record will be sent.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TableOption".to_string(),
+                        documentation: "Optional. Selects which record to send: 0 or -1 for the most recent, or a specific record number.".to_string(),
+                    },
+                ],
+            }),
+
+            "sendfile" => Some(FunctionSignature {
+                name: "SendFile".to_string(),
+                documentation: "Sends a file from the datalogger to another PakBus datalogger.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "Variable that receives 0 on success, or a positive timeout/negative error code otherwise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communication port used to reach the destination datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NeighborAddr".to_string(),
+                        documentation: "The PakBus address of the neighbor used to route this transmission.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PakBusAddr".to_string(),
+                        documentation: "The PakBus address of the destination datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Security".to_string(),
+                        documentation: "The security code required by the destination datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, to wait for a response.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LocalFile".to_string(),
+                        documentation: "The path of the source file on this datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RemoteFile".to_string(),
+                        documentation: "The path at which to store the file on the destination datalogger.".to_string(),
+                    },
+                ],
+            }),
+
+            "sendgetvariables" => Some(FunctionSignature {
+                name: "SendGetVariables".to_string(),
+                documentation: "Sends and/or retrieves an array of values to/from the host datalogger during its assigned time slot.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "Variable that receives 0 on success, or a positive timeout/negative error code otherwise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communication port used to reach the host datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NeighborAddr".to_string(),
+                        documentation: "The PakBus address of the neighbor used to route this transmission.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PakBusAddr".to_string(),
+                        documentation: "The PakBus address of the host datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Security".to_string(),
+                        documentation: "The security code required by the host datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, to wait for a response.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SendVariable".to_string(),
+                        documentation: "The local variable or array whose values will be sent to the host datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SendSwath".to_string(),
+                        documentation: "The number of contiguous values to send.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "GetVariable".to_string(),
+                        documentation: "The local variable or array in which to store the values retrieved from the host datalogger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "GetSwath".to_string(),
+                        documentation: "The number of contiguous values to retrieve.".to_string(),
+                    },
+                ],
+            }),
+
+            "sendtabledef" => Some(FunctionSignature {
+                name: "SendTableDef".to_string(),
+                documentation: "Sends a data table's definition to a destination device on the PakBus network.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communication port used to reach the destination device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NeighborAddr".to_string(),
+                        documentation: "The PakBus address of the neighbor used to route this transmission.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PakBusAddr".to_string(),
+                        documentation: "The PakBus address of the destination device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataTable".to_string(),
+                        documentation: "The name of the table whose definition will be sent.".to_string(),
+                    },
+                ],
+            }),
+
+            "sendvariables" => Some(FunctionSignature {
+                name: "SendVariables".to_string(),
+                documentation: "Sends one or more variable values to a table in a destination PakBus device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "Variable that receives 0 on success, or a positive timeout/negative error code otherwise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communication port used to reach the destination device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NeighborAddr".to_string(),
+                        documentation: "The PakBus address of the neighbor used to route this transmission.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PakBusAddr".to_string(),
+                        documentation: "The PakBus address of the destination device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Security".to_string(),
+                        documentation: "The security code required by the destination device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, to wait for a response.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TableName".to_string(),
+                        documentation: "The name of the destination table (Public/Inlocs or Status) to write to.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FieldName".to_string(),
+                        documentation: "The field name(s) to write; must be a string array when Swath is greater than 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Variable".to_string(),
+                        documentation: "The local variable or array holding the value(s) to send.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Swath".to_string(),
+                        documentation: "The number of contiguous values to send.".to_string(),
+                    },
+                ],
+            }),
+
+            "staticroute" => Some(FunctionSignature {
+                name: "StaticRoute".to_string(),
+                documentation: "Defines a fixed route to a PakBus datalogger, for use when dynamic routing is unavailable.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communication port used to reach the neighbor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NeighborAddr".to_string(),
+                        documentation: "The PakBus address of the neighbor to route through.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PakBusAddr".to_string(),
+                        documentation: "The PakBus address of the destination device reached via this route.".to_string(),
+                    },
+                ],
+            }),
+
+            "timeuntiltransmit" => Some(FunctionSignature {
+                name: "TimeUntilTransmit".to_string(),
+                documentation: "Returns the seconds remaining until the datalogger's assigned communication time slot with its host.".to_string(),
+                parameters: vec![],
+            }),
+
             "abs" => Some(FunctionSignature {
                 name: "Abs".to_string(),
                 documentation: "Returns the absolute value of a number.".to_string(),
@@ -3797,6 +4260,24 @@ mod tests {
                 "I2COpen",
                 "I2CRead",
                 "I2CWrite",
+                "AcceptDataRecords",
+                "Broadcast",
+                "ClockReport",
+                "DataGram",
+                "EncryptExempt",
+                "GetDataRecord",
+                "GetFile",
+                "GetVariables",
+                "PakBusClock",
+                "Route",
+                "Routes",
+                "SendData",
+                "SendFile",
+                "SendGetVariables",
+                "SendTableDef",
+                "SendVariables",
+                "StaticRoute",
+                "TimeUntilTransmit",
             ] {
                 assert!(
                     SignatureProvider::get_function_signature(name).is_some(),
@@ -3810,6 +4291,14 @@ mod tests {
         fn pppclose_takes_no_parameters() {
             let sig = SignatureProvider::get_function_signature("PPPClose")
                 .expect("PPPClose should have a signature");
+
+            assert!(sig.parameters.is_empty());
+        }
+
+        #[test]
+        fn timeuntiltransmit_takes_no_parameters() {
+            let sig = SignatureProvider::get_function_signature("TimeUntilTransmit")
+                .expect("TimeUntilTransmit should have a signature");
 
             assert!(sig.parameters.is_empty());
         }
