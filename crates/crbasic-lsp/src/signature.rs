@@ -843,6 +843,635 @@ impl SignatureProvider {
                 ],
             }),
 
+            "battery" => Some(FunctionSignature {
+                name: "Battery".to_string(),
+                documentation: "Measures the voltage of the battery powering the datalogger."
+                    .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Dest".to_string(),
+                    documentation: "Destination variable that stores the measured battery voltage, in volts.".to_string(),
+                }],
+            }),
+
+            "paneltemp" => Some(FunctionSignature {
+                name: "PanelTemp".to_string(),
+                documentation:
+                    "Measures the temperature of the datalogger wiring panel in degrees Celsius."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable to store the panel temperature reading.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "Lowest frequency notched out by the sinc filter (e.g. 60 or 50 Hz for AC noise).".to_string(),
+                    },
+                ],
+            }),
+
+            "brhalf" => Some(FunctionSignature {
+                name: "BrHalf".to_string(),
+                documentation:
+                    "Applies an excitation voltage to a half bridge and measures the single-ended voltage output."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the measurement result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "Input voltage range for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "Single-ended channel number for the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "Excitation channel used to excite the bridge."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPEx".to_string(),
+                        documentation: "Number of sensors to excite per excitation channel before advancing to the next.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExmV".to_string(),
+                        documentation: "Excitation voltage, in millivolts, applied to the sensor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Reverse excitation polarity and take a second measurement to cancel offsets (True/False).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "Delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "Lowest frequency notched out by the sinc filter."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "Multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset added after scaling by Mult.".to_string(),
+                    },
+                ],
+            }),
+
+            "brfull" => Some(FunctionSignature {
+                name: "BrFull".to_string(),
+                documentation:
+                    "Applies an excitation voltage to a full bridge and measures the differential voltage output."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the measurement result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "Input voltage range for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "Differential channel number for the measurement."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "Excitation channel used to excite the bridge."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPEx".to_string(),
+                        documentation: "Number of sensors to excite per excitation channel before advancing to the next.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExmV".to_string(),
+                        documentation: "Excitation voltage, in millivolts, applied to the bridge.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Reverse excitation polarity and take a second measurement to cancel offsets (True/False).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevDiff".to_string(),
+                        documentation: "Reverse the differential input polarity and take a second measurement to cancel datalogger offsets (True/False).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "Delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "Lowest frequency notched out by the sinc filter."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "Multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset added after scaling by Mult.".to_string(),
+                    },
+                ],
+            }),
+
+            "therm107" => Some(FunctionSignature {
+                name: "Therm107".to_string(),
+                documentation: "Measures temperature using a 107 thermistor.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the temperature result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "Single-ended channel number for the measurement."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Excite".to_string(),
+                        documentation: "Excitation channel used to apply voltage excitation to the thermistor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "Delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Integ".to_string(),
+                        documentation: "AC noise rejection frequency (60 or 50 Hz) or sinc filter fN1, depending on datalogger model.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "Multiplier applied to scale the result (1 = Celsius, 1.8 = Fahrenheit).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset added after scaling by Mult (0 = Celsius, 32 = Fahrenheit).".to_string(),
+                    },
+                ],
+            }),
+
+            "therm108" => Some(FunctionSignature {
+                name: "Therm108".to_string(),
+                documentation: "Measures temperature using a 108 thermistor.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the temperature result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "Single-ended channel number for the measurement."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Excite".to_string(),
+                        documentation: "Excitation channel used to apply voltage excitation to the thermistor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "Delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Integ".to_string(),
+                        documentation: "AC noise rejection frequency (60 or 50 Hz) or sinc filter fN1, depending on datalogger model.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "Multiplier applied to scale the result (1 = Celsius, 1.8 = Fahrenheit).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset added after scaling by Mult (0 = Celsius, 32 = Fahrenheit).".to_string(),
+                    },
+                ],
+            }),
+
+            "therm109" => Some(FunctionSignature {
+                name: "Therm109".to_string(),
+                documentation: "Measures temperature using a 109 thermistor.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the temperature result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "Single-ended channel number for the measurement."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Excite".to_string(),
+                        documentation: "Excitation channel used to apply voltage excitation to the thermistor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "Delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Integ".to_string(),
+                        documentation: "AC noise rejection frequency (60 or 50 Hz) or sinc filter fN1, depending on datalogger model.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "Multiplier applied to scale the result (1 = Celsius, 1.8 = Fahrenheit).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset added after scaling by Mult (0 = Celsius, 32 = Fahrenheit).".to_string(),
+                    },
+                ],
+            }),
+
+            "periodavg" => Some(FunctionSignature {
+                name: "PeriodAvg".to_string(),
+                documentation:
+                    "Measures the period or frequency of a signal on a single-ended channel."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the result(s)."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Chan".to_string(),
+                        documentation: "Single-ended channel number for the first measurement."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "Output format: 0 = period (microseconds), 1 = frequency (Hz).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Cycles".to_string(),
+                        documentation: "Number of signal cycles to average per scan."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Timeout".to_string(),
+                        documentation: "Maximum time, in milliseconds, to wait for the specified Cycles to be measured.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "Multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset added after scaling by Mult.".to_string(),
+                    },
+                ],
+            }),
+
+            "portset" => Some(FunctionSignature {
+                name: "PortSet".to_string(),
+                documentation: "Sets a control port to a high or low state.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Port".to_string(),
+                        documentation: "Control port to set (e.g. C1-C8).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "State".to_string(),
+                        documentation: "Output level: 0 sets the port low, non-zero sets it high.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "Execution mode: run in measurement or processing sequence, optionally attempting pipeline mode.".to_string(),
+                    },
+                ],
+            }),
+
+            "pulseport" => Some(FunctionSignature {
+                name: "PulsePort".to_string(),
+                documentation:
+                    "Toggles a port, delays, toggles it back, and delays again to generate a clocking pulse."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Port".to_string(),
+                        documentation: "Port to toggle to generate the clocking pulse."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Delay".to_string(),
+                        documentation: "Delay, in microseconds, after each toggle.".to_string(),
+                    },
+                ],
+            }),
+
+            "excitev" => Some(FunctionSignature {
+                name: "ExciteV".to_string(),
+                documentation:
+                    "Sets an excitation channel output to a specified voltage for a specified duration."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "Excitation channel to apply the voltage to."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExmV".to_string(),
+                        documentation: "Excitation voltage, in millivolts, to apply."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Delay".to_string(),
+                        documentation: "Delay, in microseconds, before excitation turns off and the next instruction runs (0 = leave excitation on).".to_string(),
+                    },
+                ],
+            }),
+
+            "brhalf3w" => Some(FunctionSignature {
+                name: "BrHalf3W".to_string(),
+                documentation:
+                    "Applies an excitation voltage and measures a 3-wire half bridge to calculate the resistance ratio."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the measurement result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "Input voltage range for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "Single-ended channel number for the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "Excitation channel used to excite the bridge."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPEx".to_string(),
+                        documentation: "Number of sensors to excite per excitation channel before advancing to the next.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExmV".to_string(),
+                        documentation: "Excitation voltage, in millivolts, applied to the sensor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Reverse excitation polarity and take a second measurement to cancel offsets (True/False).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "Delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "Lowest frequency notched out by the sinc filter."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "Multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset added after scaling by Mult.".to_string(),
+                    },
+                ],
+            }),
+
+            "brhalf4w" => Some(FunctionSignature {
+                name: "BrHalf4W".to_string(),
+                documentation:
+                    "Applies an excitation voltage and makes two differential voltage measurements to measure a 4-wire half bridge."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the measurement result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range1".to_string(),
+                        documentation: "Input voltage range for the first differential voltage measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range2".to_string(),
+                        documentation: "Input voltage range for the second differential voltage measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "Differential channel number for the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "Excitation channel used to excite the bridge."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPEx".to_string(),
+                        documentation: "Number of sensors to excite per excitation channel before advancing to the next.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExmV".to_string(),
+                        documentation: "Excitation voltage, in millivolts, applied to the bridge.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Reverse excitation polarity and take a second measurement to cancel offsets (True/False).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevDiff".to_string(),
+                        documentation: "Reverse the differential input polarity and take a second measurement to cancel datalogger offsets (True/False).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "Delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "Lowest frequency notched out by the sinc filter."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "Multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset added after scaling by Mult.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ReturnV1".to_string(),
+                        documentation: "If non-zero, also returns the excitation voltage measurement V1 (requires a 2-element Dest array).".to_string(),
+                    },
+                ],
+            }),
+
+            "brfull6w" => Some(FunctionSignature {
+                name: "BrFull6W".to_string(),
+                documentation:
+                    "Applies an excitation voltage and makes two differential voltage measurements to measure a 6-wire full bridge."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the measurement result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range1".to_string(),
+                        documentation: "Input voltage range for the first differential voltage measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range2".to_string(),
+                        documentation: "Input voltage range for the second differential voltage measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "Differential channel number for the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "Excitation channel used to excite the bridge."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPEx".to_string(),
+                        documentation: "Number of sensors to excite per excitation channel before advancing to the next.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExmV".to_string(),
+                        documentation: "Excitation voltage, in millivolts, applied to the bridge.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Reverse excitation polarity and take a second measurement to cancel offsets (True/False).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevDiff".to_string(),
+                        documentation: "Reverse the differential input polarity and take a second measurement to cancel datalogger offsets (True/False).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "Delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "Lowest frequency notched out by the sinc filter."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "Multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset added after scaling by Mult.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ReturnV1".to_string(),
+                        documentation: "If non-zero, also returns the excitation voltage measurement V1 (requires a 2-element Dest array).".to_string(),
+                    },
+                ],
+            }),
+
+            "tcse" => Some(FunctionSignature {
+                name: "TCSE".to_string(),
+                documentation:
+                    "Measures a thermocouple on a single-ended channel and converts the reading to degrees Celsius."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the measurement result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "Input voltage range.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "Single-ended channel number for the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TCType".to_string(),
+                        documentation: "Thermocouple type (TypeE, TypeT, etc.).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TRef".to_string(),
+                        documentation: "Reference temperature source.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasOff".to_string(),
+                        documentation: "Offset handling: 0 = use background-calibration offset, 1 = measure the offset each scan.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "Delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "Lowest frequency notched out by the sinc filter."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "Multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset added after scaling by Mult.".to_string(),
+                    },
+                ],
+            }),
+
             "serialopen" => Some(FunctionSignature {
                 name: "SerialOpen".to_string(),
                 documentation: "Opens a serial communication port.".to_string(),
@@ -2714,6 +3343,33 @@ mod tests {
                     "OutputOpt",
                 ]
             );
+        }
+
+        #[test]
+        fn has_remaining_measurement_functions() {
+            for name in [
+                "Battery",
+                "PanelTemp",
+                "BrHalf",
+                "BrFull",
+                "Therm107",
+                "Therm108",
+                "Therm109",
+                "PeriodAvg",
+                "PortSet",
+                "PulsePort",
+                "ExciteV",
+                "BrHalf3W",
+                "BrHalf4W",
+                "BrFull6W",
+                "TCSE",
+            ] {
+                assert!(
+                    SignatureProvider::get_function_signature(name).is_some(),
+                    "Expected a signature for measurement function: {}",
+                    name
+                );
+            }
         }
 
         #[test]
