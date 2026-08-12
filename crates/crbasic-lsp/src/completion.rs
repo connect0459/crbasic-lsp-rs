@@ -576,6 +576,66 @@ impl CompletionProvider {
                 "Stores the values in the FieldCal file to a data table; used inside a DataTable/EndTable declaration.",
             ),
             Self::create_function_completion(
+                "ACPower",
+                "ACPower(${1:DestAC}, ${2:ConfigAC}, ${3:LineFrq}, ${4:ChanV}, ${5:MultV}, ${6:MaxVrms}, ${7:ChanI}, ${8:MultI}, ${9:MaxIrms}, ${10:RepsI})",
+                "Measures real AC power and power-quality parameters for single-phase, split-phase, or three-phase Y systems.",
+            ),
+            Self::create_function_completion(
+                "AM25T",
+                "AM25T(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:AM25TChan}, ${5:ChanAnlg}, ${6:TCType}, ${7:TRef}, ${8:ClkPort}, ${9:ResPort}, ${10:ExChan}, ${11:RevDiff}, ${12:SettlingTime}, ${13:fN1}, ${14:Mult}, ${15:Offset})",
+                "Controls and measures the AM25T thermocouple multiplexer.",
+            ),
+            Self::create_function_completion(
+                "AVW200",
+                "AVW200(${1:Result}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Dest}, ${6:AVWChan}, ${7:MuxChannel}, ${8:Reps}, ${9:BeginFreq}, ${10:EndFreq}, ${11:ExVolt}, ${12:Therm50_60Hz}, ${13:Multiplier}, ${14:Offset}, ${15:AmpThreshold})",
+                "Reads vibrating-wire sensors via an AVW200 spectrum analyzer.",
+            ),
+            Self::create_function_completion(
+                "CS616",
+                "CS616(${1:Dest}, ${2:Reps}, ${3:CS616Chan}, ${4:CS616Port}, ${5:MeasPerPort}, ${6:Mult}, ${7:Offset})",
+                "Enables and measures a CS616/CS625 water content reflectometer.",
+            ),
+            Self::create_function_completion(
+                "CS7500",
+                "CS7500(${1:Dest}, ${2:Reps}, ${3:SDMAddress}, ${4:CS7500Cmd})",
+                "Communicates with a LI-7500(A) gas analyzer via SDM.",
+            ),
+            Self::create_function_completion(
+                "CurrentSE",
+                "CurrentSE(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:RGChan}, ${5:MeasOff}, ${6:SettlingTime}, ${7:fN1}, ${8:Mult}, ${9:Offset})",
+                "Measures single-ended current via the datalogger's internal shunt resistor.",
+            ),
+            Self::create_function_completion(
+                "HydraProbe",
+                "HydraProbe(${1:Dest}, ${2:SourceVolts}, ${3:ProbeType}, ${4:SoilType}, ${5:Multiplier}, ${6:Offset})",
+                "Converts raw voltages from a Stevens Hydra Probe sensor into soil measurements.",
+            ),
+            Self::create_function_completion(
+                "TDR100",
+                "TDR100(${1:Dest}, ${2:SDMAddress}, ${3:Option}, ${4:MuxOrProbeSelect}, ${5:WaveAvg}, ${6:Vp}, ${7:Points}, ${8:CableLength}, ${9:WindowLength}, ${10:ProbeLength}, ${11:ProbeOffset}, ${12:Mult}, ${13:Offset})",
+                "Measures time-domain-reflectometry probes via a TDR100 device.",
+            ),
+            Self::create_function_completion(
+                "TDR200",
+                "TDR200(${1:Dest}, ${2:SDMAddress}, ${3:Option}, ${4:MuxOrProbeSelect}, ${5:WaveAvg}, ${6:Vp}, ${7:Points}, ${8:CableLength}, ${9:WindowLength}, ${10:ProbeLength}, ${11:ProbeOffset}, ${12:Mult}, ${13:Offset}, ${14:NoiseRejectionFreq}, ${15:TDRFilterLevel}, ${16:TDRLaa})",
+                "Measures time-domain-reflectometry probes via a TDR200 device.",
+            ),
+            Self::create_function_completion(
+                "TGA",
+                "TGA(${1:Dest}, ${2:SDMAddress}, ${3:DataList}, ${4:ScanMode})",
+                "Measures a TGA100A/TGA200/TGA200A trace gas analyzer via SDM.",
+            ),
+            Self::create_function_completion(
+                "Quadrature",
+                "Quadrature(${1:Dest}, ${2:Port}, ${3:Option}, ${4:Mult})",
+                "Measures a shaft quadrature encoder to determine displacement and rotational direction.",
+            ),
+            Self::create_function_completion(
+                "SW12",
+                "SW12(${1:SWChan}, ${2:State}, ${3:SW12Option})",
+                "Enables or disables a switched-12V output channel to power external peripherals.",
+            ),
+            Self::create_function_completion(
                 "SerialOutBlock",
                 "SerialOutBlock(${1:ComPort}, ${2:Expression}, ${3:NumberBytes})",
                 "Sends binary data out a serial port.",
@@ -3608,6 +3668,140 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "SampleFieldCal"),
                 "SampleFieldCal"
+            );
+        }
+
+        #[test]
+        fn acpower_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ACPower"),
+                "ACPower(${1:DestAC}, ${2:ConfigAC}, ${3:LineFrq}, ${4:ChanV}, ${5:MultV}, \
+                 ${6:MaxVrms}, ${7:ChanI}, ${8:MultI}, ${9:MaxIrms}, ${10:RepsI})"
+            );
+        }
+
+        #[test]
+        fn am25t_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "AM25T"),
+                "AM25T(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:AM25TChan}, ${5:ChanAnlg}, \
+                 ${6:TCType}, ${7:TRef}, ${8:ClkPort}, ${9:ResPort}, ${10:ExChan}, \
+                 ${11:RevDiff}, ${12:SettlingTime}, ${13:fN1}, ${14:Mult}, ${15:Offset})"
+            );
+        }
+
+        #[test]
+        fn avw200_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "AVW200"),
+                "AVW200(${1:Result}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, \
+                 ${5:Dest}, ${6:AVWChan}, ${7:MuxChannel}, ${8:Reps}, ${9:BeginFreq}, \
+                 ${10:EndFreq}, ${11:ExVolt}, ${12:Therm50_60Hz}, ${13:Multiplier}, \
+                 ${14:Offset}, ${15:AmpThreshold})"
+            );
+        }
+
+        #[test]
+        fn cs616_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CS616"),
+                "CS616(${1:Dest}, ${2:Reps}, ${3:CS616Chan}, ${4:CS616Port}, \
+                 ${5:MeasPerPort}, ${6:Mult}, ${7:Offset})"
+            );
+        }
+
+        #[test]
+        fn cs7500_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CS7500"),
+                "CS7500(${1:Dest}, ${2:Reps}, ${3:SDMAddress}, ${4:CS7500Cmd})"
+            );
+        }
+
+        #[test]
+        fn currentse_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CurrentSE"),
+                "CurrentSE(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:RGChan}, ${5:MeasOff}, \
+                 ${6:SettlingTime}, ${7:fN1}, ${8:Mult}, ${9:Offset})"
+            );
+        }
+
+        #[test]
+        fn hydraprobe_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "HydraProbe"),
+                "HydraProbe(${1:Dest}, ${2:SourceVolts}, ${3:ProbeType}, ${4:SoilType}, \
+                 ${5:Multiplier}, ${6:Offset})"
+            );
+        }
+
+        #[test]
+        fn tdr100_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TDR100"),
+                "TDR100(${1:Dest}, ${2:SDMAddress}, ${3:Option}, ${4:MuxOrProbeSelect}, \
+                 ${5:WaveAvg}, ${6:Vp}, ${7:Points}, ${8:CableLength}, ${9:WindowLength}, \
+                 ${10:ProbeLength}, ${11:ProbeOffset}, ${12:Mult}, ${13:Offset})"
+            );
+        }
+
+        #[test]
+        fn tdr200_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TDR200"),
+                "TDR200(${1:Dest}, ${2:SDMAddress}, ${3:Option}, ${4:MuxOrProbeSelect}, \
+                 ${5:WaveAvg}, ${6:Vp}, ${7:Points}, ${8:CableLength}, ${9:WindowLength}, \
+                 ${10:ProbeLength}, ${11:ProbeOffset}, ${12:Mult}, ${13:Offset}, \
+                 ${14:NoiseRejectionFreq}, ${15:TDRFilterLevel}, ${16:TDRLaa})"
+            );
+        }
+
+        #[test]
+        fn tga_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TGA"),
+                "TGA(${1:Dest}, ${2:SDMAddress}, ${3:DataList}, ${4:ScanMode})"
+            );
+        }
+
+        #[test]
+        fn quadrature_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Quadrature"),
+                "Quadrature(${1:Dest}, ${2:Port}, ${3:Option}, ${4:Mult})"
+            );
+        }
+
+        #[test]
+        fn sw12_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SW12"),
+                "SW12(${1:SWChan}, ${2:State}, ${3:SW12Option})"
             );
         }
 
