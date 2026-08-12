@@ -148,7 +148,7 @@
     },
     "builtin-functions-communication": {
       "name": "support.function.communication.crbasic",
-      "match": "(?i)\\b(SerialOpen|SerialClose|SerialIn|SerialOut|SerialInRecord|SerialOutBlock|SerialFlush|ModbusMaster|SDI12Recorder|TCPOpen|TCPClose|UDPOpen|UDPSocketOpen|UDPSocketSend|UDPSocketRecv|UDPSocketClose|EmailRelay|PPPOpen|PPPClose|FTPClient|HTTPGet|HTTPPost|HTTPPut|GPS|EthernetPower|I2COpen|I2CRead|I2CWrite)\\b"
+      "match": "(?i)\\b(SerialOpen|SerialClose|SerialIn|SerialOut|SerialInRecord|SerialOutBlock|SerialFlush|ModbusMaster|SDI12Recorder|TCPOpen|TCPClose|UDPOpen|UDPSocketOpen|UDPSocketSend|UDPSocketRecv|UDPSocketClose|EmailRelay|PPPOpen|PPPClose|FTPClient|HTTPGet|HTTPPost|HTTPPut|GPS|EthernetPower|I2COpen|I2CRead|I2CWrite|AcceptDataRecords|Broadcast|ClockReport|DataGram|EncryptExempt|GetDataRecord|GetFile|GetVariables|PakBusClock|Route|Routes|SendData|SendFile|SendGetVariables|SendTableDef|SendVariables|StaticRoute|TimeUntilTransmit)\\b"
     },
     "builtin-functions-data": {
       "name": "support.function.data.crbasic",

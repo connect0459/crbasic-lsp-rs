@@ -506,6 +506,96 @@ impl CompletionProvider {
                 "Writes bytes to an I2C peripheral device.",
             ),
             Self::create_function_completion(
+                "AcceptDataRecords",
+                "AcceptDataRecords(${1:PakBusAddr}, ${2:TableNo}, ${3:DestTableName})",
+                "Configures the datalogger to receive and store data records pushed from a remote PakBus datalogger.",
+            ),
+            Self::create_function_completion(
+                "Broadcast",
+                "Broadcast(${1:ComPort}, ${2:Message})",
+                "Sends a broadcast message to all devices on a PakBus network.",
+            ),
+            Self::create_function_completion(
+                "ClockReport",
+                "ClockReport(${1:ComPort}, ${2:NeighborAddr}, ${3:PakBusAddr})",
+                "Sends this datalogger's clock value to a specified PakBus device.",
+            ),
+            Self::create_function_completion(
+                "DataGram",
+                "DataGram(${1:ComPort}, ${2:BaudRate}, ${3:PakBusAddr}, ${4:DestAppID}, ${5:SrcAppID})",
+                "Initializes a SerialServer/DataGram application that tunnels serial traffic through a PakBus network.",
+            ),
+            Self::create_function_completion(
+                "EncryptExempt",
+                "EncryptExempt(${1:BeginPakBusAddr}, ${2:EndPakBusAddr})",
+                "Declares a PakBus address range exempt from PakBus encryption.",
+            ),
+            Self::create_function_completion(
+                "GetDataRecord",
+                "GetDataRecord(${1:ResultCode}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Security}, ${6:TimeOut}, ${7:Tries}, ${8:TableNo}, ${9:DestTableName}, ${10:MaxRecords})",
+                "Retrieves the most recent record(s) from a table on a remote PakBus datalogger into a local table.",
+            ),
+            Self::create_function_completion(
+                "GetFile",
+                "GetFile(${1:ResultCode}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Security}, ${6:TimeOut}, ${7:LocalFile}, ${8:RemoteFile})",
+                "Retrieves a file from a remote PakBus datalogger and stores it locally.",
+            ),
+            Self::create_function_completion(
+                "GetVariables",
+                "GetVariables(${1:ResultCode}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Security}, ${6:TimeOut}, ${7:TableName}, ${8:FieldName}, ${9:Variable}, ${10:Swath})",
+                "Retrieves one or more variable values from a data table on a remote PakBus device.",
+            ),
+            Self::create_function_completion(
+                "PakBusClock",
+                "PakBusClock(${1:PakBusAddr})",
+                "Configures the datalogger to accept and synchronize its clock from time broadcasts sent by a specified PakBus device.",
+            ),
+            Self::create_function_completion(
+                "Route",
+                "Route(${1:PakBusAddr})",
+                "Returns the neighbor address of, or the route to, a PakBus datalogger.",
+            ),
+            Self::create_function_completion(
+                "Routes",
+                "Routes(${1:Dest})",
+                "Retrieves the datalogger's list of known dynamic PakBus routes into an array.",
+            ),
+            Self::create_function_completion(
+                "SendData",
+                "SendData(${1:ComPort}, ${2:NeighborAddr}, ${3:PakBusAddr}, ${4:DataTable}, ${5:TableOption})",
+                "Sends the most recent record from a data table to a destination PakBus device.",
+            ),
+            Self::create_function_completion(
+                "SendFile",
+                "SendFile(${1:ResultCode}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Security}, ${6:TimeOut}, ${7:LocalFile}, ${8:RemoteFile})",
+                "Sends a file from the datalogger to another PakBus datalogger.",
+            ),
+            Self::create_function_completion(
+                "SendGetVariables",
+                "SendGetVariables(${1:ResultCode}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Security}, ${6:TimeOut}, ${7:SendVariable}, ${8:SendSwath}, ${9:GetVariable}, ${10:GetSwath})",
+                "Sends and/or retrieves an array of values to/from the host datalogger during its assigned time slot.",
+            ),
+            Self::create_function_completion(
+                "SendTableDef",
+                "SendTableDef(${1:ComPort}, ${2:NeighborAddr}, ${3:PakBusAddr}, ${4:DataTable})",
+                "Sends a data table's definition to a destination device on the PakBus network.",
+            ),
+            Self::create_function_completion(
+                "SendVariables",
+                "SendVariables(${1:ResultCode}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Security}, ${6:TimeOut}, ${7:TableName}, ${8:FieldName}, ${9:Variable}, ${10:Swath})",
+                "Sends one or more variable values to a table in a destination PakBus device.",
+            ),
+            Self::create_function_completion(
+                "StaticRoute",
+                "StaticRoute(${1:ComPort}, ${2:NeighborAddr}, ${3:PakBusAddr})",
+                "Defines a fixed route to a PakBus datalogger, for use when dynamic routing is unavailable.",
+            ),
+            Self::create_function_completion(
+                "TimeUntilTransmit",
+                "TimeUntilTransmit",
+                "Returns the seconds remaining until the datalogger's assigned communication time slot with its host.",
+            ),
+            Self::create_function_completion(
                 "WindVector",
                 "WindVector(${1:Reps}, ${2:SpeedOrEast}, ${3:DirectionOrNorth}, ${4:DataType}, ${5:DisableVar}, ${6:Subinterval}, ${7:SensorType}, ${8:OutputOpt})",
                 "Calculates and stores the mean wind speed, wind vector magnitude, and direction statistics.",
@@ -2720,6 +2810,183 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "I2CWrite"),
                 "I2CWrite(${1:BeginPort}, ${2:Address}, ${3:Source}, ${4:NumBytes}, ${5:Option})"
+            );
+        }
+
+        #[test]
+        fn acceptdatarecords_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "AcceptDataRecords"),
+                "AcceptDataRecords(${1:PakBusAddr}, ${2:TableNo}, ${3:DestTableName})"
+            );
+        }
+
+        #[test]
+        fn broadcast_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Broadcast"),
+                "Broadcast(${1:ComPort}, ${2:Message})"
+            );
+        }
+
+        #[test]
+        fn clockreport_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ClockReport"),
+                "ClockReport(${1:ComPort}, ${2:NeighborAddr}, ${3:PakBusAddr})"
+            );
+        }
+
+        #[test]
+        fn datagram_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DataGram"),
+                "DataGram(${1:ComPort}, ${2:BaudRate}, ${3:PakBusAddr}, ${4:DestAppID}, ${5:SrcAppID})"
+            );
+        }
+
+        #[test]
+        fn encryptexempt_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "EncryptExempt"),
+                "EncryptExempt(${1:BeginPakBusAddr}, ${2:EndPakBusAddr})"
+            );
+        }
+
+        #[test]
+        fn getdatarecord_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "GetDataRecord"),
+                "GetDataRecord(${1:ResultCode}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Security}, ${6:TimeOut}, ${7:Tries}, ${8:TableNo}, ${9:DestTableName}, ${10:MaxRecords})"
+            );
+        }
+
+        #[test]
+        fn getfile_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "GetFile"),
+                "GetFile(${1:ResultCode}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Security}, ${6:TimeOut}, ${7:LocalFile}, ${8:RemoteFile})"
+            );
+        }
+
+        #[test]
+        fn getvariables_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "GetVariables"),
+                "GetVariables(${1:ResultCode}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Security}, ${6:TimeOut}, ${7:TableName}, ${8:FieldName}, ${9:Variable}, ${10:Swath})"
+            );
+        }
+
+        #[test]
+        fn pakbusclock_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PakBusClock"),
+                "PakBusClock(${1:PakBusAddr})"
+            );
+        }
+
+        #[test]
+        fn route_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Route"),
+                "Route(${1:PakBusAddr})"
+            );
+        }
+
+        #[test]
+        fn routes_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Routes"), "Routes(${1:Dest})");
+        }
+
+        #[test]
+        fn senddata_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SendData"),
+                "SendData(${1:ComPort}, ${2:NeighborAddr}, ${3:PakBusAddr}, ${4:DataTable}, ${5:TableOption})"
+            );
+        }
+
+        #[test]
+        fn sendfile_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SendFile"),
+                "SendFile(${1:ResultCode}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Security}, ${6:TimeOut}, ${7:LocalFile}, ${8:RemoteFile})"
+            );
+        }
+
+        #[test]
+        fn sendgetvariables_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SendGetVariables"),
+                "SendGetVariables(${1:ResultCode}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Security}, ${6:TimeOut}, ${7:SendVariable}, ${8:SendSwath}, ${9:GetVariable}, ${10:GetSwath})"
+            );
+        }
+
+        #[test]
+        fn sendtabledef_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SendTableDef"),
+                "SendTableDef(${1:ComPort}, ${2:NeighborAddr}, ${3:PakBusAddr}, ${4:DataTable})"
+            );
+        }
+
+        #[test]
+        fn sendvariables_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SendVariables"),
+                "SendVariables(${1:ResultCode}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Security}, ${6:TimeOut}, ${7:TableName}, ${8:FieldName}, ${9:Variable}, ${10:Swath})"
+            );
+        }
+
+        #[test]
+        fn staticroute_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "StaticRoute"),
+                "StaticRoute(${1:ComPort}, ${2:NeighborAddr}, ${3:PakBusAddr})"
+            );
+        }
+
+        #[test]
+        fn timeuntiltransmit_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TimeUntilTransmit"),
+                "TimeUntilTransmit"
             );
         }
     }
