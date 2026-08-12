@@ -1113,6 +1113,121 @@ impl SignatureProvider {
                 parameters: vec![],
             }),
 
+            "displaymenu" => Some(FunctionSignature {
+                name: "DisplayMenu".to_string(),
+                documentation: "Marks the beginning of a custom on-screen menu definition."
+                    .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "MenuName".to_string(),
+                        documentation: "Menu label shown on the datalogger display (max 20 characters).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "AddToSystem".to_string(),
+                        documentation: "Constant controlling how the menu appears relative to the system menu at power-up.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Cursor".to_string(),
+                        documentation: "Line number (1-7) where the cursor starts when the menu is entered.".to_string(),
+                    },
+                ],
+            }),
+
+            "submenu" => Some(FunctionSignature {
+                name: "SubMenu".to_string(),
+                documentation:
+                    "Marks the beginning of a nested custom menu within a DisplayMenu block."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "MenuName".to_string(),
+                        documentation: "Submenu label shown on the datalogger display (max 20 characters).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Cursor".to_string(),
+                        documentation: "Line number (1-7) where the cursor starts when the submenu is entered.".to_string(),
+                    },
+                ],
+            }),
+
+            "menuitem" => Some(FunctionSignature {
+                name: "MenuItem".to_string(),
+                documentation:
+                    "Defines an editable custom-menu entry showing the name and value of a variable."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "MenuItemName".to_string(),
+                        documentation: "Label shown on the custom menu for this editable entry.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Variable".to_string(),
+                        documentation: "Program variable whose value is displayed and can be edited.".to_string(),
+                    },
+                ],
+            }),
+
+            "menupick" => Some(FunctionSignature {
+                name: "MenuPick".to_string(),
+                documentation:
+                    "Creates a fixed pick-list of selectable values for the preceding MenuItem."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Item1".to_string(),
+                        documentation: "First selectable constant value in the pick list.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Item2".to_string(),
+                        documentation: "Second selectable constant value in the pick list (more items may follow).".to_string(),
+                    },
+                ],
+            }),
+
+            "menurecompile" => Some(FunctionSignature {
+                name: "MenuRecompile".to_string(),
+                documentation:
+                    "Creates a custom menu item that triggers a program recompile after Constant Table edits."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CompileString".to_string(),
+                        documentation: "Label for the recompile menu item (max 11 characters, 21 as pick-list header).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CompileVar".to_string(),
+                        documentation: "Boolean variable set to Yes/No to trigger the recompile.".to_string(),
+                    },
+                ],
+            }),
+
+            "displayvalue" => Some(FunctionSignature {
+                name: "DisplayValue".to_string(),
+                documentation:
+                    "Defines a read-only custom-menu entry showing a data-table field, variable, or expression."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "MenuItemName".to_string(),
+                        documentation: "Label shown on the custom menu for this read-only entry.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MenuExpression".to_string(),
+                        documentation: "Data-table field (Table.Field), variable, or expression to display.".to_string(),
+                    },
+                ],
+            }),
+
+            "displayline" => Some(FunctionSignature {
+                name: "DisplayLine".to_string(),
+                documentation: "Displays a single line of read-only text in a custom menu."
+                    .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "String, variable, constant, or expression to display as the line's text.".to_string(),
+                }],
+            }),
+
             "datatable" => Some(FunctionSignature {
                 name: "DataTable".to_string(),
                 documentation: "Defines a data table for storing measurements.".to_string(),
@@ -1571,6 +1686,25 @@ mod tests {
                 .expect("SplitStr should have a signature");
 
             assert_eq!(sig.parameters[2].name, "FilterString");
+        }
+
+        #[test]
+        fn has_menu_functions() {
+            for name in [
+                "DisplayMenu",
+                "SubMenu",
+                "MenuItem",
+                "MenuPick",
+                "MenuRecompile",
+                "DisplayValue",
+                "DisplayLine",
+            ] {
+                assert!(
+                    SignatureProvider::get_function_signature(name).is_some(),
+                    "Expected a signature for menu function: {}",
+                    name
+                );
+            }
         }
 
         #[test]
