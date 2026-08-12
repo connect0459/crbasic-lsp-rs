@@ -493,6 +493,39 @@ impl HoverProvider {
             "dnpvariable" => Some(
                 "**DNPVariable**\n\nMaps a variable or array to a DNP3 object, variation, and class within the datalogger's outstation configuration.",
             ),
+            "argosdata" => Some(
+                "**ArgosData**\n\nSpecifies the data to be transmitted to the Argos satellite.",
+            ),
+            "argosdatarepeat" => {
+                Some("**ArgosDataRepeat**\n\nSets the repeat rate for the ArgosData instruction.")
+            }
+            "argoserror" => Some(
+                "**ArgosError**\n\nRequests and clears the current error message from the Argos transmitter.",
+            ),
+            "argossetup" => Some(
+                "**ArgosSetup**\n\nSets up the datalogger for transmitting data via an Argos satellite.",
+            ),
+            "argostransmit" => Some(
+                "**ArgosTransmit**\n\nInitiates a single transmission to an Argos satellite when the instruction is executed.",
+            ),
+            "goesdata" => Some(
+                "**GOESData**\n\nTransmits data from a data table to a GOES satellite transmitter.",
+            ),
+            "goesfield" => Some(
+                "**GOESField**\n\nDeclares an output field to include in a GOES transmission; precedes the data-table field instruction it applies to.",
+            ),
+            "goesgps" => Some(
+                "**GOESGPS**\n\nRetrieves GPS data from a compatible GOES satellite transmitter and stores it in two variable arrays.",
+            ),
+            "goessetup" => Some(
+                "**GOESSetup**\n\nConfigures a GOES satellite transmitter for communication with the satellite.",
+            ),
+            "goesstatus" => Some(
+                "**GOESStatus**\n\nRequests status and diagnostic information from a GOES satellite transmitter.",
+            ),
+            "goestable" => Some(
+                "**GOESTable**\n\nFormats and outputs a data table's records to a TX325/TX326 GOES satellite transmitter.",
+            ),
             _ => None,
         }
     }
@@ -1254,6 +1287,17 @@ mod tests {
                     "DNP",
                     "DNPUpdate",
                     "DNPVariable",
+                    "ArgosData",
+                    "ArgosDataRepeat",
+                    "ArgosError",
+                    "ArgosSetup",
+                    "ArgosTransmit",
+                    "GOESData",
+                    "GOESField",
+                    "GOESGPS",
+                    "GOESSetup",
+                    "GOESStatus",
+                    "GOESTable",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
