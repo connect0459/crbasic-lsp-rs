@@ -158,6 +158,12 @@
     { "name": "CDM_VW300RainFlow", "category": "measurement" },
     { "name": "CDM_VW300Static", "category": "measurement" },
 
+    { "name": "Calibrate", "category": "measurement" },
+    { "name": "FieldCal", "category": "measurement" },
+    { "name": "FieldCalStrain", "category": "measurement" },
+    { "name": "LoadFieldCal", "category": "measurement" },
+    { "name": "SampleFieldCal", "category": "measurement" },
+
     { "name": "SerialOpen", "category": "communication" },
     { "name": "SerialClose", "category": "communication" },
     { "name": "SerialIn", "category": "communication" },
