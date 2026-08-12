@@ -305,6 +305,238 @@ impl SignatureProvider {
                 ],
             }),
 
+            "median" => Some(FunctionSignature {
+                name: "Median".to_string(),
+                documentation: "Stores the median of a variable, over time, in an output table.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of variables to calculate the median for; requires an array if greater than 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The input variable or expression producing the median values.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxN".to_string(),
+                        documentation: "The maximum number of values retained in ring memory before the median is calculated.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "The output storage data type (e.g. IEEE4, FP2, IEEE8).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DisableVar".to_string(),
+                        documentation: "A condition determining whether to process the current measurement (0 = process).".to_string(),
+                    },
+                ],
+            }),
+
+            "moment" => Some(FunctionSignature {
+                name: "Moment".to_string(),
+                documentation: "Outputs a central moment (variance, skewness, kurtosis, etc.) of a value over the measurement interval.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of variables to calculate moments for; requires an array if greater than 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The input variable or expression for the moment calculation.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Order".to_string(),
+                        documentation: "The polynomial order (2 through 5) specifying which central moment to compute.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "The output storage data type (e.g. IEEE4, FP2, IEEE8).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DisableVar".to_string(),
+                        documentation: "A condition determining whether to include the current measurement in output.".to_string(),
+                    },
+                ],
+            }),
+
+            "samplemaxmin" => Some(FunctionSignature {
+                name: "SampleMaxMin".to_string(),
+                documentation: "Records the value of a companion variable at the moment a preceding Maximum or Minimum reaches its extremum.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of variables to sample; requires Source to be an array if greater than 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The variable or array to sample when the preceding Maximum or Minimum instruction detects an extremum.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "The output storage data type (e.g. IEEE4, FP2, IEEE8, Long, String, Boolean).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DisableVar".to_string(),
+                        documentation: "An optional condition controlling whether the measurement is included in table output.".to_string(),
+                    },
+                ],
+            }),
+
+            "peakvalley" => Some(FunctionSignature {
+                name: "PeakValley".to_string(),
+                documentation: "Detects local maxima and minima in signal data with a hysteresis threshold.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "DestPV".to_string(),
+                        documentation: "The variable or array that receives the detected peak or valley value.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DestChange".to_string(),
+                        documentation: "The variable or array that receives the change from the previous peak/valley.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of signal inputs to process.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The input variable being analyzed for peaks and valleys.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Hysteresis".to_string(),
+                        documentation: "The minimum value change required to identify a new peak or valley.".to_string(),
+                    },
+                ],
+            }),
+
+            "fft" => Some(FunctionSignature {
+                name: "FFT".to_string(),
+                documentation: "Performs a Fast Fourier Transform on time-series measurement data.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "SrcArray".to_string(),
+                        documentation: "The array containing the time-series data to transform.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "The output storage data type (e.g. IEEE4, FP2, IEEE8).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "N".to_string(),
+                        documentation: "The number of points in the time series; must be a power of 2.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SampleInterval".to_string(),
+                        documentation: "The time interval between data samples.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Units".to_string(),
+                        documentation: "Time units for SampleInterval (usec, msec, sec, or min).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "The processing mode: spectral amplitude, phase, power, power density, or inverse transform.".to_string(),
+                    },
+                ],
+            }),
+
+            "covariance" => Some(FunctionSignature {
+                name: "Covariance".to_string(),
+                documentation: "Computes time-series covariance among array elements, for eddy-flux systems.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "DimX".to_string(),
+                        documentation: "The number of elements in the source array.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "XVal".to_string(),
+                        documentation: "The first array element to include in the computation.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "The output storage data type (e.g. IEEE4, FP2, IEEE8).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DisableVar".to_string(),
+                        documentation: "An optional condition excluding the current measurement from output when non-zero.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumOfCov".to_string(),
+                        documentation: "An optional count of covariance relationships to compute.".to_string(),
+                    },
+                ],
+            }),
+
+            "levelcrossing" => Some(FunctionSignature {
+                name: "LevelCrossing".to_string(),
+                documentation: "Builds a 1D or 2D level-crossing histogram for fatigue counting.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The input variable or array compared against the crossing levels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "The output storage data type (e.g. IEEE4, FP2, IEEE8, String, Boolean).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DisableVar".to_string(),
+                        documentation: "A condition determining whether to process the current measurement (0 = process).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumLevels".to_string(),
+                        documentation: "The number of crossing levels/histogram bins for the first dimension.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SecondDim".to_string(),
+                        documentation: "The number of boundary levels for the second dimension; set to 1 for a one-dimensional histogram.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CrossingArray".to_string(),
+                        documentation: "The array holding the crossing-level values compared against Source's first element.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SecondArray".to_string(),
+                        documentation: "The array holding the upper bin limits for the second dimension's comparison.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Hysteresis".to_string(),
+                        documentation: "The minimum input change required before a crossing is counted, to reject noise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "A code controlling rising/falling edge detection, histogram reset, and output format.".to_string(),
+                    },
+                ],
+            }),
+
+            "worstcase" => Some(FunctionSignature {
+                name: "WorstCase".to_string(),
+                documentation: "Saves ranked worst-case data events into separate clone tables.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "TableName".to_string(),
+                        documentation: "The data table for which worst-case events are created.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumCases".to_string(),
+                        documentation: "The number of worst-case scenarios to preserve.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxMin".to_string(),
+                        documentation: "Whether to track maximum (1) or minimum (0) ranking values.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Change".to_string(),
+                        documentation: "An optional minimum ranking shift required before recording another worst case.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RankVar".to_string(),
+                        documentation: "The variable used to evaluate and rank event severity.".to_string(),
+                    },
+                ],
+            }),
+
             "fieldnames" => Some(FunctionSignature {
                 name: "FieldNames".to_string(),
                 documentation:
@@ -4135,6 +4367,292 @@ impl SignatureProvider {
                     ParameterInfo {
                         name: "Type".to_string(),
                         documentation: "The target data type: Float, IEEE4, Long, String, or Double.".to_string(),
+                    },
+                ],
+            }),
+
+            "avgrun" => Some(FunctionSignature {
+                name: "AvgRun".to_string(),
+                documentation: "Computes a running average over the last Number values of a measurement.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the running average is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions for the calculation.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The input variable being averaged.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Number".to_string(),
+                        documentation: "The number of Source values included in the running average.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RunReset".to_string(),
+                        documentation: "An optional Boolean that clears the running history when true.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Count".to_string(),
+                        documentation: "An optional Long variable that receives the actual number of values used.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TotalCalls".to_string(),
+                        documentation: "An optional constant giving the total number of calls to this instruction instance.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Call_ID".to_string(),
+                        documentation: "An optional unique identifier distinguishing each call to this instruction instance.".to_string(),
+                    },
+                ],
+            }),
+
+            "maxrun" => Some(FunctionSignature {
+                name: "MaxRun".to_string(),
+                documentation: "Computes a running maximum over the last Number values of a measurement.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the running maximum is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions for the calculation.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The input variable being evaluated.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Number".to_string(),
+                        documentation: "The number of Source values included in the running maximum.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RunReset".to_string(),
+                        documentation: "An optional Boolean that clears the running history when true.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TotalCalls".to_string(),
+                        documentation: "An optional constant giving the total number of calls to this instruction instance.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Call_ID".to_string(),
+                        documentation: "An optional unique identifier distinguishing each call to this instruction instance.".to_string(),
+                    },
+                ],
+            }),
+
+            "minrun" => Some(FunctionSignature {
+                name: "MinRun".to_string(),
+                documentation: "Computes a running minimum over the last Number values of a measurement.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the running minimum is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions for the calculation.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The input variable being evaluated.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Number".to_string(),
+                        documentation: "The number of Source values included in the running minimum.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RunReset".to_string(),
+                        documentation: "An optional Boolean that clears the running history when true.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TotalCalls".to_string(),
+                        documentation: "An optional constant giving the total number of calls to this instruction instance.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Call_ID".to_string(),
+                        documentation: "An optional unique identifier distinguishing each call to this instruction instance.".to_string(),
+                    },
+                ],
+            }),
+
+            "totalrun" => Some(FunctionSignature {
+                name: "TotalRun".to_string(),
+                documentation: "Computes a running total over the last Number values of a measurement.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the running total is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions for the calculation.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The input variable being totaled.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Number".to_string(),
+                        documentation: "The number of Source values included in the running total.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RunReset".to_string(),
+                        documentation: "An optional Boolean that clears the running history when true.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Count".to_string(),
+                        documentation: "An optional Long variable that receives the actual number of values used.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TotalCalls".to_string(),
+                        documentation: "An optional constant giving the total number of calls to this instruction instance.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Call_ID".to_string(),
+                        documentation: "An optional unique identifier distinguishing each call to this instruction instance.".to_string(),
+                    },
+                ],
+            }),
+
+            "avgspa" => Some(FunctionSignature {
+                name: "AvgSpa".to_string(),
+                documentation: "Computes the spatial average of a measurement across array elements.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the spatial average is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Swath".to_string(),
+                        documentation: "The number of array elements to include in the calculation.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The first array element from which to begin computing the spatial average.".to_string(),
+                    },
+                ],
+            }),
+
+            "covspa" => Some(FunctionSignature {
+                name: "CovSpa".to_string(),
+                documentation: "Computes spatial covariance between a reference data set and one or more comparison data sets.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The array in which the calculated covariance results are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumOfCov".to_string(),
+                        documentation: "The number of covariance calculations to perform.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SizeOfSets".to_string(),
+                        documentation: "The number of elements in each data set.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CoreSet".to_string(),
+                        documentation: "The starting array position of the reference data set.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataSets".to_string(),
+                        documentation: "The starting array position of the data sets compared against CoreSet.".to_string(),
+                    },
+                ],
+            }),
+
+            "maxspa" => Some(FunctionSignature {
+                name: "MaxSpa".to_string(),
+                documentation: "Locates the maximum value and its position within an array.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A 2-element array/variable: Dest(1) receives the maximum value, Dest(2) its location.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Swath".to_string(),
+                        documentation: "The number of array values to search.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The input array to search.".to_string(),
+                    },
+                ],
+            }),
+
+            "rmsspa" => Some(FunctionSignature {
+                name: "RMSSpa".to_string(),
+                documentation: "Computes the spatial root-mean-square value across array elements.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the RMS result is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Swath".to_string(),
+                        documentation: "The number of array elements to include in the computation.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The variable containing the input data.".to_string(),
+                    },
+                ],
+            }),
+
+            "stddevspa" => Some(FunctionSignature {
+                name: "StdDevSpa".to_string(),
+                documentation: "Computes the spatial standard deviation across array elements.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the standard deviation is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Swath".to_string(),
+                        documentation: "The number of array values to process.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The input variable name.".to_string(),
+                    },
+                ],
+            }),
+
+            "fftspa" => Some(FunctionSignature {
+                name: "FFTSpa".to_string(),
+                documentation: "Performs a Fast Fourier Transform on time-series data, for use mid-program rather than as a table entry.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array that receives the FFT results.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "N".to_string(),
+                        documentation: "The number of data points in the time series; must be a power of 2.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SrcArray".to_string(),
+                        documentation: "The input data array for the transform.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SampleInterval".to_string(),
+                        documentation: "The time interval between measurements.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Units".to_string(),
+                        documentation: "Time units for SampleInterval (usec, msec, sec, or min).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "The processing mode selector (0-5, or +100 variants).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FFTSpaInit".to_string(),
+                        documentation: "An optional frequency-axis array, initialized at compile time.".to_string(),
                     },
                 ],
             }),
@@ -8287,6 +8805,49 @@ mod tests {
                     "Units",
                     "OutStat",
                     "LastFileName",
+                ]
+            );
+        }
+
+        #[test]
+        fn levelcrossing_has_nine_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("LevelCrossing")
+                .expect("LevelCrossing should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "Source",
+                    "DataType",
+                    "DisableVar",
+                    "NumLevels",
+                    "SecondDim",
+                    "CrossingArray",
+                    "SecondArray",
+                    "Hysteresis",
+                    "Option",
+                ]
+            );
+        }
+
+        #[test]
+        fn avgrun_has_eight_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("AvgRun")
+                .expect("AvgRun should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "Dest",
+                    "Reps",
+                    "Source",
+                    "Number",
+                    "RunReset",
+                    "Count",
+                    "TotalCalls",
+                    "Call_ID",
                 ]
             );
         }
