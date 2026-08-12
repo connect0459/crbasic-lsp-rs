@@ -611,6 +611,61 @@ impl CompletionProvider {
                 "Maps a variable or array to a DNP3 object, variation, and class within the datalogger's outstation configuration.",
             ),
             Self::create_function_completion(
+                "ArgosData",
+                "ArgosData(${1:ResultCode}, ${2:ST20Buffer}, ${3:DataTable}, ${4:NumRecords}, ${5:DataFormat})",
+                "Specifies the data to be transmitted to the Argos satellite.",
+            ),
+            Self::create_function_completion(
+                "ArgosDataRepeat",
+                "ArgosDataRepeat(${1:ResultCode}, ${2:RepeatRate}, ${3:RepeatCount}, ${4:BufferArray})",
+                "Sets the repeat rate for the ArgosData instruction.",
+            ),
+            Self::create_function_completion(
+                "ArgosError",
+                "ArgosError(${1:ErrorCodes})",
+                "Requests and clears the current error message from the Argos transmitter.",
+            ),
+            Self::create_function_completion(
+                "ArgosSetup",
+                "ArgosSetup(${1:ResultCode}, ${2:ST20Buffer}, ${3:DecimalID}, ${4:HexadecimalID}, ${5:Frequency})",
+                "Sets up the datalogger for transmitting data via an Argos satellite.",
+            ),
+            Self::create_function_completion(
+                "ArgosTransmit",
+                "ArgosTransmit(${1:ResultCode}, ${2:ST20Buffer})",
+                "Initiates a single transmission to an Argos satellite when the instruction is executed.",
+            ),
+            Self::create_function_completion(
+                "GOESData",
+                "GOESData(${1:ResultCode}, ${2:Table}, ${3:TableOption}, ${4:BufferControl}, ${5:DataFormat})",
+                "Transmits data from a data table to a GOES satellite transmitter.",
+            ),
+            Self::create_function_completion(
+                "GOESField",
+                "GOESField(${1:NumVals}, ${2:Decimation}, ${3:Precision}, ${4:Width}, ${5:SHEF})",
+                "Declares an output field to include in a GOES transmission; precedes the data-table field instruction it applies to.",
+            ),
+            Self::create_function_completion(
+                "GOESGPS",
+                "GOESGPS(${1:GoesArray1}, ${2:GoesArray2})",
+                "Retrieves GPS data from a compatible GOES satellite transmitter and stores it in two variable arrays.",
+            ),
+            Self::create_function_completion(
+                "GOESSetup",
+                "GOESSetup(${1:ResultCode}, ${2:PlatformID}, ${3:MsgWindow}, ${4:STChannel}, ${5:STBaud}, ${6:RChannel}, ${7:RBaud}, ${8:STInterval}, ${9:STOffset}, ${10:RInterval})",
+                "Configures a GOES satellite transmitter for communication with the satellite.",
+            ),
+            Self::create_function_completion(
+                "GOESStatus",
+                "GOESStatus(${1:ResultCode}, ${2:StatusCommand})",
+                "Requests status and diagnostic information from a GOES satellite transmitter.",
+            ),
+            Self::create_function_completion(
+                "GOESTable",
+                "GOESTable(${1:Result}, ${2:Comport}, ${3:Model}, ${4:BufferControl}, ${5:Fields_Scan_Order}, ${6:Newest_First}, ${7:Format})",
+                "Formats and outputs a data table's records to a TX325/TX326 GOES satellite transmitter.",
+            ),
+            Self::create_function_completion(
                 "WindVector",
                 "WindVector(${1:Reps}, ${2:SpeedOrEast}, ${3:DirectionOrNorth}, ${4:DataType}, ${5:DisableVar}, ${6:Subinterval}, ${7:SensorType}, ${8:OutputOpt})",
                 "Calculates and stores the mean wind speed, wind vector magnitude, and direction statistics.",
@@ -3032,6 +3087,116 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "DNPVariable"),
                 "DNPVariable(${1:Source}, ${2:Swath}, ${3:DNPObject}, ${4:DNPVariation}, ${5:DNPClass}, ${6:DNPFlag}, ${7:DNPEvent}, ${8:DNPNumEvents})"
+            );
+        }
+
+        #[test]
+        fn argosdata_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ArgosData"),
+                "ArgosData(${1:ResultCode}, ${2:ST20Buffer}, ${3:DataTable}, ${4:NumRecords}, ${5:DataFormat})"
+            );
+        }
+
+        #[test]
+        fn argosdatarepeat_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ArgosDataRepeat"),
+                "ArgosDataRepeat(${1:ResultCode}, ${2:RepeatRate}, ${3:RepeatCount}, ${4:BufferArray})"
+            );
+        }
+
+        #[test]
+        fn argoserror_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ArgosError"),
+                "ArgosError(${1:ErrorCodes})"
+            );
+        }
+
+        #[test]
+        fn argossetup_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ArgosSetup"),
+                "ArgosSetup(${1:ResultCode}, ${2:ST20Buffer}, ${3:DecimalID}, ${4:HexadecimalID}, ${5:Frequency})"
+            );
+        }
+
+        #[test]
+        fn argostransmit_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ArgosTransmit"),
+                "ArgosTransmit(${1:ResultCode}, ${2:ST20Buffer})"
+            );
+        }
+
+        #[test]
+        fn goesdata_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "GOESData"),
+                "GOESData(${1:ResultCode}, ${2:Table}, ${3:TableOption}, ${4:BufferControl}, ${5:DataFormat})"
+            );
+        }
+
+        #[test]
+        fn goesfield_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "GOESField"),
+                "GOESField(${1:NumVals}, ${2:Decimation}, ${3:Precision}, ${4:Width}, ${5:SHEF})"
+            );
+        }
+
+        #[test]
+        fn goesgps_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "GOESGPS"),
+                "GOESGPS(${1:GoesArray1}, ${2:GoesArray2})"
+            );
+        }
+
+        #[test]
+        fn goessetup_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "GOESSetup"),
+                "GOESSetup(${1:ResultCode}, ${2:PlatformID}, ${3:MsgWindow}, ${4:STChannel}, ${5:STBaud}, ${6:RChannel}, ${7:RBaud}, ${8:STInterval}, ${9:STOffset}, ${10:RInterval})"
+            );
+        }
+
+        #[test]
+        fn goesstatus_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "GOESStatus"),
+                "GOESStatus(${1:ResultCode}, ${2:StatusCommand})"
+            );
+        }
+
+        #[test]
+        fn goestable_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "GOESTable"),
+                "GOESTable(${1:Result}, ${2:Comport}, ${3:Model}, ${4:BufferControl}, ${5:Fields_Scan_Order}, ${6:Newest_First}, ${7:Format})"
             );
         }
     }
