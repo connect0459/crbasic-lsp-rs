@@ -4372,3 +4372,90 @@ Not flagged as gaps (out of scope for this pass):
 - CDM_\*/SDM\* peripherals (40 confirmed instructions) remain deferred to
   a future round per the Round 31 sizing above -- the last remaining
   category from that backlog, and the largest one surveyed so far.
+
+### Reference Implementation & Official Docs Comparison, Round 33 (2026-08-12)
+
+CDM_\*/SDM\* (Round 31's sizing: 40 confirmed instructions / 329
+parameters) was too large for a single one-category-per-round pass, so
+before implementing anything this round re-scraped both reference
+extensions' grammars for the raw candidate name list and split it into
+three natural sub-batches by evidentiary source and hardware grouping,
+confirmed with the user before implementation began:
+
+- Round 33a (this round): `SDM*` peripheral-bus instructions (13
+  candidates)
+- Round 33b (deferred): `CDM_*` general-purpose measurement instructions
+  (~27 candidates)
+- Round 33c (deferred): `CDM_VW300` subfamily (4 candidates),
+  kept separate per Round 31's note that it's documented only in a
+  device manual rather than the standard instruction reference
+
+Two parallel research agents independently verified all 13 `SDM*`
+candidates against help.campbellsci.com (one cross-checking against raw
+PDF manual text via `pdftotext`, not just HTML help) before anything was
+added, following the same evidentiary bar as prior rounds.
+
+- [x] `SDMAO4`, `SDMAO4A`, `SDMBeginPort`, `SDMCAN`, `SDMCD16AC`,
+  `SDMCVO4`, `SDMGeneric`, `SDMINT8`, `SDMIO16`, `SDMSIO4`, `SDMSpeed`,
+  `SDMTrigger`, `SDMX50` missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 13 are real, documented CRBasic instructions for configuring and
+    operating SDM (Synchronous Device for Measurement) bus peripherals
+    -- unlike every prior round's candidate batch, both research passes
+    found zero typos, case variants, or grammar-scrape concatenation
+    artifacts in this set; every name resolved to its own dedicated
+    help.campbellsci.com page
+  - None is a block construct (no `End*` keyword, no nested body), so
+    this needed no parser/AST changes -- purely
+    `keywords.json`/completion/hover/signature-help work
+  - `SDMCAN`'s official help page *title* renders it "SDMCan" (mixed
+    case), but the page's own syntax code block renders it `SDMCAN` --
+    kept as `SDMCAN`, extending the existing syntax-line-wins resolution
+    (previously applied only to parameter naming, e.g. `SendGetVariables`
+    in the PakBus round) to the instruction name itself
+  - `SDMTrigger`'s official syntax line has no parentheses (`SDMTrigger`,
+    not `SDMTrigger()`), the same bare-expression treatment as
+    `TimeUntilTransmit` in the PakBus round rather than the empty-parens
+    `PPPClose()` convention
+  - `SDMIO16`'s official syntax code block has a stray space in one
+    parameter name ("Mode 4_1") -- normalized to `Mode4_1` to match its
+    three sibling parameters (`Mode16_13`, `Mode12_9`, `Mode8_5`), since
+    this is a formatting slip on Campbell's own page rather than an
+    intentional alternate spelling
+  - `SDMGeneric`'s and `SDMCAN`'s syntax lines and parameter description
+    tables disagree on two parameter names each (`NumValuesOut`/`In` vs.
+    table's `NumValsOut`/`In`; `Multiplier, Offset` vs. table's
+    abbreviated "Mult, Offset") -- kept the syntax-line forms in both
+    cases, consistent with the resolution above
+  - Related `SDM*` instructions surfaced during research but explicitly
+    out of scope for this round (not part of the original 13-name
+    candidate list): `SDMCD16Mask` (bitmask alternative to `SDMCD16AC`),
+    `SDMSW8A` (SDM-SW8A 8-channel switch module), and the modern
+    `SerialOpen`/`SerialIn`/`SerialOut`/`SerialFlush` instructions that
+    replaced the legacy `SDMSIO4`/`SDMSIO1A` model for newer hardware --
+    left for a future round if the SDM family is revisited
+  - Added all 13 to `keywords.json` under the `communication` category
+    (alongside the existing PakBus/DNP/GOES/ARGOS/GPS/I2C networking
+    entries), regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 13, keeping the existing parity enforced by
+    all three completeness tests; every parameter name/order was taken
+    directly from each instruction's own help.campbellsci.com syntax
+    line (not inferred), following the same evidentiary bar as prior
+    rounds
+  - 14 new tests: 13 completion tests (one exact-`insert_text` test per
+    function, following the Round 29-32 convention) and 1 signature test
+    (`sdmtrigger_takes_no_parameters`, mirroring the existing
+    `pppclose_takes_no_parameters`/`timeuntiltransmit_takes_no_parameters`
+    convention) added across 3 commits (one per LSP layer, following the
+    Round 29-32 commit convention); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (433 `crbasic-lsp` lib tests,
+    up from 419)
+
+Not flagged as gaps (out of scope for this pass):
+
+- `CDM_*` general-purpose measurement instructions (~27 candidates,
+  Round 33b) and the `CDM_VW300` subfamily (4 candidates, Round 33c)
+  remain deferred to future rounds per the split above.
