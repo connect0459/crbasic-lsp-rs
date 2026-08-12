@@ -76,6 +76,48 @@ impl SignatureProvider {
                 ],
             }),
 
+            "subscan" => Some(FunctionSignature {
+                name: "SubScan".to_string(),
+                documentation:
+                    "Begins a nested sub-scan for faster measurement or multiplexer control."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "SubInterval".to_string(),
+                        documentation: "The time interval between sub-scans.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Units".to_string(),
+                        documentation: "Time units: uSec, mSec, Sec, Min, Hr.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Count".to_string(),
+                        documentation: "Number of sub-scans (0 = continuous).".to_string(),
+                    },
+                ],
+            }),
+
+            "iif" => Some(FunctionSignature {
+                name: "IIf".to_string(),
+                documentation:
+                    "Evaluates a Boolean expression and returns TrueValue if true, otherwise FalseValue."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Expression".to_string(),
+                        documentation: "The Boolean expression to evaluate.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TrueValue".to_string(),
+                        documentation: "Value returned when Expression is true.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FalseValue".to_string(),
+                        documentation: "Value returned when Expression is false.".to_string(),
+                    },
+                ],
+            }),
+
             "sample" => Some(FunctionSignature {
                 name: "Sample".to_string(),
                 documentation: "Samples and stores a value in the data table.".to_string(),
@@ -1325,6 +1367,12 @@ mod tests {
         fn has_data_table_functions() {
             assert!(SignatureProvider::get_function_signature("Sample").is_some());
             assert!(SignatureProvider::get_function_signature("Average").is_some());
+        }
+
+        #[test]
+        fn has_subscan_and_iif() {
+            assert!(SignatureProvider::get_function_signature("SubScan").is_some());
+            assert!(SignatureProvider::get_function_signature("IIf").is_some());
         }
 
         #[test]
