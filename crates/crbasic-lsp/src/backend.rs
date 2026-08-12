@@ -14,6 +14,7 @@ use crate::hover::HoverProvider;
 use crate::inlay_hint::InlayHintProvider;
 use crate::references::ReferencesProvider;
 use crate::rename::RenameProvider;
+use crate::selection_range::SelectionRangeProvider;
 use crate::semantic_tokens::SemanticTokensProvider;
 use crate::signature::SignatureProvider;
 use crate::symbols;
@@ -255,6 +256,7 @@ impl LanguageServer for CRBasicLanguageServer {
                     },
                 )),
                 folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
+                selection_range_provider: Some(SelectionRangeProviderCapability::Simple(true)),
                 workspace_symbol_provider: Some(tower_lsp_server::ls_types::OneOf::Left(true)),
                 inlay_hint_provider: Some(OneOf::Left(true)),
                 code_lens_provider: Some(CodeLensOptions {
@@ -353,6 +355,29 @@ impl LanguageServer for CRBasicLanguageServer {
             && let Some(ast) = &doc.ast
         {
             return Ok(Some(FoldingRangeProvider::get_folding_ranges(ast)));
+        }
+
+        Ok(None)
+    }
+
+    async fn selection_range(
+        &self,
+        params: SelectionRangeParams,
+    ) -> Result<Option<Vec<SelectionRange>>> {
+        let uri = params.text_document.uri;
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri)
+            && let Some(ast) = &doc.ast
+        {
+            let mut scanner = Scanner::new(&doc.text);
+            let tokens = scanner.scan_tokens();
+
+            return Ok(Some(SelectionRangeProvider::get_selection_ranges(
+                ast,
+                &tokens,
+                &params.positions,
+            )));
         }
 
         Ok(None)

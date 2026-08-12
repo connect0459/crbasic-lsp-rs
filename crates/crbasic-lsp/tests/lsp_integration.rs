@@ -566,6 +566,80 @@ mod document_highlight {
     }
 }
 
+mod selection_range {
+    use super::*;
+
+    #[tokio::test]
+    async fn expands_from_the_identifier_to_the_enclosing_statement_to_the_whole_program() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nPublic Temp\nTemp = 5\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let selection_params = SelectionRangeParams {
+            text_document: TextDocumentIdentifier { uri: uri.clone() },
+            positions: vec![Position {
+                line: 2,
+                character: 0,
+            }],
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        };
+
+        let result = service.inner().selection_range(selection_params).await;
+        assert!(result.is_ok(), "Selection range should succeed");
+
+        let ranges = result
+            .expect("Should be Ok")
+            .expect("Should return selection ranges");
+        assert_eq!(ranges.len(), 1);
+
+        let innermost = &ranges[0];
+        assert_eq!(innermost.range.start.line, 2);
+        let statement_level = innermost
+            .parent
+            .as_ref()
+            .expect("identifier's parent should be the assignment statement");
+        assert_eq!(statement_level.range.start.line, 2);
+        let mut outermost = statement_level;
+        while let Some(parent) = &outermost.parent {
+            outermost = parent;
+        }
+        assert_eq!(
+            outermost.range.start.line, 0,
+            "outermost range should span the whole program, starting at BeginProg"
+        );
+    }
+
+    #[tokio::test]
+    async fn returns_none_for_a_document_without_a_parsed_ast() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let selection_params = SelectionRangeParams {
+            text_document: TextDocumentIdentifier { uri: uri.clone() },
+            positions: vec![Position {
+                line: 0,
+                character: 0,
+            }],
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        };
+
+        let result = service.inner().selection_range(selection_params).await;
+        assert!(result.is_ok(), "Selection range should succeed");
+        assert_eq!(result.expect("Should be Ok"), None);
+    }
+}
+
 mod code_action {
     use super::*;
 
