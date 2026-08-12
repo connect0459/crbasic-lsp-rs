@@ -2974,6 +2974,273 @@ impl SignatureProvider {
                 ],
             }),
 
+            "argosdata" => Some(FunctionSignature {
+                name: "ArgosData".to_string(),
+                documentation: "Specifies the data to be transmitted to the Argos satellite.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "A variable that holds the result of the instruction: -1 (True) if the transmission is successful, 0 (False) if it fails.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ST20Buffer".to_string(),
+                        documentation: "The number of the ST20 buffer to set up; valid entries are 0 through 6 (7 is reserved for the ST20's internal temperature).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataTable".to_string(),
+                        documentation: "The datalogger DataTable that holds the data to be sent to the transmitter.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumRecords".to_string(),
+                        documentation: "The number of records from the data table to copy to the buffer of the transmitter.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataFormat".to_string(),
+                        documentation: "The format for the values being transmitted: \"FP2\" for two-byte values, or a comma-separated list of bit widths.".to_string(),
+                    },
+                ],
+            }),
+
+            "argosdatarepeat" => Some(FunctionSignature {
+                name: "ArgosDataRepeat".to_string(),
+                documentation: "Sets the repeat rate for the ArgosData instruction.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "A variable that holds the result of the instruction: -1 (True) success, 0 (False) failure, or 2 if the transmitter is disconnected or has a hardware problem.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RepeatRate".to_string(),
+                        documentation: "The amount of time, in seconds, between each packet being sent; valid rates are 0 through 255 (negative values select PTT defaults).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RepeatCount".to_string(),
+                        documentation: "How many times the message will be repeated; valid entries are 0 to 255 (negative values select PTT defaults).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BufferArray".to_string(),
+                        documentation: "A Boolean variable array setting the transmitter's buffers to true (use) or false (don't use); array indices correspond to buffer numbers minus 1.".to_string(),
+                    },
+                ],
+            }),
+
+            "argoserror" => Some(FunctionSignature {
+                name: "ArgosError".to_string(),
+                documentation: "Requests and clears the current error message from the Argos transmitter.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "ErrorCodes".to_string(),
+                    documentation: "A string variable that holds the returned error message from the transmitter (e.g. Bad Argument, Bad Buffer, Bad Command, No Failsafe Mode, Timeout, Transmit Failure).".to_string(),
+                }],
+            }),
+
+            "argossetup" => Some(FunctionSignature {
+                name: "ArgosSetup".to_string(),
+                documentation: "Sets up the datalogger for transmitting data via an Argos satellite.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "A variable that holds the result of the instruction: -1 (True) success, 0 (False) failure, or 2 if the transmitter is disconnected or has a hardware problem.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ST20Buffer".to_string(),
+                        documentation: "The buffer number to set up; valid entries are 0 through 7.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DecimalID".to_string(),
+                        documentation: "The decimal ID number assigned to the buffer.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "HexadecimalID".to_string(),
+                        documentation: "The hexadecimal ID number assigned to the buffer.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Frequency".to_string(),
+                        documentation: "The frequency, in Hz, assigned to the buffer; valid entries are 401630000 to 401656000 in 2000 Hz steps, plus 401676000, 401678000, and 401680000.".to_string(),
+                    },
+                ],
+            }),
+
+            "argostransmit" => Some(FunctionSignature {
+                name: "ArgosTransmit".to_string(),
+                documentation: "Initiates a single transmission to an Argos satellite when the instruction is executed.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "A variable that holds the result of the instruction: -1 (True) success, 0 (False) failure, or 2 if the transmitter is disconnected or has a hardware problem.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ST20Buffer".to_string(),
+                        documentation: "The number of the ST20 buffer to set up; valid entries are 0 through 6 (7 is reserved for the ST20's internal temperature).".to_string(),
+                    },
+                ],
+            }),
+
+            "goesdata" => Some(FunctionSignature {
+                name: "GOESData".to_string(),
+                documentation: "Transmits data from a data table to a GOES satellite transmitter.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "A variable or array that stores the result/status code of the instruction; 0 indicates success.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Table".to_string(),
+                        documentation: "The name of the data table whose records are to be transmitted.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TableOption".to_string(),
+                        documentation: "Which records to send: all records since the last execution, the most recent only, or a specific number.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BufferControl".to_string(),
+                        documentation: "Selects the self-timed or random buffer and its append/overwrite behavior.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataFormat".to_string(),
+                        documentation: "The transmission data format (e.g. FP2, ASCII, binary).".to_string(),
+                    },
+                ],
+            }),
+
+            "goesfield" => Some(FunctionSignature {
+                name: "GOESField".to_string(),
+                documentation: "Declares an output field to include in a GOES transmission; precedes the data-table field instruction it applies to.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "NumVals".to_string(),
+                        documentation: "The number of historical time-series values of the field to output; 0 appends new output per the Fields_Scan_Order setting.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Decimation".to_string(),
+                        documentation: "Controls output frequency of values: 1 outputs every value, 2 outputs every other value, and so on.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Precision".to_string(),
+                        documentation: "For ASCII formats, the number of decimal places; for binary formats, a power-of-10 multiplier applied before integer conversion.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Width".to_string(),
+                        documentation: "The number of characters in the output field (maximum 13).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SHEF".to_string(),
+                        documentation: "A string variable specifying a SHEF PE code for the field; an empty string means no code is specified.".to_string(),
+                    },
+                ],
+            }),
+
+            "goesgps" => Some(FunctionSignature {
+                name: "GOESGPS".to_string(),
+                documentation: "Retrieves GPS data from a compatible GOES satellite transmitter and stores it in two variable arrays.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "GoesArray1".to_string(),
+                        documentation: "A 6-element array holding a result code plus positioning data: time, latitude/longitude, elevation, and magnetic variation.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "GoesArray2".to_string(),
+                        documentation: "A 7-element array holding GMT date/time components: year, month, day, hour, minute, second, and microsecond.".to_string(),
+                    },
+                ],
+            }),
+
+            "goessetup" => Some(FunctionSignature {
+                name: "GOESSetup".to_string(),
+                documentation: "Configures a GOES satellite transmitter for communication with the satellite.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "A variable or array that stores the result; 0 indicates success.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PlatformID".to_string(),
+                        documentation: "The 8-digit hexadecimal platform identification number assigned by NESDIS.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MsgWindow".to_string(),
+                        documentation: "The transmission window duration, in seconds (1-120).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "STChannel".to_string(),
+                        documentation: "The self-timed transmission channel number; 0 disables self-timed transmission.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "STBaud".to_string(),
+                        documentation: "The self-timed transmission baud rate: 100, 300, or 1200.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RChannel".to_string(),
+                        documentation: "The random transmission channel number, using the same range convention as STChannel.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RBaud".to_string(),
+                        documentation: "The random transmission baud rate: 100, 300, or 1200.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "STInterval".to_string(),
+                        documentation: "The time between self-timed transmissions, as a \"Days_Hours_Minutes_Seconds\" string.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "STOffset".to_string(),
+                        documentation: "The time after midnight of the first self-timed transmission, as an \"Hours_Minutes_Seconds\" string.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RInterval".to_string(),
+                        documentation: "The average time between random transmissions, as an \"Hours_Minutes_Seconds\" string.".to_string(),
+                    },
+                ],
+            }),
+
+            "goesstatus" => Some(FunctionSignature {
+                name: "GOESStatus".to_string(),
+                documentation: "Requests status and diagnostic information from a GOES satellite transmitter.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "A variable or array that receives the requested status/diagnostic data; its required size varies with StatusCommand.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "StatusCommand".to_string(),
+                        documentation: "Selects the type of information requested: 0 Read Time, 1 Status, 2 Last Message Status, 3 Transmit Random Message, 4 Read Error Register, 5 Reset Error Register, 6 Return Transmitter to Online Mode.".to_string(),
+                    },
+                ],
+            }),
+
+            "goestable" => Some(FunctionSignature {
+                name: "GOESTable".to_string(),
+                documentation: "Formats and outputs a data table's records to a TX325/TX326 GOES satellite transmitter.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Result".to_string(),
+                        documentation: "A string variable holding either the formatted output data or a status/error message.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Comport".to_string(),
+                        documentation: "The communication port used to reach the transmitter.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Model".to_string(),
+                        documentation: "Selects the transmitter model: 0 No Connection, 2 COM9602, 3 TX325/TX326.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BufferControl".to_string(),
+                        documentation: "Selects the self-timed buffer (0) vs. random buffer (1), or a variable expression for conditional output.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Fields_Scan_Order".to_string(),
+                        documentation: "Controls output ordering: False outputs by record/row, True outputs by field/row.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Newest_First".to_string(),
+                        documentation: "Controls data sequence: False outputs oldest first, True outputs newest first.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Format".to_string(),
+                        documentation: "Selects the output data format (e.g. FP2, ASCII comma-separated, SHEF).".to_string(),
+                    },
+                ],
+            }),
+
             "abs" => Some(FunctionSignature {
                 name: "Abs".to_string(),
                 documentation: "Returns the absolute value of a number.".to_string(),
@@ -4378,6 +4645,17 @@ mod tests {
                 "DNP",
                 "DNPUpdate",
                 "DNPVariable",
+                "ArgosData",
+                "ArgosDataRepeat",
+                "ArgosError",
+                "ArgosSetup",
+                "ArgosTransmit",
+                "GOESData",
+                "GOESField",
+                "GOESGPS",
+                "GOESSetup",
+                "GOESStatus",
+                "GOESTable",
             ] {
                 assert!(
                     SignatureProvider::get_function_signature(name).is_some(),
