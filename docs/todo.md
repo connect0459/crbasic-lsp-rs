@@ -4257,3 +4257,59 @@ Not flagged as gaps (out of scope for this pass):
   typoed entries already dismissed there) remains deferred -- PakBus was
   this round's single chosen category, consistent with the
   one-category-per-round approach Round 29 established.
+
+### Reference Implementation & Official Docs Comparison, Round 31 (2026-08-12)
+
+Sized all three of Round 28's remaining backlog categories (CDM_\*/SDM\*
+peripherals, GOES/ARGOS satellite telemetry, DNP) before picking one, using
+the same "smallest and best-documented" heuristic as Round 29's choice.
+CDM_\*/SDM\* sized to 40 confirmed instructions / 329 parameters (well
+documented, but 2-3x larger than any prior round, plus a 4-instrument
+CDM-VW300 subfamily documented only in a device manual rather than the
+standard instruction reference); GOES/ARGOS sized to 12 confirmed
+instructions / 48 parameters (individually well documented, but the
+parameter semantics assume satellite-telemetry hardware context --
+ST-20 buffer numbering, GOES transmission windows -- carrying higher risk
+of subtly wrong descriptions); DNP sized to 3 confirmed instructions / 19
+parameters with zero ambiguity and no parser/AST work needed. DNP was
+picked as this round's category.
+
+- [x] `DNP`, `DNPUpdate`, `DNPVariable` missing from `BUILTIN_FUNCTIONS`
+  ✅ Resolved
+  - All 3 are real, documented CRBasic instructions for configuring a
+    datalogger as a DNP3 (Distributed Network Protocol, used in electric/
+    water utility SCADA systems) outstation device; verified directly
+    against their own help.campbellsci.com pages (syntax line, parameter
+    table, and introductory description paragraph) rather than the
+    reference grammar alone
+  - `DNPUpdateZDNPVariable`, present in one reference extension's grammar,
+    is a concatenation artifact of `DNPUpdate` and `DNPVariable` (the same
+    grammar-scrape failure mode as `FillStopZGOESField` found while sizing
+    the GOES/ARGOS alternative) -- not added as its own entry
+  - None of the three is a block construct (no `End*` keyword, no nested
+    body), so this needed no parser/AST changes -- purely
+    `keywords.json`/completion/hover/signature-help work, unlike a
+    `DataTable`-style declaration block
+  - Added all 3 to `keywords.json` under the `communication` category
+    (alongside the existing PakBus/GPS/I2C networking entries),
+    regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 3, keeping the existing parity enforced by all
+    three completeness tests; every parameter name/order was taken
+    directly from each instruction's own help.campbellsci.com syntax
+    diagram and parameter table (not inferred)
+  - 4 new tests: 3 completion tests (one exact-`insert_text` test per
+    function, following the Round 29/30 convention) added across 3
+    commits (one per LSP layer, following the Round 29/30 commit
+    convention); full workspace `build`/`test`/`clippy`/`fmt` gate and
+    client `lint`/`format:check`/`test` gate pass (408 `crbasic-lsp` lib
+    tests, up from 405)
+
+Not flagged as gaps (out of scope for this pass):
+
+- CDM_\*/SDM\* peripherals (40 confirmed instructions) and GOES/ARGOS
+  satellite telemetry (12 confirmed instructions) remain deferred to
+  future rounds per the sizing above -- each is a larger, single-category
+  batch of its own, consistent with the one-category-per-round approach.
