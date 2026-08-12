@@ -4313,3 +4313,62 @@ Not flagged as gaps (out of scope for this pass):
   satellite telemetry (12 confirmed instructions) remain deferred to
   future rounds per the sizing above -- each is a larger, single-category
   batch of its own, consistent with the one-category-per-round approach.
+
+### Reference Implementation & Official Docs Comparison, Round 32 (2026-08-12)
+
+Picked GOES/ARGOS satellite telemetry as the next category out of Round 31's
+remaining backlog (CDM_\*/SDM\* peripherals, GOES/ARGOS), following the same
+"smallest and best-documented" heuristic Round 29 established -- GOES/ARGOS
+was the smaller of the two remaining categories. Two parallel research
+agents independently verified the Argos-family and GOES-family candidates
+against help.campbellsci.com before anything was added, following the same
+evidentiary bar as prior rounds.
+
+- [x] `ArgosData`, `ArgosDataRepeat`, `ArgosError`, `ArgosSetup`,
+  `ArgosTransmit`, `GOESData`, `GOESField`, `GOESGPS`, `GOESSetup`,
+  `GOESStatus`, `GOESTable` missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 11 are real, documented CRBasic instructions for configuring a
+    datalogger to transmit data via the Argos or GOES satellite systems
+    (common in remote environmental-monitoring stations with no
+    cellular/radio coverage); none existed anywhere in `keywords.json`,
+    `completion.rs`/`hover.rs`/`signature.rs`
+  - `GOESCommand`, present in one reference extension's grammar, could not
+    be corroborated against any help.campbellsci.com page or official PDF
+    manual after a dedicated search effort -- left out rather than guessed
+    at, the same treatment as `RouteNeighbors` in the PakBus round.
+    `FillStopZGOESField`, present in another reference grammar, was
+    independently confirmed as a concatenation artifact of `FillStop` and
+    `GOESField` (the same grammar-scrape failure mode as
+    `DNPUpdateZDNPVariable` in the DNP round) -- not added as its own
+    entry. One reference grammar also spelled `ArgosData` as `ArgosDat`
+    (missing the trailing "a") and `GOESTable` as `GoesTable`
+    (lowercase-`oes`) -- both confirmed as the third-party grammar's own
+    typos, not alternate official spellings
+  - `ArgosError`'s official parameter table names its one parameter
+    `ErrorMessage`, but the instruction's own syntax line calls it
+    `ErrorCodes` -- kept as `ErrorCodes` (matching the syntax line), the
+    same syntax-line-wins resolution used for the `SendGetVariables`
+    naming mismatch in the PakBus round
+  - Added all 11 to `keywords.json` under the `communication` category
+    (alongside the existing PakBus/DNP/GPS/I2C networking entries),
+    regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 11, keeping the existing parity enforced by all
+    three completeness tests; every parameter name/order was taken
+    directly from each instruction's own help.campbellsci.com syntax
+    diagram (not inferred), following the same evidentiary bar as prior
+    rounds
+  - 11 new completion tests (one exact-`insert_text` test per function,
+    following the Round 29-31 convention) added across 3 commits (one per
+    LSP layer, following the Round 29-31 commit convention); full
+    workspace `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (419 `crbasic-lsp` lib tests, up
+    from 408)
+
+Not flagged as gaps (out of scope for this pass):
+
+- CDM_\*/SDM\* peripherals (40 confirmed instructions) remain deferred to
+  a future round per the Round 31 sizing above -- the last remaining
+  category from that backlog, and the largest one surveyed so far.
