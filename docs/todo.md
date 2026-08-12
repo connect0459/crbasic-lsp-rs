@@ -4744,3 +4744,71 @@ Not flagged as gaps (out of scope for this pass):
 
 - Rounds 34b through 34i (93 remaining candidates across 8 functional
   categories) remain deferred per the split above.
+
+### Reference Implementation & Official Docs Comparison, Round 34b (2026-08-12)
+
+Picked up the CPI bus / MQTT publish instructions (5 candidates) from
+Round 34's split. Unlike every prior round in this project's history,
+two of the five (`CPIAddModule`, `CPISpeed`) have **no dedicated
+help.campbellsci.com page** -- confirmed by direct fetches against every
+model path tried (`cr1000x`, `cr6`, `cr300`, `granite`), all 404. This
+project's web-search budget for the session was also exhausted by Round
+34's initial 98-candidate verification pass, so a third search-based
+attempt to locate either page wasn't possible; both entries rely on the
+two Round 34 research agents' independent (search-engine and forum/
+changelog based) findings instead of a directly-fetched official syntax
+line, an explicit, documented exception to this project's usual
+direct-fetch evidentiary bar.
+
+- [x] `CPIAddModule`, `CPIFileSend`, `CPISpeed`, `MQTTPublishTable`,
+  `MQTTPublishConstTable` missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 5 are real CRBasic instructions for CPI-bus module management
+    (GRANITE/CDM/VWIRE) and MQTT publishing of table/ConstTable data,
+    filed under the communication category
+  - `CPIFileSend`, `MQTTPublishTable`, and `MQTTPublishConstTable` were
+    directly fetched and confirmed against their own
+    help.campbellsci.com syntax lines
+  - `CPIAddModule`'s syntax (`CDMType, CDMSerialNo, CDMDeviceName,
+    CPIAddress`) is sourced from one research agent's independent
+    forum/OS-changelog evidence, since no dedicated help page exists;
+    flagged here as the softer-sourced entry in this batch, consistent
+    with how Round 33b flagged its own indirectly-derived
+    `CDM_Therm107`/`108`/`109` syntax
+  - `CPISpeed`'s single parameter name (`Speed`) is inferred, not
+    quoted from an official syntax line -- both research agents agreed
+    the instruction exists and adjusts CPI bus bit rate, but neither
+    located an authoritative parameter name; this is the least-confident
+    entry added in this round and should be revisited if a primary
+    source surfaces later
+  - `MQTTPublishTable`'s disjunctive `NumRecs/TimeIntoInterval`
+    parameter is spelled `NumRecsOrTimeIntoInterval`, matching the
+    existing PakBus-round convention already used for the same
+    disjunctive parameter name elsewhere in this codebase (not a new
+    normalization decision); its `Output Format` parameter (with a
+    stray space in the official syntax box) is spelled `OutputFormat`,
+    the same doc-formatting-slip cleanup precedent as Round 33's
+    `SDMIO16` fix
+  - `MQTTPublishTable` is used inside a `DataTable`/`EndTable`
+    declaration and `MQTTPublishConstTable` inside a `ConstTable`/
+    `EndConstTable` declaration, but neither is itself a block
+    construct (no matching `End*` keyword of its own), so this needed
+    no parser/AST changes
+  - Added all 5 to `keywords.json` under the `communication` category,
+    regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 5, keeping the existing parity enforced by
+    all three completeness tests
+  - 5 new completion tests (one exact-`insert_text` test per function)
+    - 2 new signature tests (`cpispeed_takes_a_single_speed_parameter`,
+    `mqttpublishtable_has_eight_parameters_in_official_order`) added
+    across 3 commits (one per LSP layer); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (490 `crbasic-lsp` lib tests,
+    up from 483)
+
+Not flagged as gaps (out of scope for this pass):
+
+- Rounds 34c through 34i (88 remaining candidates across 7 functional
+  categories) remain deferred per Round 34's split.
