@@ -749,6 +749,18 @@ impl HoverProvider {
             "cdm_voltse" => {
                 Some("**CDM_VoltSE**\n\nMakes a single-ended voltage measurement via a CDM module.")
             }
+            "cdm_vw300config" => Some(
+                "**CDM_VW300Config**\n\nSends configuration settings to a CDM-VW300 vibrating-wire spectrum analyzer; must precede BeginProg.",
+            ),
+            "cdm_vw300dynamic" => Some(
+                "**CDM_VW300Dynamic**\n\nCaptures the dynamic resonant frequency output of a CDM-VW300 vibrating-wire spectrum analyzer.",
+            ),
+            "cdm_vw300rainflow" => Some(
+                "**CDM_VW300RainFlow**\n\nCaptures rainflow-histogram data from a CDM-VW300 vibrating-wire spectrum analyzer.",
+            ),
+            "cdm_vw300static" => Some(
+                "**CDM_VW300Static**\n\nCaptures the static resonant frequency, thermistor temperature, and frequency standard deviation from a CDM-VW300 vibrating-wire spectrum analyzer.",
+            ),
             _ => None,
         }
     }
@@ -1372,6 +1384,10 @@ mod tests {
                     "CDM_Therm109",
                     "CDM_VoltDiff",
                     "CDM_VoltSE",
+                    "CDM_VW300Config",
+                    "CDM_VW300Dynamic",
+                    "CDM_VW300RainFlow",
+                    "CDM_VW300Static",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
