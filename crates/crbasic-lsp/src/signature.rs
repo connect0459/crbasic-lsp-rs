@@ -3113,6 +3113,21 @@ mod tests {
         }
 
         #[test]
+        fn every_canonical_builtin_function_has_a_signature() {
+            let missing: Vec<&str> = crbasic_parser::BUILTIN_FUNCTIONS
+                .iter()
+                .map(|(name, _)| *name)
+                .filter(|name| SignatureProvider::get_function_signature(name).is_none())
+                .collect();
+
+            assert!(
+                missing.is_empty(),
+                "BUILTIN_FUNCTIONS entries missing a signature: {:?}",
+                missing
+            );
+        }
+
+        #[test]
         fn is_case_insensitive() {
             let help_lower = SignatureProvider::get_signature_help("scan", 0);
             let help_upper = SignatureProvider::get_signature_help("SCAN", 0);
