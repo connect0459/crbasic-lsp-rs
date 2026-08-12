@@ -3105,6 +3105,130 @@ impl SignatureProvider {
                 ],
             }),
 
+            "calibrate" => Some(FunctionSignature {
+                name: "Calibrate".to_string(),
+                documentation: "Forces calibration of all analog channels under program control to compensate for temperature-related measurement errors.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "An optional array (minimum 60 elements) to store the calibration coefficients.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "An optional constant: 0 calibrates only the ranges used in the program; non-zero calibrates all ranges.".to_string(),
+                    },
+                ],
+            }),
+
+            "fieldcal" => Some(FunctionSignature {
+                name: "FieldCal".to_string(),
+                documentation: "Sets up the datalogger to perform calibration of one or more variables in an array.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Function".to_string(),
+                        documentation: "The calibration type: 0=Zero, 1=Offset, 2=Two Point Mult+Offset, 3=Two Point Mult Only, 4=Zero Basis.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasureVar".to_string(),
+                        documentation: "The variable or array being calibrated.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "How many array elements to calibrate; must equal 1 or the array size.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MultVar".to_string(),
+                        documentation: "The variable or array that receives the computed multiplier value(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "OffsetVar".to_string(),
+                        documentation: "The variable or array that receives the computed offset value(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mode".to_string(),
+                        documentation: "A status/trigger variable indicating the current calibration state (-6 to 6).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "KnownVar".to_string(),
+                        documentation: "The variable holding the reference set-point value(s) used for calibration.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Index".to_string(),
+                        documentation: "Which array element to calibrate when Reps=1; must be initialized to a non-zero value.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Avg".to_string(),
+                        documentation: "The number of points to average during calibration.".to_string(),
+                    },
+                ],
+            }),
+
+            "fieldcalstrain" => Some(FunctionSignature {
+                name: "FieldCalStrain".to_string(),
+                documentation: "Sets up the datalogger to perform a zero or shunt calibration for a strain measurement.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Function".to_string(),
+                        documentation: "The calibration type: 10 for zero calibration, 13/33/43 for shunt-calibration variants.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasureVar".to_string(),
+                        documentation: "The variable or array holding the StrainCalc results being calibrated.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "How many values to calibrate; must equal 1 or the full array size.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "GFAdj".to_string(),
+                        documentation: "The adjusted gauge factor(s); 0 for a zero calibration.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ZeromV/V".to_string(),
+                        documentation: "The zero-offset value(s); 0 for a shunt calibration.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mode".to_string(),
+                        documentation: "A variable indicating the current calibration state (-1 to 6).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "KnownRS".to_string(),
+                        documentation: "The shunt resistance value(s) used for a shunt calibration.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Index".to_string(),
+                        documentation: "The array element index to calibrate when Reps=1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Avg".to_string(),
+                        documentation: "The number of points to average during calibration.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "GFRaw".to_string(),
+                        documentation: "The raw, manufacturer-supplied gauge factor(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "uStrainDest".to_string(),
+                        documentation: "The micro-strain result variable; 0 for a shunt calibration.".to_string(),
+                    },
+                ],
+            }),
+
+            "loadfieldcal" => Some(FunctionSignature {
+                name: "LoadFieldCal".to_string(),
+                documentation: "Loads values from the FieldCal file into datalogger variables, returning True if successful.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "CheckSig".to_string(),
+                    documentation: "An optional Boolean controlling whether the program's signature must match the one stored with the calibration file.".to_string(),
+                }],
+            }),
+
+            "samplefieldcal" => Some(FunctionSignature {
+                name: "SampleFieldCal".to_string(),
+                documentation: "Stores the values in the FieldCal file to a data table; used inside a DataTable/EndTable declaration.".to_string(),
+                parameters: vec![],
+            }),
+
             "watchdogtimer" => Some(FunctionSignature {
                 name: "WatchdogTimer".to_string(),
                 documentation: "Enables a user-programmed watchdog timer that guards the program against lockup.".to_string(),
@@ -6578,6 +6702,38 @@ mod tests {
                 .expect("SDMTrigger should have a signature");
 
             assert!(sig.parameters.is_empty());
+        }
+
+        #[test]
+        fn samplefieldcal_takes_no_parameters() {
+            let sig = SignatureProvider::get_function_signature("SampleFieldCal")
+                .expect("SampleFieldCal should have a signature");
+
+            assert!(sig.parameters.is_empty());
+        }
+
+        #[test]
+        fn fieldcalstrain_has_eleven_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("FieldCalStrain")
+                .expect("FieldCalStrain should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "Function",
+                    "MeasureVar",
+                    "Reps",
+                    "GFAdj",
+                    "ZeromV/V",
+                    "Mode",
+                    "KnownRS",
+                    "Index",
+                    "Avg",
+                    "GFRaw",
+                    "uStrainDest",
+                ]
+            );
         }
 
         #[test]
