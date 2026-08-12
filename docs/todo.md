@@ -4563,3 +4563,56 @@ Not flagged as gaps (out of scope for this pass):
   per the Round 33 split above -- documented only in a device manual
   rather than the standard instruction reference, unlike every other
   candidate in this round.
+
+### Reference Implementation & Official Docs Comparison, Round 33c (2026-08-12)
+
+Picked up the `CDM_VW300` subfamily (4 candidates) deferred from Round
+33's split -- the last remaining category from the entire Round 28 name-
+diff backlog. Two parallel research agents independently located and read
+the official CDM-VW300 device manual PDF (no dedicated help.campbellsci.com
+page exists for this subfamily, confirmed by both agents) and agreed on
+every syntax line with no conflicts, unlike Round 33b.
+
+- [x] `CDM_VW300Config`, `CDM_VW300Dynamic`, `CDM_VW300RainFlow`,
+  `CDM_VW300Static` missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 4 are real, documented CRBasic instructions for the CDM-VW300
+    vibrating-wire spectrum-analyzer module, verified directly against
+    the official CDM-VW300 instruction manual PDF (§7.6.1.2-7.6.1.6);
+    the same syntax is also reused verbatim in the related VWIRE 305
+    manual, which one agent found independently and used to
+    corroborate the first agent's reading of the CDM-VW300 manual
+  - The candidate list's `CDM_VW300Rainflow` (lowercase `f`) is a case
+    typo of the manual's own `CDM_VW300RainFlow` (capital `F`) --
+    confirmed by both agents directly against the manual text, not
+    inferred; `CDM_VW300Rainfkow`, present in one reference extension's
+    grammar, does not appear anywhere in the manual and is a further
+    `k`/`l` typo of the same name -- neither was added as a separate
+    entry
+  - `CDM_VW300Config`'s official parameter-description table (Table
+    7-2) names its 3rd parameter `SysOptions` (plural), but the
+    instruction's own syntax line and every code example in the manual
+    use `SysOption` (singular) -- kept as `SysOption`, the same
+    syntax-line-wins resolution used for prior naming inconsistencies
+    in Campbell Scientific's own docs
+  - None of the 4 is a block construct (no `End*` keyword, no nested
+    body, confirmed by grepping the manual text for `EndCDM`), so this
+    needed no parser/AST changes -- purely
+    `keywords.json`/completion/hover/signature-help work
+  - Added all 4 to `keywords.json` under the `measurement` category
+    (alongside the existing Round 33b `CDM_*` entries), regenerating
+    the lexer keyword table and `client/syntaxes/crbasic.tmLanguage.json`
+    via `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 4, keeping the existing parity enforced by
+    all three completeness tests; every parameter name/order was taken
+    directly from the manual's own syntax lines (not inferred)
+  - 4 new completion tests (one exact-`insert_text` test per function,
+    following the Round 29-33b convention) added across 3 commits (one
+    per LSP layer, following the Round 29-33b commit convention); full
+    workspace `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (465 `crbasic-lsp` lib tests,
+    up from 461)
+
+This closes out the entire Round 28 builtin-function name-diff backlog
+(PakBus, DNP, CSAT3/EC100/LI-COR, GOES/ARGOS, SDM, CDM general, and
+CDM_VW300 -- Rounds 29 through 33c).
