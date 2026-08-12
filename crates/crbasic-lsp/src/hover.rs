@@ -147,6 +147,48 @@ impl HoverProvider {
             .or_else(|| Self::get_string_function_description(name))
             .or_else(|| Self::get_math_function_description(name))
             .or_else(|| Self::get_time_function_description(name))
+            .or_else(|| Self::get_logical_function_description(name))
+            .or_else(|| Self::get_menu_function_description(name))
+    }
+
+    /// Returns the description for the built-in `IIf` conditional-expression
+    /// function, or `None` if `name` isn't it.
+    fn get_logical_function_description(name: &str) -> Option<&'static str> {
+        match name.to_lowercase().as_str() {
+            "iif" => Some(
+                "**IIf**\n\nEvaluates a Boolean expression and returns TrueValue if true, otherwise FalseValue.",
+            ),
+            _ => None,
+        }
+    }
+
+    /// Returns the description for a built-in custom-menu function name, or
+    /// `None` if `name` isn't one of them.
+    fn get_menu_function_description(name: &str) -> Option<&'static str> {
+        match name.to_lowercase().as_str() {
+            "displaymenu" => Some(
+                "**DisplayMenu**\n\nMarks the beginning of a custom on-screen menu definition.",
+            ),
+            "submenu" => Some(
+                "**SubMenu**\n\nMarks the beginning of a nested custom menu within a DisplayMenu block.",
+            ),
+            "menuitem" => Some(
+                "**MenuItem**\n\nDefines an editable custom-menu entry showing the name and value of a variable.",
+            ),
+            "menupick" => Some(
+                "**MenuPick**\n\nCreates a fixed pick-list of selectable values for the preceding MenuItem.",
+            ),
+            "menurecompile" => Some(
+                "**MenuRecompile**\n\nCreates a custom menu item that triggers a program recompile after Constant Table edits.",
+            ),
+            "displayvalue" => Some(
+                "**DisplayValue**\n\nDefines a read-only custom-menu entry showing a data-table field, variable, or expression.",
+            ),
+            "displayline" => Some(
+                "**DisplayLine**\n\nDisplays a single line of read-only text in a custom menu.",
+            ),
+            _ => None,
+        }
     }
 
     /// Returns the description for a built-in time/system function name,
@@ -1196,6 +1238,46 @@ mod tests {
                     );
                 }
             }
+        }
+
+        mod logical_and_menu_functions {
+            use super::*;
+
+            #[test]
+            fn all_logical_and_menu_functions_have_hover_info() {
+                for name in [
+                    "IIf",
+                    "DisplayMenu",
+                    "SubMenu",
+                    "MenuItem",
+                    "MenuPick",
+                    "MenuRecompile",
+                    "DisplayValue",
+                    "DisplayLine",
+                ] {
+                    let description = HoverProvider::get_builtin_function_description(name);
+                    assert!(
+                        description.is_some_and(|d| d.contains(&format!("**{}**", name))),
+                        "Expected hover info for builtin function: {}",
+                        name
+                    );
+                }
+            }
+        }
+
+        #[test]
+        fn every_canonical_builtin_function_has_hover_info() {
+            let missing: Vec<&str> = crbasic_parser::BUILTIN_FUNCTIONS
+                .iter()
+                .map(|(name, _)| *name)
+                .filter(|name| HoverProvider::get_builtin_function_description(name).is_none())
+                .collect();
+
+            assert!(
+                missing.is_empty(),
+                "Missing hover info for builtin functions: {:?}",
+                missing
+            );
         }
     }
 
