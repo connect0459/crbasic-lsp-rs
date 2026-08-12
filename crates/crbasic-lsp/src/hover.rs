@@ -681,6 +681,59 @@ impl HoverProvider {
             "mqttpublishconsttable" => Some(
                 "**MQTTPublishConstTable**\n\nEnables remote editing of ConstTable values via MQTT; placed inside a ConstTable/EndConstTable declaration.",
             ),
+            "checkport" => Some(
+                "**CheckPort**\n\nRetrieves the current status (high/low) of a specified digital port or terminal.",
+            ),
+            "comportisactive" => Some(
+                "**ComPortIsActive**\n\nReturns a Boolean indicating whether activity is currently detected on a communications port.",
+            ),
+            "dhcprenew" => Some(
+                "**DHCPRenew**\n\nRestarts DHCP on the Ethernet interface to request a new IP address lease.",
+            ),
+            "encryption" => Some(
+                "**Encryption**\n\nPerforms AES-128 encryption or decryption on the contents of a variable.",
+            ),
+            "httpout" => Some(
+                "**HTTPOut**\n\nEmits a line of HTML for a datalogger-generated web page; used inside WebPageBegin/WebPageEnd.",
+            ),
+            "ipinfo" => Some(
+                "**IPInfo**\n\nRetrieves the IP address of a datalogger interface, or the remote IP of a socket handle.",
+            ),
+            "ipnetpower" => {
+                Some("**IPNetPower**\n\nPowers on or off a specific IP-capable network interface.")
+            }
+            "iproute" => Some(
+                "**IPRoute**\n\nDirects outgoing IP traffic through a specified network interface when multiple interfaces are active.",
+            ),
+            "monitorcomms" => Some(
+                "**MonitorComms**\n\nCaptures communication traffic from a specified port into a string variable, for debugging.",
+            ),
+            "pingip" => Some(
+                "**PingIP**\n\nPings an IP address and returns the response time in milliseconds.",
+            ),
+            "portbridge" => Some(
+                "**PortBridge**\n\nEstablishes a bidirectional data channel between two communications ports.",
+            ),
+            "portget" => Some(
+                "**PortGet**\n\nReads the status of a control or universal port into a destination variable.",
+            ),
+            "portpairconfig" => Some(
+                "**PortPairConfig**\n\nConfigures the voltage level and pull-resistor mode for a terminal pair.",
+            ),
+            "portsconfig" => Some(
+                "**PortsConfig**\n\nConfigures digital ports as input or output using a bitmask.",
+            ),
+            "snmpvariable" => Some(
+                "**SNMPVariable**\n\nDefines a custom MIB entry exposing a datalogger variable through SNMP.",
+            ),
+            "tcpactiveconnections" => Some(
+                "**TCPActiveConnections**\n\nMonitors active TCP connections and polling activity on a listening port.",
+            ),
+            "udpdatagram" => Some("**UDPDataGram**\n\nSends and receives UDP packets."),
+            "webpagebegin" => Some(
+                "**WebPageBegin**\n\nDeclares a datalogger-served HTML page, closed by WebPageEnd.",
+            ),
+            "xmlparse" => Some("**XMLParse**\n\nParses an XML file or string on the datalogger."),
             _ => None,
         }
     }
@@ -1751,6 +1804,25 @@ mod tests {
                     "CPISpeed",
                     "MQTTPublishTable",
                     "MQTTPublishConstTable",
+                    "CheckPort",
+                    "ComPortIsActive",
+                    "DHCPRenew",
+                    "Encryption",
+                    "HTTPOut",
+                    "IPInfo",
+                    "IPNetPower",
+                    "IPRoute",
+                    "MonitorComms",
+                    "PingIP",
+                    "PortBridge",
+                    "PortGet",
+                    "PortPairConfig",
+                    "PortsConfig",
+                    "SNMPVariable",
+                    "TCPActiveConnections",
+                    "UDPDataGram",
+                    "WebPageBegin",
+                    "XMLParse",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
