@@ -351,6 +351,41 @@ impl CompletionProvider {
                 "Calculates dew point temperature from air temperature and relative humidity.",
             ),
             Self::create_function_completion(
+                "CSAT3",
+                "CSAT3(${1:Dest}, ${2:Reps}, ${3:SDMAddress}, ${4:Command}, ${5:Option})",
+                "Controls and retrieves wind and sonic temperature data from a CSAT3 3D sonic anemometer via SDM.",
+            ),
+            Self::create_function_completion(
+                "CSAT3B",
+                "CSAT3B(${1:Destination}, ${2:Bus}, ${3:Address}, ${4:OperatingMode})",
+                "Controls and retrieves wind and sonic temperature data from a CSAT3B 3D sonic anemometer via SDM or CPI.",
+            ),
+            Self::create_function_completion(
+                "CSAT3BMonitor",
+                "CSAT3BMonitor(${1:Destination}, ${2:Bus}, ${3:Address})",
+                "Retrieves enclosure temperature, relative humidity, and inclination diagnostics from a CSAT3B.",
+            ),
+            Self::create_function_completion(
+                "EC100",
+                "EC100(${1:Dest}, ${2:SDMAddress}, ${3:EC100Cmd})",
+                "Retrieves measurement data from an EC100-based gas analyzer (EC150, EC155, IRGASON) via SDM.",
+            ),
+            Self::create_function_completion(
+                "EC100Configure",
+                "EC100Configure(${1:Result}, ${2:SDMAddress}, ${3:ConfigCmd}, ${4:DestSource})",
+                "Reads or writes configuration settings on an EC100-based gas analyzer via SDM.",
+            ),
+            Self::create_function_completion(
+                "LI7200",
+                "LI7200(${1:Dest}, ${2:Reps}, ${3:SDMAddress}, ${4:LI7200Cmd})",
+                "Measures CO2 and H2O concentration from an LI-7200 closed-path gas analyzer via SDM.",
+            ),
+            Self::create_function_completion(
+                "LI7700",
+                "LI7700(${1:Dest}, ${2:Reps}, ${3:SDMAddress}, ${4:LI7700Cmd})",
+                "Measures methane concentration from an LI-7700 open-path gas analyzer via SDM.",
+            ),
+            Self::create_function_completion(
                 "SerialInRecord",
                 "SerialInRecord(${1:COMPort}, ${2:Dest}, ${3:BeginWord}, ${4:NBytes}, ${5:EndWord}, ${6:NBytesReturned}, ${7:SerialInRecOption})",
                 "Reads and parses incoming serial data using begin/end markers.",
@@ -2565,6 +2600,76 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "DewPoint"),
                 "DewPoint(${1:Dest}, ${2:Temp}, ${3:RH})"
+            );
+        }
+
+        #[test]
+        fn csat3_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CSAT3"),
+                "CSAT3(${1:Dest}, ${2:Reps}, ${3:SDMAddress}, ${4:Command}, ${5:Option})"
+            );
+        }
+
+        #[test]
+        fn csat3b_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CSAT3B"),
+                "CSAT3B(${1:Destination}, ${2:Bus}, ${3:Address}, ${4:OperatingMode})"
+            );
+        }
+
+        #[test]
+        fn csat3bmonitor_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CSAT3BMonitor"),
+                "CSAT3BMonitor(${1:Destination}, ${2:Bus}, ${3:Address})"
+            );
+        }
+
+        #[test]
+        fn ec100_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "EC100"),
+                "EC100(${1:Dest}, ${2:SDMAddress}, ${3:EC100Cmd})"
+            );
+        }
+
+        #[test]
+        fn ec100configure_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "EC100Configure"),
+                "EC100Configure(${1:Result}, ${2:SDMAddress}, ${3:ConfigCmd}, ${4:DestSource})"
+            );
+        }
+
+        #[test]
+        fn li7200_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "LI7200"),
+                "LI7200(${1:Dest}, ${2:Reps}, ${3:SDMAddress}, ${4:LI7200Cmd})"
+            );
+        }
+
+        #[test]
+        fn li7700_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "LI7700"),
+                "LI7700(${1:Dest}, ${2:Reps}, ${3:SDMAddress}, ${4:LI7700Cmd})"
             );
         }
 
