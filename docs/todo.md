@@ -5161,3 +5161,73 @@ Not flagged as gaps (out of scope for this pass):
 
 - Round 34i (19 remaining candidates) remains deferred per Round 34's
   split -- the last sub-round.
+
+### Reference Implementation & Official Docs Comparison, Round 34i (2026-08-12)
+
+Picked up the communication IP/network instructions (19 candidates)
+from Round 34's split -- the final sub-round. All 19 were directly
+fetched and confirmed against their own help.campbellsci.com syntax
+lines.
+
+- [x] `CheckPort`, `ComPortIsActive`, `DHCPRenew`, `Encryption`,
+  `HTTPOut`, `IPInfo`, `IPNetPower`, `IPRoute`, `MonitorComms`,
+  `PingIP`, `PortBridge`, `PortGet`, `PortPairConfig`, `PortsConfig`,
+  `SNMPVariable`, `TCPActiveConnections`, `UDPDataGram`,
+  `WebPageBegin`, `XMLParse` missing from `BUILTIN_FUNCTIONS`
+  ✅ Resolved
+  - All 19 are real, documented CRBasic instructions for digital-port
+    status, IP interface/routing management, AES encryption,
+    datalogger-hosted web pages, SNMP MIB exposure, TCP/UDP socket
+    monitoring, and XML parsing
+  - `WebPageBegin` is a block construct closed by the already-present
+    `WebPageEnd` language keyword (added in an earlier phase, unrelated
+    to this audit series); following the same pattern as
+    `ModemHangup`/`EndModemHangup` in Round 34c, the opener is added as
+    a builtin function (its official syntax takes two optional
+    parameters, unlike this project's bare parameterless `End*`
+    keywords) while the closer remains untouched
+  - `HTTPOut`'s official syntax box also shows the surrounding
+    `WebPageBegin`/`HTTPOut`/`HTTPOut`/`WebPageEnd` example, but
+    `HTTPOut` itself takes a single HTML-string argument (built via `+`
+    concatenation with variables), not the multi-parameter shape of its
+    enclosing block
+  - `PortsConfig`'s official syntax has only two parameters (`Mask`,
+    `Function`) -- an earlier speculative note in this project's
+    research from Round 34's initial candidate survey had guessed a
+    third optional `ChannelType` parameter; the direct fetch in this
+    round corrects that to the real two-parameter syntax
+  - None of the 19 (aside from `WebPageBegin`, addressed above) is a
+    block construct, so this needed no other parser/AST changes --
+    purely `keywords.json`/completion/hover/signature-help work
+  - Added all 19 to `keywords.json` under the `communication` category,
+    regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 19, keeping the existing parity enforced by
+    all three completeness tests
+  - 19 new completion tests (one exact-`insert_text` test per function)
+    - 2 new signature tests (`dhcprenew_takes_no_parameters`,
+    `xmlparse_has_eight_parameters_in_official_order`) added across 3
+    commits (one per LSP layer); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (592 `crbasic-lsp` lib tests,
+    up from 571)
+
+This closes out Round 34's entire 98-name grammar-diff backlog
+(Rounds 34a through 34i), the highest-confidence candidate tier
+(present in **both** independently-authored reference grammars). Of
+the 98, 96 were added across this round series; 2
+(`SDI12SensorSetup`/`SDI12SensorResponse`) remain deferred pending a
+primary source for their exact syntax (Round 34d's note), and 3
+companion instructions surfaced during research but not themselves
+part of the 98-name list (`AddPrecise`, `MinSpa`, `StdDevRun`, plus
+`Read`/`Restore` from Round 34g) remain candidates for a future round.
+
+Not flagged as gaps (out of scope for this pass):
+
+- The two lower-confidence tiers from Round 34's initial grammar scrape
+  (72 names unique to one reference grammar, 58 names unique to the
+  other and dominated by that grammar's own typos) remain unexamined --
+  a natural target for a future Round 35, following the same
+  two-agent-verification methodology.
