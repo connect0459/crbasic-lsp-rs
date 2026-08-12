@@ -4459,3 +4459,107 @@ Not flagged as gaps (out of scope for this pass):
 - `CDM_*` general-purpose measurement instructions (~27 candidates,
   Round 33b) and the `CDM_VW300` subfamily (4 candidates, Round 33c)
   remain deferred to future rounds per the split above.
+
+### Reference Implementation & Official Docs Comparison, Round 33b (2026-08-12)
+
+Picked up the `CDM_*` general-purpose measurement instructions (28
+candidates) deferred from Round 33's split. Two parallel research agents
+independently verified all 28 candidates; unlike every prior round, their
+findings *disagreed* on several names, which required a third,
+direct-verification step before implementation could start.
+
+- [x] `CDM_ACPower`, `CDM_Battery`, `CDM_BrFull`, `CDM_BrFull6W`,
+  `CDM_BrHalf`, `CDM_BrHalf3W`, `CDM_BrHalf4W`, `CDM_CurrentDiff`,
+  `CDM_Delay`, `CDM_ExciteI`, `CDM_ExciteV`, `CDM_MuxSelect`,
+  `CDM_PanelTemp`, `CDM_PeriodAvg`, `CDM_PulsePort`, `CDM_Resistance`,
+  `CDM_Resistance3W`, `CDM_SW12`, `CDM_SW5`, `CDM_SWPower`, `CDM_TCComp`,
+  `CDM_TCDiff`, `CDM_TCSE`, `CDM_Therm107`, `CDM_Therm108`,
+  `CDM_Therm109`, `CDM_VoltDiff`, `CDM_VoltSE` missing from
+  `BUILTIN_FUNCTIONS` ✅ Resolved
+  - One research agent found and cached dedicated
+    `help.campbellsci.com/crbasic/cr6/Content/Instructions/cdm{name}.htm`
+    pages for 25 of the 28 candidates (a URL pattern the other agent's
+    search strategy never landed on) and reported clean, fully-sourced
+    syntax for all of them; the second agent, searching PDF manuals and
+    forum posts instead, corroborated most of the same 25 but explicitly
+    flagged `CDM_CurrentDiff` and `CDM_SWPower` as "likely not real" after
+    failing to find either
+  - Rather than picking a side, directly fetched and read the first
+    agent's own cached page files for `CDM_CurrentDiff` and `CDM_SWPower`
+    (plus several other disputed/uncertain entries) before adding
+    anything -- both turned out to be genuine, internally-consistent
+    Campbell Scientific help pages (matching the exact glossary-hover-text
+    and "CPI Calulator" typo fingerprint every other confirmed page in
+    this project's history has had), directly refuting the second agent's
+    "not real" call. This is the first round where the two independent
+    verification passes materially disagreed rather than just differing
+    in phrasing, and it confirms the value of the two-agent process: a
+    single agent's negative result (absence of evidence) is not
+    equivalent to evidence of absence when the other agent's positive
+    result is independently checkable
+  - The same direct-read step also resolved two parameter-name
+    discrepancies between the two agents' reports: `CDM_PanelTemp`'s 5th
+    parameter is `ThermChan` (per the cached official page), not
+    `StartThermistor` (the second agent's own placeholder guess, invented
+    because it never saw a page with the real name); `CDM_PulsePort`'s
+    3rd/4th parameters are `Port`/`Delay` (per the cached official page's
+    syntax line), not `PulseWidth` (same placeholder-guess issue)
+  - `CDM_Therm107`, `CDM_Therm108`, `CDM_Therm109` have no dedicated help
+    page (confirmed independently by both agents -- every URL pattern that
+    worked for the other 25 candidates 404's for these three), but their
+    existence is confirmed by a first-party source: `CDM_ExciteV`'s own
+    official Remarks paragraph names all three by number ("Instructions
+    that will not return the excitation to its former state are:
+    CDM_PanelTemp, CDM_Therm107, 108, and 109..."). Their syntax was
+    derived by extending the already-verified base `Therm107`/`Therm108`/
+    `Therm109` signatures (already present in this codebase's
+    `signature.rs`) with the `CDMType, CPIAddress` prefix shared by every
+    other `CDM_` instruction in this family -- the same prepend pattern
+    every other confirmed `CDM_` instruction follows relative to its
+    non-CDM base instruction -- and cross-checked against one agent's
+    directly-quoted real-world example code for `CDM_Therm107`/
+    `CDM_Therm109` (`CDM_Therm108` has no confirmed example, but shares an
+    identical parameter template with its two siblings)
+  - `CDM_VoltSE`/`CDM_TCSE`: both the official page *title* and the
+    formal *syntax line* render these with a capitalized `SE` (only the
+    informal in-page example code sometimes lowercases it to `Se`) --
+    kept as `CDM_VoltSE`/`CDM_TCSE`, extending the syntax-line-wins
+    precedent to a case where title and syntax line already agree with
+    each other and only the example disagrees. This also matches the
+    existing non-CDM `TCSE` keyword already in this codebase's
+    `keywords.json`
+  - Several syntax-line vs. parameter-table naming disagreements
+    confirmed directly from the cached pages, all resolved via the
+    established syntax-line-wins rule: `CDM_PulsePort`/`CDM_SW5` (syntax
+    `Port`, table heading `SW5Port`); `CDM_SW12`/`CDM_SW5`/`CDM_SWPower`
+    (syntax `SWOption`, table heading `Option`); `CDM_Resistance`/
+    `CDM_Resistance3W` (syntax `EXuA`, table heading `ExuA`, case only);
+    `CDM_ExciteI` (syntax `IxuA`, table heading `IxUA`, case only)
+  - None of the 28 is a block construct (no `End*` keyword, no nested
+    body), so this needed no parser/AST changes -- purely
+    `keywords.json`/completion/hover/signature-help work
+  - Added all 28 to `keywords.json` under the `measurement` category
+    (alongside the existing `Battery`/`BrFull`/`Therm107` measurement
+    entries), regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 28, keeping the existing parity enforced by
+    all three completeness tests. `CDM_BrFull6W`/`CDM_BrHalf4W`'s
+    optional `ReturnV1` and `CDM_Resistance`/`CDM_Resistance3W`'s
+    optional `MeasCurrent` are included in the snippet, matching the
+    existing non-CDM `BrFull6W`/`BrHalf4W`/`Resistance` snippets' own
+    convention of including optional trailing parameters
+  - 28 new completion tests (one exact-`insert_text` test per function,
+    following the Round 29-33a convention) added across 3 commits (one
+    per LSP layer, following the Round 29-33a commit convention); full
+    workspace `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (461 `crbasic-lsp` lib tests,
+    up from 433)
+
+Not flagged as gaps (out of scope for this pass):
+
+- The `CDM_VW300` subfamily (4 candidates, Round 33c) remains deferred
+  per the Round 33 split above -- documented only in a device manual
+  rather than the standard instruction reference, unlike every other
+  candidate in this round.
