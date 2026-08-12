@@ -5107,3 +5107,57 @@ Not flagged as gaps (out of scope for this pass):
   the note above -- natural candidates for a future round.
 - Rounds 34h through 34i (37 remaining candidates across 2 functional
   categories) remain deferred per Round 34's split.
+
+### Reference Implementation & Official Docs Comparison, Round 34h (2026-08-12)
+
+Picked up the statistics/spatial-analysis instructions (18
+candidates) from Round 34's split -- the largest single sub-round so
+far. All 18 were directly fetched and confirmed against their own
+help.campbellsci.com syntax lines.
+
+- [x] `AvgRun`, `AvgSpa`, `CovSpa`, `Covariance`, `FFT`, `FFTSpa`,
+  `LevelCrossing`, `MaxRun`, `MaxSpa`, `Median`, `MinRun`, `Moment`,
+  `PeakValley`, `RMSSpa`, `SampleMaxMin`, `StdDevSpa`, `TotalRun`,
+  `WorstCase` missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 18 are real, documented CRBasic instructions covering running
+    (window-based) statistics, spatial (array-wide) statistics, FFT
+    analysis, and event/histogram-style table output
+  - Rather than filing all 18 under one new category, split them by
+    actual usage pattern into two categories this project already
+    has: `Median`/`Moment`/`SampleMaxMin`/`PeakValley`/`FFT`/
+    `Covariance`/`LevelCrossing`/`WorstCase` under `data` (they are
+    DataTable-scoped output-processing instructions, the same family
+    as the existing `StdDev`/`Minimum`/`Maximum`/`Histogram` entries);
+    `AvgRun`/`MaxRun`/`MinRun`/`TotalRun`/`AvgSpa`/`CovSpa`/`MaxSpa`/
+    `RMSSpa`/`StdDevSpa`/`FFTSpa` under `math` (mid-program
+    running/spatial calculations usable anywhere, the same family as
+    the existing `MovePrecise`/`PWR`/`CType` entries)
+  - `Covariance`'s official syntax box separates its last parameter
+    (`NumOfCov`) with a semicolon rather than a comma -- an
+    idiosyncratic formatting choice unique to that one page. Normalized
+    to the same comma-separated argument list every other instruction
+    in this project uses, since CRBasic itself has no
+    semicolon-separated argument convention
+  - None of the 18 is a block construct, so this needed no parser/AST
+    changes -- purely `keywords.json`/completion/hover/signature-help
+    work
+  - Added all 18 to `keywords.json` under their respective categories,
+    regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 18, keeping the existing parity enforced by
+    all three completeness tests
+  - 18 new completion tests (one exact-`insert_text` test per function)
+    - 2 new signature tests
+    (`levelcrossing_has_nine_parameters_in_official_order`,
+    `avgrun_has_eight_parameters_in_official_order`) added across 3
+    commits (one per LSP layer); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (571 `crbasic-lsp` lib tests,
+    up from 551)
+
+Not flagged as gaps (out of scope for this pass):
+
+- Round 34i (19 remaining candidates) remains deferred per Round 34's
+  split -- the last sub-round.
