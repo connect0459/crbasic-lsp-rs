@@ -1126,6 +1126,101 @@ impl CompletionProvider {
                 "Enables remote editing of ConstTable values via MQTT; placed inside a ConstTable/EndConstTable declaration.",
             ),
             Self::create_function_completion(
+                "CheckPort",
+                "CheckPort(${1:Port})",
+                "Retrieves the current status (high/low) of a specified digital port or terminal.",
+            ),
+            Self::create_function_completion(
+                "ComPortIsActive",
+                "ComPortIsActive(${1:ComPort})",
+                "Returns a Boolean indicating whether activity is currently detected on a communications port.",
+            ),
+            Self::create_function_completion(
+                "DHCPRenew",
+                "DHCPRenew",
+                "Restarts DHCP on the Ethernet interface to request a new IP address lease.",
+            ),
+            Self::create_function_completion(
+                "Encryption",
+                "Encryption(${1:Dest}, ${2:EncryptSrc}, ${3:SrcLen}, ${4:EncryptKey}, ${5:EncryptInit}, ${6:EncryptInitLen}, ${7:EncryptOption})",
+                "Performs AES-128 encryption or decryption on the contents of a variable.",
+            ),
+            Self::create_function_completion(
+                "HTTPOut",
+                "HTTPOut(${1:HTMLString})",
+                "Emits a line of HTML for a datalogger-generated web page; used inside WebPageBegin/WebPageEnd.",
+            ),
+            Self::create_function_completion(
+                "IPInfo",
+                "IPInfo(${1:Interface}, ${2:Option})",
+                "Retrieves the IP address of a datalogger interface, or the remote IP of a socket handle.",
+            ),
+            Self::create_function_completion(
+                "IPNetPower",
+                "IPNetPower(${1:Interface}, ${2:State}, ${3:Timeout})",
+                "Powers on or off a specific IP-capable network interface.",
+            ),
+            Self::create_function_completion(
+                "IPRoute",
+                "IPRoute(${1:IPAddr}, ${2:IPInterface}, ${3:ExclusiveOption})",
+                "Directs outgoing IP traffic through a specified network interface when multiple interfaces are active.",
+            ),
+            Self::create_function_completion(
+                "MonitorComms",
+                "MonitorComms(${1:Dest}, ${2:ComNum}, ${3:Output})",
+                "Captures communication traffic from a specified port into a string variable, for debugging.",
+            ),
+            Self::create_function_completion(
+                "PingIP",
+                "PingIP(${1:PingIPAddr}, ${2:PingTimeOut}, ${3:PingOption})",
+                "Pings an IP address and returns the response time in milliseconds.",
+            ),
+            Self::create_function_completion(
+                "PortBridge",
+                "PortBridge(${1:Enable}, ${2:Bridge})",
+                "Establishes a bidirectional data channel between two communications ports.",
+            ),
+            Self::create_function_completion(
+                "PortGet",
+                "PortGet(${1:Dest}, ${2:Port})",
+                "Reads the status of a control or universal port into a destination variable.",
+            ),
+            Self::create_function_completion(
+                "PortPairConfig",
+                "PortPairConfig(${1:Port}, ${2:Option}, ${3:PullOpt})",
+                "Configures the voltage level and pull-resistor mode for a terminal pair.",
+            ),
+            Self::create_function_completion(
+                "PortsConfig",
+                "PortsConfig(${1:Mask}, ${2:Function})",
+                "Configures digital ports as input or output using a bitmask.",
+            ),
+            Self::create_function_completion(
+                "SNMPVariable",
+                "SNMPVariable(${1:Name}, ${2:OID}, ${3:Type}, ${4:Access}, ${5:Valid})",
+                "Defines a custom MIB entry exposing a datalogger variable through SNMP.",
+            ),
+            Self::create_function_completion(
+                "TCPActiveConnections",
+                "TCPActiveConnections(${1:Dest}, ${2:SecsSinceLastRx}, ${3:Port})",
+                "Monitors active TCP connections and polling activity on a listening port.",
+            ),
+            Self::create_function_completion(
+                "UDPDataGram",
+                "UDPDataGram(${1:IPAddr}, ${2:UDPPort}, ${3:UDPSendVar}, ${4:UDPSendLen}, ${5:UDPRecVar}, ${6:UDPTimeOut}, ${7:UDPConnectHandle}, ${8:IPVersion})",
+                "Sends and receives UDP packets.",
+            ),
+            Self::create_function_completion(
+                "WebPageBegin",
+                "WebPageBegin(${1:WebPageName}, ${2:WebPageCmd})",
+                "Declares a datalogger-served HTML page, closed by WebPageEnd.",
+            ),
+            Self::create_function_completion(
+                "XMLParse",
+                "XMLParse(${1:XMLContent}, ${2:XMLValue}, ${3:AttrName}, ${4:AttrNameSpace}, ${5:ElemName}, ${6:ElemNameSpace}, ${7:MaxDepth}, ${8:MaxNameSpaces})",
+                "Parses an XML file or string on the datalogger.",
+            ),
+            Self::create_function_completion(
                 "WindVector",
                 "WindVector(${1:Reps}, ${2:SpeedOrEast}, ${3:DirectionOrNorth}, ${4:DataType}, ${5:DisableVar}, ${6:Subinterval}, ${7:SensorType}, ${8:OutputOpt})",
                 "Calculates and stores the mean wind speed, wind vector magnitude, and direction statistics.",
@@ -5071,6 +5166,196 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "MQTTPublishConstTable"),
                 "MQTTPublishConstTable(${1:QoS})"
+            );
+        }
+
+        #[test]
+        fn checkport_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CheckPort"),
+                "CheckPort(${1:Port})"
+            );
+        }
+
+        #[test]
+        fn comportisactive_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ComPortIsActive"),
+                "ComPortIsActive(${1:ComPort})"
+            );
+        }
+
+        #[test]
+        fn dhcprenew_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "DHCPRenew"), "DHCPRenew");
+        }
+
+        #[test]
+        fn encryption_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Encryption"),
+                "Encryption(${1:Dest}, ${2:EncryptSrc}, ${3:SrcLen}, ${4:EncryptKey}, \
+                 ${5:EncryptInit}, ${6:EncryptInitLen}, ${7:EncryptOption})"
+            );
+        }
+
+        #[test]
+        fn httpout_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "HTTPOut"),
+                "HTTPOut(${1:HTMLString})"
+            );
+        }
+
+        #[test]
+        fn ipinfo_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "IPInfo"),
+                "IPInfo(${1:Interface}, ${2:Option})"
+            );
+        }
+
+        #[test]
+        fn ipnetpower_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "IPNetPower"),
+                "IPNetPower(${1:Interface}, ${2:State}, ${3:Timeout})"
+            );
+        }
+
+        #[test]
+        fn iproute_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "IPRoute"),
+                "IPRoute(${1:IPAddr}, ${2:IPInterface}, ${3:ExclusiveOption})"
+            );
+        }
+
+        #[test]
+        fn monitorcomms_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MonitorComms"),
+                "MonitorComms(${1:Dest}, ${2:ComNum}, ${3:Output})"
+            );
+        }
+
+        #[test]
+        fn pingip_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PingIP"),
+                "PingIP(${1:PingIPAddr}, ${2:PingTimeOut}, ${3:PingOption})"
+            );
+        }
+
+        #[test]
+        fn portbridge_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PortBridge"),
+                "PortBridge(${1:Enable}, ${2:Bridge})"
+            );
+        }
+
+        #[test]
+        fn portget_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PortGet"),
+                "PortGet(${1:Dest}, ${2:Port})"
+            );
+        }
+
+        #[test]
+        fn portpairconfig_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PortPairConfig"),
+                "PortPairConfig(${1:Port}, ${2:Option}, ${3:PullOpt})"
+            );
+        }
+
+        #[test]
+        fn portsconfig_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PortsConfig"),
+                "PortsConfig(${1:Mask}, ${2:Function})"
+            );
+        }
+
+        #[test]
+        fn snmpvariable_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SNMPVariable"),
+                "SNMPVariable(${1:Name}, ${2:OID}, ${3:Type}, ${4:Access}, ${5:Valid})"
+            );
+        }
+
+        #[test]
+        fn tcpactiveconnections_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TCPActiveConnections"),
+                "TCPActiveConnections(${1:Dest}, ${2:SecsSinceLastRx}, ${3:Port})"
+            );
+        }
+
+        #[test]
+        fn udpdatagram_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "UDPDataGram"),
+                "UDPDataGram(${1:IPAddr}, ${2:UDPPort}, ${3:UDPSendVar}, ${4:UDPSendLen}, \
+                 ${5:UDPRecVar}, ${6:UDPTimeOut}, ${7:UDPConnectHandle}, ${8:IPVersion})"
+            );
+        }
+
+        #[test]
+        fn webpagebegin_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "WebPageBegin"),
+                "WebPageBegin(${1:WebPageName}, ${2:WebPageCmd})"
+            );
+        }
+
+        #[test]
+        fn xmlparse_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "XMLParse"),
+                "XMLParse(${1:XMLContent}, ${2:XMLValue}, ${3:AttrName}, ${4:AttrNameSpace}, \
+                 ${5:ElemName}, ${6:ElemNameSpace}, ${7:MaxDepth}, ${8:MaxNameSpaces})"
             );
         }
     }
