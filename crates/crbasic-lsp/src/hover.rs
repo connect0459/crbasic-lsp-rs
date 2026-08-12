@@ -665,6 +665,90 @@ impl HoverProvider {
             "li7700" => Some(
                 "**LI7700**\n\nMeasures methane concentration from an LI-7700 open-path gas analyzer via SDM.",
             ),
+            "cdm_acpower" => Some(
+                "**CDM_ACPower**\n\nMeasures real AC power and power-quality parameters via a CDM module in single-phase, split-phase, or three-phase configurations.",
+            ),
+            "cdm_battery" => Some(
+                "**CDM_Battery**\n\nReads and returns a CDM module's own power-supply voltage.",
+            ),
+            "cdm_brfull" => {
+                Some("**CDM_BrFull**\n\nMakes a 4-wire full-bridge measurement via a CDM module.")
+            }
+            "cdm_brfull6w" => {
+                Some("**CDM_BrFull6W**\n\nMakes a 6-wire full-bridge measurement via a CDM module.")
+            }
+            "cdm_brhalf" => Some(
+                "**CDM_BrHalf**\n\nMakes a single-ended half-bridge measurement via a CDM module.",
+            ),
+            "cdm_brhalf3w" => {
+                Some("**CDM_BrHalf3W**\n\nMakes a 3-wire half-bridge measurement via a CDM module.")
+            }
+            "cdm_brhalf4w" => Some(
+                "**CDM_BrHalf4W**\n\nMakes a 4-wire half-bridge measurement via a CDM module, commonly used with PRTCalc for RTDs.",
+            ),
+            "cdm_currentdiff" => Some(
+                "**CDM_CurrentDiff**\n\nMakes a differential current-loop measurement via a CDM module.",
+            ),
+            "cdm_delay" => Some(
+                "**CDM_Delay**\n\nDelays a CDM module's measurement or processing task sequence for a specified time.",
+            ),
+            "cdm_excitei" => Some(
+                "**CDM_ExciteI**\n\nApplies a current excitation to an excitation channel on a CDM module.",
+            ),
+            "cdm_excitev" => Some(
+                "**CDM_ExciteV**\n\nApplies a voltage excitation to an excitation channel on a CDM module.",
+            ),
+            "cdm_muxselect" => Some(
+                "**CDM_MuxSelect**\n\nWakes and clocks an AM16/32A or AM16/32B multiplexer to a starting channel via a CDM module.",
+            ),
+            "cdm_paneltemp" => Some(
+                "**CDM_PanelTemp**\n\nReads a CDM wiring-panel thermistor, for use as a thermocouple reference temperature.",
+            ),
+            "cdm_periodavg" => Some(
+                "**CDM_PeriodAvg**\n\nMeasures the period or frequency of a signal on a CDM single-ended channel.",
+            ),
+            "cdm_pulseport" => Some(
+                "**CDM_PulsePort**\n\nToggles a CDM switched-5V digital port, delays, and toggles it again to generate a clock signal.",
+            ),
+            "cdm_resistance" => Some(
+                "**CDM_Resistance**\n\nMeasures resistance via current excitation on a CDM module.",
+            ),
+            "cdm_resistance3w" => Some(
+                "**CDM_Resistance3W**\n\nMeasures resistance via current excitation using a 3-wire connection on a CDM module.",
+            ),
+            "cdm_sw12" => Some(
+                "**CDM_SW12**\n\nSets a CDM switched-12V output port high or low to power external peripherals.",
+            ),
+            "cdm_sw5" => Some(
+                "**CDM_SW5**\n\nSets a CDM switched-5V output port high or low to power external peripherals.",
+            ),
+            "cdm_swpower" => Some(
+                "**CDM_SWPower**\n\nSets the ganged switched-12V and switched-5V power output on a VOLT408 isolation module.",
+            ),
+            "cdm_tccomp" => Some(
+                "**CDM_TCComp**\n\nMakes a differential thermocouple measurement with automatic cold-junction compensation via a CDM module.",
+            ),
+            "cdm_tcdiff" => Some(
+                "**CDM_TCDiff**\n\nMakes a differential thermocouple measurement via a CDM module.",
+            ),
+            "cdm_tcse" => Some(
+                "**CDM_TCSE**\n\nMakes a single-ended thermocouple measurement via a CDM module.",
+            ),
+            "cdm_therm107" => {
+                Some("**CDM_Therm107**\n\nMeasures a 107 thermistor probe via a CDM module.")
+            }
+            "cdm_therm108" => {
+                Some("**CDM_Therm108**\n\nMeasures a 108 thermistor probe via a CDM module.")
+            }
+            "cdm_therm109" => {
+                Some("**CDM_Therm109**\n\nMeasures a 109 thermistor probe via a CDM module.")
+            }
+            "cdm_voltdiff" => Some(
+                "**CDM_VoltDiff**\n\nMakes a differential voltage measurement via a CDM module.",
+            ),
+            "cdm_voltse" => {
+                Some("**CDM_VoltSE**\n\nMakes a single-ended voltage measurement via a CDM module.")
+            }
             _ => None,
         }
     }
@@ -1260,6 +1344,34 @@ mod tests {
                     "EC100Configure",
                     "LI7200",
                     "LI7700",
+                    "CDM_ACPower",
+                    "CDM_Battery",
+                    "CDM_BrFull",
+                    "CDM_BrFull6W",
+                    "CDM_BrHalf",
+                    "CDM_BrHalf3W",
+                    "CDM_BrHalf4W",
+                    "CDM_CurrentDiff",
+                    "CDM_Delay",
+                    "CDM_ExciteI",
+                    "CDM_ExciteV",
+                    "CDM_MuxSelect",
+                    "CDM_PanelTemp",
+                    "CDM_PeriodAvg",
+                    "CDM_PulsePort",
+                    "CDM_Resistance",
+                    "CDM_Resistance3W",
+                    "CDM_SW12",
+                    "CDM_SW5",
+                    "CDM_SWPower",
+                    "CDM_TCComp",
+                    "CDM_TCDiff",
+                    "CDM_TCSE",
+                    "CDM_Therm107",
+                    "CDM_Therm108",
+                    "CDM_Therm109",
+                    "CDM_VoltDiff",
+                    "CDM_VoltSE",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
