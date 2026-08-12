@@ -144,6 +144,48 @@ impl HoverProvider {
             .or_else(|| Self::get_measurement_function_description(name))
             .or_else(|| Self::get_communication_function_description(name))
             .or_else(|| Self::get_data_function_description(name))
+            .or_else(|| Self::get_string_function_description(name))
+    }
+
+    /// Returns the description for a built-in string-manipulation function
+    /// name, or `None` if `name` isn't one of them.
+    fn get_string_function_description(name: &str) -> Option<&'static str> {
+        match name.to_lowercase().as_str() {
+            "splitstr" => Some("**SplitStr**\n\nSplits a string by delimiter."),
+            "formatfloat" => Some("**FormatFloat**\n\nFormats a float as a string."),
+            "formatlong" => Some(
+                "**FormatLong**\n\nConverts a Long value to a decimal, hexadecimal, or octal string.",
+            ),
+            "mid" => Some("**Mid**\n\nExtracts a substring."),
+            "left" => Some("**Left**\n\nReturns leftmost characters."),
+            "right" => Some("**Right**\n\nReturns rightmost characters."),
+            "len" => Some("**Len**\n\nReturns the length of a string."),
+            "instr" => Some("**InStr**\n\nFinds a substring within a string."),
+            "lowercase" => Some("**LowerCase**\n\nConverts to lowercase."),
+            "uppercase" => Some("**UpperCase**\n\nConverts to uppercase."),
+            "trim" => Some("**Trim**\n\nRemoves leading and trailing spaces."),
+            "rtrim" => Some("**RTrim**\n\nRemoves trailing spaces."),
+            "ltrim" => Some("**LTrim**\n\nRemoves leading spaces."),
+            "replace" => Some("**Replace**\n\nReplaces occurrences in a string."),
+            "chr" => Some("**Chr**\n\nReturns a character in the extended ASCII character set."),
+            "ascii" => Some("**ASCII**\n\nReturns the ASCII value of a character in a string."),
+            "strcomp" => Some(
+                "**StrComp**\n\nCompares two strings to determine if they are identical or their sort order.",
+            ),
+            "checksum" => {
+                Some("**CheckSum**\n\nReturns a checksum signature for the characters in a string.")
+            }
+            "hextodec" => {
+                Some("**HexToDec**\n\nConverts a hexadecimal string to a float or integer.")
+            }
+            "hex" => {
+                Some("**Hex**\n\nReturns a hexadecimal string representation of a Long value.")
+            }
+            "sprintf" => {
+                Some("**Sprintf**\n\nWrites a formatted output string to a destination variable.")
+            }
+            _ => None,
+        }
     }
 
     /// Returns the description for a built-in data-table/output-processing
@@ -992,6 +1034,44 @@ mod tests {
                     "FileTime",
                     "FileList",
                     "DataInterval",
+                ] {
+                    let description = HoverProvider::get_builtin_function_description(name);
+                    assert!(
+                        description.is_some_and(|d| d.contains(&format!("**{}**", name))),
+                        "Expected hover info for builtin function: {}",
+                        name
+                    );
+                }
+            }
+        }
+
+        mod string_functions {
+            use super::*;
+
+            #[test]
+            fn all_string_functions_have_hover_info() {
+                for name in [
+                    "SplitStr",
+                    "FormatFloat",
+                    "FormatLong",
+                    "Mid",
+                    "Left",
+                    "Right",
+                    "Len",
+                    "InStr",
+                    "LowerCase",
+                    "UpperCase",
+                    "Trim",
+                    "RTrim",
+                    "LTrim",
+                    "Replace",
+                    "Chr",
+                    "ASCII",
+                    "StrComp",
+                    "CheckSum",
+                    "HexToDec",
+                    "Hex",
+                    "Sprintf",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
