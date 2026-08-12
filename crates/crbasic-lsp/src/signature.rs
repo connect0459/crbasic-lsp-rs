@@ -3737,6 +3737,283 @@ impl SignatureProvider {
                 ],
             }),
 
+            "etsz" => Some(FunctionSignature {
+                name: "ETsz".to_string(),
+                documentation: "Calculates the ASCE standardized reference evapotranspiration.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Temp".to_string(),
+                        documentation: "A variable holding air temperature, in degrees Celsius.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RH".to_string(),
+                        documentation: "A variable holding relative humidity, in percent.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "uZ".to_string(),
+                        documentation: "A variable holding wind speed, in meters per second.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Rs".to_string(),
+                        documentation: "Solar radiation, in megajoules per square meter.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Longitude".to_string(),
+                        documentation: "The station's longitude, in decimal degrees west.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Latitude".to_string(),
+                        documentation: "The station's latitude, in decimal degrees (±90).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Altitude".to_string(),
+                        documentation: "The station's elevation, in meters above sea level.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Zw".to_string(),
+                        documentation: "The wind sensor's height, in meters.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Sz".to_string(),
+                        documentation: "The reference crop type: 0 for short reference, 1 for tall reference.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "The output storage data type (e.g. IEEE4, FP2, IEEE8).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DisableVar".to_string(),
+                        documentation: "An optional condition that excludes the measurement from output when true.".to_string(),
+                    },
+                ],
+            }),
+
+            "solarposition" => Some(FunctionSignature {
+                name: "SolarPosition".to_string(),
+                documentation: "Calculates solar azimuth, elevation, hour angle, declination, and air mass.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A 5-element array that receives azimuth, elevation, hour angle, declination, and air mass.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeArray".to_string(),
+                        documentation: "A 9-element array containing date/time components from the RealTime instruction.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOffset".to_string(),
+                        documentation: "The local UTC offset, in seconds; overridden by the datalogger's UTC Offset setting if enabled.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Latitude".to_string(),
+                        documentation: "The station's latitude, in decimal degrees (±90; positive is Northern Hemisphere).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Longitude".to_string(),
+                        documentation: "The station's longitude, in decimal degrees east of the Greenwich meridian.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Altitude".to_string(),
+                        documentation: "The station's elevation above sea level, in meters.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Pressure".to_string(),
+                        documentation: "The annual average barometric pressure, in millibars; -1 estimates it from temperature.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "AirTemp".to_string(),
+                        documentation: "Air temperature, in degrees Celsius, used in the pressure/position calculations.".to_string(),
+                    },
+                ],
+            }),
+
+            "wetdrybulb" => Some(FunctionSignature {
+                name: "WetDryBulb".to_string(),
+                documentation: "Computes vapor pressure from wet-bulb and dry-bulb temperatures and barometric pressure.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array that receives the computed vapor pressure, in kPa.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DryTemp".to_string(),
+                        documentation: "A variable holding the ambient (dry-bulb) air temperature, in degrees Celsius.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "WetTemp".to_string(),
+                        documentation: "A variable holding the wet-bulb temperature, in degrees Celsius.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Pressure".to_string(),
+                        documentation: "The air pressure, in kilopascals.".to_string(),
+                    },
+                ],
+            }),
+
+            "muxselect" => Some(FunctionSignature {
+                name: "MuxSelect".to_string(),
+                documentation: "Selects a channel on an AM16/32A or AM16/32B multiplexer and readies it for measurement.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ClkPort".to_string(),
+                        documentation: "The control port used to clock/advance the multiplexer channel.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ResetPort".to_string(),
+                        documentation: "The control port used to wake up and reset the multiplexer.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ClockPW".to_string(),
+                        documentation: "The clock pulse width, in milliseconds, controlling how fast the multiplexer advances.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MuxChan".to_string(),
+                        documentation: "The first measurement channel to select.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mode".to_string(),
+                        documentation: "The clocking type: 0 for AM16/32A, 1 for AM16/32B.".to_string(),
+                    },
+                ],
+            }),
+
+            "pulsecountreset" => Some(FunctionSignature {
+                name: "PulseCountReset".to_string(),
+                documentation: "Resets the pulse counter and running-average values associated with pulse count measurements.".to_string(),
+                parameters: vec![],
+            }),
+
+            "prt" => Some(FunctionSignature {
+                name: "PRT".to_string(),
+                documentation: "Converts RTD resistance measurements to temperature using the DIN 43760 standard.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the temperature result is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; if greater than 1, Dest must be an array.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "A variable containing the RTD resistance ratio (RS/RO).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "An optional multiplier to convert the result to a different unit (defaults to 1, for Celsius).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An optional offset to convert the result to a different unit (defaults to 0, for Celsius).".to_string(),
+                    },
+                ],
+            }),
+
+            "prtcalc" => Some(FunctionSignature {
+                name: "PRTCalc".to_string(),
+                documentation: "Converts RTD resistance measurements to temperature using the Callendar-Van Dusen equation.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the temperature result is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of times the calculation repeats on consecutive Source elements; defaults to 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "A variable containing the RTD resistance ratio (RS/RO).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PRTType".to_string(),
+                        documentation: "The sensor type code (0 through 6), specifying the RTD standard and alpha value.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "An optional multiplier to convert the output to a different unit.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An optional offset to convert the output to a different unit.".to_string(),
+                    },
+                ],
+            }),
+
+            "moveprecise" => Some(FunctionSignature {
+                name: "MovePrecise".to_string(),
+                documentation: "Transfers a value into a variable as a high-precision (56-bit mantissa) number.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "PrecisionVariable".to_string(),
+                        documentation: "The variable that receives the high-precision value.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "X".to_string(),
+                        documentation: "The value to move into PrecisionVariable.".to_string(),
+                    },
+                ],
+            }),
+
+            "pwr" => Some(FunctionSignature {
+                name: "PWR".to_string(),
+                documentation: "Raises X to the power of Y and returns a floating-point result.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "X".to_string(),
+                        documentation: "The base value.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Y".to_string(),
+                        documentation: "The exponent applied to the base.".to_string(),
+                    },
+                ],
+            }),
+
+            "ctype" => Some(FunctionSignature {
+                name: "CType".to_string(),
+                documentation: "Converts an expression to a specified data type (Float, IEEE4, Long, String, or Double).".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Expression".to_string(),
+                        documentation: "The value or string to convert.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Type".to_string(),
+                        documentation: "The target data type: Float, IEEE4, Long, String, or Double.".to_string(),
+                    },
+                ],
+            }),
+
+            "serialinchk" => Some(FunctionSignature {
+                name: "SerialInChk".to_string(),
+                documentation: "Returns the number of characters currently available in the serial input buffer.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "ComPort".to_string(),
+                    documentation: "The communications port to check.".to_string(),
+                }],
+            }),
+
+            "setsecurity" => Some(FunctionSignature {
+                name: "SetSecurity".to_string(),
+                documentation: "Establishes up to three hierarchical security levels restricting access to datalogger functions.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Security1".to_string(),
+                        documentation: "The highest-level security code; enables program changes and ConstTable editing when entered.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Security2".to_string(),
+                        documentation: "The mid-level security code; allows clock changes and DataTable field editing when entered.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Security3".to_string(),
+                        documentation: "The lowest-level security code; permits basic data collection when entered.".to_string(),
+                    },
+                ],
+            }),
+
             "watchdogtimer" => Some(FunctionSignature {
                 name: "WatchdogTimer".to_string(),
                 documentation: "Enables a user-programmed watchdog timer that guards the program against lockup.".to_string(),
@@ -7721,6 +7998,38 @@ mod tests {
 
             let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
             assert_eq!(names, vec!["SWChan", "State", "SW12Option"]);
+        }
+
+        #[test]
+        fn pulsecountreset_takes_no_parameters() {
+            let sig = SignatureProvider::get_function_signature("PulseCountReset")
+                .expect("PulseCountReset should have a signature");
+
+            assert!(sig.parameters.is_empty());
+        }
+
+        #[test]
+        fn etsz_has_eleven_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("ETsz")
+                .expect("ETsz should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "Temp",
+                    "RH",
+                    "uZ",
+                    "Rs",
+                    "Longitude",
+                    "Latitude",
+                    "Altitude",
+                    "Zw",
+                    "Sz",
+                    "DataType",
+                    "DisableVar",
+                ]
+            );
         }
 
         #[test]
