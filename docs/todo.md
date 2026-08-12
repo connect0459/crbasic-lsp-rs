@@ -3943,8 +3943,59 @@ only covered 52 of `BUILTIN_FUNCTIONS`' 130 entries (78 missing, not the
 Not flagged as gaps (out of scope for this pass):
 
 - `hover.rs` and `signature.rs` still only cover a small subset of
-  `BUILTIN_FUNCTIONS` (hover has no builtin-function coverage at all;
-  signature help covers 33) -- both are separate, larger content
+  `BUILTIN_FUNCTIONS` (hover: 4/130; signature help: 32/130 -- this
+  entry originally said "no coverage at all" / "33", both off by a
+  small amount; corrected in the next section below once actually
+  re-checked against the code) -- both are separate, larger content
   efforts than the completion-snippet parity closed here, consistent
   with how the "Keyword/instruction list unification" entry already
   scoped `hover.rs`/`signature.rs` prose out of that round too.
+
+### Hover Builtin Function Parity (2026-08-12)
+
+Closes the `hover.rs` half of the gap the previous section deliberately
+deferred. Re-checking the code before starting found the previous
+section's own numbers were off: hover.rs had 4/130 covered (WindVector,
+TCDiff, Resistance, SDI12Recorder), not 0, and `signature.rs` had 32/130
+(33 match arms, but one -- `DataTable` -- is a statement, not a
+`BUILTIN_FUNCTIONS` entry), not 33.
+
+- [x] Full hover-text parity with `BUILTIN_FUNCTIONS` ✅ Resolved
+  - Added hover coverage for the remaining 126 functions, grouped into
+    8 commits by `keywords.json` category (scan, measurement,
+    communication, data, string, math, time, logical+menu), each with
+    its own `all_<category>_functions_have_hover_info` test
+  - Descriptions reuse the already-verified one-line prose from
+    `completion.rs::get_builtin_function_completions` (authored and
+    checked against help.campbellsci.com during the prior "Builtin
+    Function Completion Parity" round) rather than re-deriving them
+    independently -- the same facts, a second surface. `Rnd`'s and
+    `NaN`'s hover text each additionally note they take no
+    parentheses, per that round's own signature-shape finding
+  - Relocated `SDI12Recorder`'s pre-existing hover entry from
+    `get_measurement_function_description` into a new
+    `get_communication_function_description` -- its real
+    `keywords.json` category -- instead of leaving it in the wrong
+    bucket now that categories are being tracked deliberately
+  - Split into one `get_<category>_function_description` helper per
+    category (mirroring the pre-existing `get_measurement_function_description`
+    shape) rather than one large flat match, chained through a new
+    `get_builtin_function_description` dispatcher
+  - Added `every_canonical_builtin_function_has_hover_info`, the
+    hover.rs equivalent of completion.rs's pre-existing
+    `every_canonical_builtin_function_has_a_completion_item`, so this
+    parity is enforced going forward
+  - **Process note**: the first two commits of this round briefly
+    committed that completeness test before the remaining categories
+    were filled in, leaving 2 commits in the middle of the history
+    with a failing test (caught by `cargo test`, not by the
+    pre-commit hooks, which don't run the Rust test suite). Fixed by
+    a follow-up commit removing the premature test and restoring a
+    fully green state, then re-adding it correctly in the final
+    commit once every category actually had coverage -- worth
+    remembering for the `signature.rs` round below: don't add a
+    forward-looking completeness test until the category work it
+    depends on is actually done.
+  - 8 new category tests + 1 completeness test added across the 8
+    commits; full workspace `build`/`test`/`clippy`/`fmt` gate passes
+    (356 `crbasic-lsp` lib tests, up from 347)
