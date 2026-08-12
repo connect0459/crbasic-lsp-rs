@@ -153,6 +153,10 @@
     { "name": "CDM_Therm109", "category": "measurement" },
     { "name": "CDM_VoltDiff", "category": "measurement" },
     { "name": "CDM_VoltSE", "category": "measurement" },
+    { "name": "CDM_VW300Config", "category": "measurement" },
+    { "name": "CDM_VW300Dynamic", "category": "measurement" },
+    { "name": "CDM_VW300RainFlow", "category": "measurement" },
+    { "name": "CDM_VW300Static", "category": "measurement" },
 
     { "name": "SerialOpen", "category": "communication" },
     { "name": "SerialClose", "category": "communication" },
