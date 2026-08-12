@@ -1629,6 +1629,1314 @@ impl SignatureProvider {
                 ],
             }),
 
+            "cdm_acpower" => Some(FunctionSignature {
+                name: "CDM_ACPower".to_string(),
+                documentation: "Measures real AC power and power-quality parameters via a CDM module in single-phase, split-phase, or three-phase configurations.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DestAC".to_string(),
+                        documentation: "A variable or array to store the measurement results; the number of values returned depends on ConfigAC.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ConfigAC".to_string(),
+                        documentation: "The measurement configuration: 1 single-phase, 2 split-phase, 3 three-phase 'Y'.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LineFrq".to_string(),
+                        documentation: "The expected line frequency in Hz: 60, 50, or a value from 2 to 20 for variable-frequency (wild AC) power.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ChanV".to_string(),
+                        documentation: "The single-ended channel for the voltage measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MultV".to_string(),
+                        documentation: "The potential-transformer multiplier, expressed as input volts per output millivolts.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxVrms".to_string(),
+                        documentation: "The expected maximum RMS voltage at the potential transformer's primary side.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ChanI".to_string(),
+                        documentation: "The single-ended channel for the current measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MultI".to_string(),
+                        documentation: "The current-transformer multiplier, expressed as input amps per output millivolts.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxIrms".to_string(),
+                        documentation: "The expected maximum RMS current at the current transformer's primary side.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RepsI".to_string(),
+                        documentation: "The number of current measurements to make on consecutive channels; used only for single-phase configurations.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_battery" => Some(FunctionSignature {
+                name: "CDM_Battery".to_string(),
+                documentation: "Reads and returns a CDM module's own power-supply voltage.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable to store the CDM module's power-supply voltage.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_brfull" => Some(FunctionSignature {
+                name: "CDM_BrFull".to_string(),
+                documentation: "Makes a 4-wire full-bridge measurement via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the measurement results.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "The expected input voltage range of the sensor signal.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "The differential channel pair for the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "The excitation channel used to excite the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPEx".to_string(),
+                        documentation: "The number of sensors to excite with the same excitation terminal before advancing to the next.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExmV".to_string(),
+                        documentation: "The excitation voltage, in millivolts, applied to the sensor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Whether to reverse the excitation and make a second measurement, canceling excitation-related offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevDiff".to_string(),
+                        documentation: "Whether to reverse the differential inputs and make a second measurement, canceling measurement-circuitry offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, after setting up the measurement and before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The first notch filter frequency used to reject noise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw result to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_brfull6w" => Some(FunctionSignature {
+                name: "CDM_BrFull6W".to_string(),
+                documentation: "Makes a 6-wire full-bridge measurement via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the measurement results (1000*V2/V1).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range1".to_string(),
+                        documentation: "The expected input voltage range for the first channel measured.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range2".to_string(),
+                        documentation: "The expected input voltage range for the second channel measured.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "The differential channel pair for the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "The excitation channel used to excite the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPEx".to_string(),
+                        documentation: "The number of sensors to excite with the same excitation terminal before advancing to the next.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExmV".to_string(),
+                        documentation: "The excitation voltage, in millivolts, applied to the sensor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Whether to reverse the excitation and make a second measurement, canceling excitation-related offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevDiff".to_string(),
+                        documentation: "Whether to reverse the differential inputs and make a second measurement, canceling measurement-circuitry offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, after setting up the measurement and before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The first notch filter frequency used to reject noise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ReturnV1".to_string(),
+                        documentation: "Optional; if non-zero, also returns V1 as a second element of Dest (which must then be a two-element or larger array).".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_brhalf" => Some(FunctionSignature {
+                name: "CDM_BrHalf".to_string(),
+                documentation: "Makes a single-ended half-bridge measurement via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the measurement results.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "The expected input voltage range of the sensor signal.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "The single-ended channel for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "The excitation channel used to excite the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPEx".to_string(),
+                        documentation: "The number of sensors to excite with the same excitation terminal before advancing to the next.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExmV".to_string(),
+                        documentation: "The excitation voltage, in millivolts, applied to the sensor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Whether to reverse the excitation and make a second measurement, canceling excitation-related offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, after setting up the measurement and before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The first notch filter frequency used to reject noise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw result to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_brhalf3w" => Some(FunctionSignature {
+                name: "CDM_BrHalf3W".to_string(),
+                documentation: "Makes a 3-wire half-bridge measurement via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the measurement results.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "The expected input voltage range of the sensor signal.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "The single-ended channel for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "The excitation channel used to excite the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPEx".to_string(),
+                        documentation: "The number of sensors to excite with the same excitation terminal before advancing to the next.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExmV".to_string(),
+                        documentation: "The excitation voltage, in millivolts, applied to the sensor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Whether to reverse the excitation and make a second measurement, canceling excitation-related offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, after setting up the measurement and before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The first notch filter frequency used to reject noise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw result to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_brhalf4w" => Some(FunctionSignature {
+                name: "CDM_BrHalf4W".to_string(),
+                documentation: "Makes a 4-wire half-bridge measurement via a CDM module, commonly used with PRTCalc for RTDs.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the measurement results (V2/V1).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range1".to_string(),
+                        documentation: "The expected input voltage range for the first channel measured.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range2".to_string(),
+                        documentation: "The expected input voltage range for the second channel measured.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "The differential channel pair for the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "The excitation channel used to excite the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPEx".to_string(),
+                        documentation: "The number of sensors to excite with the same excitation terminal before advancing to the next.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExmV".to_string(),
+                        documentation: "The excitation voltage, in millivolts, applied to the sensor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Whether to reverse the excitation and make a second measurement, canceling excitation-related offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevDiff".to_string(),
+                        documentation: "Whether to reverse the differential inputs and make a second measurement, canceling measurement-circuitry offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, after setting up the measurement and before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The first notch filter frequency used to reject noise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ReturnV1".to_string(),
+                        documentation: "Optional; if non-zero, also returns V1 as a second element of Dest (which must then be a two-element or larger array).".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_currentdiff" => Some(FunctionSignature {
+                name: "CDM_CurrentDiff".to_string(),
+                documentation: "Makes a differential current-loop measurement via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the measurement results, in milliamps.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "The expected current range of the input from the sensor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "The differential channel pair for the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevDiff".to_string(),
+                        documentation: "Whether to reverse the differential inputs and make a second measurement, canceling measurement-circuitry offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, after setting up the measurement and before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The first notch filter frequency used to reject noise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw result to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_delay" => Some(FunctionSignature {
+                name: "CDM_Delay".to_string(),
+                documentation: "Delays a CDM module's measurement or processing task sequence for a specified time.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "Whether the delay affects the measurement task sequence (0) or the processing task sequence (1).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Delay".to_string(),
+                        documentation: "The time to delay, at 10-microsecond resolution; units are set by Units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Units".to_string(),
+                        documentation: "The time units for Delay: 0 usec, 1 msec, 2 sec, 3 min, 4 hr, 5 day.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_excitei" => Some(FunctionSignature {
+                name: "CDM_ExciteI".to_string(),
+                documentation: "Applies a current excitation to an excitation channel on a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IxChan".to_string(),
+                        documentation: "The excitation channel to apply the current to.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IxuA".to_string(),
+                        documentation: "The current excitation, in microamps, to apply; the allowable range is ±2500 µA.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Delay".to_string(),
+                        documentation: "The time, in microseconds, before the excitation is turned off; 0 holds it until scan end or the next excitation set.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_excitev" => Some(FunctionSignature {
+                name: "CDM_ExciteV".to_string(),
+                documentation: "Applies a voltage excitation to an excitation channel on a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "The excitation channel to apply the voltage to.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExmV".to_string(),
+                        documentation: "The excitation voltage, in millivolts, to apply; the allowable range is ±5000 mV.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Delay".to_string(),
+                        documentation: "The time, in microseconds, before the excitation is turned off; 0 holds it until scan end, the next excitation set, or an interrupting measurement.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_muxselect" => Some(FunctionSignature {
+                name: "CDM_MuxSelect".to_string(),
+                documentation: "Wakes and clocks an AM16/32A or AM16/32B multiplexer to a starting channel via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ClkPort".to_string(),
+                        documentation: "The switched-5V port used to clock the multiplexer.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ResetPort".to_string(),
+                        documentation: "The switched-5V port used to wake up and reset the multiplexer; must be unique per multiplexer.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ClockPW".to_string(),
+                        documentation: "The clock period, in milliseconds, used to advance the multiplexer.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MuxChan".to_string(),
+                        documentation: "The first measurement channel on the multiplexer.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mode".to_string(),
+                        documentation: "The clocking mode: 0 for AM16/32A clocking, 1 for AM16/32B clocking.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_paneltemp" => Some(FunctionSignature {
+                name: "CDM_PanelTemp".to_string(),
+                documentation: "Reads a CDM wiring-panel thermistor, for use as a thermocouple reference temperature.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the panel temperature, in degrees Celsius.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive thermistors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ThermChan".to_string(),
+                        documentation: "The wiring-panel thermistor bank to read; choose the one closest to the analog channel used for the thermocouple measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The first notch filter frequency used to reject noise.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_periodavg" => Some(FunctionSignature {
+                name: "CDM_PeriodAvg".to_string(),
+                documentation: "Measures the period or frequency of a signal on a CDM single-ended channel.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the measurement result.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Gain".to_string(),
+                        documentation: "The input gain code selecting the expected peak-to-peak signal range before the zero-crossing comparator.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "The single-ended channel for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Threshold".to_string(),
+                        documentation: "The comparator trigger threshold, in millivolts, for signals not centered on 0 V.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "Whether to return the period (0) or the frequency (1) of the signal.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Cycles".to_string(),
+                        documentation: "The number of signal cycles to average each scan.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Timeout".to_string(),
+                        documentation: "The maximum time, in milliseconds, to wait for Cycles to complete before storing an overrange value.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw result to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_pulseport" => Some(FunctionSignature {
+                name: "CDM_PulsePort".to_string(),
+                documentation: "Toggles a CDM switched-5V digital port, delays, and toggles it again to generate a clock signal.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Port".to_string(),
+                        documentation: "The switched-5V port to toggle.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Delay".to_string(),
+                        documentation: "The time, in microseconds, to delay after each toggle.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_resistance" => Some(FunctionSignature {
+                name: "CDM_Resistance".to_string(),
+                documentation: "Measures resistance via current excitation on a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the measurement results.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "The expected input voltage range of the measured signal.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "The differential channel pair for the voltage measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IexChan".to_string(),
+                        documentation: "The excitation channel supplying the known current.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPEx".to_string(),
+                        documentation: "The number of series-connected sensors to excite with the same excitation channel before advancing to the next.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EXuA".to_string(),
+                        documentation: "The excitation current, in microamps; the allowable range is ±2500 µA.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Whether to reverse the excitation and make a second measurement, canceling excitation-related offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevDiff".to_string(),
+                        documentation: "Whether to reverse the differential inputs and make a second measurement, canceling measurement-circuitry offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, after setting up the measurement and before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The first notch filter frequency used to reject noise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasCurrent".to_string(),
+                        documentation: "Optional; if 1, also returns the measured excitation current as the last element of Dest.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_resistance3w" => Some(FunctionSignature {
+                name: "CDM_Resistance3W".to_string(),
+                documentation: "Measures resistance via current excitation using a 3-wire connection on a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the measurement results.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "The expected input voltage range of the measured signal.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "The single-ended channel for the voltage measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IexChan".to_string(),
+                        documentation: "The excitation channel supplying the known current.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPEx".to_string(),
+                        documentation: "The number of series-connected sensors to excite with the same excitation channel before advancing to the next.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EXuA".to_string(),
+                        documentation: "The excitation current, in microamps; the allowable range is ±2500 µA.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Whether to reverse the excitation and make a second measurement, canceling excitation-related offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, after setting up the measurement and before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The first notch filter frequency used to reject noise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasCurrent".to_string(),
+                        documentation: "Optional; if 1, also returns the measured excitation current as the last element of Dest.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_sw12" => Some(FunctionSignature {
+                name: "CDM_SW12".to_string(),
+                documentation: "Sets a CDM switched-12V output port high or low to power external peripherals.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Port".to_string(),
+                        documentation: "The switched-12V port to use (1=S12-1, 2=S12-2).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "State".to_string(),
+                        documentation: "Whether to set the port high (non-zero) or low (0).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SWOption".to_string(),
+                        documentation: "Optional run-mode selector determining whether the instruction runs in the measurement or processing task sequence.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_sw5" => Some(FunctionSignature {
+                name: "CDM_SW5".to_string(),
+                documentation: "Sets a CDM switched-5V output port high or low to power external peripherals.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Port".to_string(),
+                        documentation: "The switched-5V port to use.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "State".to_string(),
+                        documentation: "Whether to set the port high (non-zero) or low (0).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SWOption".to_string(),
+                        documentation: "Optional run-mode selector determining whether the instruction runs in the measurement or processing task sequence.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_swpower" => Some(FunctionSignature {
+                name: "CDM_SWPower".to_string(),
+                documentation: "Sets the ganged switched-12V and switched-5V power output on a VOLT408 isolation module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "State".to_string(),
+                        documentation: "Whether to set the switched 12V/5V outputs high (non-zero) or low (0).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SWOption".to_string(),
+                        documentation: "Optional run-mode selector determining whether the instruction runs in the measurement or processing task sequence.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_tccomp" => Some(FunctionSignature {
+                name: "CDM_TCComp".to_string(),
+                documentation: "Makes a differential thermocouple measurement with automatic cold-junction compensation via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the temperature result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "The differential channel pair for the thermocouple measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TCType".to_string(),
+                        documentation: "The thermocouple type being measured (TypeT, TypeE, TypeK, etc.).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FilterEnable".to_string(),
+                        documentation: "Whether to enable simultaneous 50/60 Hz notch filtering (1) or run fast, unfiltered measurements (0).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Units".to_string(),
+                        documentation: "The temperature units of the result: 0 Celsius, 1 Fahrenheit, 2 Kelvin.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_tcdiff" => Some(FunctionSignature {
+                name: "CDM_TCDiff".to_string(),
+                documentation: "Makes a differential thermocouple measurement via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the temperature result(s), in degrees Celsius.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "The expected input voltage range of the thermocouple signal.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "The differential channel pair for the thermocouple measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TCType".to_string(),
+                        documentation: "The thermocouple type being measured (TypeT, TypeE, TypeK, etc.).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TRef".to_string(),
+                        documentation: "The variable holding the reference (cold-junction) temperature, in degrees Celsius, e.g. from CDM_PanelTemp.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevDiff".to_string(),
+                        documentation: "Whether to reverse the differential inputs and make a second measurement, canceling measurement-circuitry offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, after setting up the measurement and before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The first notch filter frequency used to reject noise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the result (1 = Celsius, 1.8 = Fahrenheit).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset added after scaling by Mult (0 = Celsius, 32 = Fahrenheit).".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_tcse" => Some(FunctionSignature {
+                name: "CDM_TCSE".to_string(),
+                documentation: "Makes a single-ended thermocouple measurement via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the temperature result(s), in degrees Celsius.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "The expected input voltage range of the thermocouple signal.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "The single-ended channel for the thermocouple measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TCType".to_string(),
+                        documentation: "The thermocouple type being measured (TypeT, TypeE, TypeK, etc.).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TRef".to_string(),
+                        documentation: "The variable holding the reference (cold-junction) temperature, in degrees Celsius, e.g. from CDM_PanelTemp.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasOff".to_string(),
+                        documentation: "Whether to measure and subtract the ground offset voltage before the measurement (1) or reuse the background calibration offset (0).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, after setting up the measurement and before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The first notch filter frequency used to reject noise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the result (1 = Celsius, 1.8 = Fahrenheit).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset added after scaling by Mult (0 = Celsius, 32 = Fahrenheit).".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_therm107" => Some(FunctionSignature {
+                name: "CDM_Therm107".to_string(),
+                documentation: "Measures a 107 thermistor probe via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the temperature result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "The single-ended channel for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Excite".to_string(),
+                        documentation: "The excitation channel used to apply voltage excitation to the thermistor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Integ".to_string(),
+                        documentation: "The AC noise rejection frequency (60 or 50 Hz) or notch filter fN1, depending on the module.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the result (1 = Celsius, 1.8 = Fahrenheit).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset added after scaling by Mult (0 = Celsius, 32 = Fahrenheit).".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_therm108" => Some(FunctionSignature {
+                name: "CDM_Therm108".to_string(),
+                documentation: "Measures a 108 thermistor probe via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the temperature result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "The single-ended channel for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Excite".to_string(),
+                        documentation: "The excitation channel used to apply voltage excitation to the thermistor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Integ".to_string(),
+                        documentation: "The AC noise rejection frequency (60 or 50 Hz) or notch filter fN1, depending on the module.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the result (1 = Celsius, 1.8 = Fahrenheit).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset added after scaling by Mult (0 = Celsius, 32 = Fahrenheit).".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_therm109" => Some(FunctionSignature {
+                name: "CDM_Therm109".to_string(),
+                documentation: "Measures a 109 thermistor probe via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the temperature result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "The single-ended channel for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Excite".to_string(),
+                        documentation: "The excitation channel used to apply voltage excitation to the thermistor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Integ".to_string(),
+                        documentation: "The AC noise rejection frequency (60 or 50 Hz) or notch filter fN1, depending on the module.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the result (1 = Celsius, 1.8 = Fahrenheit).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset added after scaling by Mult (0 = Celsius, 32 = Fahrenheit).".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_voltdiff" => Some(FunctionSignature {
+                name: "CDM_VoltDiff".to_string(),
+                documentation: "Makes a differential voltage measurement via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the measurement results, in millivolts.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "The expected input voltage range of the sensor signal.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "The differential channel pair for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevDiff".to_string(),
+                        documentation: "Whether to reverse the differential inputs and make a second measurement, canceling measurement-circuitry offset errors.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, after setting up the measurement and before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The first notch filter frequency used to reject noise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw result to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_voltse" => Some(FunctionSignature {
+                name: "CDM_VoltSE".to_string(),
+                documentation: "Makes a single-ended voltage measurement via a CDM module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CDM module used by the instruction; a read-only value reported by the device itself.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The CPI bus address configured on the CDM module; must be a constant, valid range 1 through 120.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array to store the measurement results, in millivolts.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "The expected input voltage range of the sensor signal.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SEChan".to_string(),
+                        documentation: "The single-ended channel for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasOff".to_string(),
+                        documentation: "Whether to measure and subtract the ground offset voltage before the measurement (1) or reuse the background calibration offset (0).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The delay, in microseconds, after setting up the measurement and before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The first notch filter frequency used to reject noise.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw result to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw result to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
             "watchdogtimer" => Some(FunctionSignature {
                 name: "WatchdogTimer".to_string(),
                 documentation: "Enables a user-programmed watchdog timer that guards the program against lockup.".to_string(),
@@ -4951,6 +6259,34 @@ mod tests {
                 "EC100Configure",
                 "LI7200",
                 "LI7700",
+                "CDM_ACPower",
+                "CDM_Battery",
+                "CDM_BrFull",
+                "CDM_BrFull6W",
+                "CDM_BrHalf",
+                "CDM_BrHalf3W",
+                "CDM_BrHalf4W",
+                "CDM_CurrentDiff",
+                "CDM_Delay",
+                "CDM_ExciteI",
+                "CDM_ExciteV",
+                "CDM_MuxSelect",
+                "CDM_PanelTemp",
+                "CDM_PeriodAvg",
+                "CDM_PulsePort",
+                "CDM_Resistance",
+                "CDM_Resistance3W",
+                "CDM_SW12",
+                "CDM_SW5",
+                "CDM_SWPower",
+                "CDM_TCComp",
+                "CDM_TCDiff",
+                "CDM_TCSE",
+                "CDM_Therm107",
+                "CDM_Therm108",
+                "CDM_Therm109",
+                "CDM_VoltDiff",
+                "CDM_VoltSE",
             ] {
                 assert!(
                     SignatureProvider::get_function_signature(name).is_some(),
