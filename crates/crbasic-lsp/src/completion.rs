@@ -551,6 +551,11 @@ impl CompletionProvider {
                 "Reads and parses incoming serial data using begin/end markers.",
             ),
             Self::create_function_completion(
+                "SerialInChk",
+                "SerialInChk(${1:ComPort})",
+                "Returns the number of characters currently available in the serial input buffer.",
+            ),
+            Self::create_function_completion(
                 "Calibrate",
                 "Calibrate(${1:Dest}, ${2:Range})",
                 "Forces calibration of all analog channels under program control to compensate for temperature-related measurement errors.",
@@ -634,6 +639,41 @@ impl CompletionProvider {
                 "SW12",
                 "SW12(${1:SWChan}, ${2:State}, ${3:SW12Option})",
                 "Enables or disables a switched-12V output channel to power external peripherals.",
+            ),
+            Self::create_function_completion(
+                "ETsz",
+                "ETsz(${1:Temp}, ${2:RH}, ${3:uZ}, ${4:Rs}, ${5:Longitude}, ${6:Latitude}, ${7:Altitude}, ${8:Zw}, ${9:Sz}, ${10:DataType}, ${11:DisableVar})",
+                "Calculates the ASCE standardized reference evapotranspiration.",
+            ),
+            Self::create_function_completion(
+                "SolarPosition",
+                "SolarPosition(${1:Dest}, ${2:TimeArray}, ${3:TimeOffset}, ${4:Latitude}, ${5:Longitude}, ${6:Altitude}, ${7:Pressure}, ${8:AirTemp})",
+                "Calculates solar azimuth, elevation, hour angle, declination, and air mass.",
+            ),
+            Self::create_function_completion(
+                "WetDryBulb",
+                "WetDryBulb(${1:Dest}, ${2:DryTemp}, ${3:WetTemp}, ${4:Pressure})",
+                "Computes vapor pressure from wet-bulb and dry-bulb temperatures and barometric pressure.",
+            ),
+            Self::create_function_completion(
+                "MuxSelect",
+                "MuxSelect(${1:ClkPort}, ${2:ResetPort}, ${3:ClockPW}, ${4:MuxChan}, ${5:Mode})",
+                "Selects a channel on an AM16/32A or AM16/32B multiplexer and readies it for measurement.",
+            ),
+            Self::create_function_completion(
+                "PulseCountReset",
+                "PulseCountReset()",
+                "Resets the pulse counter and running-average values associated with pulse count measurements.",
+            ),
+            Self::create_function_completion(
+                "PRT",
+                "PRT(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:Mult}, ${5:Offset})",
+                "Converts RTD resistance measurements to temperature using the DIN 43760 standard.",
+            ),
+            Self::create_function_completion(
+                "PRTCalc",
+                "PRTCalc(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:PRTType}, ${5:Mult}, ${6:Offset})",
+                "Converts RTD resistance measurements to temperature using the Callendar-Van Dusen equation.",
             ),
             Self::create_function_completion(
                 "SerialOutBlock",
@@ -1231,6 +1271,21 @@ impl CompletionProvider {
                 "Rounds a number down to the nearest integer.",
             ),
             Self::create_function_completion(
+                "MovePrecise",
+                "MovePrecise(${1:PrecisionVariable}, ${2:X})",
+                "Transfers a value into a variable as a high-precision (56-bit mantissa) number.",
+            ),
+            Self::create_function_completion(
+                "PWR",
+                "PWR(${1:X}, ${2:Y})",
+                "Raises X to the power of Y and returns a floating-point result.",
+            ),
+            Self::create_function_completion(
+                "CType",
+                "CType(${1:Expression}, ${2:Type})",
+                "Converts an expression to a specified data type (Float, IEEE4, Long, String, or Double).",
+            ),
+            Self::create_function_completion(
                 "SetStatus",
                 "SetStatus(${1:FieldName}, ${2:Value})",
                 "Changes the value of a field in the datalogger's Status table.",
@@ -1239,6 +1294,11 @@ impl CompletionProvider {
                 "SetSetting",
                 "SetSetting(${1:FieldName}, ${2:Value})",
                 "Changes the value of a field in the datalogger's Settings table.",
+            ),
+            Self::create_function_completion(
+                "SetSecurity",
+                "SetSecurity(${1:Security1}, ${2:Security2}, ${3:Security3})",
+                "Establishes up to three hierarchical security levels restricting access to datalogger functions.",
             ),
             Self::create_function_completion(
                 "MoveBytes",
@@ -3802,6 +3862,125 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "SW12"),
                 "SW12(${1:SWChan}, ${2:State}, ${3:SW12Option})"
+            );
+        }
+
+        #[test]
+        fn etsz_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ETsz"),
+                "ETsz(${1:Temp}, ${2:RH}, ${3:uZ}, ${4:Rs}, ${5:Longitude}, ${6:Latitude}, \
+                 ${7:Altitude}, ${8:Zw}, ${9:Sz}, ${10:DataType}, ${11:DisableVar})"
+            );
+        }
+
+        #[test]
+        fn solarposition_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SolarPosition"),
+                "SolarPosition(${1:Dest}, ${2:TimeArray}, ${3:TimeOffset}, ${4:Latitude}, \
+                 ${5:Longitude}, ${6:Altitude}, ${7:Pressure}, ${8:AirTemp})"
+            );
+        }
+
+        #[test]
+        fn wetdrybulb_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "WetDryBulb"),
+                "WetDryBulb(${1:Dest}, ${2:DryTemp}, ${3:WetTemp}, ${4:Pressure})"
+            );
+        }
+
+        #[test]
+        fn muxselect_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MuxSelect"),
+                "MuxSelect(${1:ClkPort}, ${2:ResetPort}, ${3:ClockPW}, ${4:MuxChan}, ${5:Mode})"
+            );
+        }
+
+        #[test]
+        fn pulsecountreset_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PulseCountReset"),
+                "PulseCountReset()"
+            );
+        }
+
+        #[test]
+        fn prt_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PRT"),
+                "PRT(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:Mult}, ${5:Offset})"
+            );
+        }
+
+        #[test]
+        fn prtcalc_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PRTCalc"),
+                "PRTCalc(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:PRTType}, ${5:Mult}, ${6:Offset})"
+            );
+        }
+
+        #[test]
+        fn moveprecise_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MovePrecise"),
+                "MovePrecise(${1:PrecisionVariable}, ${2:X})"
+            );
+        }
+
+        #[test]
+        fn pwr_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "PWR"), "PWR(${1:X}, ${2:Y})");
+        }
+
+        #[test]
+        fn ctype_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CType"),
+                "CType(${1:Expression}, ${2:Type})"
+            );
+        }
+
+        #[test]
+        fn serialinchk_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SerialInChk"),
+                "SerialInChk(${1:ComPort})"
+            );
+        }
+
+        #[test]
+        fn setsecurity_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SetSecurity"),
+                "SetSecurity(${1:Security1}, ${2:Security2}, ${3:Security3})"
             );
         }
 
