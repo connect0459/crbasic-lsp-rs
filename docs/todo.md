@@ -3999,3 +3999,72 @@ TCDiff, Resistance, SDI12Recorder), not 0, and `signature.rs` had 32/130
   - 8 new category tests + 1 completeness test added across the 8
     commits; full workspace `build`/`test`/`clippy`/`fmt` gate passes
     (356 `crbasic-lsp` lib tests, up from 347)
+
+### Signature Help Builtin Function Parity (2026-08-12)
+
+Closes the `signature.rs` half of the same gap the "Builtin Function
+Completion Parity" round deferred (see the corrected 4/32 counts in its
+own section above). `signature.rs` needs a per-parameter description for
+every function, not just a one-line summary, so unlike the `hover.rs`
+round this couldn't reuse `completion.rs`'s prose directly -- 6
+categories (measurement, communication, data, string, time, menu) were
+researched and verified against help.campbellsci.com by parallel research
+agents, each given the exact parameter names/order already fixed by
+`completion.rs` and instructed to flag rather than silently rename any
+mismatch found. Scan/logical (`SubScan`/`IIf`) and math (single-`Value`-
+parameter trig/log/rounding functions) were low-risk enough to write
+directly without dispatching a research pass.
+
+- [x] Full per-parameter signature-help parity with `BUILTIN_FUNCTIONS`
+  ✅ Resolved
+  - Added signature help for the remaining 98 functions, grouped into
+    9 commits (scan+logical, measurement, communication, data, string,
+    math, time, menu, plus a final commit for the completeness test),
+    each with its own `has_<category>_functions`/`all_remaining_<category>_functions_have_a_signature`
+    test following the file's existing lighter spot-check convention
+    (a handful of `is_some()` assertions per category, not an
+    exhaustive list per function -- `hover.rs`'s exhaustive-list style
+    is that file's own convention, not carried over here)
+  - Added `every_canonical_builtin_function_has_a_signature`, the
+    `signature.rs` equivalent of `completion.rs`'s/`hover.rs`'s
+    existing completeness tests, in its own final commit once every
+    category actually had coverage -- deliberately following the
+    hover.rs round's own lesson (see its Process Note above) rather
+    than repeating the premature-red-test mistake
+  - `Rnd` and `NaN` take no parentheses (per the earlier "Builtin
+    Function Completion Parity" round's finding); both represented
+    with an empty parameter list and their own dedicated
+    `_takes_no_parameters` test, mirroring `PPPClose` (zero parameters,
+    confirmed via `completion.rs`'s existing verified `"PPPClose()"`
+    snippet)
+  - **Parameter-naming discrepancies found during research, deliberately
+    not acted on**: kept every parameter name exactly as already fixed
+    by `completion.rs` (cross-surface consistency with the existing,
+    already-shipped completion snippets and the coming autocomplete
+    experience), even where a research agent found the official docs
+    use a different name for the same slot. Recorded here rather than
+    silently ignored:
+    - `Therm107`/`Therm108`/`Therm109`: official sensor manuals
+      (`107.pdf`/`108.pdf`/`109.pdf` at s.campbellsci.com -- no live
+      CRBasic Editor Help page exists for these three) name the 4th
+      parameter `VxChan` (given: `Excite`) and the 6th `Integ/fN1`, a
+      dual name split across older/newer datalogger models (given:
+      `Integ`)
+    - `ExciteV`: CR6/CR1000X docs show an undocumented-here 4th
+      optional parameter, `DiffEx`, after `Delay` -- not added, since
+      doing so would desync this function's arity from
+      `completion.rs`'s existing 3-parameter snippet
+    - `UDPSocketRecv`: official docs spell the 5th parameter
+      `RemoteIPAddr` (given: `RemoteIPAdd`, missing the trailing `r`)
+    - `LowerCase`/`UpperCase`/`Trim`/`RTrim`/`LTrim`/`Replace`: official
+      docs use more specific names (`SourceString`, `TrimString`,
+      `SearchString`/`SubString`/`ReplaceString`) than the generic
+      `String`/`Find`/`ReplaceWith` already established by
+      `completion.rs`
+    - `MenuItem`: Campbell's own docs are internally inconsistent here
+      -- the syntax line names the 2nd parameter `Variable` (matching
+      what's already given), but that same page's parameter-description
+      table heading calls it `MenuVariable`
+  - 12 new tests added across the 9 commits; full workspace
+    `build`/`test`/`clippy`/`fmt` gate passes (368 `crbasic-lsp` lib
+    tests, up from 356)
