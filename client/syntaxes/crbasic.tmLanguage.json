@@ -144,7 +144,7 @@
     },
     "builtin-functions-measurement": {
       "name": "support.function.measurement.crbasic",
-      "match": "(?i)\\b(Battery|PanelTemp|VoltSe|VoltDiff|BrHalf|BrFull|Therm107|Therm108|Therm109|TCDiff|Resistance|PeriodAvg|PulseCount|PortSet|PulsePort|ExciteV|BrHalf3W|BrHalf4W|BrFull6W|TCSE|WatchdogTimer|PWM|DewPoint)\\b"
+      "match": "(?i)\\b(Battery|PanelTemp|VoltSe|VoltDiff|BrHalf|BrFull|Therm107|Therm108|Therm109|TCDiff|Resistance|PeriodAvg|PulseCount|PortSet|PulsePort|ExciteV|BrHalf3W|BrHalf4W|BrFull6W|TCSE|WatchdogTimer|PWM|DewPoint|CSAT3|CSAT3B|CSAT3BMonitor|EC100|EC100Configure|LI7200|LI7700)\\b"
     },
     "builtin-functions-communication": {
       "name": "support.function.communication.crbasic",

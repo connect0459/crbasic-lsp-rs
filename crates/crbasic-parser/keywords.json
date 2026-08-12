@@ -118,6 +118,13 @@
     { "name": "WatchdogTimer", "category": "measurement" },
     { "name": "PWM", "category": "measurement" },
     { "name": "DewPoint", "category": "measurement" },
+    { "name": "CSAT3", "category": "measurement" },
+    { "name": "CSAT3B", "category": "measurement" },
+    { "name": "CSAT3BMonitor", "category": "measurement" },
+    { "name": "EC100", "category": "measurement" },
+    { "name": "EC100Configure", "category": "measurement" },
+    { "name": "LI7200", "category": "measurement" },
+    { "name": "LI7700", "category": "measurement" },
 
     { "name": "SerialOpen", "category": "communication" },
     { "name": "SerialClose", "category": "communication" },
