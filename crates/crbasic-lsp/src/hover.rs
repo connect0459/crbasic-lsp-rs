@@ -217,6 +217,12 @@ impl HoverProvider {
             "nan" => Some(
                 "**NaN**\n\nRepresents the IEEE-754 Not-a-Number value used to flag an invalid measurement. Takes no parentheses.",
             ),
+            "secssince1990" => Some(
+                "**SecsSince1990**\n\nConverts between a date/time string and the number of seconds since January 1, 1990.",
+            ),
+            "timeisbetween" => Some(
+                "**TimeIsBetween**\n\nReturns true when the datalogger's real-time clock falls within a specified time range.",
+            ),
             _ => None,
         }
     }
@@ -250,6 +256,9 @@ impl HoverProvider {
             "round" => Some("**Round**\n\nRounds to specified decimal places."),
             "rnd" => Some(
                 "**Rnd**\n\nReturns a random value between 0 (inclusive) and 1 (exclusive). Takes no parentheses.",
+            ),
+            "randomize" => Some(
+                "**Randomize**\n\nInitializes the random-number generator used by Rnd with a new seed value.",
             ),
             "ceiling" => Some("**Ceiling**\n\nRounds a number up to the nearest integer."),
             "floor" => Some("**Floor**\n\nRounds a number down to the nearest integer."),
@@ -410,6 +419,17 @@ impl HoverProvider {
             "httpput" => {
                 Some("**HTTPPut**\n\nSends files or text to a URL via an HTTP PUT request.")
             }
+            "gps" => Some(
+                "**GPS**\n\nSynchronizes the datalogger clock with a GPS receiver and stores its position/timing data.",
+            ),
+            "ethernetpower" => {
+                Some("**EthernetPower**\n\nTurns power to all Ethernet devices on or off.")
+            }
+            "i2copen" => Some(
+                "**I2COpen**\n\nConfigures a port pair for I2C communication at a specified clock rate.",
+            ),
+            "i2cread" => Some("**I2CRead**\n\nReads bytes from an I2C peripheral device."),
+            "i2cwrite" => Some("**I2CWrite**\n\nWrites bytes to an I2C peripheral device."),
             _ => None,
         }
     }
@@ -479,6 +499,15 @@ impl HoverProvider {
             ),
             "resistance" => Some(
                 "**Resistance**\n\nMeasures the resistance of a basic or full-bridge circuit using current excitation.",
+            ),
+            "watchdogtimer" => Some(
+                "**WatchdogTimer**\n\nEnables a user-programmed watchdog timer that guards the program against lockup.",
+            ),
+            "pwm" => Some(
+                "**PWM**\n\nGenerates a pulse-width-modulated signal on a digital port at a specified duty cycle.",
+            ),
+            "dewpoint" => Some(
+                "**DewPoint**\n\nCalculates dew point temperature from air temperature and relative humidity.",
             ),
             _ => None,
         }
@@ -1065,6 +1094,9 @@ mod tests {
                     "BrHalf4W",
                     "BrFull6W",
                     "TCSE",
+                    "WatchdogTimer",
+                    "PWM",
+                    "DewPoint",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
@@ -1105,6 +1137,11 @@ mod tests {
                     "HTTPGet",
                     "HTTPPost",
                     "HTTPPut",
+                    "GPS",
+                    "EthernetPower",
+                    "I2COpen",
+                    "I2CRead",
+                    "I2CWrite",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
@@ -1199,9 +1236,31 @@ mod tests {
             #[test]
             fn all_math_functions_have_hover_info() {
                 for name in [
-                    "Abs", "Sgn", "Sqr", "Exp", "Ln", "Log", "Log10", "Sin", "Cos", "Tan", "Sinh",
-                    "Cosh", "Tanh", "Asin", "Acos", "Atn", "Atn2", "Int", "Fix", "Frac", "Round",
-                    "Rnd", "Ceiling", "Floor",
+                    "Abs",
+                    "Sgn",
+                    "Sqr",
+                    "Exp",
+                    "Ln",
+                    "Log",
+                    "Log10",
+                    "Sin",
+                    "Cos",
+                    "Tan",
+                    "Sinh",
+                    "Cosh",
+                    "Tanh",
+                    "Asin",
+                    "Acos",
+                    "Atn",
+                    "Atn2",
+                    "Int",
+                    "Fix",
+                    "Frac",
+                    "Round",
+                    "Rnd",
+                    "Randomize",
+                    "Ceiling",
+                    "Floor",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
@@ -1229,6 +1288,8 @@ mod tests {
                     "MoveBytes",
                     "ArrayLength",
                     "NaN",
+                    "SecsSince1990",
+                    "TimeIsBetween",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(

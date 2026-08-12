@@ -115,6 +115,9 @@
     { "name": "BrHalf4W", "category": "measurement" },
     { "name": "BrFull6W", "category": "measurement" },
     { "name": "TCSE", "category": "measurement" },
+    { "name": "WatchdogTimer", "category": "measurement" },
+    { "name": "PWM", "category": "measurement" },
+    { "name": "DewPoint", "category": "measurement" },
 
     { "name": "SerialOpen", "category": "communication" },
     { "name": "SerialClose", "category": "communication" },
@@ -139,6 +142,11 @@
     { "name": "HTTPGet", "category": "communication" },
     { "name": "HTTPPost", "category": "communication" },
     { "name": "HTTPPut", "category": "communication" },
+    { "name": "GPS", "category": "communication" },
+    { "name": "EthernetPower", "category": "communication" },
+    { "name": "I2COpen", "category": "communication" },
+    { "name": "I2CRead", "category": "communication" },
+    { "name": "I2CWrite", "category": "communication" },
 
     { "name": "Sample", "category": "data" },
     { "name": "Average", "category": "data" },
@@ -207,6 +215,7 @@
     { "name": "Frac", "category": "math" },
     { "name": "Round", "category": "math" },
     { "name": "Rnd", "category": "math" },
+    { "name": "Randomize", "category": "math" },
     { "name": "Ceiling", "category": "math" },
     { "name": "Floor", "category": "math" },
 
@@ -220,6 +229,8 @@
     { "name": "MoveBytes", "category": "time" },
     { "name": "ArrayLength", "category": "time" },
     { "name": "NaN", "category": "time" },
+    { "name": "SecsSince1990", "category": "time" },
+    { "name": "TimeIsBetween", "category": "time" },
 
     { "name": "IIf", "category": "logical" },
 

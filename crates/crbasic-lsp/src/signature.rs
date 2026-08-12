@@ -1472,6 +1472,63 @@ impl SignatureProvider {
                 ],
             }),
 
+            "watchdogtimer" => Some(FunctionSignature {
+                name: "WatchdogTimer".to_string(),
+                documentation: "Enables a user-programmed watchdog timer that guards the program against lockup.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Interval".to_string(),
+                        documentation: "The watchdog interval; 0 disables the watchdog timer.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Units".to_string(),
+                        documentation: "Time units for Interval.".to_string(),
+                    },
+                ],
+            }),
+
+            "pwm" => Some(FunctionSignature {
+                name: "PWM".to_string(),
+                documentation: "Generates a pulse-width-modulated signal on a digital port at a specified duty cycle.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The duty cycle, as a constant or variable from 0.0 (always off) to 1.0 (always on).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Port".to_string(),
+                        documentation: "The digital channel to output the PWM signal on.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Period".to_string(),
+                        documentation: "The signal period; maximum is 36.4 seconds.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Units".to_string(),
+                        documentation: "Time units for Period (usec, msec, or sec).".to_string(),
+                    },
+                ],
+            }),
+
+            "dewpoint" => Some(FunctionSignature {
+                name: "DewPoint".to_string(),
+                documentation: "Calculates dew point temperature from air temperature and relative humidity.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable to store the calculated dew point.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Temp".to_string(),
+                        documentation: "Variable holding the dry bulb air temperature, in degrees Celsius.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RH".to_string(),
+                        documentation: "Variable holding the relative humidity, in percent.".to_string(),
+                    },
+                ],
+            }),
+
             "serialopen" => Some(FunctionSignature {
                 name: "SerialOpen".to_string(),
                 documentation: "Opens a serial communication port.".to_string(),
@@ -2095,6 +2152,111 @@ impl SignatureProvider {
                 ],
             }),
 
+            "gps" => Some(FunctionSignature {
+                name: "GPS".to_string(),
+                documentation: "Synchronizes the datalogger clock with a GPS receiver and stores its position/timing data.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "GPSArray".to_string(),
+                        documentation: "The variable in which to store the fifteen values returned by the GPS (location, speed, course, satellite, and timing data).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The control port pair to which the GPS device is attached.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOffset".to_string(),
+                        documentation: "The local time offset, in seconds, from UTC; use -1 to read coordinates without adjusting the clock.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxTimeDiff".to_string(),
+                        documentation: "The maximum difference, in milliseconds, between the datalogger clock and the GPS clock tolerated before the clock is changed.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NMEAStrings".to_string(),
+                        documentation: "String array that holds the raw NMEA sentences (GPRMC, GPGGA, and any others).".to_string(),
+                    },
+                ],
+            }),
+
+            "ethernetpower" => Some(FunctionSignature {
+                name: "EthernetPower".to_string(),
+                documentation: "Turns power to all Ethernet devices on or off.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "State".to_string(),
+                    documentation: "A non-zero value turns Ethernet power on; zero turns it off.".to_string(),
+                }],
+            }),
+
+            "i2copen" => Some(FunctionSignature {
+                name: "I2COpen".to_string(),
+                documentation: "Configures a port pair for I2C communication at a specified clock rate.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "BeginPort".to_string(),
+                        documentation: "The starting port for the I2C clock/data signal pair.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BitRate".to_string(),
+                        documentation: "The I2C clock frequency, in Hertz.".to_string(),
+                    },
+                ],
+            }),
+
+            "i2cread" => Some(FunctionSignature {
+                name: "I2CRead".to_string(),
+                documentation: "Reads bytes from an I2C peripheral device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "BeginPort".to_string(),
+                        documentation: "The beginning port used for the I2C clock/data signal pair.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Address".to_string(),
+                        documentation: "The 7-bit address of the I2C peripheral device (the read bit is appended automatically).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable in which to store the data read from the I2C device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumBytes".to_string(),
+                        documentation: "The number of bytes to read from the I2C device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "Bit field specifying the transaction's start/stop/restart conditions.".to_string(),
+                    },
+                ],
+            }),
+
+            "i2cwrite" => Some(FunctionSignature {
+                name: "I2CWrite".to_string(),
+                documentation: "Writes bytes to an I2C peripheral device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "BeginPort".to_string(),
+                        documentation: "The beginning port used for the I2C clock/data signal pair.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Address".to_string(),
+                        documentation: "The 7-bit address of the I2C peripheral device (the read bit is appended automatically).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The variable in which the data to be written to the I2C device is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumBytes".to_string(),
+                        documentation: "The number of bytes to write to the I2C device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "Bit field specifying the transaction's start/stop/restart conditions.".to_string(),
+                    },
+                ],
+            }),
+
             "abs" => Some(FunctionSignature {
                 name: "Abs".to_string(),
                 documentation: "Returns the absolute value of a number.".to_string(),
@@ -2300,6 +2462,15 @@ impl SignatureProvider {
                 name: "Rnd".to_string(),
                 documentation: "Returns a random value between 0 (inclusive) and 1 (exclusive). Takes no parentheses.".to_string(),
                 parameters: vec![],
+            }),
+
+            "randomize" => Some(FunctionSignature {
+                name: "Randomize".to_string(),
+                documentation: "Initializes the random-number generator used by Rnd with a new seed value.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Number".to_string(),
+                    documentation: "Numeric expression used as the new seed value.".to_string(),
+                }],
             }),
 
             "ceiling" => Some(FunctionSignature {
@@ -2817,6 +2988,44 @@ impl SignatureProvider {
                     "Represents the IEEE-754 Not-a-Number value used to flag an invalid measurement or processing error. Takes no parentheses."
                         .to_string(),
                 parameters: vec![],
+            }),
+
+            "secssince1990" => Some(FunctionSignature {
+                name: "SecsSince1990".to_string(),
+                documentation: "Converts between a date/time string and the number of seconds since January 1, 1990.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "Variable formatted as a String (date/time) or Long (seconds since 1990) to convert.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DateOption".to_string(),
+                        documentation: "Constant specifying the date/time string format used by Source or returned by the function.".to_string(),
+                    },
+                ],
+            }),
+
+            "timeisbetween" => Some(FunctionSignature {
+                name: "TimeIsBetween".to_string(),
+                documentation: "Returns true when the datalogger's real-time clock falls within a specified time range.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "BeginTime".to_string(),
+                        documentation: "Start of the time range; included in the range that returns true.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EndTime".to_string(),
+                        documentation: "End of the time range; not included in the range that returns true.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Interval".to_string(),
+                        documentation: "The repeating interval that BeginTime and EndTime are measured within.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Units".to_string(),
+                        documentation: "Time units for BeginTime, EndTime, and Interval.".to_string(),
+                    },
+                ],
             }),
 
             "displaymenu" => Some(FunctionSignature {
@@ -3378,6 +3587,9 @@ mod tests {
                 "BrHalf4W",
                 "BrFull6W",
                 "TCSE",
+                "WatchdogTimer",
+                "PWM",
+                "DewPoint",
             ] {
                 assert!(
                     SignatureProvider::get_function_signature(name).is_some(),
@@ -3416,6 +3628,11 @@ mod tests {
                 "HTTPGet",
                 "HTTPPost",
                 "HTTPPut",
+                "GPS",
+                "EthernetPower",
+                "I2COpen",
+                "I2CRead",
+                "I2CWrite",
             ] {
                 assert!(
                     SignatureProvider::get_function_signature(name).is_some(),
@@ -3444,8 +3661,24 @@ mod tests {
         #[test]
         fn all_remaining_math_functions_have_a_signature() {
             for name in [
-                "Sgn", "Exp", "Ln", "Log", "Log10", "Sinh", "Cosh", "Tanh", "Asin", "Acos", "Atn",
-                "Int", "Fix", "Frac", "Rnd", "Ceiling", "Floor",
+                "Sgn",
+                "Exp",
+                "Ln",
+                "Log",
+                "Log10",
+                "Sinh",
+                "Cosh",
+                "Tanh",
+                "Asin",
+                "Acos",
+                "Atn",
+                "Int",
+                "Fix",
+                "Frac",
+                "Rnd",
+                "Randomize",
+                "Ceiling",
+                "Floor",
             ] {
                 assert!(
                     SignatureProvider::get_function_signature(name).is_some(),
@@ -3582,6 +3815,8 @@ mod tests {
                 "MoveBytes",
                 "ArrayLength",
                 "NaN",
+                "SecsSince1990",
+                "TimeIsBetween",
             ] {
                 assert!(
                     SignatureProvider::get_function_signature(name).is_some(),

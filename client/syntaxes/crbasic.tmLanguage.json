@@ -144,11 +144,11 @@
     },
     "builtin-functions-measurement": {
       "name": "support.function.measurement.crbasic",
-      "match": "(?i)\\b(Battery|PanelTemp|VoltSe|VoltDiff|BrHalf|BrFull|Therm107|Therm108|Therm109|TCDiff|Resistance|PeriodAvg|PulseCount|PortSet|PulsePort|ExciteV|BrHalf3W|BrHalf4W|BrFull6W|TCSE)\\b"
+      "match": "(?i)\\b(Battery|PanelTemp|VoltSe|VoltDiff|BrHalf|BrFull|Therm107|Therm108|Therm109|TCDiff|Resistance|PeriodAvg|PulseCount|PortSet|PulsePort|ExciteV|BrHalf3W|BrHalf4W|BrFull6W|TCSE|WatchdogTimer|PWM|DewPoint)\\b"
     },
     "builtin-functions-communication": {
       "name": "support.function.communication.crbasic",
-      "match": "(?i)\\b(SerialOpen|SerialClose|SerialIn|SerialOut|SerialInRecord|SerialOutBlock|SerialFlush|ModbusMaster|SDI12Recorder|TCPOpen|TCPClose|UDPOpen|UDPSocketOpen|UDPSocketSend|UDPSocketRecv|UDPSocketClose|EmailRelay|PPPOpen|PPPClose|FTPClient|HTTPGet|HTTPPost|HTTPPut)\\b"
+      "match": "(?i)\\b(SerialOpen|SerialClose|SerialIn|SerialOut|SerialInRecord|SerialOutBlock|SerialFlush|ModbusMaster|SDI12Recorder|TCPOpen|TCPClose|UDPOpen|UDPSocketOpen|UDPSocketSend|UDPSocketRecv|UDPSocketClose|EmailRelay|PPPOpen|PPPClose|FTPClient|HTTPGet|HTTPPost|HTTPPut|GPS|EthernetPower|I2COpen|I2CRead|I2CWrite)\\b"
     },
     "builtin-functions-data": {
       "name": "support.function.data.crbasic",
@@ -166,11 +166,11 @@
         },
         {
           "name": "support.function.math.crbasic",
-          "match": "(?i)\\b(Abs|Sgn|Sqr|Exp|Ln|Log|Log10|Sin|Cos|Tan|Sinh|Cosh|Tanh|Asin|Acos|Atn|Atn2|Int|Fix|Frac|Round|Rnd|Ceiling|Floor)\\b"
+          "match": "(?i)\\b(Abs|Sgn|Sqr|Exp|Ln|Log|Log10|Sin|Cos|Tan|Sinh|Cosh|Tanh|Asin|Acos|Atn|Atn2|Int|Fix|Frac|Round|Rnd|Randomize|Ceiling|Floor)\\b"
         },
         {
           "name": "support.function.time.crbasic",
-          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|SetStatus|SetSetting|MoveBytes|ArrayLength|NaN)\\b"
+          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|SetStatus|SetSetting|MoveBytes|ArrayLength|NaN|SecsSince1990|TimeIsBetween)\\b"
         },
         {
           "name": "support.function.logical.crbasic",

@@ -261,6 +261,16 @@ impl CompletionProvider {
                 "Pauses execution for a specified time.",
             ),
             Self::create_function_completion(
+                "SecsSince1990",
+                "SecsSince1990(${1:Source}, ${2:DateOption})",
+                "Converts between a date/time string and the number of seconds since January 1, 1990.",
+            ),
+            Self::create_function_completion(
+                "TimeIsBetween",
+                "TimeIsBetween(${1:BeginTime}, ${2:EndTime}, ${3:Interval}, ${4:Units})",
+                "Returns true when the datalogger's real-time clock falls within a specified time range.",
+            ),
+            Self::create_function_completion(
                 "Battery",
                 "Battery(${1:Dest})",
                 "Measures the voltage of the battery powering the datalogger.",
@@ -324,6 +334,21 @@ impl CompletionProvider {
                 "TCSE",
                 "TCSE(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:SEChan}, ${5:TCType}, ${6:TRef}, ${7:MeasOff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})",
                 "Measures a thermocouple on a single-ended channel and converts the reading to degrees Celsius.",
+            ),
+            Self::create_function_completion(
+                "WatchdogTimer",
+                "WatchdogTimer(${1:Interval}, ${2:Units})",
+                "Enables a user-programmed watchdog timer that guards the program against lockup.",
+            ),
+            Self::create_function_completion(
+                "PWM",
+                "PWM(${1:Source}, ${2:Port}, ${3:Period}, ${4:Units})",
+                "Generates a pulse-width-modulated signal on a digital port at a specified duty cycle.",
+            ),
+            Self::create_function_completion(
+                "DewPoint",
+                "DewPoint(${1:Dest}, ${2:Temp}, ${3:RH})",
+                "Calculates dew point temperature from air temperature and relative humidity.",
             ),
             Self::create_function_completion(
                 "SerialInRecord",
@@ -419,6 +444,31 @@ impl CompletionProvider {
                 "HTTPPut",
                 "HTTPPut(${1:URI}, ${2:Contents}, ${3:Response}, ${4:Header}, ${5:NumRecsOrTimeIntoInterval}, ${6:Interval}, ${7:IntervalUnits}, ${8:FileOption}, ${9:TimeOut})",
                 "Sends files or text to a URL via an HTTP PUT request.",
+            ),
+            Self::create_function_completion(
+                "GPS",
+                "GPS(${1:GPSArray}, ${2:ComPort}, ${3:TimeOffset}, ${4:MaxTimeDiff}, ${5:NMEAStrings})",
+                "Synchronizes the datalogger clock with a GPS receiver and stores its position/timing data.",
+            ),
+            Self::create_function_completion(
+                "EthernetPower",
+                "EthernetPower(${1:State})",
+                "Turns power to all Ethernet devices on or off.",
+            ),
+            Self::create_function_completion(
+                "I2COpen",
+                "I2COpen(${1:BeginPort}, ${2:BitRate})",
+                "Configures a port pair for I2C communication at a specified clock rate.",
+            ),
+            Self::create_function_completion(
+                "I2CRead",
+                "I2CRead(${1:BeginPort}, ${2:Address}, ${3:Dest}, ${4:NumBytes}, ${5:Option})",
+                "Reads bytes from an I2C peripheral device.",
+            ),
+            Self::create_function_completion(
+                "I2CWrite",
+                "I2CWrite(${1:BeginPort}, ${2:Address}, ${3:Source}, ${4:NumBytes}, ${5:Option})",
+                "Writes bytes to an I2C peripheral device.",
             ),
             Self::create_function_completion(
                 "WindVector",
@@ -574,6 +624,11 @@ impl CompletionProvider {
                 "Rnd",
                 "Rnd",
                 "Returns a random value between 0 (inclusive) and 1 (exclusive).",
+            ),
+            Self::create_function_completion(
+                "Randomize",
+                "Randomize(${1:Number})",
+                "Initializes the random-number generator used by Rnd with a new seed value.",
             ),
             Self::create_function_completion(
                 "Ceiling",
@@ -2450,6 +2505,116 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "IIf"),
                 "IIf(${1:Expression}, ${2:TrueValue}, ${3:FalseValue})"
+            );
+        }
+
+        #[test]
+        fn randomize_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Randomize"),
+                "Randomize(${1:Number})"
+            );
+        }
+
+        #[test]
+        fn secssince1990_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SecsSince1990"),
+                "SecsSince1990(${1:Source}, ${2:DateOption})"
+            );
+        }
+
+        #[test]
+        fn timeisbetween_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TimeIsBetween"),
+                "TimeIsBetween(${1:BeginTime}, ${2:EndTime}, ${3:Interval}, ${4:Units})"
+            );
+        }
+
+        #[test]
+        fn watchdogtimer_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "WatchdogTimer"),
+                "WatchdogTimer(${1:Interval}, ${2:Units})"
+            );
+        }
+
+        #[test]
+        fn pwm_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PWM"),
+                "PWM(${1:Source}, ${2:Port}, ${3:Period}, ${4:Units})"
+            );
+        }
+
+        #[test]
+        fn dewpoint_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DewPoint"),
+                "DewPoint(${1:Dest}, ${2:Temp}, ${3:RH})"
+            );
+        }
+
+        #[test]
+        fn gps_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "GPS"),
+                "GPS(${1:GPSArray}, ${2:ComPort}, ${3:TimeOffset}, ${4:MaxTimeDiff}, ${5:NMEAStrings})"
+            );
+        }
+
+        #[test]
+        fn ethernetpower_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "EthernetPower"),
+                "EthernetPower(${1:State})"
+            );
+        }
+
+        #[test]
+        fn i2copen_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "I2COpen"),
+                "I2COpen(${1:BeginPort}, ${2:BitRate})"
+            );
+        }
+
+        #[test]
+        fn i2cread_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "I2CRead"),
+                "I2CRead(${1:BeginPort}, ${2:Address}, ${3:Dest}, ${4:NumBytes}, ${5:Option})"
+            );
+        }
+
+        #[test]
+        fn i2cwrite_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "I2CWrite"),
+                "I2CWrite(${1:BeginPort}, ${2:Address}, ${3:Source}, ${4:NumBytes}, ${5:Option})"
             );
         }
     }
