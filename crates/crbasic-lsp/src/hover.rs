@@ -761,6 +761,21 @@ impl HoverProvider {
             "cdm_vw300static" => Some(
                 "**CDM_VW300Static**\n\nCaptures the static resonant frequency, thermistor temperature, and frequency standard deviation from a CDM-VW300 vibrating-wire spectrum analyzer.",
             ),
+            "calibrate" => Some(
+                "**Calibrate**\n\nForces calibration of all analog channels under program control to compensate for temperature-related measurement errors.",
+            ),
+            "fieldcal" => Some(
+                "**FieldCal**\n\nSets up the datalogger to perform calibration of one or more variables in an array.",
+            ),
+            "fieldcalstrain" => Some(
+                "**FieldCalStrain**\n\nSets up the datalogger to perform a zero or shunt calibration for a strain measurement.",
+            ),
+            "loadfieldcal" => Some(
+                "**LoadFieldCal**\n\nLoads values from the FieldCal file into datalogger variables, returning True if successful.",
+            ),
+            "samplefieldcal" => Some(
+                "**SampleFieldCal**\n\nStores the values in the FieldCal file to a data table; used inside a DataTable/EndTable declaration.",
+            ),
             _ => None,
         }
     }
@@ -1388,6 +1403,11 @@ mod tests {
                     "CDM_VW300Dynamic",
                     "CDM_VW300RainFlow",
                     "CDM_VW300Static",
+                    "Calibrate",
+                    "FieldCal",
+                    "FieldCalStrain",
+                    "LoadFieldCal",
+                    "SampleFieldCal",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
