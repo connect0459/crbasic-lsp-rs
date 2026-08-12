@@ -4968,3 +4968,65 @@ Not flagged as gaps (out of scope for this pass):
 
 - Rounds 34f through 34i (63 remaining candidates across 4 functional
   categories) remain deferred per Round 34's split.
+
+### Reference Implementation & Official Docs Comparison, Round 34f (2026-08-12)
+
+Picked up the math/physical-model instructions (12 candidates) from
+Round 34's split. All 12 were directly fetched and confirmed against
+their own help.campbellsci.com syntax lines.
+
+- [x] `ETsz`, `SolarPosition`, `WetDryBulb`, `MovePrecise`, `MuxSelect`,
+  `PulseCountReset`, `SerialInChk`, `SetSecurity`, `PWR`, `CType`, `PRT`,
+  `PRTCalc` missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 12 are real, documented CRBasic instructions spanning
+    evapotranspiration/solar-position/psychrometric physical models,
+    high-precision math, multiplexer channel selection, pulse-counter
+    reset, serial buffer status, program security levels,
+    exponentiation, data-type casting, and RTD-to-temperature
+    conversion
+  - The candidate list's `CTYPE` (all-caps, a grammar-scrape artifact)
+    is spelled `CType`, matching every fetched official syntax line's
+    own rendering -- the same syntax-line-wins resolution used for
+    prior naming inconsistencies
+  - Categorized by function rather than dumped into one category,
+    following this project's existing category conventions rather than
+    inventing new ones: `ETsz`/`SolarPosition`/`WetDryBulb`/
+    `MuxSelect`/`PulseCountReset`/`PRT`/`PRTCalc` under `measurement`
+    (physical models and sensor-adjacent calculations, alongside the
+    existing `FieldCal`/`Therm107` entries); `MovePrecise`/`PWR`/
+    `CType` under `math` (alongside `Ceiling`/`Floor`); `SerialInChk`
+    under `communication` (alongside the `SerialIn`/`SerialOut`
+    family); `SetSecurity` under `time` -- this project's existing
+    loose "runtime/system utility" bucket that already holds
+    `SetStatus`/`SetSetting`, neither of which is actually about time
+  - `PRT`'s and `PRTCalc`'s bracketed `[Mult, Offset]` parameter groups
+    are each split into two separate placeholders, matching the
+    existing precedent already used throughout this codebase (e.g.
+    `BrFull`, `Therm107`, and this same round's own `AM25T`/`CS616`)
+  - `PulseCountReset`'s official syntax line shows empty parentheses
+    (`PulseCountReset( )`), so its snippet uses the empty-parens
+    `PulseCountReset()` form, matching the existing `PPPClose()`
+    convention for parameterless instructions
+  - None of the 12 is a block construct, so this needed no parser/AST
+    changes -- purely `keywords.json`/completion/hover/signature-help
+    work
+  - Added all 12 to `keywords.json` under their respective categories,
+    regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 12, keeping the existing parity enforced by
+    all three completeness tests
+  - 12 new completion tests (one exact-`insert_text` test per function)
+    - 2 new signature tests
+    (`pulsecountreset_takes_no_parameters`,
+    `etsz_has_eleven_parameters_in_official_order`) added across 3
+    commits (one per LSP layer); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (533 `crbasic-lsp` lib tests,
+    up from 519)
+
+Not flagged as gaps (out of scope for this pass):
+
+- Rounds 34g through 34i (51 remaining candidates across 3 functional
+  categories) remain deferred per Round 34's split.
