@@ -640,6 +640,84 @@ mod selection_range {
     }
 }
 
+mod linked_editing_range {
+    use super::*;
+
+    #[tokio::test]
+    async fn links_all_occurrences_of_a_variable() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nPublic Temp\nTemp = 5\nTemp = Temp + 1\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let linked_params = LinkedEditingRangeParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 1,
+                    character: 7,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        };
+
+        let result = service.inner().linked_editing_range(linked_params).await;
+        assert!(result.is_ok(), "Linked editing range should succeed");
+
+        let linked = result
+            .expect("Should be Ok")
+            .expect("Should return linked editing ranges");
+        assert!(
+            linked.ranges.len() >= 3,
+            "Should link at least 3 occurrences of Temp (found {})",
+            linked.ranges.len()
+        );
+    }
+
+    #[tokio::test]
+    async fn returns_none_when_cursor_is_not_on_an_identifier() {
+        let (service, _socket) = create_test_server().await;
+        let uri = test_uri("test.CR6");
+
+        let open_params = DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "crbasic".to_string(),
+                version: 1,
+                text: "BeginProg\nEndProg".to_string(),
+            },
+        };
+        service.inner().did_open(open_params).await;
+
+        let linked_params = LinkedEditingRangeParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 0,
+                    character: 0,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        };
+
+        let result = service.inner().linked_editing_range(linked_params).await;
+        assert!(result.is_ok(), "Linked editing range should succeed");
+        assert_eq!(
+            result.expect("Should be Ok"),
+            None,
+            "Should not link anything on the BeginProg keyword"
+        );
+    }
+}
+
 mod code_action {
     use super::*;
 

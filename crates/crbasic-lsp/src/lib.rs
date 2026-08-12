@@ -15,6 +15,7 @@ pub mod document_highlight;
 pub mod folding;
 pub mod hover;
 pub mod inlay_hint;
+pub mod linked_editing_range;
 pub mod references;
 pub mod rename;
 pub mod selection_range;

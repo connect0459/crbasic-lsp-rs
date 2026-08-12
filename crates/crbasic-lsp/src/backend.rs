@@ -12,6 +12,7 @@ use crate::document_highlight::DocumentHighlightProvider;
 use crate::folding::FoldingRangeProvider;
 use crate::hover::HoverProvider;
 use crate::inlay_hint::InlayHintProvider;
+use crate::linked_editing_range::LinkedEditingRangeProvider;
 use crate::references::ReferencesProvider;
 use crate::rename::RenameProvider;
 use crate::selection_range::SelectionRangeProvider;
@@ -257,6 +258,9 @@ impl LanguageServer for CRBasicLanguageServer {
                 )),
                 folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
                 selection_range_provider: Some(SelectionRangeProviderCapability::Simple(true)),
+                linked_editing_range_provider: Some(LinkedEditingRangeServerCapabilities::Simple(
+                    true,
+                )),
                 workspace_symbol_provider: Some(tower_lsp_server::ls_types::OneOf::Left(true)),
                 inlay_hint_provider: Some(OneOf::Left(true)),
                 code_lens_provider: Some(CodeLensOptions {
@@ -378,6 +382,27 @@ impl LanguageServer for CRBasicLanguageServer {
                 &tokens,
                 &params.positions,
             )));
+        }
+
+        Ok(None)
+    }
+
+    async fn linked_editing_range(
+        &self,
+        params: LinkedEditingRangeParams,
+    ) -> Result<Option<LinkedEditingRanges>> {
+        let uri = params.text_document_position_params.text_document.uri;
+        let position = params.text_document_position_params.position;
+
+        let manager = self.document_manager.read().await;
+
+        if let Some(doc) = manager.get(&uri) {
+            let mut scanner = Scanner::new(&doc.text);
+            let tokens = scanner.scan_tokens();
+
+            return Ok(LinkedEditingRangeProvider::get_linked_editing_ranges(
+                &tokens, position,
+            ));
         }
 
         Ok(None)
