@@ -641,6 +641,156 @@ impl SignatureProvider {
                 ],
             }),
 
+            "sgn" => Some(FunctionSignature {
+                name: "Sgn".to_string(),
+                documentation: "Returns the sign of a number as -1, 0, or 1.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to get the sign of.".to_string(),
+                }],
+            }),
+
+            "exp" => Some(FunctionSignature {
+                name: "Exp".to_string(),
+                documentation: "Returns e raised to a power.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The exponent to raise e to.".to_string(),
+                }],
+            }),
+
+            "ln" => Some(FunctionSignature {
+                name: "Ln".to_string(),
+                documentation: "Returns the natural logarithm of a number.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to take the natural logarithm of.".to_string(),
+                }],
+            }),
+
+            "log" => Some(FunctionSignature {
+                name: "Log".to_string(),
+                documentation: "Returns the natural logarithm of a number.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to take the natural logarithm of.".to_string(),
+                }],
+            }),
+
+            "log10" => Some(FunctionSignature {
+                name: "Log10".to_string(),
+                documentation: "Returns the base-10 logarithm of a number.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to take the base-10 logarithm of.".to_string(),
+                }],
+            }),
+
+            "sinh" => Some(FunctionSignature {
+                name: "Sinh".to_string(),
+                documentation: "Returns the hyperbolic sine of a number.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to get the hyperbolic sine of.".to_string(),
+                }],
+            }),
+
+            "cosh" => Some(FunctionSignature {
+                name: "Cosh".to_string(),
+                documentation: "Returns the hyperbolic cosine of a number.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to get the hyperbolic cosine of.".to_string(),
+                }],
+            }),
+
+            "tanh" => Some(FunctionSignature {
+                name: "Tanh".to_string(),
+                documentation: "Returns the hyperbolic tangent of a number.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to get the hyperbolic tangent of.".to_string(),
+                }],
+            }),
+
+            "asin" => Some(FunctionSignature {
+                name: "Asin".to_string(),
+                documentation: "Returns the arc sine of a number, in radians.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to get the arc sine of.".to_string(),
+                }],
+            }),
+
+            "acos" => Some(FunctionSignature {
+                name: "Acos".to_string(),
+                documentation: "Returns the arc cosine of a number, in radians.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to get the arc cosine of.".to_string(),
+                }],
+            }),
+
+            "atn" => Some(FunctionSignature {
+                name: "Atn".to_string(),
+                documentation: "Returns the arc tangent of a number, in radians.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to get the arc tangent of.".to_string(),
+                }],
+            }),
+
+            "int" => Some(FunctionSignature {
+                name: "Int".to_string(),
+                documentation: "Returns the integer part of a number, truncating toward negative infinity.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to truncate.".to_string(),
+                }],
+            }),
+
+            "fix" => Some(FunctionSignature {
+                name: "Fix".to_string(),
+                documentation: "Returns the integer part of a number, truncating toward zero.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to truncate.".to_string(),
+                }],
+            }),
+
+            "frac" => Some(FunctionSignature {
+                name: "Frac".to_string(),
+                documentation: "Returns the fractional portion of a number.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to get the fractional portion of.".to_string(),
+                }],
+            }),
+
+            "rnd" => Some(FunctionSignature {
+                name: "Rnd".to_string(),
+                documentation: "Returns a random value between 0 (inclusive) and 1 (exclusive). Takes no parentheses.".to_string(),
+                parameters: vec![],
+            }),
+
+            "ceiling" => Some(FunctionSignature {
+                name: "Ceiling".to_string(),
+                documentation: "Rounds a number up to the nearest integer.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to round up.".to_string(),
+                }],
+            }),
+
+            "floor" => Some(FunctionSignature {
+                name: "Floor".to_string(),
+                documentation: "Rounds a number down to the nearest integer.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Value".to_string(),
+                    documentation: "The number to round down.".to_string(),
+                }],
+            }),
+
             "len" => Some(FunctionSignature {
                 name: "Len".to_string(),
                 documentation: "Returns the length of a string.".to_string(),
@@ -1214,6 +1364,28 @@ mod tests {
             assert!(SignatureProvider::get_function_signature("Sqr").is_some());
             assert!(SignatureProvider::get_function_signature("Sin").is_some());
             assert!(SignatureProvider::get_function_signature("Round").is_some());
+        }
+
+        #[test]
+        fn all_remaining_math_functions_have_a_signature() {
+            for name in [
+                "Sgn", "Exp", "Ln", "Log", "Log10", "Sinh", "Cosh", "Tanh", "Asin", "Acos", "Atn",
+                "Int", "Fix", "Frac", "Rnd", "Ceiling", "Floor",
+            ] {
+                assert!(
+                    SignatureProvider::get_function_signature(name).is_some(),
+                    "Expected a signature for math function: {}",
+                    name
+                );
+            }
+        }
+
+        #[test]
+        fn rnd_takes_no_parameters() {
+            let sig = SignatureProvider::get_function_signature("Rnd")
+                .expect("Rnd should have a signature");
+
+            assert!(sig.parameters.is_empty());
         }
 
         #[test]
