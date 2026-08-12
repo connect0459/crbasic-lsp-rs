@@ -4653,3 +4653,94 @@ every syntax line with no conflicts, unlike Round 33b.
 This closes out the entire Round 28 builtin-function name-diff backlog
 (PakBus, DNP, CSAT3/EC100/LI-COR, GOES/ARGOS, SDM, CDM general, and
 CDM_VW300 -- Rounds 29 through 33c).
+
+### Reference Implementation & Official Docs Comparison, Round 34 (2026-08-12)
+
+With the Round 28 backlog fully closed, re-ran the same grammar-scrape
+methodology from scratch against both reference extensions'
+`tmLanguage.json` files, this time extracting every keyword-alternation
+group (not just the previously-tracked instruction families) and diffing
+the combined name set against the current `keywords.json`. This surfaced
+98 candidate names present in **both** independently-authored reference
+grammars but absent from this project -- a much larger, higher-confidence
+batch than any prior round, since agreement between two independent
+grammars had not previously been used as the primary filter (each of
+Rounds 28-33c instead started from one grammar's own family-scoped
+listing). Two lower-confidence tiers (72 names unique to one grammar, 58
+names unique to the other, the latter dominated by that grammar's own
+typos) were also captured but deliberately not pursued this round.
+
+Two parallel research agents independently verified all 98 candidates
+against `help.campbellsci.com` and, where no dedicated help page existed,
+official PDF manuals -- one starting from HTML search, the other
+deliberately starting from PDF/forum search first (mirroring Round 33b's
+disagreement-resolution approach, but here to get two genuinely
+independent evidence trails rather than to resolve a conflict). Both
+passes agreed: **all 98 are genuine, documented CRBasic instructions**,
+zero typos or invented names -- the first round where both-grammar
+agreement was tested as a filter, and it held up completely. One entry
+(`CPIAddModule`) had its syntax line confirmed only by the second
+(PDF/forum-first) pass, resolving the first pass's "exists but
+unconfirmed syntax" flag.
+
+Given the batch size (98, more than double Round 31's previous record of
+40), split into 9 sub-rounds by functional category, confirmed with the
+user before implementation began:
+
+- Round 34a (this round): Field calibration (5 candidates)
+- Round 34b (deferred): CPI bus / MQTT (5 candidates)
+- Round 34c (deferred): Dial/modem/SMS/email (6 candidates, incl. the
+  `EndDialSequence` companion keyword surfaced during verification)
+- Round 34d (deferred): SDI-12/SPI/SDM peripheral bus (7 candidates)
+- Round 34e (deferred): Sensor-specific measurement instructions (12
+  candidates)
+- Round 34f (deferred): Math / physical-model calculations (12
+  candidates)
+- Round 34g (deferred): Data/file/table management (14 candidates)
+- Round 34h (deferred): Statistics / spatial-analysis (18 candidates)
+- Round 34i (deferred): Communication IP/network (19 candidates)
+
+Not flagged as gaps (out of scope for this pass): the 72-name and 58-name
+lower-confidence tiers (unique to one reference grammar each) remain
+unexamined; `AddPrecise`, `MinSpa`, and `StdDevRun` (companion
+instructions to ones confirmed in this round's research, but not
+themselves part of the 98-name candidate list) are natural candidates for
+a future round.
+
+- [x] `Calibrate`, `FieldCal`, `FieldCalStrain`, `LoadFieldCal`,
+  `SampleFieldCal` missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 5 are real, documented CRBasic instructions for field
+    calibration of measured variables (forcing AD-converter
+    self-calibration, computing/loading/storing multiplier-offset or
+    strain-gauge calibration coefficients), verified directly against
+    each instruction's own help.campbellsci.com syntax line
+  - `FieldCalStrain`'s 5th parameter is officially named `ZeromV/V` --
+    a slash-containing label in Campbell Scientific's own syntax line,
+    not a typo or a placeholder needing normalization
+  - `SampleFieldCal` takes no parameters and has no dedicated help-page
+    parentheses in its syntax box (confirmed via direct fetch of the
+    page's literal syntax text); it's used bare inside a
+    `DataTable`/`EndTable` declaration, the same bare-keyword treatment
+    already used for `TimeUntilTransmit`/`SDMTrigger` in prior rounds
+  - None of the 5 is a block construct, so this needed no parser/AST
+    changes -- purely `keywords.json`/completion/hover/signature-help
+    work
+  - Added all 5 to `keywords.json` under the `measurement` category,
+    regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 5, keeping the existing parity enforced by
+    all three completeness tests
+  - 5 new completion tests (one exact-`insert_text` test per function)
+    - 2 new signature tests (`samplefieldcal_takes_no_parameters`,
+    `fieldcalstrain_has_eleven_parameters_in_official_order`) added
+    across 3 commits (one per LSP layer, following the Round 29-33c
+    commit convention); full workspace `build`/`test`/`clippy`/`fmt`
+    gate and client `lint`/`format:check`/`test` gate pass (483
+    `crbasic-lsp` lib tests, up from 476)
+
+Not flagged as gaps (out of scope for this pass):
+
+- Rounds 34b through 34i (93 remaining candidates across 8 functional
+  categories) remain deferred per the split above.
