@@ -1136,6 +1136,46 @@ impl CompletionProvider {
                 "Stores a frequency distribution of input data across a set of bins.",
             ),
             Self::create_function_completion(
+                "Median",
+                "Median(${1:Reps}, ${2:Source}, ${3:MaxN}, ${4:DataType}, ${5:DisableVar})",
+                "Stores the median of a variable, over time, in an output table.",
+            ),
+            Self::create_function_completion(
+                "Moment",
+                "Moment(${1:Reps}, ${2:Source}, ${3:Order}, ${4:DataType}, ${5:DisableVar})",
+                "Outputs a central moment (variance, skewness, kurtosis, etc.) of a value over the measurement interval.",
+            ),
+            Self::create_function_completion(
+                "SampleMaxMin",
+                "SampleMaxMin(${1:Reps}, ${2:Source}, ${3:DataType}, ${4:DisableVar})",
+                "Records the value of a companion variable at the moment a preceding Maximum or Minimum reaches its extremum.",
+            ),
+            Self::create_function_completion(
+                "PeakValley",
+                "PeakValley(${1:DestPV}, ${2:DestChange}, ${3:Reps}, ${4:Source}, ${5:Hysteresis})",
+                "Detects local maxima and minima in signal data with a hysteresis threshold.",
+            ),
+            Self::create_function_completion(
+                "FFT",
+                "FFT(${1:SrcArray}, ${2:DataType}, ${3:N}, ${4:SampleInterval}, ${5:Units}, ${6:Option})",
+                "Performs a Fast Fourier Transform on time-series measurement data.",
+            ),
+            Self::create_function_completion(
+                "Covariance",
+                "Covariance(${1:DimX}, ${2:XVal}, ${3:DataType}, ${4:DisableVar}, ${5:NumOfCov})",
+                "Computes time-series covariance among array elements, for eddy-flux systems.",
+            ),
+            Self::create_function_completion(
+                "LevelCrossing",
+                "LevelCrossing(${1:Source}, ${2:DataType}, ${3:DisableVar}, ${4:NumLevels}, ${5:SecondDim}, ${6:CrossingArray}, ${7:SecondArray}, ${8:Hysteresis}, ${9:Option})",
+                "Builds a 1D or 2D level-crossing histogram for fatigue counting.",
+            ),
+            Self::create_function_completion(
+                "WorstCase",
+                "WorstCase(${1:TableName}, ${2:NumCases}, ${3:MaxMin}, ${4:Change}, ${5:RankVar})",
+                "Saves ranked worst-case data events into separate clone tables.",
+            ),
+            Self::create_function_completion(
                 "FieldNames",
                 "FieldNames(${1:FieldNameDescriptionList})",
                 "Overrides the default field names for the preceding output-processing instruction.",
@@ -1359,6 +1399,56 @@ impl CompletionProvider {
                 "CType",
                 "CType(${1:Expression}, ${2:Type})",
                 "Converts an expression to a specified data type (Float, IEEE4, Long, String, or Double).",
+            ),
+            Self::create_function_completion(
+                "AvgRun",
+                "AvgRun(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:Number}, ${5:RunReset}, ${6:Count}, ${7:TotalCalls}, ${8:Call_ID})",
+                "Computes a running average over the last Number values of a measurement.",
+            ),
+            Self::create_function_completion(
+                "MaxRun",
+                "MaxRun(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:Number}, ${5:RunReset}, ${6:TotalCalls}, ${7:Call_ID})",
+                "Computes a running maximum over the last Number values of a measurement.",
+            ),
+            Self::create_function_completion(
+                "MinRun",
+                "MinRun(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:Number}, ${5:RunReset}, ${6:TotalCalls}, ${7:Call_ID})",
+                "Computes a running minimum over the last Number values of a measurement.",
+            ),
+            Self::create_function_completion(
+                "TotalRun",
+                "TotalRun(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:Number}, ${5:RunReset}, ${6:Count}, ${7:TotalCalls}, ${8:Call_ID})",
+                "Computes a running total over the last Number values of a measurement.",
+            ),
+            Self::create_function_completion(
+                "AvgSpa",
+                "AvgSpa(${1:Dest}, ${2:Swath}, ${3:Source})",
+                "Computes the spatial average of a measurement across array elements.",
+            ),
+            Self::create_function_completion(
+                "CovSpa",
+                "CovSpa(${1:Dest}, ${2:NumOfCov}, ${3:SizeOfSets}, ${4:CoreSet}, ${5:DataSets})",
+                "Computes spatial covariance between a reference data set and one or more comparison data sets.",
+            ),
+            Self::create_function_completion(
+                "MaxSpa",
+                "MaxSpa(${1:Dest}, ${2:Swath}, ${3:Source})",
+                "Locates the maximum value and its position within an array.",
+            ),
+            Self::create_function_completion(
+                "RMSSpa",
+                "RMSSpa(${1:Dest}, ${2:Swath}, ${3:Source})",
+                "Computes the spatial root-mean-square value across array elements.",
+            ),
+            Self::create_function_completion(
+                "StdDevSpa",
+                "StdDevSpa(${1:Dest}, ${2:Swath}, ${3:Source})",
+                "Computes the spatial standard deviation across array elements.",
+            ),
+            Self::create_function_completion(
+                "FFTSpa",
+                "FFTSpa(${1:Dest}, ${2:N}, ${3:SrcArray}, ${4:SampleInterval}, ${5:Units}, ${6:Option}, ${7:FFTSpaInit})",
+                "Performs a Fast Fourier Transform on time-series data, for use mid-program rather than as a table entry.",
             ),
             Self::create_function_completion(
                 "SetStatus",
@@ -2878,6 +2968,87 @@ mod tests {
         }
 
         #[test]
+        fn median_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Median"),
+                "Median(${1:Reps}, ${2:Source}, ${3:MaxN}, ${4:DataType}, ${5:DisableVar})"
+            );
+        }
+
+        #[test]
+        fn moment_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Moment"),
+                "Moment(${1:Reps}, ${2:Source}, ${3:Order}, ${4:DataType}, ${5:DisableVar})"
+            );
+        }
+
+        #[test]
+        fn samplemaxmin_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SampleMaxMin"),
+                "SampleMaxMin(${1:Reps}, ${2:Source}, ${3:DataType}, ${4:DisableVar})"
+            );
+        }
+
+        #[test]
+        fn peakvalley_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "PeakValley"),
+                "PeakValley(${1:DestPV}, ${2:DestChange}, ${3:Reps}, ${4:Source}, ${5:Hysteresis})"
+            );
+        }
+
+        #[test]
+        fn fft_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FFT"),
+                "FFT(${1:SrcArray}, ${2:DataType}, ${3:N}, ${4:SampleInterval}, ${5:Units}, ${6:Option})"
+            );
+        }
+
+        #[test]
+        fn covariance_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Covariance"),
+                "Covariance(${1:DimX}, ${2:XVal}, ${3:DataType}, ${4:DisableVar}, ${5:NumOfCov})"
+            );
+        }
+
+        #[test]
+        fn levelcrossing_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "LevelCrossing"),
+                "LevelCrossing(${1:Source}, ${2:DataType}, ${3:DisableVar}, ${4:NumLevels}, \
+                 ${5:SecondDim}, ${6:CrossingArray}, ${7:SecondArray}, ${8:Hysteresis}, ${9:Option})"
+            );
+        }
+
+        #[test]
+        fn worstcase_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "WorstCase"),
+                "WorstCase(${1:TableName}, ${2:NumCases}, ${3:MaxMin}, ${4:Change}, ${5:RankVar})"
+            );
+        }
+
+        #[test]
         fn fieldnames_snippet_takes_a_single_comma_separated_string_parameter() {
             // Confirmed at https://help.campbellsci.com/crbasic/cr6/Content/Instructions/fieldnames.htm:
             // FieldNames takes exactly one quoted, comma-separated string
@@ -4181,6 +4352,111 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "CType"),
                 "CType(${1:Expression}, ${2:Type})"
+            );
+        }
+
+        #[test]
+        fn avgrun_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "AvgRun"),
+                "AvgRun(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:Number}, ${5:RunReset}, \
+                 ${6:Count}, ${7:TotalCalls}, ${8:Call_ID})"
+            );
+        }
+
+        #[test]
+        fn maxrun_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MaxRun"),
+                "MaxRun(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:Number}, ${5:RunReset}, \
+                 ${6:TotalCalls}, ${7:Call_ID})"
+            );
+        }
+
+        #[test]
+        fn minrun_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MinRun"),
+                "MinRun(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:Number}, ${5:RunReset}, \
+                 ${6:TotalCalls}, ${7:Call_ID})"
+            );
+        }
+
+        #[test]
+        fn totalrun_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TotalRun"),
+                "TotalRun(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:Number}, ${5:RunReset}, \
+                 ${6:Count}, ${7:TotalCalls}, ${8:Call_ID})"
+            );
+        }
+
+        #[test]
+        fn avgspa_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "AvgSpa"),
+                "AvgSpa(${1:Dest}, ${2:Swath}, ${3:Source})"
+            );
+        }
+
+        #[test]
+        fn covspa_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CovSpa"),
+                "CovSpa(${1:Dest}, ${2:NumOfCov}, ${3:SizeOfSets}, ${4:CoreSet}, ${5:DataSets})"
+            );
+        }
+
+        #[test]
+        fn maxspa_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MaxSpa"),
+                "MaxSpa(${1:Dest}, ${2:Swath}, ${3:Source})"
+            );
+        }
+
+        #[test]
+        fn rmsspa_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "RMSSpa"),
+                "RMSSpa(${1:Dest}, ${2:Swath}, ${3:Source})"
+            );
+        }
+
+        #[test]
+        fn stddevspa_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "StdDevSpa"),
+                "StdDevSpa(${1:Dest}, ${2:Swath}, ${3:Source})"
+            );
+        }
+
+        #[test]
+        fn fftspa_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FFTSpa"),
+                "FFTSpa(${1:Dest}, ${2:N}, ${3:SrcArray}, ${4:SampleInterval}, ${5:Units}, \
+                 ${6:Option}, ${7:FFTSpaInit})"
             );
         }
 
