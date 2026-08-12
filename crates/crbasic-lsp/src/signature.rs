@@ -3229,6 +3229,514 @@ impl SignatureProvider {
                 parameters: vec![],
             }),
 
+            "acpower" => Some(FunctionSignature {
+                name: "ACPower".to_string(),
+                documentation: "Measures real AC power and power-quality parameters for single-phase, split-phase, or three-phase Y systems.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "DestAC".to_string(),
+                        documentation: "The variable or array in which the measurement results are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ConfigAC".to_string(),
+                        documentation: "The measurement configuration: 1=single-phase, 2=split-phase, 3=three-phase Y.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LineFrq".to_string(),
+                        documentation: "The line frequency in Hz (50, 60, or a value 2-20 for a variable frequency).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ChanV".to_string(),
+                        documentation: "The starting channel for the voltage measurement(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MultV".to_string(),
+                        documentation: "The potential transformer multiplier (input volts per output millivolt).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxVrms".to_string(),
+                        documentation: "The expected maximum RMS voltage at the transformer primary.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ChanI".to_string(),
+                        documentation: "The starting channel for the current measurement(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MultI".to_string(),
+                        documentation: "The current transformer multiplier (input amps per output millivolt).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxIrms".to_string(),
+                        documentation: "The expected maximum RMS current at the transformer primary.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RepsI".to_string(),
+                        documentation: "The number of current measurements to take (single-phase configuration only).".to_string(),
+                    },
+                ],
+            }),
+
+            "am25t" => Some(FunctionSignature {
+                name: "AM25T".to_string(),
+                documentation: "Controls and measures the AM25T thermocouple multiplexer.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the measurement results are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions; 0 measures the reference PRT only.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "The voltage measurement range code.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "AM25TChan".to_string(),
+                        documentation: "The starting input channel number on the AM25T.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ChanAnlg".to_string(),
+                        documentation: "The differential analog terminal connected to the AM25T's common output.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TCType".to_string(),
+                        documentation: "The thermocouple type identifier.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TRef".to_string(),
+                        documentation: "A variable holding the reference temperature, in degrees Celsius.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ClkPort".to_string(),
+                        documentation: "The control port used to clock the AM25T (C1 through C8).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ResPort".to_string(),
+                        documentation: "The control port used to reset the AM25T (C1 through C8).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "The excitation channel used for the reference PRT measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevDiff".to_string(),
+                        documentation: "A Boolean selecting whether the differential measurement polarity is reversed.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The signal settling duration, in microseconds.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The filter notch frequency, in Hz.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
+            "avw200" => Some(FunctionSignature {
+                name: "AVW200".to_string(),
+                documentation: "Reads vibrating-wire sensors via an AVW200 spectrum analyzer.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Result".to_string(),
+                        documentation: "A variable that receives the communication result/status code.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communications port used to reach the AVW200.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NeighborAddr".to_string(),
+                        documentation: "The PakBus address used to route through an intermediate datalogger, if any.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PakBusAddr".to_string(),
+                        documentation: "The target AVW200's PakBus network address (1 through 4094).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The array in which the measurement results are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "AVWChan".to_string(),
+                        documentation: "The AVW200 channel (1 or 2) that the sensor is connected to.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MuxChannel".to_string(),
+                        documentation: "The starting multiplexer channel (1 through 32), or 1 if no multiplexer is used.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of measurements to take on the multiplexer.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BeginFreq".to_string(),
+                        documentation: "The starting sweep frequency, in Hz (minimum 100).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EndFreq".to_string(),
+                        documentation: "The ending sweep frequency, in Hz (maximum 6500).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExVolt".to_string(),
+                        documentation: "The excitation voltage: 1 for 5V, 2 for 12V peak-to-peak.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Therm50_60Hz".to_string(),
+                        documentation: "The thermistor integration setting (0, 1, or 2).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Multiplier".to_string(),
+                        documentation: "A multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "AmpThreshold".to_string(),
+                        documentation: "An optional minimum signal amplitude threshold, in millivolts.".to_string(),
+                    },
+                ],
+            }),
+
+            "cs616" => Some(FunctionSignature {
+                name: "CS616".to_string(),
+                documentation: "Enables and measures a CS616/CS625 water content reflectometer.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the measurement results are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CS616Chan".to_string(),
+                        documentation: "The single-ended terminal number for the first measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CS616Port".to_string(),
+                        documentation: "The control port used to enable the sensor(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasPerPort".to_string(),
+                        documentation: "The number of control terminals used per sensor measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw output period to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw output period to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
+            "cs7500" => Some(FunctionSignature {
+                name: "CS7500".to_string(),
+                documentation: "Communicates with a LI-7500(A) gas analyzer via SDM.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the measurement results are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of gas analyzers to communicate with.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The device's SDM address (0 through 14; 15 is reserved).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CS7500Cmd".to_string(),
+                        documentation: "A code specifying which sensor data to retrieve.".to_string(),
+                    },
+                ],
+            }),
+
+            "currentse" => Some(FunctionSignature {
+                name: "CurrentSE".to_string(),
+                documentation: "Measures single-ended current via the datalogger's internal shunt resistor.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the measurement results are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of repetitions.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "The input voltage range, in millivolts.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RGChan".to_string(),
+                        documentation: "The internal shunt channel to use: RG1 or RG2.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasOff".to_string(),
+                        documentation: "Whether to also measure the ground offset voltage.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "The signal settling duration, in microseconds.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "The lowest frequency eliminated by the input filter.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the result.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the result.".to_string(),
+                    },
+                ],
+            }),
+
+            "hydraprobe" => Some(FunctionSignature {
+                name: "HydraProbe".to_string(),
+                documentation: "Converts raw voltages from a Stevens Hydra Probe sensor into soil measurements.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "An 11-element array that receives the processed soil measurements.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SourceVolts".to_string(),
+                        documentation: "A 4-element array holding the raw voltage readings from the sensor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ProbeType".to_string(),
+                        documentation: "The probe version: 0=Standard, 1=Type A.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SoilType".to_string(),
+                        documentation: "The soil classification: 1=sand, 2=silt, 3=clay, 4=loam.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Multiplier".to_string(),
+                        documentation: "A scaling factor used in the temperature conversion.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An adjustment value used in the temperature conversion.".to_string(),
+                    },
+                ],
+            }),
+
+            "tdr100" => Some(FunctionSignature {
+                name: "TDR100".to_string(),
+                documentation: "Measures time-domain-reflectometry probes via a TDR100 device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the measurement results are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The device's SDM address (0 through 14).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "The output type: 0=La/L ratio, 1=waveform, 2=waveform+derivative, 3=conductivity.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MuxOrProbeSelect".to_string(),
+                        documentation: "The multiplexer channel and probe selection, in ABCR format.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "WaveAvg".to_string(),
+                        documentation: "The number of reflections to average (1 through 128).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Vp".to_string(),
+                        documentation: "The propagation velocity; set to 1.0 for soil measurements.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Points".to_string(),
+                        documentation: "The number of waveform values to collect (20 through 2048).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CableLength".to_string(),
+                        documentation: "The cable length, in meters.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "WindowLength".to_string(),
+                        documentation: "The waveform collection window length, in meters.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ProbeLength".to_string(),
+                        documentation: "The exposed probe rod length, in meters.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ProbeOffset".to_string(),
+                        documentation: "A correction value for epoxy-encapsulated probe rods.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
+            "tdr200" => Some(FunctionSignature {
+                name: "TDR200".to_string(),
+                documentation: "Measures time-domain-reflectometry probes via a TDR200 device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the measurement results are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The device's SDM address (0 through 14).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "The output type: 0=La/L ratio, 1=waveform, 2=waveform+derivative, 3=conductivity.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MuxOrProbeSelect".to_string(),
+                        documentation: "The multiplexer channel and probe selection, in ABCR format.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "WaveAvg".to_string(),
+                        documentation: "The number of reflections to average (up to 128).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Vp".to_string(),
+                        documentation: "The propagation velocity; typically 1.0.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Points".to_string(),
+                        documentation: "The number of waveform data points to collect (20 through 10,112).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CableLength".to_string(),
+                        documentation: "The probe cable length, in meters.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "WindowLength".to_string(),
+                        documentation: "The waveform collection window length, in meters.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ProbeLength".to_string(),
+                        documentation: "The exposed probe rod length, in meters.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ProbeOffset".to_string(),
+                        documentation: "A correction value for epoxy-encapsulated probe rods.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NoiseRejectionFreq".to_string(),
+                        documentation: "The noise-rejection filter frequency: 0, 50, or 60 Hz.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TDRFilterLevel".to_string(),
+                        documentation: "The weighted-averaging filter level (0 through 10).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TDRLaa".to_string(),
+                        documentation: "The algorithm used for probe-length detection (0, 1, or 2).".to_string(),
+                    },
+                ],
+            }),
+
+            "tga" => Some(FunctionSignature {
+                name: "TGA".to_string(),
+                documentation: "Measures a TGA100A/TGA200/TGA200A trace gas analyzer via SDM.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The array in which the measurement results are stored; its length depends on DataList and ScanMode.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The device's SDM address (0 through 14; 15 is reserved).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataList".to_string(),
+                        documentation: "Which data set to retrieve: 1=concentration/status, up to 5=all data.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ScanMode".to_string(),
+                        documentation: "The number of scan-specific values to retrieve, matching the TGA's number of ramps (1 through 3).".to_string(),
+                    },
+                ],
+            }),
+
+            "quadrature" => Some(FunctionSignature {
+                name: "Quadrature".to_string(),
+                documentation: "Measures a shaft quadrature encoder to determine displacement and rotational direction.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A 4-element array storing the accumulator, net direction, and up/down counts.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Port".to_string(),
+                        documentation: "The digital port pair used: C1, C3, C5, or C7.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "The counting mode: 0=X1, 1=X2, 2=X4.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A scaling factor applied to the measurement results.".to_string(),
+                    },
+                ],
+            }),
+
+            "sw12" => Some(FunctionSignature {
+                name: "SW12".to_string(),
+                documentation: "Enables or disables a switched-12V output channel to power external peripherals.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "SWChan".to_string(),
+                        documentation: "The switched-12V port to control: SW12_1, SW12_2, or SW12_CSIO.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "State".to_string(),
+                        documentation: "Whether the 12V supply is enabled (non-zero) or disabled (0).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SW12Option".to_string(),
+                        documentation: "An optional value controlling the execution context (measurement or processing task).".to_string(),
+                    },
+                ],
+            }),
+
             "watchdogtimer" => Some(FunctionSignature {
                 name: "WatchdogTimer".to_string(),
                 documentation: "Enables a user-programmed watchdog timer that guards the program against lockup.".to_string(),
@@ -7175,6 +7683,44 @@ mod tests {
                     "Offset",
                 ]
             );
+        }
+
+        #[test]
+        fn tdr200_has_sixteen_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("TDR200")
+                .expect("TDR200 should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "Dest",
+                    "SDMAddress",
+                    "Option",
+                    "MuxOrProbeSelect",
+                    "WaveAvg",
+                    "Vp",
+                    "Points",
+                    "CableLength",
+                    "WindowLength",
+                    "ProbeLength",
+                    "ProbeOffset",
+                    "Mult",
+                    "Offset",
+                    "NoiseRejectionFreq",
+                    "TDRFilterLevel",
+                    "TDRLaa",
+                ]
+            );
+        }
+
+        #[test]
+        fn sw12_has_three_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("SW12")
+                .expect("SW12 should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(names, vec!["SWChan", "State", "SW12Option"]);
         }
 
         #[test]
