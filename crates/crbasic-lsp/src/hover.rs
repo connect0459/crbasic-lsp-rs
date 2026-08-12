@@ -509,6 +509,27 @@ impl HoverProvider {
             "dewpoint" => Some(
                 "**DewPoint**\n\nCalculates dew point temperature from air temperature and relative humidity.",
             ),
+            "csat3" => Some(
+                "**CSAT3**\n\nControls and retrieves wind and sonic temperature data from a CSAT3 3D sonic anemometer via SDM.",
+            ),
+            "csat3b" => Some(
+                "**CSAT3B**\n\nControls and retrieves wind and sonic temperature data from a CSAT3B 3D sonic anemometer via SDM or CPI.",
+            ),
+            "csat3bmonitor" => Some(
+                "**CSAT3BMonitor**\n\nRetrieves enclosure temperature, relative humidity, and inclination diagnostics from a CSAT3B.",
+            ),
+            "ec100" => Some(
+                "**EC100**\n\nRetrieves measurement data from an EC100-based gas analyzer (EC150, EC155, IRGASON) via SDM.",
+            ),
+            "ec100configure" => Some(
+                "**EC100Configure**\n\nReads or writes configuration settings on an EC100-based gas analyzer via SDM.",
+            ),
+            "li7200" => Some(
+                "**LI7200**\n\nMeasures CO2 and H2O concentration from an LI-7200 closed-path gas analyzer via SDM.",
+            ),
+            "li7700" => Some(
+                "**LI7700**\n\nMeasures methane concentration from an LI-7700 open-path gas analyzer via SDM.",
+            ),
             _ => None,
         }
     }
@@ -1097,6 +1118,13 @@ mod tests {
                     "WatchdogTimer",
                     "PWM",
                     "DewPoint",
+                    "CSAT3",
+                    "CSAT3B",
+                    "CSAT3BMonitor",
+                    "EC100",
+                    "EC100Configure",
+                    "LI7200",
+                    "LI7700",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
