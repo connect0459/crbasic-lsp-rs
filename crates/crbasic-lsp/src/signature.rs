@@ -2877,6 +2877,103 @@ impl SignatureProvider {
                 parameters: vec![],
             }),
 
+            "dnp" => Some(FunctionSignature {
+                name: "DNP".to_string(),
+                documentation: "Configures a communications port to set up the datalogger as a DNP3 outstation device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communications port used for DNP3 communication.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BaudRate".to_string(),
+                        documentation: "The baud rate, in bps, at which data is transmitted; a negative value enables autobaud mode.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Confirmation".to_string(),
+                        documentation: "Encodes the data-link-layer confirmation mode and timeout in the form XSSS (X = confirmation mode, SSS = timeout in seconds).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOffset".to_string(),
+                        documentation: "Optional. The local time offset, in seconds, from UTC; ignored if the datalogger's UTC Offset setting is enabled.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxTimeDiff".to_string(),
+                        documentation: "Optional. The maximum time difference, in milliseconds, allowed between the datalogger and DNP3 master clocks before resynchronizing; 0 resyncs immediately, -1 disables resynchronization.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DNPTLS".to_string(),
+                        documentation: "Optional. Enables TLS encryption for the DNP3 connection when set to 1.".to_string(),
+                    },
+                ],
+            }),
+
+            "dnpupdate" => Some(FunctionSignature {
+                name: "DNPUpdate".to_string(),
+                documentation: "Sets up the datalogger as a DNP3 outstation and determines when it updates its arrays of DNP elements.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "DNPSlaveAddr".to_string(),
+                        documentation: "The DNP3 outstation address assigned to this datalogger (valid range 1-65520).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DNPMasterAddr".to_string(),
+                        documentation: "The DNP3 master/client address this datalogger will respond to (valid range 1-65520).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Optional. Seconds to wait for confirmation of an unsolicited response before retransmitting; 0 disables unsolicited responses.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Retries".to_string(),
+                        documentation: "Optional. The number of retransmission attempts after the initial attempt fails; 0 retries unsolicited responses (with data) indefinitely until confirmed.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ConnectHandle".to_string(),
+                        documentation: "Optional. A variable set by TCPOpen identifying the master connection to respond to, as if the request had arrived directly.".to_string(),
+                    },
+                ],
+            }),
+
+            "dnpvariable" => Some(FunctionSignature {
+                name: "DNPVariable".to_string(),
+                documentation: "Maps a variable or array to a DNP3 object, variation, and class within the datalogger's outstation configuration.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The public variable or array supplying data to the DNP outstation.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Swath".to_string(),
+                        documentation: "The number of elements of Source to map.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DNPObject".to_string(),
+                        documentation: "The DNP3 object type (e.g. binary input, analog input, counter) that Source is mapped to.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DNPVariation".to_string(),
+                        documentation: "The data format variation within DNPObject's group (e.g. 32-bit analog vs. floating point).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DNPClass".to_string(),
+                        documentation: "The DNP3 class assigned to this data: 0 for static data, or 1, 2, or 3 for event data.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DNPFlag".to_string(),
+                        documentation: "The DNP3 data-quality flag for this data; 1 indicates online, 0 indicates offline.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DNPEvent".to_string(),
+                        documentation: "Optional. An expression that triggers an event when true; the default (0) triggers an event on any value change.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DNPNumEvents".to_string(),
+                        documentation: "The number of historical events to retain until they're received by the master.".to_string(),
+                    },
+                ],
+            }),
+
             "abs" => Some(FunctionSignature {
                 name: "Abs".to_string(),
                 documentation: "Returns the absolute value of a number.".to_string(),
@@ -4278,6 +4375,9 @@ mod tests {
                 "SendVariables",
                 "StaticRoute",
                 "TimeUntilTransmit",
+                "DNP",
+                "DNPUpdate",
+                "DNPVariable",
             ] {
                 assert!(
                     SignatureProvider::get_function_signature(name).is_some(),
