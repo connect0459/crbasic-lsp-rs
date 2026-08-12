@@ -152,7 +152,7 @@
     },
     "builtin-functions-data": {
       "name": "support.function.data.crbasic",
-      "match": "(?i)\\b(Sample|Average|StdDev|Minimum|Maximum|Totalize|WindVector|Histogram|FieldNames|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval)\\b"
+      "match": "(?i)\\b(Sample|Average|StdDev|Minimum|Maximum|Totalize|WindVector|Histogram|FieldNames|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval|CardFlush|DataEvent|Data|DataLong|DataTime|ResetTable|TableFile|FileMark|FileReadLine|Erase)\\b"
     },
     "builtin-functions-menu": {
       "name": "support.function.menu.crbasic",
@@ -170,7 +170,7 @@
         },
         {
           "name": "support.function.time.crbasic",
-          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|SetStatus|SetSetting|SetSecurity|MoveBytes|ArrayLength|NaN|SecsSince1990|TimeIsBetween)\\b"
+          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|SetStatus|SetSetting|SetSecurity|MoveBytes|ArrayLength|NaN|SecsSince1990|TimeIsBetween|DaylightSaving|DaylightSavingUS|InstructionTimes|LineNum|Signature)\\b"
         },
         {
           "name": "support.function.logical.crbasic",

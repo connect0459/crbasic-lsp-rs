@@ -299,6 +299,16 @@
     { "name": "FileTime", "category": "data" },
     { "name": "FileList", "category": "data" },
     { "name": "DataInterval", "category": "data" },
+    { "name": "CardFlush", "category": "data" },
+    { "name": "DataEvent", "category": "data" },
+    { "name": "Data", "category": "data" },
+    { "name": "DataLong", "category": "data" },
+    { "name": "DataTime", "category": "data" },
+    { "name": "ResetTable", "category": "data" },
+    { "name": "TableFile", "category": "data" },
+    { "name": "FileMark", "category": "data" },
+    { "name": "FileReadLine", "category": "data" },
+    { "name": "Erase", "category": "data" },
 
     { "name": "SplitStr", "category": "string" },
     { "name": "FormatFloat", "category": "string" },
@@ -364,6 +374,11 @@
     { "name": "NaN", "category": "time" },
     { "name": "SecsSince1990", "category": "time" },
     { "name": "TimeIsBetween", "category": "time" },
+    { "name": "DaylightSaving", "category": "time" },
+    { "name": "DaylightSavingUS", "category": "time" },
+    { "name": "InstructionTimes", "category": "time" },
+    { "name": "LineNum", "category": "time" },
+    { "name": "Signature", "category": "time" },
 
     { "name": "IIf", "category": "logical" },
 
