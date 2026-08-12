@@ -565,6 +565,21 @@ impl HoverProvider {
             "sdmx50" => {
                 Some("**SDMX50**\n\nSwitches an SDMX50 coaxial multiplexer to a specified channel.")
             }
+            "cpiaddmodule" => Some(
+                "**CPIAddModule**\n\nStatically assigns a CPI-bus address to a GRANITE/CDM/VWIRE module.",
+            ),
+            "cpifilesend" => Some(
+                "**CPIFileSend**\n\nSends an OS file to a GRANITE/CDM module over the CPI bus via memory card, USR drive, or USB.",
+            ),
+            "cpispeed" => Some(
+                "**CPISpeed**\n\nAdjusts the CPI bus bit rate, needed when the bus load or cable length requires a slower speed.",
+            ),
+            "mqttpublishtable" => Some(
+                "**MQTTPublishTable**\n\nPublishes a data table's contents to an MQTT broker; placed inside a DataTable/EndTable declaration.",
+            ),
+            "mqttpublishconsttable" => Some(
+                "**MQTTPublishConstTable**\n\nEnables remote editing of ConstTable values via MQTT; placed inside a ConstTable/EndConstTable declaration.",
+            ),
             _ => None,
         }
     }
@@ -1498,6 +1513,11 @@ mod tests {
                     "SDMSpeed",
                     "SDMTrigger",
                     "SDMX50",
+                    "CPIAddModule",
+                    "CPIFileSend",
+                    "CPISpeed",
+                    "MQTTPublishTable",
+                    "MQTTPublishConstTable",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
