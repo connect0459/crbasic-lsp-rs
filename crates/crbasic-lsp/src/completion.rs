@@ -666,6 +666,71 @@ impl CompletionProvider {
                 "Formats and outputs a data table's records to a TX325/TX326 GOES satellite transmitter.",
             ),
             Self::create_function_completion(
+                "SDMAO4",
+                "SDMAO4(${1:Source}, ${2:Reps}, ${3:SDMAddress})",
+                "Sets the output voltage on an SDM-AO4 four-channel analog output device.",
+            ),
+            Self::create_function_completion(
+                "SDMAO4A",
+                "SDMAO4A(${1:Source}, ${2:SDMAO4ADest}, ${3:SDMAddress}, ${4:SDMAO4AStartChan}, ${5:Reps}, ${6:SDMAO4AOption})",
+                "Sets the output voltage on an SDM-AO4A four-channel analog output device.",
+            ),
+            Self::create_function_completion(
+                "SDMBeginPort",
+                "SDMBeginPort(${1:SDMPort})",
+                "Designates an alternate set of datalogger terminals to use as an SDM port.",
+            ),
+            Self::create_function_completion(
+                "SDMCAN",
+                "SDMCAN(${1:Dest}, ${2:SDMAddress}, ${3:TimeQuanta}, ${4:TSEG1}, ${5:TSEG2}, ${6:ID}, ${7:DataType}, ${8:StartBit}, ${9:NumBits}, ${10:NumVals}, ${11:Multiplier}, ${12:Offset})",
+                "Configures and operates the SDM-CAN interface between a CAN-bus network and the datalogger.",
+            ),
+            Self::create_function_completion(
+                "SDMCD16AC",
+                "SDMCD16AC(${1:Source}, ${2:Reps}, ${3:SDMAddress})",
+                "Enables or disables the relay ports of an SDM-CD16AC relay control device.",
+            ),
+            Self::create_function_completion(
+                "SDMCVO4",
+                "SDMCVO4(${1:CVO4Source}, ${2:CVO4Reps}, ${3:SDMAddress}, ${4:CVO4Mode})",
+                "Controls the SDM-CVO4 four-channel current/voltage output device.",
+            ),
+            Self::create_function_completion(
+                "SDMGeneric",
+                "SDMGeneric(${1:Dest}, ${2:SDMAddress}, ${3:CmdByte}, ${4:NumValuesOut}, ${5:Source}, ${6:NumValuesIn}, ${7:BytesPerValue}, ${8:BigEndian}, ${9:DelayByte})",
+                "Sends raw commands to an SDM device with no dedicated CRBasic instruction support.",
+            ),
+            Self::create_function_completion(
+                "SDMINT8",
+                "SDMINT8(${1:Dest}, ${2:SDMAddress}, ${3:Config8_5}, ${4:Config4_1}, ${5:Funct8_5}, ${6:Funct4_1}, ${7:OutputOpt}, ${8:CaptureTrig}, ${9:Mult}, ${10:Offset})",
+                "Programs and controls the SDM-INT8 eight-channel interval timer.",
+            ),
+            Self::create_function_completion(
+                "SDMIO16",
+                "SDMIO16(${1:Dest}, ${2:IO16Status}, ${3:SDMAddress}, ${4:IO16Cmd}, ${5:Mode16_13}, ${6:Mode12_9}, ${7:Mode8_5}, ${8:Mode4_1}, ${9:Multiplier}, ${10:Offset})",
+                "Sets up and operates an SDM-IO16 16-port digital I/O expansion device.",
+            ),
+            Self::create_function_completion(
+                "SDMSIO4",
+                "SDMSIO4(${1:Dest}, ${2:Reps}, ${3:SDMAddress}, ${4:Mode}, ${5:Command}, ${6:Param1}, ${7:Param2}, ${8:ValuesPerRep}, ${9:Multiplier}, ${10:Offset})",
+                "Controls and transfers data with a legacy SDM-SIO4 four-port serial I/O device.",
+            ),
+            Self::create_function_completion(
+                "SDMSpeed",
+                "SDMSpeed(${1:BitPeriod})",
+                "Changes the bit period the datalogger uses to clock SDM bus communication.",
+            ),
+            Self::create_function_completion(
+                "SDMTrigger",
+                "SDMTrigger",
+                "Broadcasts a simultaneous \"measure now\" group trigger to all SDM devices that support it.",
+            ),
+            Self::create_function_completion(
+                "SDMX50",
+                "SDMX50(${1:SDMAddress}, ${2:Channel})",
+                "Switches an SDMX50 coaxial multiplexer to a specified channel.",
+            ),
+            Self::create_function_completion(
                 "WindVector",
                 "WindVector(${1:Reps}, ${2:SpeedOrEast}, ${3:DirectionOrNorth}, ${4:DataType}, ${5:DisableVar}, ${6:Subinterval}, ${7:SensorType}, ${8:OutputOpt})",
                 "Calculates and stores the mean wind speed, wind vector magnitude, and direction statistics.",
@@ -3197,6 +3262,133 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "GOESTable"),
                 "GOESTable(${1:Result}, ${2:Comport}, ${3:Model}, ${4:BufferControl}, ${5:Fields_Scan_Order}, ${6:Newest_First}, ${7:Format})"
+            );
+        }
+
+        #[test]
+        fn sdmao4_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMAO4"),
+                "SDMAO4(${1:Source}, ${2:Reps}, ${3:SDMAddress})"
+            );
+        }
+
+        #[test]
+        fn sdmao4a_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMAO4A"),
+                "SDMAO4A(${1:Source}, ${2:SDMAO4ADest}, ${3:SDMAddress}, ${4:SDMAO4AStartChan}, ${5:Reps}, ${6:SDMAO4AOption})"
+            );
+        }
+
+        #[test]
+        fn sdmbeginport_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMBeginPort"),
+                "SDMBeginPort(${1:SDMPort})"
+            );
+        }
+
+        #[test]
+        fn sdmcan_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMCAN"),
+                "SDMCAN(${1:Dest}, ${2:SDMAddress}, ${3:TimeQuanta}, ${4:TSEG1}, ${5:TSEG2}, ${6:ID}, ${7:DataType}, ${8:StartBit}, ${9:NumBits}, ${10:NumVals}, ${11:Multiplier}, ${12:Offset})"
+            );
+        }
+
+        #[test]
+        fn sdmcd16ac_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMCD16AC"),
+                "SDMCD16AC(${1:Source}, ${2:Reps}, ${3:SDMAddress})"
+            );
+        }
+
+        #[test]
+        fn sdmcvo4_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMCVO4"),
+                "SDMCVO4(${1:CVO4Source}, ${2:CVO4Reps}, ${3:SDMAddress}, ${4:CVO4Mode})"
+            );
+        }
+
+        #[test]
+        fn sdmgeneric_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMGeneric"),
+                "SDMGeneric(${1:Dest}, ${2:SDMAddress}, ${3:CmdByte}, ${4:NumValuesOut}, ${5:Source}, ${6:NumValuesIn}, ${7:BytesPerValue}, ${8:BigEndian}, ${9:DelayByte})"
+            );
+        }
+
+        #[test]
+        fn sdmint8_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMINT8"),
+                "SDMINT8(${1:Dest}, ${2:SDMAddress}, ${3:Config8_5}, ${4:Config4_1}, ${5:Funct8_5}, ${6:Funct4_1}, ${7:OutputOpt}, ${8:CaptureTrig}, ${9:Mult}, ${10:Offset})"
+            );
+        }
+
+        #[test]
+        fn sdmio16_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMIO16"),
+                "SDMIO16(${1:Dest}, ${2:IO16Status}, ${3:SDMAddress}, ${4:IO16Cmd}, ${5:Mode16_13}, ${6:Mode12_9}, ${7:Mode8_5}, ${8:Mode4_1}, ${9:Multiplier}, ${10:Offset})"
+            );
+        }
+
+        #[test]
+        fn sdmsio4_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMSIO4"),
+                "SDMSIO4(${1:Dest}, ${2:Reps}, ${3:SDMAddress}, ${4:Mode}, ${5:Command}, ${6:Param1}, ${7:Param2}, ${8:ValuesPerRep}, ${9:Multiplier}, ${10:Offset})"
+            );
+        }
+
+        #[test]
+        fn sdmspeed_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMSpeed"),
+                "SDMSpeed(${1:BitPeriod})"
+            );
+        }
+
+        #[test]
+        fn sdmtrigger_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "SDMTrigger"), "SDMTrigger");
+        }
+
+        #[test]
+        fn sdmx50_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SDMX50"),
+                "SDMX50(${1:SDMAddress}, ${2:Channel})"
             );
         }
     }
