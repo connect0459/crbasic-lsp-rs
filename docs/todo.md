@@ -4812,3 +4812,56 @@ Not flagged as gaps (out of scope for this pass):
 
 - Rounds 34c through 34i (88 remaining candidates across 7 functional
   categories) remain deferred per Round 34's split.
+
+### Reference Implementation & Official Docs Comparison, Round 34c (2026-08-12)
+
+Picked up the dial/modem/SMS/email instructions (6 candidates) from
+Round 34's split. All 6 candidates plus the `EndDialSequence` companion
+keyword (surfaced during Round 34's research, not itself part of the
+98-name candidate list) were directly fetched and confirmed against
+their own help.campbellsci.com syntax lines -- no softer-sourced entries
+this round, unlike 34b.
+
+- [x] `EmailSend`, `DialModem`, `DialSequence`, `ModemHangup`, `SMSRecv`,
+  `SMSSend` missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 6 are real, documented CRBasic instructions for direct SMTP
+    email, modem dialing/hangup, and CELL2XX SMS messaging
+  - `DialSequence`/`EndDialSequence` is a block construct (its own
+    dedicated help page documents both halves together, titled
+    `dialsequenceenddialsequence.htm`, the same combined-page pattern
+    already used for `ModemHangup`/`EndModemHangup` and
+    `WebPageBegin`/`WebPageEnd`). Unlike this project's existing bare
+    (parameterless) `End*` language keywords, `EndDialSequence` takes a
+    `DialSuccess` parameter, so both halves were added as builtin
+    functions rather than language keywords; no parser/AST changes were
+    needed either way, since this project's block folding is done by
+    pairing flat statements in `folding.rs`, not by AST nesting
+  - `EmailSend`'s disjunctive `NumRecs/TimeIntoInterval` parameter is
+    spelled `NumRecsOrTimeIntoInterval`, matching the existing
+    `EmailRelay` snippet's own convention for the identical parameter
+    name (not a new normalization decision -- `EmailRelay` already had
+    this exact parameter and this project's completion.rs already
+    normalized it the same way before this round)
+  - None of the 6 introduces a *new* block-construct shape beyond the
+    `DialSequence`/`EndDialSequence` case above, so no other parser/AST
+    changes were needed
+  - Added all 6 (plus `EndDialSequence`) to `keywords.json` under the
+    `communication` category, regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 7 names, keeping the existing parity
+    enforced by all three completeness tests
+  - 7 new completion tests (one exact-`insert_text` test per function)
+    - 2 new signature tests
+    (`enddialsequence_takes_a_single_dialsuccess_parameter`,
+    `smssend_has_four_parameters_in_official_order`) added across 3
+    commits (one per LSP layer); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (499 `crbasic-lsp` lib tests,
+    up from 490)
+
+Not flagged as gaps (out of scope for this pass):
+
+- Rounds 34d through 34i (82 remaining candidates across 6 functional
+  categories) remain deferred per Round 34's split.
