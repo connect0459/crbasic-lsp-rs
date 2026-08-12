@@ -386,6 +386,146 @@ impl CompletionProvider {
                 "Measures methane concentration from an LI-7700 open-path gas analyzer via SDM.",
             ),
             Self::create_function_completion(
+                "CDM_ACPower",
+                "CDM_ACPower(${1:CDMType}, ${2:CPIAddress}, ${3:DestAC}, ${4:ConfigAC}, ${5:LineFrq}, ${6:ChanV}, ${7:MultV}, ${8:MaxVrms}, ${9:ChanI}, ${10:MultI}, ${11:MaxIrms}, ${12:RepsI})",
+                "Measures real AC power and power-quality parameters via a CDM module in single-phase, split-phase, or three-phase configurations.",
+            ),
+            Self::create_function_completion(
+                "CDM_Battery",
+                "CDM_Battery(${1:CDMType}, ${2:CPIAddress}, ${3:Dest})",
+                "Reads and returns a CDM module's own power-supply voltage.",
+            ),
+            Self::create_function_completion(
+                "CDM_BrFull",
+                "CDM_BrFull(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:DiffChan}, ${7:ExChan}, ${8:MeasPEx}, ${9:ExmV}, ${10:RevEx}, ${11:RevDiff}, ${12:SettlingTime}, ${13:fN1}, ${14:Mult}, ${15:Offset})",
+                "Makes a 4-wire full-bridge measurement via a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_BrFull6W",
+                "CDM_BrFull6W(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range1}, ${6:Range2}, ${7:DiffChan}, ${8:ExChan}, ${9:MeasPEx}, ${10:ExmV}, ${11:RevEx}, ${12:RevDiff}, ${13:SettlingTime}, ${14:fN1}, ${15:Mult}, ${16:Offset}, ${17:ReturnV1})",
+                "Makes a 6-wire full-bridge measurement via a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_BrHalf",
+                "CDM_BrHalf(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:SEChan}, ${7:ExChan}, ${8:MeasPEx}, ${9:ExmV}, ${10:RevEx}, ${11:SettlingTime}, ${12:fN1}, ${13:Mult}, ${14:Offset})",
+                "Makes a single-ended half-bridge measurement via a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_BrHalf3W",
+                "CDM_BrHalf3W(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:SEChan}, ${7:ExChan}, ${8:MeasPEx}, ${9:ExmV}, ${10:RevEx}, ${11:SettlingTime}, ${12:fN1}, ${13:Mult}, ${14:Offset})",
+                "Makes a 3-wire half-bridge measurement via a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_BrHalf4W",
+                "CDM_BrHalf4W(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range1}, ${6:Range2}, ${7:DiffChan}, ${8:ExChan}, ${9:MeasPEx}, ${10:ExmV}, ${11:RevEx}, ${12:RevDiff}, ${13:SettlingTime}, ${14:fN1}, ${15:Mult}, ${16:Offset}, ${17:ReturnV1})",
+                "Makes a 4-wire half-bridge measurement via a CDM module, commonly used with PRTCalc for RTDs.",
+            ),
+            Self::create_function_completion(
+                "CDM_CurrentDiff",
+                "CDM_CurrentDiff(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:DiffChan}, ${7:RevDiff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})",
+                "Makes a differential current-loop measurement via a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_Delay",
+                "CDM_Delay(${1:CDMType}, ${2:CPIAddress}, ${3:Option}, ${4:Delay}, ${5:Units})",
+                "Delays a CDM module's measurement or processing task sequence for a specified time.",
+            ),
+            Self::create_function_completion(
+                "CDM_ExciteI",
+                "CDM_ExciteI(${1:CDMType}, ${2:CPIAddress}, ${3:IxChan}, ${4:IxuA}, ${5:Delay})",
+                "Applies a current excitation to an excitation channel on a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_ExciteV",
+                "CDM_ExciteV(${1:CDMType}, ${2:CPIAddress}, ${3:ExChan}, ${4:ExmV}, ${5:Delay})",
+                "Applies a voltage excitation to an excitation channel on a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_MuxSelect",
+                "CDM_MuxSelect(${1:CDMType}, ${2:CPIAddress}, ${3:ClkPort}, ${4:ResetPort}, ${5:ClockPW}, ${6:MuxChan}, ${7:Mode})",
+                "Wakes and clocks an AM16/32A or AM16/32B multiplexer to a starting channel via a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_PanelTemp",
+                "CDM_PanelTemp(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:ThermChan}, ${6:fN1})",
+                "Reads a CDM wiring-panel thermistor, for use as a thermocouple reference temperature.",
+            ),
+            Self::create_function_completion(
+                "CDM_PeriodAvg",
+                "CDM_PeriodAvg(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Gain}, ${6:SEChan}, ${7:Threshold}, ${8:Option}, ${9:Cycles}, ${10:Timeout}, ${11:Mult}, ${12:Offset})",
+                "Measures the period or frequency of a signal on a CDM single-ended channel.",
+            ),
+            Self::create_function_completion(
+                "CDM_PulsePort",
+                "CDM_PulsePort(${1:CDMType}, ${2:CPIAddress}, ${3:Port}, ${4:Delay})",
+                "Toggles a CDM switched-5V digital port, delays, and toggles it again to generate a clock signal.",
+            ),
+            Self::create_function_completion(
+                "CDM_Resistance",
+                "CDM_Resistance(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:DiffChan}, ${7:IexChan}, ${8:MeasPEx}, ${9:EXuA}, ${10:RevEx}, ${11:RevDiff}, ${12:SettlingTime}, ${13:fN1}, ${14:Mult}, ${15:Offset}, ${16:MeasCurrent})",
+                "Measures resistance via current excitation on a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_Resistance3W",
+                "CDM_Resistance3W(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:SEChan}, ${7:IexChan}, ${8:MeasPEx}, ${9:EXuA}, ${10:RevEx}, ${11:SettlingTime}, ${12:fN1}, ${13:Mult}, ${14:Offset}, ${15:MeasCurrent})",
+                "Measures resistance via current excitation using a 3-wire connection on a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_SW12",
+                "CDM_SW12(${1:CDMType}, ${2:CPIAddress}, ${3:Port}, ${4:State}, ${5:SWOption})",
+                "Sets a CDM switched-12V output port high or low to power external peripherals.",
+            ),
+            Self::create_function_completion(
+                "CDM_SW5",
+                "CDM_SW5(${1:CDMType}, ${2:CPIAddress}, ${3:Port}, ${4:State}, ${5:SWOption})",
+                "Sets a CDM switched-5V output port high or low to power external peripherals.",
+            ),
+            Self::create_function_completion(
+                "CDM_SWPower",
+                "CDM_SWPower(${1:CDMType}, ${2:CPIAddress}, ${3:State}, ${4:SWOption})",
+                "Sets the ganged switched-12V and switched-5V power output on a VOLT408 isolation module.",
+            ),
+            Self::create_function_completion(
+                "CDM_TCComp",
+                "CDM_TCComp(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:DiffChan}, ${6:TCType}, ${7:FilterEnable}, ${8:Units})",
+                "Makes a differential thermocouple measurement with automatic cold-junction compensation via a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_TCDiff",
+                "CDM_TCDiff(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:DiffChan}, ${7:TCType}, ${8:TRef}, ${9:RevDiff}, ${10:SettlingTime}, ${11:fN1}, ${12:Mult}, ${13:Offset})",
+                "Makes a differential thermocouple measurement via a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_TCSE",
+                "CDM_TCSE(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:SEChan}, ${7:TCType}, ${8:TRef}, ${9:MeasOff}, ${10:SettlingTime}, ${11:fN1}, ${12:Mult}, ${13:Offset})",
+                "Makes a single-ended thermocouple measurement via a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_Therm107",
+                "CDM_Therm107(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:SEChan}, ${6:Excite}, ${7:SettlingTime}, ${8:Integ}, ${9:Mult}, ${10:Offset})",
+                "Measures a 107 thermistor probe via a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_Therm108",
+                "CDM_Therm108(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:SEChan}, ${6:Excite}, ${7:SettlingTime}, ${8:Integ}, ${9:Mult}, ${10:Offset})",
+                "Measures a 108 thermistor probe via a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_Therm109",
+                "CDM_Therm109(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:SEChan}, ${6:Excite}, ${7:SettlingTime}, ${8:Integ}, ${9:Mult}, ${10:Offset})",
+                "Measures a 109 thermistor probe via a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_VoltDiff",
+                "CDM_VoltDiff(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:DiffChan}, ${7:RevDiff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})",
+                "Makes a differential voltage measurement via a CDM module.",
+            ),
+            Self::create_function_completion(
+                "CDM_VoltSE",
+                "CDM_VoltSE(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:SEChan}, ${7:MeasOff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})",
+                "Makes a single-ended voltage measurement via a CDM module.",
+            ),
+            Self::create_function_completion(
                 "SerialInRecord",
                 "SerialInRecord(${1:COMPort}, ${2:Dest}, ${3:BeginWord}, ${4:NBytes}, ${5:EndWord}, ${6:NBytesReturned}, ${7:SerialInRecOption})",
                 "Reads and parses incoming serial data using begin/end markers.",
@@ -2895,6 +3035,286 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "LI7700"),
                 "LI7700(${1:Dest}, ${2:Reps}, ${3:SDMAddress}, ${4:LI7700Cmd})"
+            );
+        }
+
+        #[test]
+        fn cdm_acpower_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_ACPower"),
+                "CDM_ACPower(${1:CDMType}, ${2:CPIAddress}, ${3:DestAC}, ${4:ConfigAC}, ${5:LineFrq}, ${6:ChanV}, ${7:MultV}, ${8:MaxVrms}, ${9:ChanI}, ${10:MultI}, ${11:MaxIrms}, ${12:RepsI})"
+            );
+        }
+
+        #[test]
+        fn cdm_battery_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_Battery"),
+                "CDM_Battery(${1:CDMType}, ${2:CPIAddress}, ${3:Dest})"
+            );
+        }
+
+        #[test]
+        fn cdm_brfull_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_BrFull"),
+                "CDM_BrFull(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:DiffChan}, ${7:ExChan}, ${8:MeasPEx}, ${9:ExmV}, ${10:RevEx}, ${11:RevDiff}, ${12:SettlingTime}, ${13:fN1}, ${14:Mult}, ${15:Offset})"
+            );
+        }
+
+        #[test]
+        fn cdm_brfull6w_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_BrFull6W"),
+                "CDM_BrFull6W(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range1}, ${6:Range2}, ${7:DiffChan}, ${8:ExChan}, ${9:MeasPEx}, ${10:ExmV}, ${11:RevEx}, ${12:RevDiff}, ${13:SettlingTime}, ${14:fN1}, ${15:Mult}, ${16:Offset}, ${17:ReturnV1})"
+            );
+        }
+
+        #[test]
+        fn cdm_brhalf_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_BrHalf"),
+                "CDM_BrHalf(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:SEChan}, ${7:ExChan}, ${8:MeasPEx}, ${9:ExmV}, ${10:RevEx}, ${11:SettlingTime}, ${12:fN1}, ${13:Mult}, ${14:Offset})"
+            );
+        }
+
+        #[test]
+        fn cdm_brhalf3w_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_BrHalf3W"),
+                "CDM_BrHalf3W(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:SEChan}, ${7:ExChan}, ${8:MeasPEx}, ${9:ExmV}, ${10:RevEx}, ${11:SettlingTime}, ${12:fN1}, ${13:Mult}, ${14:Offset})"
+            );
+        }
+
+        #[test]
+        fn cdm_brhalf4w_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_BrHalf4W"),
+                "CDM_BrHalf4W(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range1}, ${6:Range2}, ${7:DiffChan}, ${8:ExChan}, ${9:MeasPEx}, ${10:ExmV}, ${11:RevEx}, ${12:RevDiff}, ${13:SettlingTime}, ${14:fN1}, ${15:Mult}, ${16:Offset}, ${17:ReturnV1})"
+            );
+        }
+
+        #[test]
+        fn cdm_currentdiff_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_CurrentDiff"),
+                "CDM_CurrentDiff(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:DiffChan}, ${7:RevDiff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})"
+            );
+        }
+
+        #[test]
+        fn cdm_delay_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_Delay"),
+                "CDM_Delay(${1:CDMType}, ${2:CPIAddress}, ${3:Option}, ${4:Delay}, ${5:Units})"
+            );
+        }
+
+        #[test]
+        fn cdm_excitei_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_ExciteI"),
+                "CDM_ExciteI(${1:CDMType}, ${2:CPIAddress}, ${3:IxChan}, ${4:IxuA}, ${5:Delay})"
+            );
+        }
+
+        #[test]
+        fn cdm_excitev_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_ExciteV"),
+                "CDM_ExciteV(${1:CDMType}, ${2:CPIAddress}, ${3:ExChan}, ${4:ExmV}, ${5:Delay})"
+            );
+        }
+
+        #[test]
+        fn cdm_muxselect_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_MuxSelect"),
+                "CDM_MuxSelect(${1:CDMType}, ${2:CPIAddress}, ${3:ClkPort}, ${4:ResetPort}, ${5:ClockPW}, ${6:MuxChan}, ${7:Mode})"
+            );
+        }
+
+        #[test]
+        fn cdm_paneltemp_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_PanelTemp"),
+                "CDM_PanelTemp(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:ThermChan}, ${6:fN1})"
+            );
+        }
+
+        #[test]
+        fn cdm_periodavg_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_PeriodAvg"),
+                "CDM_PeriodAvg(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Gain}, ${6:SEChan}, ${7:Threshold}, ${8:Option}, ${9:Cycles}, ${10:Timeout}, ${11:Mult}, ${12:Offset})"
+            );
+        }
+
+        #[test]
+        fn cdm_pulseport_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_PulsePort"),
+                "CDM_PulsePort(${1:CDMType}, ${2:CPIAddress}, ${3:Port}, ${4:Delay})"
+            );
+        }
+
+        #[test]
+        fn cdm_resistance_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_Resistance"),
+                "CDM_Resistance(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:DiffChan}, ${7:IexChan}, ${8:MeasPEx}, ${9:EXuA}, ${10:RevEx}, ${11:RevDiff}, ${12:SettlingTime}, ${13:fN1}, ${14:Mult}, ${15:Offset}, ${16:MeasCurrent})"
+            );
+        }
+
+        #[test]
+        fn cdm_resistance3w_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_Resistance3W"),
+                "CDM_Resistance3W(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:SEChan}, ${7:IexChan}, ${8:MeasPEx}, ${9:EXuA}, ${10:RevEx}, ${11:SettlingTime}, ${12:fN1}, ${13:Mult}, ${14:Offset}, ${15:MeasCurrent})"
+            );
+        }
+
+        #[test]
+        fn cdm_sw12_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_SW12"),
+                "CDM_SW12(${1:CDMType}, ${2:CPIAddress}, ${3:Port}, ${4:State}, ${5:SWOption})"
+            );
+        }
+
+        #[test]
+        fn cdm_sw5_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_SW5"),
+                "CDM_SW5(${1:CDMType}, ${2:CPIAddress}, ${3:Port}, ${4:State}, ${5:SWOption})"
+            );
+        }
+
+        #[test]
+        fn cdm_swpower_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_SWPower"),
+                "CDM_SWPower(${1:CDMType}, ${2:CPIAddress}, ${3:State}, ${4:SWOption})"
+            );
+        }
+
+        #[test]
+        fn cdm_tccomp_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_TCComp"),
+                "CDM_TCComp(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:DiffChan}, ${6:TCType}, ${7:FilterEnable}, ${8:Units})"
+            );
+        }
+
+        #[test]
+        fn cdm_tcdiff_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_TCDiff"),
+                "CDM_TCDiff(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:DiffChan}, ${7:TCType}, ${8:TRef}, ${9:RevDiff}, ${10:SettlingTime}, ${11:fN1}, ${12:Mult}, ${13:Offset})"
+            );
+        }
+
+        #[test]
+        fn cdm_tcse_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_TCSE"),
+                "CDM_TCSE(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:SEChan}, ${7:TCType}, ${8:TRef}, ${9:MeasOff}, ${10:SettlingTime}, ${11:fN1}, ${12:Mult}, ${13:Offset})"
+            );
+        }
+
+        #[test]
+        fn cdm_therm107_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_Therm107"),
+                "CDM_Therm107(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:SEChan}, ${6:Excite}, ${7:SettlingTime}, ${8:Integ}, ${9:Mult}, ${10:Offset})"
+            );
+        }
+
+        #[test]
+        fn cdm_therm108_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_Therm108"),
+                "CDM_Therm108(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:SEChan}, ${6:Excite}, ${7:SettlingTime}, ${8:Integ}, ${9:Mult}, ${10:Offset})"
+            );
+        }
+
+        #[test]
+        fn cdm_therm109_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_Therm109"),
+                "CDM_Therm109(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:SEChan}, ${6:Excite}, ${7:SettlingTime}, ${8:Integ}, ${9:Mult}, ${10:Offset})"
+            );
+        }
+
+        #[test]
+        fn cdm_voltdiff_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_VoltDiff"),
+                "CDM_VoltDiff(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:DiffChan}, ${7:RevDiff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})"
+            );
+        }
+
+        #[test]
+        fn cdm_voltse_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_VoltSE"),
+                "CDM_VoltSE(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:SEChan}, ${7:MeasOff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})"
             );
         }
 
