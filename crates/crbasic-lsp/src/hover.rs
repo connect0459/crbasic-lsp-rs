@@ -859,6 +859,42 @@ impl HoverProvider {
             "sw12" => Some(
                 "**SW12**\n\nEnables or disables a switched-12V output channel to power external peripherals.",
             ),
+            "etsz" => {
+                Some("**ETsz**\n\nCalculates the ASCE standardized reference evapotranspiration.")
+            }
+            "solarposition" => Some(
+                "**SolarPosition**\n\nCalculates solar azimuth, elevation, hour angle, declination, and air mass.",
+            ),
+            "wetdrybulb" => Some(
+                "**WetDryBulb**\n\nComputes vapor pressure from wet-bulb and dry-bulb temperatures and barometric pressure.",
+            ),
+            "muxselect" => Some(
+                "**MuxSelect**\n\nSelects a channel on an AM16/32A or AM16/32B multiplexer and readies it for measurement.",
+            ),
+            "pulsecountreset" => Some(
+                "**PulseCountReset**\n\nResets the pulse counter and running-average values associated with pulse count measurements.",
+            ),
+            "prt" => Some(
+                "**PRT**\n\nConverts RTD resistance measurements to temperature using the DIN 43760 standard.",
+            ),
+            "prtcalc" => Some(
+                "**PRTCalc**\n\nConverts RTD resistance measurements to temperature using the Callendar-Van Dusen equation.",
+            ),
+            "moveprecise" => Some(
+                "**MovePrecise**\n\nTransfers a value into a variable as a high-precision (56-bit mantissa) number.",
+            ),
+            "pwr" => {
+                Some("**PWR**\n\nRaises X to the power of Y and returns a floating-point result.")
+            }
+            "ctype" => Some(
+                "**CType**\n\nConverts an expression to a specified data type (Float, IEEE4, Long, String, or Double).",
+            ),
+            "serialinchk" => Some(
+                "**SerialInChk**\n\nReturns the number of characters currently available in the serial input buffer.",
+            ),
+            "setsecurity" => Some(
+                "**SetSecurity**\n\nEstablishes up to three hierarchical security levels restricting access to datalogger functions.",
+            ),
             _ => None,
         }
     }
@@ -1503,6 +1539,13 @@ mod tests {
                     "TGA",
                     "Quadrature",
                     "SW12",
+                    "ETsz",
+                    "SolarPosition",
+                    "WetDryBulb",
+                    "MuxSelect",
+                    "PulseCountReset",
+                    "PRT",
+                    "PRTCalc",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
@@ -1525,6 +1568,7 @@ mod tests {
                     "SerialIn",
                     "SerialOut",
                     "SerialInRecord",
+                    "SerialInChk",
                     "SerialOutBlock",
                     "SerialFlush",
                     "ModbusMaster",
@@ -1729,6 +1773,9 @@ mod tests {
                     "Randomize",
                     "Ceiling",
                     "Floor",
+                    "MovePrecise",
+                    "PWR",
+                    "CType",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
@@ -1758,6 +1805,7 @@ mod tests {
                     "NaN",
                     "SecsSince1990",
                     "TimeIsBetween",
+                    "SetSecurity",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
