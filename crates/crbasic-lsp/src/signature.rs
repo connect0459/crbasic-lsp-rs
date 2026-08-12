@@ -1472,6 +1472,163 @@ impl SignatureProvider {
                 ],
             }),
 
+            "csat3" => Some(FunctionSignature {
+                name: "CSAT3".to_string(),
+                documentation: "Controls and retrieves wind and sonic temperature data from a CSAT3 3D sonic anemometer via SDM.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array (5 elements: Ux, Uy, Uz, speed of sound or temperature, and a diagnostic word) to store the CSAT3 result(s); must be an array if Reps is greater than 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of CSAT3 units to measure; their SDM addresses must be sequential.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "SDM address of the CSAT3 (0 through 14; address 15 is reserved for SDMTrigger).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Command".to_string(),
+                        documentation: "Selects the measurement trigger: triggers a new measurement and gets data, or retrieves data after a prior group trigger without triggering a new measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "Sets the CSAT3's execution parameter, specifying the measurement frequency the CSAT3 should expect from the datalogger.".to_string(),
+                    },
+                ],
+            }),
+
+            "csat3b" => Some(FunctionSignature {
+                name: "CSAT3B".to_string(),
+                documentation: "Controls and retrieves wind and sonic temperature data from a CSAT3B 3D sonic anemometer via SDM or CPI.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Destination".to_string(),
+                        documentation: "Float variable or array (at least 5 elements) to store the wind components, sonic temperature, and diagnostic word returned by the anemometer.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Bus".to_string(),
+                        documentation: "Constant selecting the communication bus: 0 for SDM, 1 for CPI.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Address".to_string(),
+                        documentation: "Constant identifying the CSAT3B's address on the bus (0 to 14 for SDM; 1 to 120 for CPI).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "OperatingMode".to_string(),
+                        documentation: "Constant controlling the trigger source (datalogger-triggered or self-triggered) and the bandwidth filter applied to the output.".to_string(),
+                    },
+                ],
+            }),
+
+            "csat3bmonitor" => Some(FunctionSignature {
+                name: "CSAT3BMonitor".to_string(),
+                documentation: "Retrieves enclosure temperature, relative humidity, and inclination diagnostics from a CSAT3B.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Destination".to_string(),
+                        documentation: "Float variable or array to store the enclosure temperature, relative humidity, and inclination values returned by the anemometer.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Bus".to_string(),
+                        documentation: "Constant selecting the communication bus: 0 for SDM, 1 for CPI.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Address".to_string(),
+                        documentation: "Constant identifying the CSAT3B's address on the bus (0 to 14 for SDM; 1 to 120 for CPI).".to_string(),
+                    },
+                ],
+            }),
+
+            "ec100" => Some(FunctionSignature {
+                name: "EC100".to_string(),
+                documentation: "Retrieves measurement data from an EC100-based gas analyzer (EC150, EC155, IRGASON) via SDM.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Input variable array to store the data returned by the analyzer; its length depends on the selected EC100Cmd.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "SDM address of the analyzer (0 through 14; address 15 is reserved for SDMTrigger).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EC100Cmd".to_string(),
+                        documentation: "Requests which data set to retrieve from the analyzer; results are returned in Dest.".to_string(),
+                    },
+                ],
+            }),
+
+            "ec100configure" => Some(FunctionSignature {
+                name: "EC100Configure".to_string(),
+                documentation: "Reads or writes configuration settings on an EC100-based gas analyzer via SDM.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Result".to_string(),
+                        documentation: "Variable receiving the success/failure code: 0 for a successful read, or for a write that matched the existing value; 1 for a write that changed the value; NAN if the setting was not acknowledged.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "SDM address of the analyzer to configure (0 through 14; address 15 is reserved for SDMTrigger).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ConfigCmd".to_string(),
+                        documentation: "Selects which setting to get or set.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DestSource".to_string(),
+                        documentation: "Variable holding the setting value being read or written; setting it to 2718 sends the save-settings command.".to_string(),
+                    },
+                ],
+            }),
+
+            "li7200" => Some(FunctionSignature {
+                name: "LI7200".to_string(),
+                documentation: "Measures CO2 and H2O concentration from an LI-7200 closed-path gas analyzer via SDM.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Input variable array to store the data returned by each LI-7200; its length depends on the number of repetitions and the selected command.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of LI-7200 units to communicate with; their SDM addresses must be sequential.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "SDM address of the LI-7200 (0 through 14; address 15 is reserved for SDMTrigger).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LI7200Cmd".to_string(),
+                        documentation: "Requests which data set to retrieve from the analyzer; results are returned in Dest.".to_string(),
+                    },
+                ],
+            }),
+
+            "li7700" => Some(FunctionSignature {
+                name: "LI7700".to_string(),
+                documentation: "Measures methane concentration from an LI-7700 open-path gas analyzer via SDM.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Input variable array to store the data returned by each LI-7700; its length depends on the number of repetitions and the selected command.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of LI-7700 units to communicate with; their SDM addresses must be sequential.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "SDM address of the LI-7700 (0 through 14; address 15 is reserved for SDMTrigger).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LI7700Cmd".to_string(),
+                        documentation: "Requests which data set to retrieve from the analyzer; results are returned in Dest.".to_string(),
+                    },
+                ],
+            }),
+
             "watchdogtimer" => Some(FunctionSignature {
                 name: "WatchdogTimer".to_string(),
                 documentation: "Enables a user-programmed watchdog timer that guards the program against lockup.".to_string(),
@@ -3590,6 +3747,13 @@ mod tests {
                 "WatchdogTimer",
                 "PWM",
                 "DewPoint",
+                "CSAT3",
+                "CSAT3B",
+                "CSAT3BMonitor",
+                "EC100",
+                "EC100Configure",
+                "LI7200",
+                "LI7700",
             ] {
                 assert!(
                     SignatureProvider::get_function_signature(name).is_some(),
