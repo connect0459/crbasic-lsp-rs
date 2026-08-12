@@ -484,6 +484,15 @@ impl HoverProvider {
             "timeuntiltransmit" => Some(
                 "**TimeUntilTransmit**\n\nReturns the seconds remaining until the datalogger's assigned communication time slot with its host.",
             ),
+            "dnp" => Some(
+                "**DNP**\n\nConfigures a communications port to set up the datalogger as a DNP3 outstation device.",
+            ),
+            "dnpupdate" => Some(
+                "**DNPUpdate**\n\nSets up the datalogger as a DNP3 outstation and determines when it updates its arrays of DNP elements.",
+            ),
+            "dnpvariable" => Some(
+                "**DNPVariable**\n\nMaps a variable or array to a DNP3 object, variation, and class within the datalogger's outstation configuration.",
+            ),
             _ => None,
         }
     }
@@ -1242,6 +1251,9 @@ mod tests {
                     "SendVariables",
                     "StaticRoute",
                     "TimeUntilTransmit",
+                    "DNP",
+                    "DNPUpdate",
+                    "DNPVariable",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
