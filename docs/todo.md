@@ -4865,3 +4865,57 @@ Not flagged as gaps (out of scope for this pass):
 
 - Rounds 34d through 34i (82 remaining candidates across 6 functional
   categories) remain deferred per Round 34's split.
+
+### Reference Implementation & Official Docs Comparison, Round 34d (2026-08-12)
+
+Picked up the SDI-12/SPI/SDM peripheral bus instructions (7 candidates)
+from Round 34's split. 5 of the 7 (`SPIOpen`, `SPIRead`, `SPIWrite`,
+`SDMCD16Mask`, `SDMSW8A`) were directly fetched and confirmed against
+their own help.campbellsci.com syntax lines.
+
+- [x] `SPIOpen`, `SPIRead`, `SPIWrite`, `SDMCD16Mask`, `SDMSW8A` missing
+  from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 5 are real, documented CRBasic instructions: `SPIOpen`/
+    `SPIRead`/`SPIWrite` configure/read/write the datalogger as an SPI
+    controller; `SDMCD16Mask` is a bit-mask alternative to the existing
+    `SDMCD16AC` relay-control instruction (previously surfaced but
+    explicitly out of scope in Round 33's notes); `SDMSW8A` reads an
+    SDM-SW8A eight-channel switch-closure module (also previously
+    surfaced and explicitly out of scope in Round 33's notes)
+  - None of the 5 is a block construct, so this needed no parser/AST
+    changes -- purely `keywords.json`/completion/hover/signature-help
+    work
+  - Added all 5 to `keywords.json` under the `communication` category
+    (alongside the existing I2C and SDM* entries), regenerating the
+    lexer keyword table and `client/syntaxes/crbasic.tmLanguage.json`
+    via `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 5, keeping the existing parity enforced by
+    all three completeness tests
+  - 5 new completion tests (one exact-`insert_text` test per function)
+    - 1 new signature test (`sdmsw8a_has_seven_parameters_in_official_order`)
+    added across 3 commits (one per LSP layer); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (505 `crbasic-lsp` lib tests,
+    up from 499)
+
+Not flagged as gaps (out of scope for this pass):
+
+- `SDI12SensorSetup`/`SDI12SensorResponse` (the other 2 candidates in
+  this round's original split) are **not yet added**, unlike every
+  other candidate confirmed so far in Rounds 28-34d. Neither has a
+  help.campbellsci.com page under any model path tried (`cr1000x`,
+  `cr6`, `cr300`, `granite`, and a guessed
+  `sdi12sensorsetupsdi12sensorresponse.htm` combined-page URL, all
+  404), and neither of Round 34's two independent research agents
+  could locate an authoritative syntax line -- only a bare
+  `SDI12SensorSetup(1,1,1,1)` real-world code example with no parameter
+  names attached. Adding these now would mean inventing 4 parameter
+  names with no evidentiary support, which this project's audit rounds
+  have consistently avoided (contrast with Round 33b's
+  `CDM_Therm107`/`108`/`109`, which had a verified sibling instruction
+  to derive from -- no such sibling exists here). Left for a future
+  round if a primary source (PDF manual, a fuller forum example)
+  surfaces.
+- Rounds 34e through 34i (75 remaining candidates across 5 functional
+  categories) remain deferred per Round 34's split.
