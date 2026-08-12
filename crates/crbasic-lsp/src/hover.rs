@@ -405,6 +405,25 @@ impl HoverProvider {
             "emailrelay" => Some(
                 "**EmailRelay**\n\nSends an email message to one or more addresses via a Campbell Scientific relay service.",
             ),
+            "emailsend" => {
+                Some("**EmailSend**\n\nSends an email message directly via an SMTP server.")
+            }
+            "dialmodem" => Some(
+                "**DialModem**\n\nDials a modem device over a communications port and checks for an expected response.",
+            ),
+            "dialsequence" => Some(
+                "**DialSequence**\n\nDeclares a PakBus dial-out route/sequence, closed by EndDialSequence.",
+            ),
+            "enddialsequence" => Some(
+                "**EndDialSequence**\n\nCloses a DialSequence block, reporting whether the dial sequence succeeded.",
+            ),
+            "modemhangup" => Some(
+                "**ModemHangup**\n\nDeclares code to run when a communications port hangs up, closed by EndModemHangup.",
+            ),
+            "smsrecv" => {
+                Some("**SMSRecv**\n\nPolls a CELL2XX cellular modem for a pending SMS message.")
+            }
+            "smssend" => Some("**SMSSend**\n\nSends an SMS message via a CELL2XX cellular modem."),
             "pppopen" => Some(
                 "**PPPOpen**\n\nEnables a PPP network connection through an external modem and returns its IP address.",
             ),
@@ -1457,6 +1476,13 @@ mod tests {
                     "UDPSocketRecv",
                     "UDPSocketClose",
                     "EmailRelay",
+                    "EmailSend",
+                    "DialModem",
+                    "DialSequence",
+                    "EndDialSequence",
+                    "ModemHangup",
+                    "SMSRecv",
+                    "SMSSend",
                     "PPPOpen",
                     "PPPClose",
                     "FTPClient",
