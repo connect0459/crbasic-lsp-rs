@@ -223,6 +223,21 @@ impl HoverProvider {
             "timeisbetween" => Some(
                 "**TimeIsBetween**\n\nReturns true when the datalogger's real-time clock falls within a specified time range.",
             ),
+            "daylightsaving" => Some(
+                "**DaylightSaving**\n\nDetects a custom-rule daylight saving transition and returns the clock adjustment.",
+            ),
+            "daylightsavingus" => Some(
+                "**DaylightSavingUS**\n\nDetects a US-rule daylight saving transition and returns the clock adjustment.",
+            ),
+            "instructiontimes" => Some(
+                "**InstructionTimes**\n\nPopulates an array with the processing time, in microseconds, of every program line; must precede BeginProg.",
+            ),
+            "linenum" => {
+                Some("**LineNum**\n\nReturns the current program line number, for debugging.")
+            }
+            "signature" => Some(
+                "**Signature**\n\nReturns a pseudo-random signature of the program code between two Signature markers.",
+            ),
             _ => None,
         }
     }
@@ -359,6 +374,34 @@ impl HoverProvider {
             "datainterval" => Some(
                 "**DataInterval**\n\nSets the real-time-clock-based interval on which a data table's records are generated.",
             ),
+            "cardflush" => Some(
+                "**CardFlush**\n\nImmediately writes buffered data to an external storage device.",
+            ),
+            "dataevent" => Some(
+                "**DataEvent**\n\nConditionally starts and stops data storage to a table based on trigger conditions.",
+            ),
+            "data" => {
+                Some("**Data**\n\nDefines a list of Float constants for later retrieval with Read.")
+            }
+            "datalong" => Some(
+                "**DataLong**\n\nDefines a list of Long constants for later retrieval with Read.",
+            ),
+            "datatime" => Some(
+                "**DataTime**\n\nSelects whether a data table's records are timestamped at scan time or at storage time.",
+            ),
+            "resettable" => Some(
+                "**ResetTable**\n\nErases all records from a specified data table during program execution.",
+            ),
+            "tablefile" => Some(
+                "**TableFile**\n\nWrites a data table's contents to external storage media; placed inside a DataTable/EndTable declaration.",
+            ),
+            "filemark" => Some(
+                "**FileMark**\n\nInserts a filemark into a data table, signaling file-splitting software to start a new file.",
+            ),
+            "filereadline" => Some(
+                "**FileReadLine**\n\nReads one line from an open file into a destination variable.",
+            ),
+            "erase" => Some("**Erase**\n\nSets all bytes of a variable or array to zero."),
             _ => None,
         }
     }
@@ -1693,6 +1736,16 @@ mod tests {
                     "FileTime",
                     "FileList",
                     "DataInterval",
+                    "CardFlush",
+                    "DataEvent",
+                    "Data",
+                    "DataLong",
+                    "DataTime",
+                    "ResetTable",
+                    "TableFile",
+                    "FileMark",
+                    "FileReadLine",
+                    "Erase",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
@@ -1806,6 +1859,11 @@ mod tests {
                     "SecsSince1990",
                     "TimeIsBetween",
                     "SetSecurity",
+                    "DaylightSaving",
+                    "DaylightSavingUS",
+                    "InstructionTimes",
+                    "LineNum",
+                    "Signature",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
