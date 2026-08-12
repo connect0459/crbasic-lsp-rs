@@ -430,6 +430,60 @@ impl HoverProvider {
             ),
             "i2cread" => Some("**I2CRead**\n\nReads bytes from an I2C peripheral device."),
             "i2cwrite" => Some("**I2CWrite**\n\nWrites bytes to an I2C peripheral device."),
+            "acceptdatarecords" => Some(
+                "**AcceptDataRecords**\n\nConfigures the datalogger to receive and store data records pushed from a remote PakBus datalogger.",
+            ),
+            "broadcast" => Some(
+                "**Broadcast**\n\nSends a broadcast message to all devices on a PakBus network.",
+            ),
+            "clockreport" => Some(
+                "**ClockReport**\n\nSends this datalogger's clock value to a specified PakBus device.",
+            ),
+            "datagram" => Some(
+                "**DataGram**\n\nInitializes a SerialServer/DataGram application that tunnels serial traffic through a PakBus network.",
+            ),
+            "encryptexempt" => Some(
+                "**EncryptExempt**\n\nDeclares a PakBus address range exempt from PakBus encryption.",
+            ),
+            "getdatarecord" => Some(
+                "**GetDataRecord**\n\nRetrieves the most recent record(s) from a table on a remote PakBus datalogger into a local table.",
+            ),
+            "getfile" => Some(
+                "**GetFile**\n\nRetrieves a file from a remote PakBus datalogger and stores it locally.",
+            ),
+            "getvariables" => Some(
+                "**GetVariables**\n\nRetrieves one or more variable values from a data table on a remote PakBus device.",
+            ),
+            "pakbusclock" => Some(
+                "**PakBusClock**\n\nConfigures the datalogger to accept and synchronize its clock from time broadcasts sent by a specified PakBus device.",
+            ),
+            "route" => Some(
+                "**Route**\n\nReturns the neighbor address of, or the route to, a PakBus datalogger.",
+            ),
+            "routes" => Some(
+                "**Routes**\n\nRetrieves the datalogger's list of known dynamic PakBus routes into an array.",
+            ),
+            "senddata" => Some(
+                "**SendData**\n\nSends the most recent record from a data table to a destination PakBus device.",
+            ),
+            "sendfile" => Some(
+                "**SendFile**\n\nSends a file from the datalogger to another PakBus datalogger.",
+            ),
+            "sendgetvariables" => Some(
+                "**SendGetVariables**\n\nSends and/or retrieves an array of values to/from the host datalogger during its assigned time slot.",
+            ),
+            "sendtabledef" => Some(
+                "**SendTableDef**\n\nSends a data table's definition to a destination device on the PakBus network.",
+            ),
+            "sendvariables" => Some(
+                "**SendVariables**\n\nSends one or more variable values to a table in a destination PakBus device.",
+            ),
+            "staticroute" => Some(
+                "**StaticRoute**\n\nDefines a fixed route to a PakBus datalogger, for use when dynamic routing is unavailable.",
+            ),
+            "timeuntiltransmit" => Some(
+                "**TimeUntilTransmit**\n\nReturns the seconds remaining until the datalogger's assigned communication time slot with its host.",
+            ),
             _ => None,
         }
     }
@@ -1170,6 +1224,24 @@ mod tests {
                     "I2COpen",
                     "I2CRead",
                     "I2CWrite",
+                    "AcceptDataRecords",
+                    "Broadcast",
+                    "ClockReport",
+                    "DataGram",
+                    "EncryptExempt",
+                    "GetDataRecord",
+                    "GetFile",
+                    "GetVariables",
+                    "PakBusClock",
+                    "Route",
+                    "Routes",
+                    "SendData",
+                    "SendFile",
+                    "SendGetVariables",
+                    "SendTableDef",
+                    "SendVariables",
+                    "StaticRoute",
+                    "TimeUntilTransmit",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
