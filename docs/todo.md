@@ -4188,3 +4188,72 @@ parity round above.
     workspace `build`/`test`/`clippy`/`fmt` gate and client
     `lint`/`format:check`/`test` gate pass (386 `crbasic-lsp` lib tests, up
     from 379)
+
+### Reference Implementation & Official Docs Comparison, Round 30 (2026-08-12)
+
+Picked PakBus (Campbell Scientific's proprietary datalogger-to-datalogger
+networking protocol) as the next category out of Round 28's ~345-name
+deferred backlog, following the same one-category-per-round approach as
+Round 29's CSAT3/LI-COR work. 20 PakBus-related candidate names were found
+in one reference extension's TextMate grammar; two parallel research
+agents independently verified each against help.campbellsci.com before
+anything was added, following the same evidentiary bar as prior rounds.
+
+- [x] `AcceptDataRecords`, `Broadcast`, `ClockReport`, `DataGram`,
+  `EncryptExempt`, `GetDataRecord`, `GetFile`, `GetVariables`,
+  `PakBusClock`, `Route`, `Routes`, `SendData`, `SendFile`,
+  `SendGetVariables`, `SendTableDef`, `SendVariables`, `StaticRoute`,
+  `TimeUntilTransmit` missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 18 are real, documented CRBasic instructions/functions for
+    PakBus networking (routing, clock synchronization, remote
+    file/variable/data-record transfer between dataloggers); none
+    existed anywhere in `keywords.json`,
+    `completion.rs`/`hover.rs`/`signature.rs`
+  - Two of the reference grammar's 20 candidates turned out to be
+    garbled spellings of real functions rather than distinct
+    instructions: `NetWorkPakBusCLock` is `PakBusClock`, and
+    `SenfVariables` is `SendVariables` -- neither was added as a
+    separate entry
+  - One candidate, `RouteNeighbors`, could not be corroborated against
+    any help.campbellsci.com page or official manual after a dedicated
+    search effort; left out rather than guessed at, unlike the
+    confirmed typos above where the real target was independently
+    verifiable
+  - `Route` (a function returning the neighbor/route address for a
+    given `PakBusAddr`) is distinct from `Routes` (an instruction that
+    fills an array with the full dynamic route table) -- confirmed as
+    two separate, correctly-spelled instructions, not a singular/plural
+    typo of each other
+  - `TimeUntilTransmit` is used bare with no parentheses (an expression,
+    like `Rnd`/`NaN`/the data-type case), not a zero-argument function
+    call like `PPPClose()` -- confirmed against its own syntax line
+  - Added all 18 to `keywords.json` under the `communication` category
+    (matching the existing `GPS`/`I2COpen` PakBus-adjacent networking
+    entries from Round 28), regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 18, keeping the existing parity enforced by
+    all three completeness tests; every parameter name/order was taken
+    directly from each function's own help.campbellsci.com syntax
+    diagram (not inferred), following the same evidentiary bar as prior
+    rounds. `SendGetVariables`'s own official page names its 9th
+    parameter `GetVariable` in the syntax line but `GetVariables`
+    (plural) in the parameter table -- kept as `GetVariable` (matching
+    the syntax line), the same resolution strategy used for prior
+    syntax/table naming mismatches (e.g. `MenuItem` in the
+    signature-help parity round)
+  - 19 new tests: 18 completion tests (one exact-`insert_text` test per
+    function) and 1 signature test (`timeuntiltransmit_takes_no_parameters`,
+    mirroring the existing `pppclose_takes_no_parameters` convention)
+    added across 3 commits (one per LSP layer, following the Round 29
+    commit convention); full workspace `build`/`test`/`clippy`/`fmt`
+    gate passes (405 `crbasic-lsp` lib tests, up from 386)
+
+Not flagged as gaps (out of scope for this pass):
+
+- The remaining backlog from Round 28's full name diff (CDM_\*/SDM\*
+  peripherals, GOES/ARGOS satellite telemetry, DNP, plus the garbled/
+  typoed entries already dismissed there) remains deferred -- PakBus was
+  this round's single chosen category, consistent with the
+  one-category-per-round approach Round 29 established.
