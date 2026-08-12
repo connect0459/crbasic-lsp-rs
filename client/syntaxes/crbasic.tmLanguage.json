@@ -152,7 +152,7 @@
     },
     "builtin-functions-data": {
       "name": "support.function.data.crbasic",
-      "match": "(?i)\\b(Sample|Average|StdDev|Minimum|Maximum|Totalize|WindVector|Histogram|FieldNames|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval|CardFlush|DataEvent|Data|DataLong|DataTime|ResetTable|TableFile|FileMark|FileReadLine|Erase)\\b"
+      "match": "(?i)\\b(Sample|Average|StdDev|Minimum|Maximum|Totalize|WindVector|Histogram|Median|Moment|SampleMaxMin|PeakValley|FFT|Covariance|LevelCrossing|WorstCase|FieldNames|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval|CardFlush|DataEvent|Data|DataLong|DataTime|ResetTable|TableFile|FileMark|FileReadLine|Erase)\\b"
     },
     "builtin-functions-menu": {
       "name": "support.function.menu.crbasic",
@@ -166,7 +166,7 @@
         },
         {
           "name": "support.function.math.crbasic",
-          "match": "(?i)\\b(Abs|Sgn|Sqr|Exp|Ln|Log|Log10|Sin|Cos|Tan|Sinh|Cosh|Tanh|Asin|Acos|Atn|Atn2|Int|Fix|Frac|Round|Rnd|Randomize|Ceiling|Floor|MovePrecise|PWR|CType)\\b"
+          "match": "(?i)\\b(Abs|Sgn|Sqr|Exp|Ln|Log|Log10|Sin|Cos|Tan|Sinh|Cosh|Tanh|Asin|Acos|Atn|Atn2|Int|Fix|Frac|Round|Rnd|Randomize|Ceiling|Floor|MovePrecise|PWR|CType|AvgRun|MaxRun|MinRun|TotalRun|AvgSpa|CovSpa|MaxSpa|RMSSpa|StdDevSpa|FFTSpa)\\b"
         },
         {
           "name": "support.function.time.crbasic",
