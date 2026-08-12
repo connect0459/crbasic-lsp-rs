@@ -5030,3 +5030,80 @@ Not flagged as gaps (out of scope for this pass):
 
 - Rounds 34g through 34i (51 remaining candidates across 3 functional
   categories) remain deferred per Round 34's split.
+
+### Reference Implementation & Official Docs Comparison, Round 34g (2026-08-12)
+
+Picked up the data/file/table management instructions (14 candidates)
+from Round 34's split. All 14 were directly fetched and confirmed
+against their own help.campbellsci.com syntax lines.
+
+- [x] `CardFlush`, `DataEvent`, `DataLong`, `DataTime`, `DaylightSaving`,
+  `DaylightSavingUS`, `Erase`, `FileMark`, `FileReadLine`,
+  `InstructionTimes`, `LineNum`, `ResetTable`, `Signature`, `TableFile`
+  missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 14 are real, documented CRBasic instructions for buffered-write
+    control, event-triggered table recording, constant-list
+    declaration, table timestamping, daylight-saving clock adjustment,
+    variable clearing, file/table management, per-line profiling,
+    debugging, and program-tamper detection
+  - `DataLong`'s own official help page documents it together with a
+    plain `Data` keyword as two spellings of **one** instruction
+    (`"Data (or DataLong) list of constants"` -- `Data` stores Float
+    constants, `DataLong` stores Long constants). Added `Data` as well,
+    even though it wasn't itself one of the 98 candidates (it had been
+    filtered out earlier as a too-generic regex artifact) -- adding
+    `DataLong` alone would have misrepresented it as an unrelated,
+    freestanding instruction rather than the alternate-type spelling it
+    actually is
+  - `Read`/`Restore`, the two other instructions used alongside
+    `Data`/`DataLong` in the same official examples, are genuinely
+    separate instructions (not alternate spellings) and are
+    deliberately not added here -- doing so would expand this round
+    past its confirmed candidate list; left for a future round
+  - `Data`'s and `DataLong`'s official syntax line has no parentheses
+    (`Data 1, 2, 3.5` is valid CRBasic), so their snippets use a bare
+    `Name value, value` form instead of the usual `Name(args)` shape --
+    the first time this round-series has needed a non-parenthesized
+    multi-argument snippet
+  - `CardFlush`'s, `LineNum`'s, and `Signature`'s official syntax lines
+    are all bare keywords with zero parentheses and zero parameters,
+    the same bare-keyword treatment already used for `SDMTrigger`/
+    `TimeUntilTransmit` in prior rounds
+  - `TableFile`'s disjunctive `NumRecs/TimeIntoInterval` parameter is
+    spelled `NumRecsOrTimeIntoInterval`, matching the existing
+    convention already used for the same slash-as-disjunction pattern
+    elsewhere in this codebase
+  - Categorized by function: `CardFlush`/`DataEvent`/`Data`/`DataLong`/
+    `DataTime`/`ResetTable`/`TableFile`/`FileMark`/`FileReadLine`/
+    `Erase` under `data` (alongside the existing `Sample`/`FileOpen`
+    family); `DaylightSaving`/`DaylightSavingUS`/`InstructionTimes`/
+    `LineNum`/`Signature` under `time` -- this project's existing loose
+    "runtime/system utility" bucket that already holds
+    `SetStatus`/`SetSetting`/`SetSecurity`, none of which are actually
+    about time either
+  - `TableFile`/`DataTime` are placed inside a `DataTable`/`EndTable`
+    declaration but neither is itself a block construct (no matching
+    `End*` keyword of its own), so this needed no parser/AST changes
+  - Added all 15 (14 candidates plus the companion `Data` spelling) to
+    `keywords.json` under their respective categories, regenerating the
+    lexer keyword table and `client/syntaxes/crbasic.tmLanguage.json`
+    via `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 15, keeping the existing parity enforced by
+    all three completeness tests
+  - 15 new completion tests (one exact-`insert_text` test per function)
+    - 3 new signature tests (`cardflush_takes_no_parameters`,
+    `signature_takes_no_parameters`,
+    `tablefile_has_eight_parameters_in_official_order`) added across 3
+    commits (one per LSP layer); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (551 `crbasic-lsp` lib tests,
+    up from 533)
+
+Not flagged as gaps (out of scope for this pass):
+
+- `Read`/`Restore` (surfaced during this round's research, not
+  themselves part of the 98-name candidate list) remain unadded per
+  the note above -- natural candidates for a future round.
+- Rounds 34h through 34i (37 remaining candidates across 2 functional
+  categories) remain deferred per Round 34's split.
