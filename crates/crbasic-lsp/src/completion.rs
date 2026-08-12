@@ -551,6 +551,31 @@ impl CompletionProvider {
                 "Reads and parses incoming serial data using begin/end markers.",
             ),
             Self::create_function_completion(
+                "Calibrate",
+                "Calibrate(${1:Dest}, ${2:Range})",
+                "Forces calibration of all analog channels under program control to compensate for temperature-related measurement errors.",
+            ),
+            Self::create_function_completion(
+                "FieldCal",
+                "FieldCal(${1:Function}, ${2:MeasureVar}, ${3:Reps}, ${4:MultVar}, ${5:OffsetVar}, ${6:Mode}, ${7:KnownVar}, ${8:Index}, ${9:Avg})",
+                "Sets up the datalogger to perform calibration of one or more variables in an array.",
+            ),
+            Self::create_function_completion(
+                "FieldCalStrain",
+                "FieldCalStrain(${1:Function}, ${2:MeasureVar}, ${3:Reps}, ${4:GFAdj}, ${5:ZeromV/V}, ${6:Mode}, ${7:KnownRS}, ${8:Index}, ${9:Avg}, ${10:GFRaw}, ${11:uStrainDest})",
+                "Sets up the datalogger to perform a zero or shunt calibration for a strain measurement.",
+            ),
+            Self::create_function_completion(
+                "LoadFieldCal",
+                "LoadFieldCal(${1:CheckSig})",
+                "Loads values from the FieldCal file into datalogger variables, returning True if successful.",
+            ),
+            Self::create_function_completion(
+                "SampleFieldCal",
+                "SampleFieldCal",
+                "Stores the values in the FieldCal file to a data table; used inside a DataTable/EndTable declaration.",
+            ),
+            Self::create_function_completion(
                 "SerialOutBlock",
                 "SerialOutBlock(${1:ComPort}, ${2:Expression}, ${3:NumberBytes})",
                 "Sends binary data out a serial port.",
@@ -3375,6 +3400,56 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "CDM_VW300Static"),
                 "CDM_VW300Static(${1:CPIAddress}, ${2:DestFreq}, ${3:DestTherm}, ${4:DestStdDev})"
+            );
+        }
+
+        #[test]
+        fn calibrate_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Calibrate"),
+                "Calibrate(${1:Dest}, ${2:Range})"
+            );
+        }
+
+        #[test]
+        fn fieldcal_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FieldCal"),
+                "FieldCal(${1:Function}, ${2:MeasureVar}, ${3:Reps}, ${4:MultVar}, ${5:OffsetVar}, ${6:Mode}, ${7:KnownVar}, ${8:Index}, ${9:Avg})"
+            );
+        }
+
+        #[test]
+        fn fieldcalstrain_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FieldCalStrain"),
+                "FieldCalStrain(${1:Function}, ${2:MeasureVar}, ${3:Reps}, ${4:GFAdj}, ${5:ZeromV/V}, ${6:Mode}, ${7:KnownRS}, ${8:Index}, ${9:Avg}, ${10:GFRaw}, ${11:uStrainDest})"
+            );
+        }
+
+        #[test]
+        fn loadfieldcal_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "LoadFieldCal"),
+                "LoadFieldCal(${1:CheckSig})"
+            );
+        }
+
+        #[test]
+        fn samplefieldcal_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SampleFieldCal"),
+                "SampleFieldCal"
             );
         }
 
