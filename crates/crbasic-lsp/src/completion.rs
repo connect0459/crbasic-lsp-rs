@@ -526,6 +526,26 @@ impl CompletionProvider {
                 "Makes a single-ended voltage measurement via a CDM module.",
             ),
             Self::create_function_completion(
+                "CDM_VW300Config",
+                "CDM_VW300Config(${1:DeviceType}, ${2:CPIAddress}, ${3:SysOption}, ${4:ChanEnable}, ${5:ResonAmp}, ${6:LowFreq}, ${7:HighFreq}, ${8:ChanOptions}, ${9:Mult}, ${10:Offset}, ${11:SteinA}, ${12:SteinB}, ${13:SteinC}, ${14:RF_MeanBins}, ${15:RF_AmpBins}, ${16:RF_LowLim}, ${17:RF_HighLim}, ${18:RF_Hyst}, ${19:RF_Form})",
+                "Sends configuration settings to a CDM-VW300 vibrating-wire spectrum analyzer; must precede BeginProg.",
+            ),
+            Self::create_function_completion(
+                "CDM_VW300Dynamic",
+                "CDM_VW300Dynamic(${1:CPIAddress}, ${2:DestFreq}, ${3:DestDiag})",
+                "Captures the dynamic resonant frequency output of a CDM-VW300 vibrating-wire spectrum analyzer.",
+            ),
+            Self::create_function_completion(
+                "CDM_VW300RainFlow",
+                "CDM_VW300RainFlow(${1:CPIAddress}, ${2:RF1}, ${3:RF2}, ${4:RF3}, ${5:RF4}, ${6:RF5}, ${7:RF6}, ${8:RF7}, ${9:RF8})",
+                "Captures rainflow-histogram data from a CDM-VW300 vibrating-wire spectrum analyzer.",
+            ),
+            Self::create_function_completion(
+                "CDM_VW300Static",
+                "CDM_VW300Static(${1:CPIAddress}, ${2:DestFreq}, ${3:DestTherm}, ${4:DestStdDev})",
+                "Captures the static resonant frequency, thermistor temperature, and frequency standard deviation from a CDM-VW300 vibrating-wire spectrum analyzer.",
+            ),
+            Self::create_function_completion(
                 "SerialInRecord",
                 "SerialInRecord(${1:COMPort}, ${2:Dest}, ${3:BeginWord}, ${4:NBytes}, ${5:EndWord}, ${6:NBytesReturned}, ${7:SerialInRecOption})",
                 "Reads and parses incoming serial data using begin/end markers.",
@@ -3315,6 +3335,46 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "CDM_VoltSE"),
                 "CDM_VoltSE(${1:CDMType}, ${2:CPIAddress}, ${3:Dest}, ${4:Reps}, ${5:Range}, ${6:SEChan}, ${7:MeasOff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})"
+            );
+        }
+
+        #[test]
+        fn cdm_vw300config_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_VW300Config"),
+                "CDM_VW300Config(${1:DeviceType}, ${2:CPIAddress}, ${3:SysOption}, ${4:ChanEnable}, ${5:ResonAmp}, ${6:LowFreq}, ${7:HighFreq}, ${8:ChanOptions}, ${9:Mult}, ${10:Offset}, ${11:SteinA}, ${12:SteinB}, ${13:SteinC}, ${14:RF_MeanBins}, ${15:RF_AmpBins}, ${16:RF_LowLim}, ${17:RF_HighLim}, ${18:RF_Hyst}, ${19:RF_Form})"
+            );
+        }
+
+        #[test]
+        fn cdm_vw300dynamic_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_VW300Dynamic"),
+                "CDM_VW300Dynamic(${1:CPIAddress}, ${2:DestFreq}, ${3:DestDiag})"
+            );
+        }
+
+        #[test]
+        fn cdm_vw300rainflow_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_VW300RainFlow"),
+                "CDM_VW300RainFlow(${1:CPIAddress}, ${2:RF1}, ${3:RF2}, ${4:RF3}, ${5:RF4}, ${6:RF5}, ${7:RF6}, ${8:RF7}, ${9:RF8})"
+            );
+        }
+
+        #[test]
+        fn cdm_vw300static_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CDM_VW300Static"),
+                "CDM_VW300Static(${1:CPIAddress}, ${2:DestFreq}, ${3:DestTherm}, ${4:DestStdDev})"
             );
         }
 
