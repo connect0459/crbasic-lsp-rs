@@ -449,6 +449,15 @@ impl HoverProvider {
             ),
             "i2cread" => Some("**I2CRead**\n\nReads bytes from an I2C peripheral device."),
             "i2cwrite" => Some("**I2CWrite**\n\nWrites bytes to an I2C peripheral device."),
+            "spiopen" => Some(
+                "**SPIOpen**\n\nConfigures the datalogger as an SPI controller for communication with peripheral devices.",
+            ),
+            "spiread" => Some(
+                "**SPIRead**\n\nSynchronously reads a specified number of bytes from an SPI peripheral device.",
+            ),
+            "spiwrite" => Some(
+                "**SPIWrite**\n\nSynchronously transmits a specified number of bytes to an SPI peripheral device.",
+            ),
             "acceptdatarecords" => Some(
                 "**AcceptDataRecords**\n\nConfigures the datalogger to receive and store data records pushed from a remote PakBus datalogger.",
             ),
@@ -560,6 +569,9 @@ impl HoverProvider {
             "sdmcd16ac" => Some(
                 "**SDMCD16AC**\n\nEnables or disables the relay ports of an SDM-CD16AC relay control device.",
             ),
+            "sdmcd16mask" => Some(
+                "**SDMCD16Mask**\n\nEnables or disables specific relay ports of an SDM-CD16AC device via a bit-mask filter.",
+            ),
             "sdmcvo4" => Some(
                 "**SDMCVO4**\n\nControls the SDM-CVO4 four-channel current/voltage output device.",
             ),
@@ -577,6 +589,9 @@ impl HoverProvider {
             ),
             "sdmspeed" => Some(
                 "**SDMSpeed**\n\nChanges the bit period the datalogger uses to clock SDM bus communication.",
+            ),
+            "sdmsw8a" => Some(
+                "**SDMSW8A**\n\nReads channels from an SDM-SW8A eight-channel switch closure module.",
             ),
             "sdmtrigger" => Some(
                 "**SDMTrigger**\n\nBroadcasts a simultaneous \"measure now\" group trigger to all SDM devices that support it.",
@@ -1494,6 +1509,9 @@ mod tests {
                     "I2COpen",
                     "I2CRead",
                     "I2CWrite",
+                    "SPIOpen",
+                    "SPIRead",
+                    "SPIWrite",
                     "AcceptDataRecords",
                     "Broadcast",
                     "ClockReport",
@@ -1531,12 +1549,14 @@ mod tests {
                     "SDMBeginPort",
                     "SDMCAN",
                     "SDMCD16AC",
+                    "SDMCD16Mask",
                     "SDMCVO4",
                     "SDMGeneric",
                     "SDMINT8",
                     "SDMIO16",
                     "SDMSIO4",
                     "SDMSpeed",
+                    "SDMSW8A",
                     "SDMTrigger",
                     "SDMX50",
                     "CPIAddModule",
