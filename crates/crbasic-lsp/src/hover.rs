@@ -825,6 +825,40 @@ impl HoverProvider {
             "samplefieldcal" => Some(
                 "**SampleFieldCal**\n\nStores the values in the FieldCal file to a data table; used inside a DataTable/EndTable declaration.",
             ),
+            "acpower" => Some(
+                "**ACPower**\n\nMeasures real AC power and power-quality parameters for single-phase, split-phase, or three-phase Y systems.",
+            ),
+            "am25t" => {
+                Some("**AM25T**\n\nControls and measures the AM25T thermocouple multiplexer.")
+            }
+            "avw200" => {
+                Some("**AVW200**\n\nReads vibrating-wire sensors via an AVW200 spectrum analyzer.")
+            }
+            "cs616" => {
+                Some("**CS616**\n\nEnables and measures a CS616/CS625 water content reflectometer.")
+            }
+            "cs7500" => Some("**CS7500**\n\nCommunicates with a LI-7500(A) gas analyzer via SDM."),
+            "currentse" => Some(
+                "**CurrentSE**\n\nMeasures single-ended current via the datalogger's internal shunt resistor.",
+            ),
+            "hydraprobe" => Some(
+                "**HydraProbe**\n\nConverts raw voltages from a Stevens Hydra Probe sensor into soil measurements.",
+            ),
+            "tdr100" => {
+                Some("**TDR100**\n\nMeasures time-domain-reflectometry probes via a TDR100 device.")
+            }
+            "tdr200" => {
+                Some("**TDR200**\n\nMeasures time-domain-reflectometry probes via a TDR200 device.")
+            }
+            "tga" => {
+                Some("**TGA**\n\nMeasures a TGA100A/TGA200/TGA200A trace gas analyzer via SDM.")
+            }
+            "quadrature" => Some(
+                "**Quadrature**\n\nMeasures a shaft quadrature encoder to determine displacement and rotational direction.",
+            ),
+            "sw12" => Some(
+                "**SW12**\n\nEnables or disables a switched-12V output channel to power external peripherals.",
+            ),
             _ => None,
         }
     }
@@ -1457,6 +1491,18 @@ mod tests {
                     "FieldCalStrain",
                     "LoadFieldCal",
                     "SampleFieldCal",
+                    "ACPower",
+                    "AM25T",
+                    "AVW200",
+                    "CS616",
+                    "CS7500",
+                    "CurrentSE",
+                    "HydraProbe",
+                    "TDR100",
+                    "TDR200",
+                    "TGA",
+                    "Quadrature",
+                    "SW12",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
