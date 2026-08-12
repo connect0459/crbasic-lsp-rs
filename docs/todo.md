@@ -3267,6 +3267,43 @@ an LSP-layer bug rather than a parser-grammar gap.
     4 models, avoiding duplicate coverage of the same profile data through
     two call paths
   - `ValidationProfile` re-exported from `crbasic-parser`'s crate root
+- [x] `selection_range`/`linked_editing_range` LSP providers ✅ Resolved
+  - Picked up from the Round 12 comparison's "plausible future work" note
+    (see Known Issues / Technical Debt above): both were named as
+    unimplemented but supportable via existing AST spans and the
+    `document_highlight`/`rename` identifier-occurrence lookup
+  - `SelectionRangeProvider` (`crates/crbasic-lsp/src/selection_range.rs`)
+    walks the AST's statement spans from the whole `Program` down to the
+    innermost enclosing block (recursing into `If`/`For`/`Do`/`Function`/
+    `Sub`/`Select Case` bodies, mirroring `FoldingRangeProvider`'s block
+    traversal), then adds the identifier token under the cursor as the
+    final, innermost step -- giving editors incremental "expand selection"
+    support from a variable name out to the whole program
+  - `Statement::span()` (already defined in `parser.rs`, exhaustively
+    matching all 18 statement variants) is reused directly rather than
+    duplicated, since it already covers every variant this traversal needs
+  - `LinkedEditingRangeProvider`
+    (`crates/crbasic-lsp/src/linked_editing_range.rs`) is a thin wrapper
+    around `ReferencesProvider::find_identifier_at_position`/
+    `find_all_references` (the same lookup `document_highlight`/`rename`
+    already share), returning every occurrence of the symbol under the
+    cursor plus a CRBasic identifier `word_pattern`
+    (`^[A-Za-z_][A-Za-z0-9_]*$`) so clients constrain in-place edits to
+    valid identifier characters
+  - Both wired into `backend.rs` (`selection_range`/`linked_editing_range`
+    handlers and matching `ServerCapabilities` entries); no client-side
+    changes needed, since `vscode-languageclient` negotiates these
+    automatically from the server's advertised capabilities
+  - `type_definition`/`implementation`/`declaration`/`document_link`/
+    `color`/`moniker`/`inline_value`/`execute_command`/pull-model
+    `diagnostic`/`textDocument/formatting` remain out of scope per the
+    Round 12 comparison's reasoning -- unchanged by this round
+  - 11 new unit tests (6 in `selection_range.rs`, 5 in
+    `linked_editing_range.rs`) + 4 new integration tests
+    (`tests/lsp_integration.rs`) added Red-first, across 2 commits (one
+    per provider); full workspace `build`/`test`/`clippy`/`fmt` gate and
+    client `lint`/`format:check`/`test` gate pass (476 `crbasic-lsp` lib
+    tests, up from 465)
 - [ ] Integration with Campbell Scientific toolchain ⏸️ Deferred
   - Checked `docs/researches/research-001-crbasic-for-vscode.md`: it
     documents the language spec (from CS's public help pages) but no
