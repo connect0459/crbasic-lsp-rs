@@ -146,6 +146,37 @@ impl HoverProvider {
             .or_else(|| Self::get_data_function_description(name))
             .or_else(|| Self::get_string_function_description(name))
             .or_else(|| Self::get_math_function_description(name))
+            .or_else(|| Self::get_time_function_description(name))
+    }
+
+    /// Returns the description for a built-in time/system function name,
+    /// or `None` if `name` isn't one of them.
+    fn get_time_function_description(name: &str) -> Option<&'static str> {
+        match name.to_lowercase().as_str() {
+            "realtime" => Some("**RealTime**\n\nReturns the current real-time clock values."),
+            "timeintointerval" => {
+                Some("**TimeIntoInterval**\n\nReturns true when the interval boundary is crossed.")
+            }
+            "iftime" => Some("**IfTime**\n\nReturns true at specified time intervals."),
+            "timer" => Some("**Timer**\n\nReturns elapsed time from a timer."),
+            "delay" => Some("**Delay**\n\nPauses execution for a specified time."),
+            "setstatus" => Some(
+                "**SetStatus**\n\nChanges the value of a field in the datalogger's Status table.",
+            ),
+            "setsetting" => Some(
+                "**SetSetting**\n\nChanges the value of a field in the datalogger's Settings table.",
+            ),
+            "movebytes" => Some(
+                "**MoveBytes**\n\nMoves binary bytes of data from one memory location to another.",
+            ),
+            "arraylength" => Some(
+                "**ArrayLength**\n\nReturns the total number of elements across all dimensions of an array.",
+            ),
+            "nan" => Some(
+                "**NaN**\n\nRepresents the IEEE-754 Not-a-Number value used to flag an invalid measurement. Takes no parentheses.",
+            ),
+            _ => None,
+        }
     }
 
     /// Returns the description for a built-in math function name, or
@@ -1129,6 +1160,33 @@ mod tests {
                     "Abs", "Sgn", "Sqr", "Exp", "Ln", "Log", "Log10", "Sin", "Cos", "Tan", "Sinh",
                     "Cosh", "Tanh", "Asin", "Acos", "Atn", "Atn2", "Int", "Fix", "Frac", "Round",
                     "Rnd", "Ceiling", "Floor",
+                ] {
+                    let description = HoverProvider::get_builtin_function_description(name);
+                    assert!(
+                        description.is_some_and(|d| d.contains(&format!("**{}**", name))),
+                        "Expected hover info for builtin function: {}",
+                        name
+                    );
+                }
+            }
+        }
+
+        mod time_functions {
+            use super::*;
+
+            #[test]
+            fn all_time_functions_have_hover_info() {
+                for name in [
+                    "RealTime",
+                    "TimeIntoInterval",
+                    "IfTime",
+                    "Timer",
+                    "Delay",
+                    "SetStatus",
+                    "SetSetting",
+                    "MoveBytes",
+                    "ArrayLength",
+                    "NaN",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
