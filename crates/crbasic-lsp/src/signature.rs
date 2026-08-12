@@ -1257,6 +1257,225 @@ impl SignatureProvider {
                 ],
             }),
 
+            "formatfloat" => Some(FunctionSignature {
+                name: "FormatFloat".to_string(),
+                documentation:
+                    "Formats a floating-point value as a string using a printf-style format specifier."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Value".to_string(),
+                        documentation: "The floating-point value to convert to a string."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FormatString".to_string(),
+                        documentation: "A printf-style format specifier controlling width, precision, and numeric type.".to_string(),
+                    },
+                ],
+            }),
+
+            "formatlong" => Some(FunctionSignature {
+                name: "FormatLong".to_string(),
+                documentation:
+                    "Converts a Long value to a decimal, hexadecimal, octal, or binary string."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "LongVar".to_string(),
+                        documentation: "The Long value to format.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FormatString".to_string(),
+                        documentation: "A format code selecting decimal, hex, octal, or binary output and field width.".to_string(),
+                    },
+                ],
+            }),
+
+            "lowercase" => Some(FunctionSignature {
+                name: "LowerCase".to_string(),
+                documentation: "Converts a string to all lowercase characters.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "String".to_string(),
+                    documentation: "The string to convert to lowercase.".to_string(),
+                }],
+            }),
+
+            "uppercase" => Some(FunctionSignature {
+                name: "UpperCase".to_string(),
+                documentation: "Converts a string to all uppercase characters.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "String".to_string(),
+                    documentation: "The string to convert to uppercase.".to_string(),
+                }],
+            }),
+
+            "trim" => Some(FunctionSignature {
+                name: "Trim".to_string(),
+                documentation:
+                    "Returns a copy of a string with leading and trailing spaces removed."
+                        .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "String".to_string(),
+                    documentation: "The string to strip of leading and trailing spaces."
+                        .to_string(),
+                }],
+            }),
+
+            "rtrim" => Some(FunctionSignature {
+                name: "RTrim".to_string(),
+                documentation: "Returns a copy of a string with trailing spaces removed."
+                    .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "String".to_string(),
+                    documentation: "The string to strip of trailing spaces.".to_string(),
+                }],
+            }),
+
+            "ltrim" => Some(FunctionSignature {
+                name: "LTrim".to_string(),
+                documentation: "Returns a copy of a string with leading spaces removed."
+                    .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "String".to_string(),
+                    documentation: "The string to strip of leading spaces.".to_string(),
+                }],
+            }),
+
+            "replace" => Some(FunctionSignature {
+                name: "Replace".to_string(),
+                documentation:
+                    "Searches a string for a substring and replaces all occurrences with another string."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "String".to_string(),
+                        documentation: "The string to search.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Find".to_string(),
+                        documentation: "The substring to search for and replace.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ReplaceWith".to_string(),
+                        documentation: "The string used to replace each occurrence of Find."
+                            .to_string(),
+                    },
+                ],
+            }),
+
+            "chr" => Some(FunctionSignature {
+                name: "Chr".to_string(),
+                documentation: "Returns a character in the extended ASCII character set."
+                    .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Code".to_string(),
+                    documentation: "The extended ASCII code, 0 to 255, of the character to return.".to_string(),
+                }],
+            }),
+
+            "ascii" => Some(FunctionSignature {
+                name: "ASCII".to_string(),
+                documentation: "Returns the ASCII value of a character in a string.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "ASCIIString".to_string(),
+                    documentation: "The string, indexed as ASCIIString(1,1,X), where X selects the character position to evaluate.".to_string(),
+                }],
+            }),
+
+            "strcomp" => Some(FunctionSignature {
+                name: "StrComp".to_string(),
+                documentation:
+                    "Compares two strings to determine if they are identical or their relative sort order."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "String1".to_string(),
+                        documentation: "The first string to compare.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "String2".to_string(),
+                        documentation: "The second string to compare against String1."
+                            .to_string(),
+                    },
+                ],
+            }),
+
+            "checksum" => Some(FunctionSignature {
+                name: "CheckSum".to_string(),
+                documentation: "Returns a checksum signature for the characters in a string."
+                    .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ChkSumString".to_string(),
+                        documentation: "The string, or a file path, whose bytes are used to compute the checksum.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ChkSumType".to_string(),
+                        documentation: "The checksum algorithm to use, such as CRC16, CRC32, MD5, or SHA1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CheckSumSize".to_string(),
+                        documentation: "The number of bytes to include in the checksum, or 0 to use the string's length.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ChkSumOption1".to_string(),
+                        documentation: "Additional option required by cryptographic checksum types 25-29, typically a destination array.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ChkSumOption2".to_string(),
+                        documentation: "Additional option for HMAC checksum types 27-28, specifying the cryptographic key.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ChkSumOption3".to_string(),
+                        documentation: "Additional option for HMAC checksum types 27-28, specifying the key length, or 0 to auto-detect.".to_string(),
+                    },
+                ],
+            }),
+
+            "hextodec" => Some(FunctionSignature {
+                name: "HexToDec".to_string(),
+                documentation: "Converts a hexadecimal string to its float or integer decimal value.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Expression".to_string(),
+                    documentation: "The hexadecimal string to convert to a decimal value."
+                        .to_string(),
+                }],
+            }),
+
+            "hex" => Some(FunctionSignature {
+                name: "Hex".to_string(),
+                documentation: "Returns a hexadecimal string representation of a Long value."
+                    .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Expression".to_string(),
+                    documentation: "The value, converted to Long, to represent in hexadecimal."
+                        .to_string(),
+                }],
+            }),
+
+            "sprintf" => Some(FunctionSignature {
+                name: "Sprintf".to_string(),
+                documentation:
+                    "Writes a formatted output string, built from up to ten arguments, to a destination variable."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The string variable that receives the formatted output."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Format".to_string(),
+                        documentation: "A printf-style format string with up to ten format specifiers.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Argument1".to_string(),
+                        documentation: "The value formatted by the first format specifier in Format.".to_string(),
+                    },
+                ],
+            }),
+
             "timer" => Some(FunctionSignature {
                 name: "Timer".to_string(),
                 documentation: "Returns elapsed time from a timer.".to_string(),
@@ -1998,6 +2217,33 @@ mod tests {
             assert!(SignatureProvider::get_function_signature("Mid").is_some());
             assert!(SignatureProvider::get_function_signature("InStr").is_some());
             assert!(SignatureProvider::get_function_signature("SplitStr").is_some());
+        }
+
+        #[test]
+        fn has_remaining_string_functions() {
+            for name in [
+                "FormatFloat",
+                "FormatLong",
+                "LowerCase",
+                "UpperCase",
+                "Trim",
+                "RTrim",
+                "LTrim",
+                "Replace",
+                "Chr",
+                "ASCII",
+                "StrComp",
+                "CheckSum",
+                "HexToDec",
+                "Hex",
+                "Sprintf",
+            ] {
+                assert!(
+                    SignatureProvider::get_function_signature(name).is_some(),
+                    "Expected a signature for string function: {}",
+                    name
+                );
+            }
         }
 
         #[test]
