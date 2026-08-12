@@ -2937,6 +2937,174 @@ impl SignatureProvider {
                 ],
             }),
 
+            "cdm_vw300config" => Some(FunctionSignature {
+                name: "CDM_VW300Config".to_string(),
+                documentation: "Sends configuration settings to a CDM-VW300 vibrating-wire spectrum analyzer; must precede BeginProg.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "DeviceType".to_string(),
+                        documentation: "Identifies whether the analyzer is a CDM-VW300 (0) or a CDM-VW305 (1).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The address of the CDM-VW300 on the CPI network (1 through 120); set with DVWTool, not by this parameter.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SysOption".to_string(),
+                        documentation: "Determines whether a numeric value or NaN is stored on a warning flag, and whether diagnostic lights are active (0, 1, 10, or 11).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ChanEnable".to_string(),
+                        documentation: "An array activating each CDM-VW300 input channel (0 or 1 per channel).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ResonAmp".to_string(),
+                        documentation: "The target resonant excitation amplitude the CDM-VW300 maintains, in volts (0.001 to 0.010 V).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LowFreq".to_string(),
+                        documentation: "The lower boundary of the valid frequency range, in Hz (290 to 6000 Hz).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "HighFreq".to_string(),
+                        documentation: "The upper boundary of the valid frequency range, in Hz (290 to 6000 Hz).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ChanOptions".to_string(),
+                        documentation: "The output units/format for the channel (e.g. Hz or Hz²).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SteinA".to_string(),
+                        documentation: "The Steinhart-Hart coefficient A used to convert the embedded thermistor reading to temperature.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SteinB".to_string(),
+                        documentation: "The Steinhart-Hart coefficient B used to convert the embedded thermistor reading to temperature.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SteinC".to_string(),
+                        documentation: "The Steinhart-Hart coefficient C used to convert the embedded thermistor reading to temperature.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF_MeanBins".to_string(),
+                        documentation: "The number of mean-value bins in the rainflow histogram.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF_AmpBins".to_string(),
+                        documentation: "The number of amplitude bins in the rainflow histogram.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF_LowLim".to_string(),
+                        documentation: "The low limit of the rainflow histogram.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF_HighLim".to_string(),
+                        documentation: "The high limit of the rainflow histogram.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF_Hyst".to_string(),
+                        documentation: "The minimum amplitude change (hysteresis) counted in the rainflow histogram.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF_Form".to_string(),
+                        documentation: "The output form/units of the rainflow histogram.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_vw300dynamic" => Some(FunctionSignature {
+                name: "CDM_VW300Dynamic".to_string(),
+                documentation: "Captures the dynamic resonant frequency output of a CDM-VW300 vibrating-wire spectrum analyzer.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The address of the CDM-VW300 on the CPI network.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DestFreq".to_string(),
+                        documentation: "A variable or array to store the dynamic resonant frequency output.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DestDiag".to_string(),
+                        documentation: "A variable or array to store the diagnostic code (excitation strength and amplitude/frequency warning flags).".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_vw300rainflow" => Some(FunctionSignature {
+                name: "CDM_VW300RainFlow".to_string(),
+                documentation: "Captures rainflow-histogram data from a CDM-VW300 vibrating-wire spectrum analyzer.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The address of the CDM-VW300 on the CPI network.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF1".to_string(),
+                        documentation: "Destination for the rainflow histogram data of channel 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF2".to_string(),
+                        documentation: "Destination for the rainflow histogram data of channel 2.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF3".to_string(),
+                        documentation: "Destination for the rainflow histogram data of channel 3.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF4".to_string(),
+                        documentation: "Destination for the rainflow histogram data of channel 4.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF5".to_string(),
+                        documentation: "Destination for the rainflow histogram data of channel 5.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF6".to_string(),
+                        documentation: "Destination for the rainflow histogram data of channel 6.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF7".to_string(),
+                        documentation: "Destination for the rainflow histogram data of channel 7.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RF8".to_string(),
+                        documentation: "Destination for the rainflow histogram data of channel 8.".to_string(),
+                    },
+                ],
+            }),
+
+            "cdm_vw300static" => Some(FunctionSignature {
+                name: "CDM_VW300Static".to_string(),
+                documentation: "Captures the static resonant frequency, thermistor temperature, and frequency standard deviation from a CDM-VW300 vibrating-wire spectrum analyzer.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The address of the CDM-VW300 on the CPI network.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DestFreq".to_string(),
+                        documentation: "A variable or array to store the static (1 Hz) resonant frequency output.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DestTherm".to_string(),
+                        documentation: "A variable or array to store the embedded thermistor/RTD reading (temperature or resistance).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DestStdDev".to_string(),
+                        documentation: "A variable or array to store the standard deviation of the dynamic output over the latest one-second interval.".to_string(),
+                    },
+                ],
+            }),
+
             "watchdogtimer" => Some(FunctionSignature {
                 name: "WatchdogTimer".to_string(),
                 documentation: "Enables a user-programmed watchdog timer that guards the program against lockup.".to_string(),
@@ -6287,6 +6455,10 @@ mod tests {
                 "CDM_Therm109",
                 "CDM_VoltDiff",
                 "CDM_VoltSE",
+                "CDM_VW300Config",
+                "CDM_VW300Dynamic",
+                "CDM_VW300RainFlow",
+                "CDM_VW300Static",
             ] {
                 assert!(
                     SignatureProvider::get_function_signature(name).is_some(),
