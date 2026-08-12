@@ -143,6 +143,63 @@ impl HoverProvider {
         Self::get_scan_function_description(name)
             .or_else(|| Self::get_measurement_function_description(name))
             .or_else(|| Self::get_communication_function_description(name))
+            .or_else(|| Self::get_data_function_description(name))
+    }
+
+    /// Returns the description for a built-in data-table/output-processing
+    /// or file-management function name, or `None` if `name` isn't one of
+    /// them.
+    fn get_data_function_description(name: &str) -> Option<&'static str> {
+        match name.to_lowercase().as_str() {
+            "sample" => Some("**Sample**\n\nSamples and stores a value in the data table."),
+            "average" => Some("**Average**\n\nCalculates and stores the average of values."),
+            "stddev" => Some("**StdDev**\n\nCalculates and stores the standard deviation."),
+            "minimum" => Some("**Minimum**\n\nStores the minimum value over the output interval."),
+            "maximum" => Some("**Maximum**\n\nStores the maximum value over the output interval."),
+            "totalize" => {
+                Some("**Totalize**\n\nStores the sum of values over the output interval.")
+            }
+            "histogram" => Some(
+                "**Histogram**\n\nStores a frequency distribution of input data across a set of bins.",
+            ),
+            "fieldnames" => Some(
+                "**FieldNames**\n\nOverrides the default field names for the preceding output-processing instruction.",
+            ),
+            "cardout" => {
+                Some("**CardOut**\n\nCreates a new data table that is stored on a memory card.")
+            }
+            "newfile" => Some(
+                "**NewFile**\n\nDetermines whether a monitored file has been newly written since this instruction last ran.",
+            ),
+            "filemanage" => Some(
+                "**FileManage**\n\nPerforms a management operation, such as delete, hide, run, or format, on a file or device.",
+            ),
+            "fileopen" => Some(
+                "**FileOpen**\n\nOpens a file for reading or writing and returns a file handle.",
+            ),
+            "fileclose" => Some("**FileClose**\n\nCloses a file previously opened with FileOpen."),
+            "fileread" => {
+                Some("**FileRead**\n\nReads data from an open file into a variable or array.")
+            }
+            "filewrite" => {
+                Some("**FileWrite**\n\nWrites data from a variable or array to an open file.")
+            }
+            "filecopy" => {
+                Some("**FileCopy**\n\nCopies a file from one drive on the datalogger to another.")
+            }
+            "filerename" => Some("**FileRename**\n\nRenames a file stored on the datalogger."),
+            "filesize" => Some("**FileSize**\n\nReturns the size, in bytes, of a specified file."),
+            "filetime" => {
+                Some("**FileTime**\n\nReturns the last-modified timestamp of a specified file.")
+            }
+            "filelist" => Some(
+                "**FileList**\n\nWrites the list of file names on a device into a destination array.",
+            ),
+            "datainterval" => Some(
+                "**DataInterval**\n\nSets the real-time-clock-based interval on which a data table's records are generated.",
+            ),
+            _ => None,
+        }
     }
 
     /// Returns the description for a built-in communication function name
@@ -896,6 +953,45 @@ mod tests {
                     "HTTPGet",
                     "HTTPPost",
                     "HTTPPut",
+                ] {
+                    let description = HoverProvider::get_builtin_function_description(name);
+                    assert!(
+                        description.is_some_and(|d| d.contains(&format!("**{}**", name))),
+                        "Expected hover info for builtin function: {}",
+                        name
+                    );
+                }
+            }
+        }
+
+        mod data_functions {
+            use super::*;
+
+            #[test]
+            fn all_data_functions_have_hover_info() {
+                for name in [
+                    "Sample",
+                    "Average",
+                    "StdDev",
+                    "Minimum",
+                    "Maximum",
+                    "Totalize",
+                    "WindVector",
+                    "Histogram",
+                    "FieldNames",
+                    "CardOut",
+                    "NewFile",
+                    "FileManage",
+                    "FileOpen",
+                    "FileClose",
+                    "FileRead",
+                    "FileWrite",
+                    "FileCopy",
+                    "FileRename",
+                    "FileSize",
+                    "FileTime",
+                    "FileList",
+                    "DataInterval",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
