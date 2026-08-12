@@ -916,6 +916,31 @@ impl CompletionProvider {
                 "Switches an SDMX50 coaxial multiplexer to a specified channel.",
             ),
             Self::create_function_completion(
+                "CPIAddModule",
+                "CPIAddModule(${1:CDMType}, ${2:CDMSerialNo}, ${3:CDMDeviceName}, ${4:CPIAddress})",
+                "Statically assigns a CPI-bus address to a GRANITE/CDM/VWIRE module.",
+            ),
+            Self::create_function_completion(
+                "CPIFileSend",
+                "CPIFileSend(${1:ResultCode}, ${2:FileSendProgress}, ${3:CPIAddress}, ${4:OSFlag}, ${5:OSVersion})",
+                "Sends an OS file to a GRANITE/CDM module over the CPI bus via memory card, USR drive, or USB.",
+            ),
+            Self::create_function_completion(
+                "CPISpeed",
+                "CPISpeed(${1:Speed})",
+                "Adjusts the CPI bus bit rate, needed when the bus load or cable length requires a slower speed.",
+            ),
+            Self::create_function_completion(
+                "MQTTPublishTable",
+                "MQTTPublishTable(${1:QoS}, ${2:NumRecsOrTimeIntoInterval}, ${3:Interval}, ${4:Units}, ${5:OutputFormat}, ${6:Longitude}, ${7:Latitude}, ${8:Altitude})",
+                "Publishes a data table's contents to an MQTT broker; placed inside a DataTable/EndTable declaration.",
+            ),
+            Self::create_function_completion(
+                "MQTTPublishConstTable",
+                "MQTTPublishConstTable(${1:QoS})",
+                "Enables remote editing of ConstTable values via MQTT; placed inside a ConstTable/EndConstTable declaration.",
+            ),
+            Self::create_function_completion(
                 "WindVector",
                 "WindVector(${1:Reps}, ${2:SpeedOrEast}, ${3:DirectionOrNorth}, ${4:DataType}, ${5:DisableVar}, ${6:Subinterval}, ${7:SensorType}, ${8:OutputOpt})",
                 "Calculates and stores the mean wind speed, wind vector magnitude, and direction statistics.",
@@ -3944,6 +3969,56 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "SDMX50"),
                 "SDMX50(${1:SDMAddress}, ${2:Channel})"
+            );
+        }
+
+        #[test]
+        fn cpiaddmodule_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CPIAddModule"),
+                "CPIAddModule(${1:CDMType}, ${2:CDMSerialNo}, ${3:CDMDeviceName}, ${4:CPIAddress})"
+            );
+        }
+
+        #[test]
+        fn cpifilesend_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CPIFileSend"),
+                "CPIFileSend(${1:ResultCode}, ${2:FileSendProgress}, ${3:CPIAddress}, ${4:OSFlag}, ${5:OSVersion})"
+            );
+        }
+
+        #[test]
+        fn cpispeed_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CPISpeed"),
+                "CPISpeed(${1:Speed})"
+            );
+        }
+
+        #[test]
+        fn mqttpublishtable_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MQTTPublishTable"),
+                "MQTTPublishTable(${1:QoS}, ${2:NumRecsOrTimeIntoInterval}, ${3:Interval}, ${4:Units}, ${5:OutputFormat}, ${6:Longitude}, ${7:Latitude}, ${8:Altitude})"
+            );
+        }
+
+        #[test]
+        fn mqttpublishconsttable_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MQTTPublishConstTable"),
+                "MQTTPublishConstTable(${1:QoS})"
             );
         }
     }
