@@ -3241,6 +3241,376 @@ impl SignatureProvider {
                 ],
             }),
 
+            "sdmao4" => Some(FunctionSignature {
+                name: "SDMAO4".to_string(),
+                documentation: "Sets the output voltage on an SDM-AO4 four-channel analog output device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "A variable or array holding the voltage(s), in millivolts, to output.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of output channels to set; values greater than 4 spill onto additional SDM-AO4 devices at sequentially higher addresses.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The SDM bus address of the device; valid entries are 0 through 14 (15 is reserved for SDMTrigger).".to_string(),
+                    },
+                ],
+            }),
+
+            "sdmao4a" => Some(FunctionSignature {
+                name: "SDMAO4A".to_string(),
+                documentation: "Sets the output voltage on an SDM-AO4A four-channel analog output device, the feature-extended replacement for the SDM-AO4.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "A variable or array holding the voltage(s), in millivolts, to output.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAO4ADest".to_string(),
+                        documentation: "A variable that receives the status/error code of the instruction: 240 success, 241 signature error, 242 current overload, 243 both.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The SDM bus address of the device; valid entries are 0 through 14 (15 is reserved for SDMTrigger).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAO4AStartChan".to_string(),
+                        documentation: "The first output channel to set; subsequent channels set by Reps continue from there.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of output channels to set; values greater than 4 spill onto additional SDM-AO4A devices at sequentially higher addresses.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAO4AOption".to_string(),
+                        documentation: "The operating mode: 0 power down, 1 5V synchronous, 2 5V sequential, 3 10V synchronous, 4 10V sequential.".to_string(),
+                    },
+                ],
+            }),
+
+            "sdmbeginport" => Some(FunctionSignature {
+                name: "SDMBeginPort".to_string(),
+                documentation: "Designates an alternate set of datalogger terminals to use as an SDM port; must precede BeginProg and any SerialOpen.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "SDMPort".to_string(),
+                    documentation: "The terminal group to use as the Data/Clock/Enable lines of the SDM port, in place of the default C1/C2/C3.".to_string(),
+                }],
+            }),
+
+            "sdmcan" => Some(FunctionSignature {
+                name: "SDMCAN".to_string(),
+                documentation: "Configures and operates the SDM-CAN interface between a CAN-bus network and the datalogger.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array that receives the measurement/status results.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The SDM bus address of the device; valid entries are 0 through 14 (15 is reserved for SDMTrigger).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeQuanta".to_string(),
+                        documentation: "The base timing unit for the CAN bit-rate synchronization segment.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TSEG1".to_string(),
+                        documentation: "The CAN bit-timing segment covering propagation delay plus phase segment 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TSEG2".to_string(),
+                        documentation: "The CAN bit-timing segment covering phase segment 2, setting the bit-sample point relative to TSEG1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ID".to_string(),
+                        documentation: "The CAN frame identifier; a positive value selects a 29-bit extended ID, a negative value an 11-bit standard ID.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "A numeric code (1 through 33) selecting the SDM-CAN operation to perform.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "StartBit".to_string(),
+                        documentation: "The starting bit position within the CAN data frame; valid entries are 1 through 64, negative to count from the left.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumBits".to_string(),
+                        documentation: "The number of bits per value; valid entries are 1 through 64, negative to enable interrupt notification on new data.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumVals".to_string(),
+                        documentation: "The number of values to transfer per execution.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Multiplier".to_string(),
+                        documentation: "A multiplier applied to scale the raw value to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw value to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
+            "sdmcd16ac" => Some(FunctionSignature {
+                name: "SDMCD16AC".to_string(),
+                documentation: "Enables or disables the relay ports of an SDM-CD16AC relay control device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "An array of values enabling (non-zero) or disabling (zero) each relay port.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of SDM-CD16AC devices to control.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The address of the first device; valid entries are 0 through 14, incrementing per device when Reps is greater than 1.".to_string(),
+                    },
+                ],
+            }),
+
+            "sdmcvo4" => Some(FunctionSignature {
+                name: "SDMCVO4".to_string(),
+                documentation: "Controls the SDM-CVO4 four-channel current/voltage output device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CVO4Source".to_string(),
+                        documentation: "An array of output values per channel, in millivolts (voltage mode) or microamps (current mode).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CVO4Reps".to_string(),
+                        documentation: "The number of channels to set; 0 powers off the device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The SDM bus address of the device; valid entries are 0 through 14.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CVO4Mode".to_string(),
+                        documentation: "The output-type override: 0 voltage per jumper, 1 current per jumper, 10 voltage overriding jumper, 11 current overriding jumper.".to_string(),
+                    },
+                ],
+            }),
+
+            "sdmgeneric" => Some(FunctionSignature {
+                name: "SDMGeneric".to_string(),
+                documentation: "Sends raw commands to an SDM device with no dedicated CRBasic instruction support.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable that receives the bytes returned from the device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The SDM bus address of the device; valid entries are 0 through 14 (15 is reserved for SDMTrigger).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CmdByte".to_string(),
+                        documentation: "The setup/command byte sent to the device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumValuesOut".to_string(),
+                        documentation: "The number of values to send to the device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "A variable holding the values to send to the device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumValuesIn".to_string(),
+                        documentation: "The number of values expected back from the device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BytesPerValue".to_string(),
+                        documentation: "The byte width per value, typically 1, 2, or 4.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BigEndian".to_string(),
+                        documentation: "The byte order of the transfer: 0 little-endian, 1 big-endian.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DelayByte".to_string(),
+                        documentation: "The inter-byte delay, in microseconds; a negative value applies the delay on receive instead.".to_string(),
+                    },
+                ],
+            }),
+
+            "sdmint8" => Some(FunctionSignature {
+                name: "SDMINT8".to_string(),
+                documentation: "Programs and controls the SDM-INT8 eight-channel interval timer.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "An array that receives the results; 1-D per channel, or 2-D when OutputOpt selects capturing all events.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The SDM bus address of the device; valid entries are 0 through 14.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Config8_5".to_string(),
+                        documentation: "A four-digit code configuring the voltage level and edge-detection settings for channels 8 through 5.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Config4_1".to_string(),
+                        documentation: "A four-digit code configuring the voltage level and edge-detection settings for channels 4 through 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Funct8_5".to_string(),
+                        documentation: "A four-digit code selecting the timing function (period, frequency, counts, etc.) for channels 8 through 5.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Funct4_1".to_string(),
+                        documentation: "A four-digit code selecting the timing function (period, frequency, counts, etc.) for channels 4 through 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "OutputOpt".to_string(),
+                        documentation: "The output-option code selecting the averaging or event-capture mode.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CaptureTrig".to_string(),
+                        documentation: "A variable that, when true, triggers the return of captured events (used only with the capture-all-events output option).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
+            "sdmio16" => Some(FunctionSignature {
+                name: "SDMIO16".to_string(),
+                documentation: "Sets up and operates an SDM-IO16 16-port digital I/O expansion device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A variable or array holding measurement results (reads) or source values (writes).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IO16Status".to_string(),
+                        documentation: "A variable that receives the result/error code of the command: 0 success, incrementing on repeated failure.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The SDM bus address of the device; valid entries are 0 through 14 (15 is reserved for SDMTrigger).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IO16Cmd".to_string(),
+                        documentation: "A numeric command code (1 through 104) selecting the read/write operation to perform.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mode16_13".to_string(),
+                        documentation: "A four-digit mode code configuring ports 16 through 13.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mode12_9".to_string(),
+                        documentation: "A four-digit mode code configuring ports 12 through 9.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mode8_5".to_string(),
+                        documentation: "A four-digit mode code configuring ports 8 through 5.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mode4_1".to_string(),
+                        documentation: "A four-digit mode code configuring ports 4 through 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Multiplier".to_string(),
+                        documentation: "A multiplier applied to scale the raw results to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw results to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
+            "sdmsio4" => Some(FunctionSignature {
+                name: "SDMSIO4".to_string(),
+                documentation: "Controls and transfers data with a legacy SDM-SIO4 four-port serial I/O device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "An array, sized Reps by ValuesPerRep, holding data retrieved from (or sourced to, on send) the device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of sequentially-addressed SDM-SIO4 devices to poll.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The address of the first device; valid entries are 0 through 14.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mode".to_string(),
+                        documentation: "The port selector: 1 through 4 for an individual port, 5 for all ports.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Command".to_string(),
+                        documentation: "An operation code (1 through 2305) selecting the command to send (e.g. send data, set comm parameters).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Param1".to_string(),
+                        documentation: "The first command-specific parameter; its meaning depends on Command.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Param2".to_string(),
+                        documentation: "The second command-specific parameter; its meaning depends on Command.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ValuesPerRep".to_string(),
+                        documentation: "The number of values sent or received per device per execution.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Multiplier".to_string(),
+                        documentation: "A multiplier applied to scale the raw values to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw values to engineering units.".to_string(),
+                    },
+                ],
+            }),
+
+            "sdmspeed" => Some(FunctionSignature {
+                name: "SDMSpeed".to_string(),
+                documentation: "Changes the bit period the datalogger uses to clock SDM bus communication, useful for long cable runs.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "BitPeriod".to_string(),
+                    documentation: "The desired bit period, in microseconds; default is 26, valid range is 9 to 2000.".to_string(),
+                }],
+            }),
+
+            "sdmtrigger" => Some(FunctionSignature {
+                name: "SDMTrigger".to_string(),
+                documentation: "Broadcasts a simultaneous \"measure now\" group trigger to all SDM devices on the bus that support group triggering.".to_string(),
+                parameters: vec![],
+            }),
+
+            "sdmx50" => Some(FunctionSignature {
+                name: "SDMX50".to_string(),
+                documentation: "Switches an SDMX50 coaxial multiplexer to a specified channel, independent of the TDR100 instruction.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The SDM bus address of the device; valid entries are 0 through 14 (15 is reserved for SDMTrigger), incrementing per device when multiple multiplexers are used.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Channel".to_string(),
+                        documentation: "The multiplexer channel to activate; valid entries are 1 through 8.".to_string(),
+                    },
+                ],
+            }),
+
             "abs" => Some(FunctionSignature {
                 name: "Abs".to_string(),
                 documentation: "Returns the absolute value of a number.".to_string(),
@@ -4656,6 +5026,19 @@ mod tests {
                 "GOESSetup",
                 "GOESStatus",
                 "GOESTable",
+                "SDMAO4",
+                "SDMAO4A",
+                "SDMBeginPort",
+                "SDMCAN",
+                "SDMCD16AC",
+                "SDMCVO4",
+                "SDMGeneric",
+                "SDMINT8",
+                "SDMIO16",
+                "SDMSIO4",
+                "SDMSpeed",
+                "SDMTrigger",
+                "SDMX50",
             ] {
                 assert!(
                     SignatureProvider::get_function_signature(name).is_some(),
@@ -4677,6 +5060,14 @@ mod tests {
         fn timeuntiltransmit_takes_no_parameters() {
             let sig = SignatureProvider::get_function_signature("TimeUntilTransmit")
                 .expect("TimeUntilTransmit should have a signature");
+
+            assert!(sig.parameters.is_empty());
+        }
+
+        #[test]
+        fn sdmtrigger_takes_no_parameters() {
+            let sig = SignatureProvider::get_function_signature("SDMTrigger")
+                .expect("SDMTrigger should have a signature");
 
             assert!(sig.parameters.is_empty());
         }
