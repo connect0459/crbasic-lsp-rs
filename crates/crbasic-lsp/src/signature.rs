@@ -5211,6 +5211,113 @@ impl SignatureProvider {
                 ],
             }),
 
+            "cpiaddmodule" => Some(FunctionSignature {
+                name: "CPIAddModule".to_string(),
+                documentation: "Statically assigns a CPI-bus address to a GRANITE/CDM/VWIRE module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CDMType".to_string(),
+                        documentation: "The type of CPI module being added (e.g. a specific CDM/GRANITE/VWIRE model).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CDMSerialNo".to_string(),
+                        documentation: "The serial number of the module, used to distinguish it from other modules of the same type.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CDMDeviceName".to_string(),
+                        documentation: "A user-assigned name for the module.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The address to statically assign to the module on the CPI bus.".to_string(),
+                    },
+                ],
+            }),
+
+            "cpifilesend" => Some(FunctionSignature {
+                name: "CPIFileSend".to_string(),
+                documentation: "Sends an OS file to a GRANITE/CDM module over the CPI bus via memory card, USR drive, or USB.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "A variable that stores the transmission response code (0 = success, 1 through 5 indicate various errors).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FileSendProgress".to_string(),
+                        documentation: "A variable that reports the file-transfer completion percentage, reaching 100 when done.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CPIAddress".to_string(),
+                        documentation: "The configured CPI address (1 to 120) of the target module; must be a constant, not a variable.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "OSFlag".to_string(),
+                        documentation: "A variable that triggers the OS transfer when set.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "OSVersion".to_string(),
+                        documentation: "A string specifying the storage drive (CRD:, USR:, or USB:) and OS file version to send.".to_string(),
+                    },
+                ],
+            }),
+
+            "cpispeed" => Some(FunctionSignature {
+                name: "CPISpeed".to_string(),
+                documentation: "Adjusts the CPI bus bit rate, needed when the bus load or cable length requires a slower speed.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Speed".to_string(),
+                    documentation: "The CPI bus speed in kbps (e.g. 1000, 500, or 250); lower speeds support longer cable runs or higher bus loads.".to_string(),
+                }],
+            }),
+
+            "mqttpublishtable" => Some(FunctionSignature {
+                name: "MQTTPublishTable".to_string(),
+                documentation: "Publishes a data table's contents to an MQTT broker; placed inside a DataTable/EndTable declaration.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "QoS".to_string(),
+                        documentation: "The MQTT Quality of Service level: 0 (at most once) or 1 (at least once).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumRecsOrTimeIntoInterval".to_string(),
+                        documentation: "Positive: number of records per publish; negative: a sliding window; zero: publish whenever the table is called.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Interval".to_string(),
+                        documentation: "The time duration between publishes when using interval-driven mode.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Units".to_string(),
+                        documentation: "Time units for Interval and NumRecsOrTimeIntoInterval (Sec, Min, Hr, or Day).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "OutputFormat".to_string(),
+                        documentation: "The published data format: 1 = CSIJSON, 2 = GeoJSON, 3 = BASICJSON.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Longitude".to_string(),
+                        documentation: "The station's longitude; used only when OutputFormat selects GeoJSON.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Latitude".to_string(),
+                        documentation: "The station's latitude; used only when OutputFormat selects GeoJSON.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Altitude".to_string(),
+                        documentation: "The station's altitude above sea level, in meters; used only when OutputFormat selects GeoJSON.".to_string(),
+                    },
+                ],
+            }),
+
+            "mqttpublishconsttable" => Some(FunctionSignature {
+                name: "MQTTPublishConstTable".to_string(),
+                documentation: "Enables remote editing of ConstTable values via MQTT; placed inside a ConstTable/EndConstTable declaration.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "QoS".to_string(),
+                    documentation: "The MQTT Quality of Service level: 0 (at most once) or 1 (at least once).".to_string(),
+                }],
+            }),
+
             "abs" => Some(FunctionSignature {
                 name: "Abs".to_string(),
                 documentation: "Returns the absolute value of a number.".to_string(),
@@ -6732,6 +6839,36 @@ mod tests {
                     "Avg",
                     "GFRaw",
                     "uStrainDest",
+                ]
+            );
+        }
+
+        #[test]
+        fn cpispeed_takes_a_single_speed_parameter() {
+            let sig = SignatureProvider::get_function_signature("CPISpeed")
+                .expect("CPISpeed should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(names, vec!["Speed"]);
+        }
+
+        #[test]
+        fn mqttpublishtable_has_eight_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("MQTTPublishTable")
+                .expect("MQTTPublishTable should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "QoS",
+                    "NumRecsOrTimeIntoInterval",
+                    "Interval",
+                    "Units",
+                    "OutputFormat",
+                    "Longitude",
+                    "Latitude",
+                    "Altitude",
                 ]
             );
         }
