@@ -4068,3 +4068,77 @@ directly without dispatching a research pass.
   - 12 new tests added across the 9 commits; full workspace
     `build`/`test`/`clippy`/`fmt` gate passes (368 `crbasic-lsp` lib
     tests, up from 356)
+
+### Reference Implementation & Official Docs Comparison, Round 28 (2026-08-12)
+
+A fresh audit round (research-only, no code changes) re-checked four
+angles not covered by Rounds 1-27's grammar diff: the reference
+extension's snippets file and `extension.js`, `docs/researches/research-001`
+cross-checked line-by-line against the current implementation, the health
+of the three parity-enforcing completeness tests, and a full (not
+sampled) name-by-name diff of both reference repos' function lists
+against `keywords.json`'s `builtinFunctions`.
+
+- [x] Newly-discovered builtin functions missing from `BUILTIN_FUNCTIONS`
+  ✅ Resolved
+  - The first three angles were clean (no new gap): the reference
+    extension's 11 snippets and its 82-line `extension.js` (a `.crb`
+    text-paste command plus a Windows-only `PC400.exe` launcher, no
+    CRBasic language logic) had nothing not already covered;
+    `research-001` was re-verified in full against the parser/semantic
+    analyzer with no new discrepancy beyond the already-fixed
+    While/Wend omission; all three completeness tests
+    (`every_canonical_builtin_function_has_a_completion_item`/
+    `_hover_info`/`_a_signature`) were confirmed non-vacuous (each
+    iterates the real 130-entry `BUILTIN_FUNCTIONS`, not a hardcoded
+    list)
+  - The fourth angle (full name diff) found a 354-name union of
+    functions in one or both reference repos absent from
+    `keywords.json`. The overwhelming majority is the same
+    already-acknowledged, deliberately-deferred content backlog from
+    the "Builtin Function Completion Parity" round above (GOES/ARGOS,
+    DNP, CDM_*/SDM* peripherals, CSAT3/LI7200/LI7700 sensors, PakBus,
+    plus many garbled/typoed entries in one reference repo's data) --
+    not re-actioned here
+  - 9 of the 354 names were individually verified against
+    help.campbellsci.com and confirmed as real, currently-undocumented,
+    single-page CRBasic instructions small enough to add outright
+    rather than defer: `SecsSince1990`, `WatchdogTimer`,
+    `TimeIsBetween`, `PWM`, `GPS`, `Randomize`, `DewPoint`,
+    `EthernetPower`, `I2COpen`. A follow-up check on `I2COpen`'s two
+    companion instructions (`I2CRead`/`I2CWrite`, both undocumented on
+    the same page as `I2COpen`) confirmed both independently, bringing
+    the total to 11
+  - Added all 11 to `keywords.json` (categorized: `WatchdogTimer`/`PWM`/
+    `DewPoint` under `measurement`; `GPS`/`EthernetPower`/`I2COpen`/
+    `I2CRead`/`I2CWrite` under `communication`; `Randomize` under
+    `math`; `SecsSince1990`/`TimeIsBetween` under `time` -- matching the
+    category of each function's closest existing sibling, e.g.
+    `WatchdogTimer` alongside `PortSet` since both are Campbell's own
+    "Datalogger Status/Control" doc category, which this project folds
+    into `measurement`), regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 11, keeping the existing parity enforced by
+    the completeness tests; every parameter name/order was taken
+    directly from each function's own help.campbellsci.com syntax
+    diagram (not inferred), following the same evidentiary bar as prior
+    rounds
+  - 20 new tests (11 exact-`insert_text` completion tests, plus
+    additions to the existing category spot-check lists in
+    `hover.rs`/`signature.rs`) added in a single commit (all 11
+    functions share one concern -- this round's own verification pass
+    -- rather than the multi-commit-per-category split the earlier,
+    separately-researched parity rounds used); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (379 `crbasic-lsp` lib tests,
+    up from 368)
+
+Not flagged as gaps (out of scope for this pass):
+
+- The remaining ~345 unmatched names from the full diff remain the same
+  acknowledged, deliberately-deferred content backlog first named in
+  the "Keyword/instruction list unification" round above -- each would
+  need its own per-function docs verification before being added, not
+  a mechanical list sync.
