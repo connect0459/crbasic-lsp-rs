@@ -7040,6 +7040,368 @@ impl SignatureProvider {
                 }],
             }),
 
+            "checkport" => Some(FunctionSignature {
+                name: "CheckPort".to_string(),
+                documentation: "Retrieves the current status (high/low) of a specified digital port or terminal.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Port".to_string(),
+                    documentation: "The control port (C1-C4) or universal terminal (U1-U12) to check.".to_string(),
+                }],
+            }),
+
+            "comportisactive" => Some(FunctionSignature {
+                name: "ComPortIsActive".to_string(),
+                documentation: "Returns a Boolean indicating whether activity is currently detected on a communications port.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "ComPort".to_string(),
+                    documentation: "The communications port to monitor for activity.".to_string(),
+                }],
+            }),
+
+            "dhcprenew" => Some(FunctionSignature {
+                name: "DHCPRenew".to_string(),
+                documentation: "Restarts DHCP on the Ethernet interface to request a new IP address lease.".to_string(),
+                parameters: vec![],
+            }),
+
+            "encryption" => Some(FunctionSignature {
+                name: "Encryption".to_string(),
+                documentation: "Performs AES-128 encryption or decryption on the contents of a variable.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The destination for the encrypted or decrypted output.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EncryptSrc".to_string(),
+                        documentation: "The source data to encrypt or decrypt.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SrcLen".to_string(),
+                        documentation: "The number of bytes to process; 0 uses the length up to the first null character.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EncryptKey".to_string(),
+                        documentation: "The encryption key string (max 63 bytes); an empty string uses the PakBus encryption setting.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EncryptInit".to_string(),
+                        documentation: "A 16-byte initialization vector for the algorithm.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EncryptInitLen".to_string(),
+                        documentation: "The length of the initialization vector (0 through 16).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EncryptOption".to_string(),
+                        documentation: "The mode: 0 for encryption, 1 for decryption.".to_string(),
+                    },
+                ],
+            }),
+
+            "httpout" => Some(FunctionSignature {
+                name: "HTTPOut".to_string(),
+                documentation: "Emits a line of HTML for a datalogger-generated web page; used inside WebPageBegin/WebPageEnd.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "HTMLString".to_string(),
+                    documentation: "The HTML string to output, optionally concatenated with variables using the + operator.".to_string(),
+                }],
+            }),
+
+            "ipinfo" => Some(FunctionSignature {
+                name: "IPInfo".to_string(),
+                documentation: "Retrieves the IP address of a datalogger interface, or the remote IP of a socket handle.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Interface".to_string(),
+                        documentation: "The network interface or socket handle to query.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "Which IP address version to return: IPv4 or IPv6.".to_string(),
+                    },
+                ],
+            }),
+
+            "ipnetpower" => Some(FunctionSignature {
+                name: "IPNetPower".to_string(),
+                documentation: "Powers on or off a specific IP-capable network interface.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Interface".to_string(),
+                        documentation: "The network interface to control (e.g. internal Ethernet, CS I/O Interface, CELL2XX modem).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "State".to_string(),
+                        documentation: "Non-zero enables power; zero disables it.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Timeout".to_string(),
+                        documentation: "An optional number of seconds the interface remains powered after the last activity.".to_string(),
+                    },
+                ],
+            }),
+
+            "iproute" => Some(FunctionSignature {
+                name: "IPRoute".to_string(),
+                documentation: "Directs outgoing IP traffic through a specified network interface when multiple interfaces are active.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "IPAddr".to_string(),
+                        documentation: "The target IP address or domain name, or an empty string to set the default gateway.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IPInterface".to_string(),
+                        documentation: "The network interface to use (Ethernet, PPP, CS I/O, Wi-Fi, or USB).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExclusiveOption".to_string(),
+                        documentation: "An optional flag determining whether routing fails if the interface is unavailable.".to_string(),
+                    },
+                ],
+            }),
+
+            "monitorcomms" => Some(FunctionSignature {
+                name: "MonitorComms".to_string(),
+                documentation: "Captures communication traffic from a specified port into a string variable, for debugging.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A string variable that receives the communication debugging data.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ComNum".to_string(),
+                        documentation: "The communications port to monitor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Output".to_string(),
+                        documentation: "The output format: 1 for ASCII, 0 for binary.".to_string(),
+                    },
+                ],
+            }),
+
+            "pingip" => Some(FunctionSignature {
+                name: "PingIP".to_string(),
+                documentation: "Pings an IP address and returns the response time in milliseconds.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "PingIPAddr".to_string(),
+                        documentation: "The IP address or domain name to ping.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PingTimeOut".to_string(),
+                        documentation: "The maximum time, in milliseconds, to wait for a response.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PingOption".to_string(),
+                        documentation: "An optional IP version preference used when resolving a domain name.".to_string(),
+                    },
+                ],
+            }),
+
+            "portbridge" => Some(FunctionSignature {
+                name: "PortBridge".to_string(),
+                documentation: "Establishes a bidirectional data channel between two communications ports.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Enable".to_string(),
+                        documentation: "A Boolean that activates the bridge when true.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Bridge".to_string(),
+                        documentation: "A 2-by-3 Long array storing the comport identifiers and byte counts for both bridged ports.".to_string(),
+                    },
+                ],
+            }),
+
+            "portget" => Some(FunctionSignature {
+                name: "PortGet".to_string(),
+                documentation: "Reads the status of a control or universal port into a destination variable.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable that receives the port status (1 for high, 0 for low).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Port".to_string(),
+                        documentation: "The control terminal (C1-C4) or universal terminal (U1-U12) to read.".to_string(),
+                    },
+                ],
+            }),
+
+            "portpairconfig" => Some(FunctionSignature {
+                name: "PortPairConfig".to_string(),
+                documentation: "Configures the voltage level and pull-resistor mode for a terminal pair.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Port".to_string(),
+                        documentation: "The terminal pair to configure (C1, C3, U1 through U11).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "The voltage level: 1 for 5V, 2 for 3.3V.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PullOpt".to_string(),
+                        documentation: "An optional pull-resistor type: 0 for pull-down, 1 for pull-up.".to_string(),
+                    },
+                ],
+            }),
+
+            "portsconfig" => Some(FunctionSignature {
+                name: "PortsConfig".to_string(),
+                documentation: "Configures digital ports as input or output using a bitmask.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Mask".to_string(),
+                        documentation: "A bitmask (C1-C8) selecting which digital ports are affected.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Function".to_string(),
+                        documentation: "The port mode: 0 for input, 1 for output.".to_string(),
+                    },
+                ],
+            }),
+
+            "snmpvariable" => Some(FunctionSignature {
+                name: "SNMPVariable".to_string(),
+                documentation: "Defines a custom MIB entry exposing a datalogger variable through SNMP.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Name".to_string(),
+                        documentation: "The variable or array to expose via SNMP.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "OID".to_string(),
+                        documentation: "The dot-notation object identifier for the managed object.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Type".to_string(),
+                        documentation: "An optional data type: Integer, Counter, String, TimeTicks, Opaque, Gauge, or Float.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Access".to_string(),
+                        documentation: "An optional access mode: read-only (default) or RWRITE.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Valid".to_string(),
+                        documentation: "An optional constraint on valid values, using RANGES or VALUES syntax.".to_string(),
+                    },
+                ],
+            }),
+
+            "tcpactiveconnections" => Some(FunctionSignature {
+                name: "TCPActiveConnections".to_string(),
+                documentation: "Monitors active TCP connections and polling activity on a listening port.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "A string variable that receives connection details (IP, port, timestamp).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SecsSinceLastRx".to_string(),
+                        documentation: "A variable or array indicating seconds since the last communication.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Port".to_string(),
+                        documentation: "The TCP port to monitor; 0 monitors all connections.".to_string(),
+                    },
+                ],
+            }),
+
+            "udpdatagram" => Some(FunctionSignature {
+                name: "UDPDataGram".to_string(),
+                documentation: "Sends and receives UDP packets.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "IPAddr".to_string(),
+                        documentation: "The target IP address (IPv4, IPv6, or domain name); blank listens for incoming datagrams.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UDPPort".to_string(),
+                        documentation: "The UDP port number (0 through 65535).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UDPSendVar".to_string(),
+                        documentation: "The variable containing data to transmit.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UDPSendLen".to_string(),
+                        documentation: "The packet size, in bytes.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UDPRecVar".to_string(),
+                        documentation: "The variable that stores a received datagram.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UDPTimeOut".to_string(),
+                        documentation: "The timeout duration, in milliseconds.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UDPConnectHandle".to_string(),
+                        documentation: "An optional variable that receives the socket handle of incoming data.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IPVersion".to_string(),
+                        documentation: "An optional IP version to listen on: 0 for IPv4, 1 for IPv6.".to_string(),
+                    },
+                ],
+            }),
+
+            "webpagebegin" => Some(FunctionSignature {
+                name: "WebPageBegin".to_string(),
+                documentation: "Declares a datalogger-served HTML page, closed by WebPageEnd.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "WebPageName".to_string(),
+                        documentation: "An optional HTML file name; \"default.html\" replaces the datalogger's default home page.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "WebPageCmd".to_string(),
+                        documentation: "An optional string variable that captures incoming browser commands.".to_string(),
+                    },
+                ],
+            }),
+
+            "xmlparse" => Some(FunctionSignature {
+                name: "XMLParse".to_string(),
+                documentation: "Parses an XML file or string on the datalogger.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "XMLContent".to_string(),
+                        documentation: "The XML content to parse, as a file name or a string.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "XMLValue".to_string(),
+                        documentation: "Receives the attribute value or element content.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "AttrName".to_string(),
+                        documentation: "Receives the XML attribute name.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "AttrNameSpace".to_string(),
+                        documentation: "Receives the namespace URI of an attribute.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ElemName".to_string(),
+                        documentation: "Receives the XML element name.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ElemNameSpace".to_string(),
+                        documentation: "Receives the namespace URI of an element.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxDepth".to_string(),
+                        documentation: "The maximum nesting depth to allocate memory for.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxNameSpaces".to_string(),
+                        documentation: "The maximum number of namespaces to allocate memory for.".to_string(),
+                    },
+                ],
+            }),
+
             "abs" => Some(FunctionSignature {
                 name: "Abs".to_string(),
                 documentation: "Returns the absolute value of a number.".to_string(),
@@ -8848,6 +9210,35 @@ mod tests {
                     "Count",
                     "TotalCalls",
                     "Call_ID",
+                ]
+            );
+        }
+
+        #[test]
+        fn dhcprenew_takes_no_parameters() {
+            let sig = SignatureProvider::get_function_signature("DHCPRenew")
+                .expect("DHCPRenew should have a signature");
+
+            assert!(sig.parameters.is_empty());
+        }
+
+        #[test]
+        fn xmlparse_has_eight_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("XMLParse")
+                .expect("XMLParse should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "XMLContent",
+                    "XMLValue",
+                    "AttrName",
+                    "AttrNameSpace",
+                    "ElemName",
+                    "ElemNameSpace",
+                    "MaxDepth",
+                    "MaxNameSpaces",
                 ]
             );
         }
