@@ -3727,6 +3727,161 @@ impl SignatureProvider {
                 ],
             }),
 
+            "emailsend" => Some(FunctionSignature {
+                name: "EmailSend".to_string(),
+                documentation: "Sends an email message directly via an SMTP server.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ServerAddr".to_string(),
+                        documentation: "The mail server's IP address or domain name, with an optional port.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ToAddr".to_string(),
+                        documentation: "One or more recipient email addresses, comma-separated.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FromAddr".to_string(),
+                        documentation: "The sender's email address.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Subject".to_string(),
+                        documentation: "The text of the email's Subject field.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Message".to_string(),
+                        documentation: "The body text of the email.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Attach".to_string(),
+                        documentation: "File path(s), a data table, or a table field to attach.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UserName".to_string(),
+                        documentation: "The SMTP authentication username.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Password".to_string(),
+                        documentation: "The SMTP authentication password.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ServerResponse".to_string(),
+                        documentation: "Variable that receives the mail server's response messages.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumRecsOrTimeIntoInterval".to_string(),
+                        documentation: "Either the time into the interval for unsent records (if Interval > 0) or the number of records to send (if Interval = 0).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Interval".to_string(),
+                        documentation: "The interval at which to send unsent table data, or 0 to let NumRecsOrTimeIntoInterval control timing.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IntervalUnits".to_string(),
+                        documentation: "Time units for Interval and NumRecsOrTimeIntoInterval.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FileOption".to_string(),
+                        documentation: "The file format used for streamed or attached table data (e.g. TOB1, TOA5, CSIXML, CSIJSON).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, to wait for the connection before failing.".to_string(),
+                    },
+                ],
+            }),
+
+            "dialmodem" => Some(FunctionSignature {
+                name: "DialModem".to_string(),
+                documentation: "Dials a modem device over a communications port and checks for an expected response.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The datalogger communications port to use for dialing.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BaudRate".to_string(),
+                        documentation: "The transmission speed, in bits per second.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DialString".to_string(),
+                        documentation: "The telephone number and modem commands to dial.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ResponseString".to_string(),
+                        documentation: "The modem response expected to indicate a successful connection.".to_string(),
+                    },
+                ],
+            }),
+
+            "dialsequence" => Some(FunctionSignature {
+                name: "DialSequence".to_string(),
+                documentation: "Declares a PakBus dial-out route/sequence, closed by EndDialSequence.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "PakBusAddr".to_string(),
+                    documentation: "The PakBus address (1 through 4094) of the remote device being contacted.".to_string(),
+                }],
+            }),
+
+            "enddialsequence" => Some(FunctionSignature {
+                name: "EndDialSequence".to_string(),
+                documentation: "Closes a DialSequence block, reporting whether the dial sequence succeeded.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "DialSuccess".to_string(),
+                    documentation: "A variable that reports whether the dial sequence (typically via DialModem) succeeded.".to_string(),
+                }],
+            }),
+
+            "modemhangup" => Some(FunctionSignature {
+                name: "ModemHangup".to_string(),
+                documentation: "Declares code to run when a communications port hangs up, closed by EndModemHangup.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "ComPort".to_string(),
+                    documentation: "The communications port to monitor for a hangup.".to_string(),
+                }],
+            }),
+
+            "smsrecv" => Some(FunctionSignature {
+                name: "SMSRecv".to_string(),
+                documentation: "Polls a CELL2XX cellular modem for a pending SMS message.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "PhoneNumber".to_string(),
+                        documentation: "A string variable that receives the sender's phone number.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Message".to_string(),
+                        documentation: "A string variable that receives the text content of the received SMS.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeStamp".to_string(),
+                        documentation: "A string variable that receives the message's timestamp.".to_string(),
+                    },
+                ],
+            }),
+
+            "smssend" => Some(FunctionSignature {
+                name: "SMSSend".to_string(),
+                documentation: "Sends an SMS message via a CELL2XX cellular modem.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "A variable that receives the outcome status of the send attempt.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Swath".to_string(),
+                        documentation: "The number of SMS messages to transmit (maximum 60).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PhoneNumber".to_string(),
+                        documentation: "The recipient's phone number, including country and area codes.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Message".to_string(),
+                        documentation: "The text content of the SMS message.".to_string(),
+                    },
+                ],
+            }),
+
             "pppopen" => Some(FunctionSignature {
                 name: "PPPOpen".to_string(),
                 documentation:
@@ -6871,6 +7026,24 @@ mod tests {
                     "Altitude",
                 ]
             );
+        }
+
+        #[test]
+        fn enddialsequence_takes_a_single_dialsuccess_parameter() {
+            let sig = SignatureProvider::get_function_signature("EndDialSequence")
+                .expect("EndDialSequence should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(names, vec!["DialSuccess"]);
+        }
+
+        #[test]
+        fn smssend_has_four_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("SMSSend")
+                .expect("SMSSend should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(names, vec!["ResultCode", "Swath", "PhoneNumber", "Message"]);
         }
 
         #[test]
