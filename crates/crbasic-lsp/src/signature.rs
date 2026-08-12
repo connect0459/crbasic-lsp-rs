@@ -924,6 +924,548 @@ impl SignatureProvider {
                 ],
             }),
 
+            "serialclose" => Some(FunctionSignature {
+                name: "SerialClose".to_string(),
+                documentation:
+                    "Closes a communications port that was previously opened by SerialOpen."
+                        .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "ComPort".to_string(),
+                    documentation: "The communications port to close.".to_string(),
+                }],
+            }),
+
+            "serialinrecord" => Some(FunctionSignature {
+                name: "SerialInRecord".to_string(),
+                documentation:
+                    "Reads incoming serial data and stores a begin/end-marker-delimited record into a destination variable."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "COMPort".to_string(),
+                        documentation: "The communications port to read from.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable in which to store the record read from the buffer.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BeginWord".to_string(),
+                        documentation: "A one- or two-byte value marking the start of the record.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NBytes".to_string(),
+                        documentation: "The number of bytes to store after BeginWord, or 0/negative to capture up to EndWord.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EndWord".to_string(),
+                        documentation: "A one- or two-byte value marking the end of the record.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NBytesReturned".to_string(),
+                        documentation: "Variable that receives the number of bytes actually read.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SerialInRecOption".to_string(),
+                        documentation: "Selects which buffered record to return and whether NAN is stored when none is available.".to_string(),
+                    },
+                ],
+            }),
+
+            "serialoutblock" => Some(FunctionSignature {
+                name: "SerialOutBlock".to_string(),
+                documentation: "Sends binary data, including null bytes, out a serial port."
+                    .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communications port to send data out of."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Expression".to_string(),
+                        documentation: "The data being transmitted over the port.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumberBytes".to_string(),
+                        documentation: "The number of bytes from Expression to transmit."
+                            .to_string(),
+                    },
+                ],
+            }),
+
+            "serialflush" => Some(FunctionSignature {
+                name: "SerialFlush".to_string(),
+                documentation: "Clears any characters currently in the serial input buffer."
+                    .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "ComPort".to_string(),
+                    documentation: "The communications port whose input buffer is cleared."
+                        .to_string(),
+                }],
+            }),
+
+            "modbusmaster" => Some(FunctionSignature {
+                name: "ModbusMaster".to_string(),
+                documentation:
+                    "Sets up the datalogger as a Modbus master to send or retrieve data from a Modbus slave device."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ResultCode".to_string(),
+                        documentation: "Variable that receives the communication result or Modbus exception code.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communications port used for the Modbus session."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BaudRate".to_string(),
+                        documentation: "The baud rate, in bps, used for the Modbus communication.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ModbusAddr".to_string(),
+                        documentation: "The Modbus address of the target server device."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Function".to_string(),
+                        documentation: "The Modbus function code specifying which data operation to perform.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Variable".to_string(),
+                        documentation: "The variable or array used as the source or destination for the transferred data.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Start".to_string(),
+                        documentation: "The address of the first register to read or write."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Length".to_string(),
+                        documentation: "The number of CRBasic variables to act upon."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Tries".to_string(),
+                        documentation: "The number of attempts before giving up and continuing to the next instruction.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, to wait for a response.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ModbusOption".to_string(),
+                        documentation: "Optional data type and byte-order formatting for the transferred registers.".to_string(),
+                    },
+                ],
+            }),
+
+            "tcpopen" => Some(FunctionSignature {
+                name: "TCPOpen".to_string(),
+                documentation:
+                    "Sets up a TCP/IP socket for communication, either as a client connection or a listening server."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "IPAddr".to_string(),
+                        documentation: "The destination IP address or domain name, or an empty string to listen for connections.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TCPPort".to_string(),
+                        documentation: "The destination port (client mode) or listening port (server mode).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IPBuffer".to_string(),
+                        documentation: "Size of the input buffer for non-PakBus communication; 0 for PakBus.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IPTimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, allowed to establish or maintain the connection.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ConnectHandle".to_string(),
+                        documentation: "Variable or array that receives the handle(s) of the resulting connection(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxConnect".to_string(),
+                        documentation: "The maximum number of connections this instance can create.".to_string(),
+                    },
+                ],
+            }),
+
+            "tcpclose" => Some(FunctionSignature {
+                name: "TCPClose".to_string(),
+                documentation: "Closes a TCP/IP socket that was set up for communication."
+                    .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "TCPSocket".to_string(),
+                    documentation: "The socket handle returned by TCPOpen.".to_string(),
+                }],
+            }),
+
+            "udpopen" => Some(FunctionSignature {
+                name: "UDPOpen".to_string(),
+                documentation: "Opens a port for transferring UDP packets.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "IPAddr".to_string(),
+                        documentation: "The target IP address or domain name.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UDPPort".to_string(),
+                        documentation: "The UDP port number used for communication.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IPBuffer".to_string(),
+                        documentation: "Size of the input serial buffer; must not be 0, to avoid PakBus interference.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IPVersion".to_string(),
+                        documentation: "Address type to listen on, IPv4 or IPv6, when IPAddr is empty.".to_string(),
+                    },
+                ],
+            }),
+
+            "udpsocketopen" => Some(FunctionSignature {
+                name: "UDPSocketOpen".to_string(),
+                documentation: "Opens a UDP socket, relating a UDP source port to an ID."
+                    .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "SocketID".to_string(),
+                        documentation: "Variable that receives the socket ID, or a negative error code.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Port".to_string(),
+                        documentation: "The non-ephemeral port to bind the socket to, or 0 for an ephemeral port.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RecvQueueSize".to_string(),
+                        documentation: "The maximum number of received messages to queue for UDPSocketRecv.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Interface".to_string(),
+                        documentation: "The network interface to bind the socket to.".to_string(),
+                    },
+                ],
+            }),
+
+            "udpsocketsend" => Some(FunctionSignature {
+                name: "UDPSocketSend".to_string(),
+                documentation:
+                    "Sends a UDP datagram to a remote device via an opened UDP socket."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "BytesSent".to_string(),
+                        documentation: "Variable that receives the number of bytes sent, or a negative error code.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SocketID".to_string(),
+                        documentation: "The socket ID returned by UDPSocketOpen.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IPAddr".to_string(),
+                        documentation: "The IP address of the device to send the datagram to."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Port".to_string(),
+                        documentation: "The port of the device to send the datagram to."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Payload".to_string(),
+                        documentation: "The contents of the datagram to send.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PayLoadLen".to_string(),
+                        documentation: "The length, in bytes, of the payload.".to_string(),
+                    },
+                ],
+            }),
+
+            "udpsocketrecv" => Some(FunctionSignature {
+                name: "UDPSocketRecv".to_string(),
+                documentation:
+                    "Retrieves incoming UDP packets sent to a socket's listening port."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "BytesReceived".to_string(),
+                        documentation: "Variable that receives the number of bytes received, or a negative error/timeout code.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SocketID".to_string(),
+                        documentation: "The socket ID returned by UDPSocketOpen.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "InDatagram".to_string(),
+                        documentation: "The variable in which the received datagram payload is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "InDatagramLen".to_string(),
+                        documentation: "The maximum number of bytes to store in InDatagram, or 0 to use all available memory.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RemoteIPAdd".to_string(),
+                        documentation: "The IP address of the remote device that sent the datagram.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RemotePort".to_string(),
+                        documentation: "The port of the remote device that sent the datagram."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Timeout".to_string(),
+                        documentation: "Time, in milliseconds, to wait for an incoming datagram.".to_string(),
+                    },
+                ],
+            }),
+
+            "udpsocketclose" => Some(FunctionSignature {
+                name: "UDPSocketClose".to_string(),
+                documentation: "Closes an opened UDP socket and frees its associated memory."
+                    .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "SocketID".to_string(),
+                    documentation: "The socket ID returned by UDPSocketOpen.".to_string(),
+                }],
+            }),
+
+            "emailrelay" => Some(FunctionSignature {
+                name: "EmailRelay".to_string(),
+                documentation:
+                    "Sends an email message to one or more addresses via a Campbell Scientific relay service."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ToAddr".to_string(),
+                        documentation: "One or more recipient email addresses, comma-separated.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Subject".to_string(),
+                        documentation: "The text of the email's Subject field.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Message".to_string(),
+                        documentation: "The body text of the email.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ServerResponse".to_string(),
+                        documentation: "Variable that receives the mail server's response messages.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Attach".to_string(),
+                        documentation: "File names, data table names, or table fields to attach, or an empty string for none.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumRecsOrTimeIntoInterval".to_string(),
+                        documentation: "Either the time into the interval for unsent records (if Interval > 0) or the number of records to send (if Interval = 0).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Interval".to_string(),
+                        documentation: "The interval at which to send unsent table data, or 0 to let NumRecsOrTimeIntoInterval control timing.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IntervalUnits".to_string(),
+                        documentation: "Time units for Interval and NumRecsOrTimeIntoInterval.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FileOption".to_string(),
+                        documentation: "The file format used for streamed or attached table data.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, to wait for the connection before failing.".to_string(),
+                    },
+                ],
+            }),
+
+            "pppopen" => Some(FunctionSignature {
+                name: "PPPOpen".to_string(),
+                documentation:
+                    "Enables a PPP network connection through an external modem and returns its IP address."
+                        .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Option".to_string(),
+                    documentation: "Selects which IP address version(s) to return: IPv4, IPv6, or both.".to_string(),
+                }],
+            }),
+
+            "pppclose" => Some(FunctionSignature {
+                name: "PPPClose".to_string(),
+                documentation: "Closes an open PPP connection with a server.".to_string(),
+                parameters: vec![],
+            }),
+
+            "ftpclient" => Some(FunctionSignature {
+                name: "FTPClient".to_string(),
+                documentation: "Manages files on a server using FTP, FTPS, or SFTP."
+                    .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "IPAddress".to_string(),
+                        documentation: "The IP address or domain name of the FTP server, optionally with a port.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "User".to_string(),
+                        documentation: "The user name for accessing the FTP server."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Password".to_string(),
+                        documentation: "The password for accessing the FTP server.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LocalFileName".to_string(),
+                        documentation: "The local file, or data table for streaming, to send, or the destination for a retrieved file.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RemoteFileName".to_string(),
+                        documentation: "The path and name of the file on the remote server."
+                            .to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PutGetOption".to_string(),
+                        documentation: "Selects send or retrieve, active or passive mode, and the FTP/FTPS/SFTP protocol.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumRecsOrTimeIntoInterval".to_string(),
+                        documentation: "Either the time into the interval for unsent records (if Interval > 0) or the number of records to send (if Interval = 0).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Interval".to_string(),
+                        documentation: "The interval at which to send unsent table data, or 0 to let NumRecsOrTimeIntoInterval control timing.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IntervalUnits".to_string(),
+                        documentation: "Time units for Interval and NumRecsOrTimeIntoInterval.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FileOption".to_string(),
+                        documentation: "The file format used when streaming table data to the server.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, to wait for input after connecting.".to_string(),
+                    },
+                ],
+            }),
+
+            "httpget" => Some(FunctionSignature {
+                name: "HTTPGet".to_string(),
+                documentation: "Sends a GET request to an HTTP server.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "URI".to_string(),
+                        documentation: "The URI of the HTTP server to access, optionally with embedded credentials.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Response".to_string(),
+                        documentation: "The variable or file name in which the response is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Header".to_string(),
+                        documentation: "Additional HTTP header information to send, and where returned headers are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, to wait for input after connecting.".to_string(),
+                    },
+                ],
+            }),
+
+            "httppost" => Some(FunctionSignature {
+                name: "HTTPPost".to_string(),
+                documentation: "Sends files or text to a URL via an HTTP POST request."
+                    .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "URI".to_string(),
+                        documentation: "The URI of the HTTP server to access, optionally with embedded credentials.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Contents".to_string(),
+                        documentation: "The data, file, or data table/field name to send in the request body.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Response".to_string(),
+                        documentation: "The variable or file name in which the response is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Header".to_string(),
+                        documentation: "Additional HTTP header information to send, and where returned headers are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumRecsOrTimeIntoInterval".to_string(),
+                        documentation: "Either the time into the interval for unsent records (if Interval > 0) or the number of records to send (if Interval = 0).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Interval".to_string(),
+                        documentation: "The interval at which to send unsent table data, or 0 to let NumRecsOrTimeIntoInterval control timing.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IntervalUnits".to_string(),
+                        documentation: "Time units for Interval and NumRecsOrTimeIntoInterval.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FileOption".to_string(),
+                        documentation: "The file format used when streaming table data in the request.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, to wait for input after connecting.".to_string(),
+                    },
+                ],
+            }),
+
+            "httpput" => Some(FunctionSignature {
+                name: "HTTPPut".to_string(),
+                documentation: "Sends files or text to a URL via an HTTP PUT request."
+                    .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "URI".to_string(),
+                        documentation: "The URI of the HTTP server to access, optionally with embedded credentials.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Contents".to_string(),
+                        documentation: "The data, file, or data table/field name to send in the request body.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Response".to_string(),
+                        documentation: "The variable or file name in which the response is stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Header".to_string(),
+                        documentation: "Additional HTTP header information to send, and where returned headers are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumRecsOrTimeIntoInterval".to_string(),
+                        documentation: "Either the time into the interval for unsent records (if Interval > 0) or the number of records to send (if Interval = 0).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Interval".to_string(),
+                        documentation: "The interval at which to send unsent table data, or 0 to let NumRecsOrTimeIntoInterval control timing.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IntervalUnits".to_string(),
+                        documentation: "Time units for Interval and NumRecsOrTimeIntoInterval.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FileOption".to_string(),
+                        documentation: "The file format used when streaming table data in the request.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Maximum time, in 0.01-second units, to wait for input after connecting.".to_string(),
+                    },
+                ],
+            }),
+
             "abs" => Some(FunctionSignature {
                 name: "Abs".to_string(),
                 documentation: "Returns the absolute value of a number.".to_string(),
@@ -2179,6 +2721,45 @@ mod tests {
             assert!(SignatureProvider::get_function_signature("SerialOpen").is_some());
             assert!(SignatureProvider::get_function_signature("SerialOut").is_some());
             assert!(SignatureProvider::get_function_signature("SerialIn").is_some());
+        }
+
+        #[test]
+        fn has_remaining_communication_functions() {
+            for name in [
+                "SerialClose",
+                "SerialInRecord",
+                "SerialOutBlock",
+                "SerialFlush",
+                "ModbusMaster",
+                "TCPOpen",
+                "TCPClose",
+                "UDPOpen",
+                "UDPSocketOpen",
+                "UDPSocketSend",
+                "UDPSocketRecv",
+                "UDPSocketClose",
+                "EmailRelay",
+                "PPPOpen",
+                "PPPClose",
+                "FTPClient",
+                "HTTPGet",
+                "HTTPPost",
+                "HTTPPut",
+            ] {
+                assert!(
+                    SignatureProvider::get_function_signature(name).is_some(),
+                    "Expected a signature for communication function: {}",
+                    name
+                );
+            }
+        }
+
+        #[test]
+        fn pppclose_takes_no_parameters() {
+            let sig = SignatureProvider::get_function_signature("PPPClose")
+                .expect("PPPClose should have a signature");
+
+            assert!(sig.parameters.is_empty());
         }
 
         #[test]
