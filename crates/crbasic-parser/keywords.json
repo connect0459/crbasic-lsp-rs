@@ -172,6 +172,9 @@
     { "name": "SendVariables", "category": "communication" },
     { "name": "StaticRoute", "category": "communication" },
     { "name": "TimeUntilTransmit", "category": "communication" },
+    { "name": "DNP", "category": "communication" },
+    { "name": "DNPUpdate", "category": "communication" },
+    { "name": "DNPVariable", "category": "communication" },
 
     { "name": "Sample", "category": "data" },
     { "name": "Average", "category": "data" },

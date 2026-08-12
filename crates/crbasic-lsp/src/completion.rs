@@ -596,6 +596,21 @@ impl CompletionProvider {
                 "Returns the seconds remaining until the datalogger's assigned communication time slot with its host.",
             ),
             Self::create_function_completion(
+                "DNP",
+                "DNP(${1:ComPort}, ${2:BaudRate}, ${3:Confirmation}, ${4:TimeOffset}, ${5:MaxTimeDiff}, ${6:DNPTLS})",
+                "Configures a communications port to set up the datalogger as a DNP3 outstation device.",
+            ),
+            Self::create_function_completion(
+                "DNPUpdate",
+                "DNPUpdate(${1:DNPSlaveAddr}, ${2:DNPMasterAddr}, ${3:TimeOut}, ${4:Retries}, ${5:ConnectHandle})",
+                "Sets up the datalogger as a DNP3 outstation and determines when it updates its arrays of DNP elements.",
+            ),
+            Self::create_function_completion(
+                "DNPVariable",
+                "DNPVariable(${1:Source}, ${2:Swath}, ${3:DNPObject}, ${4:DNPVariation}, ${5:DNPClass}, ${6:DNPFlag}, ${7:DNPEvent}, ${8:DNPNumEvents})",
+                "Maps a variable or array to a DNP3 object, variation, and class within the datalogger's outstation configuration.",
+            ),
+            Self::create_function_completion(
                 "WindVector",
                 "WindVector(${1:Reps}, ${2:SpeedOrEast}, ${3:DirectionOrNorth}, ${4:DataType}, ${5:DisableVar}, ${6:Subinterval}, ${7:SensorType}, ${8:OutputOpt})",
                 "Calculates and stores the mean wind speed, wind vector magnitude, and direction statistics.",
@@ -2987,6 +3002,36 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "TimeUntilTransmit"),
                 "TimeUntilTransmit"
+            );
+        }
+
+        #[test]
+        fn dnp_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DNP"),
+                "DNP(${1:ComPort}, ${2:BaudRate}, ${3:Confirmation}, ${4:TimeOffset}, ${5:MaxTimeDiff}, ${6:DNPTLS})"
+            );
+        }
+
+        #[test]
+        fn dnpupdate_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DNPUpdate"),
+                "DNPUpdate(${1:DNPSlaveAddr}, ${2:DNPMasterAddr}, ${3:TimeOut}, ${4:Retries}, ${5:ConnectHandle})"
+            );
+        }
+
+        #[test]
+        fn dnpvariable_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DNPVariable"),
+                "DNPVariable(${1:Source}, ${2:Swath}, ${3:DNPObject}, ${4:DNPVariation}, ${5:DNPClass}, ${6:DNPFlag}, ${7:DNPEvent}, ${8:DNPNumEvents})"
             );
         }
     }
