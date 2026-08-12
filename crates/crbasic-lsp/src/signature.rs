@@ -4169,6 +4169,63 @@ impl SignatureProvider {
                 ],
             }),
 
+            "spiopen" => Some(FunctionSignature {
+                name: "SPIOpen".to_string(),
+                documentation: "Configures the datalogger as an SPI controller for communication with peripheral devices.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "BeginPort".to_string(),
+                        documentation: "The starting port for the SPI clock, COPI, and CIPO signals (C1 or C5).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BitRate".to_string(),
+                        documentation: "The synchronous clock frequency, in hertz.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "Bit field configuring clock phase, polarity, data order, and byte length.".to_string(),
+                    },
+                ],
+            }),
+
+            "spiread" => Some(FunctionSignature {
+                name: "SPIRead".to_string(),
+                documentation: "Synchronously reads a specified number of bytes from an SPI peripheral device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "BeginPort".to_string(),
+                        documentation: "The starting port for the SPI clock and data signals (C1 or C5).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable in which the bytes read from the SPI device are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumBytes".to_string(),
+                        documentation: "The number of bytes to clock from the peripheral device.".to_string(),
+                    },
+                ],
+            }),
+
+            "spiwrite" => Some(FunctionSignature {
+                name: "SPIWrite".to_string(),
+                documentation: "Synchronously transmits a specified number of bytes to an SPI peripheral device.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "BeginPort".to_string(),
+                        documentation: "The starting port for the SPI clock and data signals (C1 or C5).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The variable containing the bytes to transmit.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumBytes".to_string(),
+                        documentation: "The number of bytes to send to the peripheral device.".to_string(),
+                    },
+                ],
+            }),
+
             "acceptdatarecords" => Some(FunctionSignature {
                 name: "AcceptDataRecords".to_string(),
                 documentation: "Configures the datalogger to receive and store data records pushed from a remote PakBus datalogger.".to_string(),
@@ -5129,6 +5186,25 @@ impl SignatureProvider {
                 ],
             }),
 
+            "sdmcd16mask" => Some(FunctionSignature {
+                name: "SDMCD16Mask".to_string(),
+                documentation: "Enables or disables specific relay ports of an SDM-CD16AC device via a bit-mask filter.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "A Long variable whose bit pattern determines which ports are enabled or disabled.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMCD16Mask".to_string(),
+                        documentation: "A Long value acting as a filter, indicating which specific ports will change state.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The address of the device; valid entries are 0 through 14 (15 is reserved for SDMTrigger).".to_string(),
+                    },
+                ],
+            }),
+
             "sdmcvo4" => Some(FunctionSignature {
                 name: "SDMCVO4".to_string(),
                 documentation: "Controls the SDM-CVO4 four-channel current/voltage output device.".to_string(),
@@ -5343,6 +5419,41 @@ impl SignatureProvider {
                     name: "BitPeriod".to_string(),
                     documentation: "The desired bit period, in microseconds; default is 26, valid range is 9 to 2000.".to_string(),
                 }],
+            }),
+
+            "sdmsw8a" => Some(FunctionSignature {
+                name: "SDMSW8A".to_string(),
+                documentation: "Reads channels from an SDM-SW8A eight-channel switch closure module.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The variable or array in which the measurement results are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "The number of channels to read.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SDMAddress".to_string(),
+                        documentation: "The address of the device (0 through 14).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FunctOp".to_string(),
+                        documentation: "Determines the result type: 0=state, 1=duty cycle, 2=pulse count, 3=module status.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SW8AStartChan".to_string(),
+                        documentation: "The first channel to read.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "A multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "An offset applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                ],
             }),
 
             "sdmtrigger" => Some(FunctionSignature {
@@ -7044,6 +7155,26 @@ mod tests {
 
             let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
             assert_eq!(names, vec!["ResultCode", "Swath", "PhoneNumber", "Message"]);
+        }
+
+        #[test]
+        fn sdmsw8a_has_seven_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("SDMSW8A")
+                .expect("SDMSW8A should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "Dest",
+                    "Reps",
+                    "SDMAddress",
+                    "FunctOp",
+                    "SW8AStartChan",
+                    "Mult",
+                    "Offset",
+                ]
+            );
         }
 
         #[test]
