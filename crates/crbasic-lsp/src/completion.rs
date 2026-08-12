@@ -636,6 +636,41 @@ impl CompletionProvider {
                 "Sends an email message to one or more addresses via a Campbell Scientific relay service.",
             ),
             Self::create_function_completion(
+                "EmailSend",
+                "EmailSend(${1:ServerAddr}, ${2:ToAddr}, ${3:FromAddr}, ${4:Subject}, ${5:Message}, ${6:Attach}, ${7:UserName}, ${8:Password}, ${9:ServerResponse}, ${10:NumRecsOrTimeIntoInterval}, ${11:Interval}, ${12:IntervalUnits}, ${13:FileOption}, ${14:TimeOut})",
+                "Sends an email message directly via an SMTP server.",
+            ),
+            Self::create_function_completion(
+                "DialModem",
+                "DialModem(${1:ComPort}, ${2:BaudRate}, ${3:DialString}, ${4:ResponseString})",
+                "Dials a modem device over a communications port and checks for an expected response.",
+            ),
+            Self::create_function_completion(
+                "DialSequence",
+                "DialSequence(${1:PakBusAddr})",
+                "Declares a PakBus dial-out route/sequence, closed by EndDialSequence.",
+            ),
+            Self::create_function_completion(
+                "EndDialSequence",
+                "EndDialSequence(${1:DialSuccess})",
+                "Closes a DialSequence block, reporting whether the dial sequence succeeded.",
+            ),
+            Self::create_function_completion(
+                "ModemHangup",
+                "ModemHangup(${1:ComPort})",
+                "Declares code to run when a communications port hangs up, closed by EndModemHangup.",
+            ),
+            Self::create_function_completion(
+                "SMSRecv",
+                "SMSRecv(${1:PhoneNumber}, ${2:Message}, ${3:TimeStamp})",
+                "Polls a CELL2XX cellular modem for a pending SMS message.",
+            ),
+            Self::create_function_completion(
+                "SMSSend",
+                "SMSSend(${1:ResultCode}, ${2:Swath}, ${3:PhoneNumber}, ${4:Message})",
+                "Sends an SMS message via a CELL2XX cellular modem.",
+            ),
+            Self::create_function_completion(
                 "PPPOpen",
                 "PPPOpen(${1:Option})",
                 "Enables a PPP network connection through an external modem and returns its IP address.",
@@ -2458,6 +2493,79 @@ mod tests {
                 "EmailRelay(${1:ToAddr}, ${2:Subject}, ${3:Message}, ${4:ServerResponse}, \
                  ${5:Attach}, ${6:NumRecsOrTimeIntoInterval}, ${7:Interval}, \
                  ${8:IntervalUnits}, ${9:FileOption}, ${10:TimeOut})"
+            );
+        }
+
+        #[test]
+        fn emailsend_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "EmailSend"),
+                "EmailSend(${1:ServerAddr}, ${2:ToAddr}, ${3:FromAddr}, ${4:Subject}, \
+                 ${5:Message}, ${6:Attach}, ${7:UserName}, ${8:Password}, \
+                 ${9:ServerResponse}, ${10:NumRecsOrTimeIntoInterval}, ${11:Interval}, \
+                 ${12:IntervalUnits}, ${13:FileOption}, ${14:TimeOut})"
+            );
+        }
+
+        #[test]
+        fn dialmodem_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DialModem"),
+                "DialModem(${1:ComPort}, ${2:BaudRate}, ${3:DialString}, ${4:ResponseString})"
+            );
+        }
+
+        #[test]
+        fn dialsequence_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DialSequence"),
+                "DialSequence(${1:PakBusAddr})"
+            );
+        }
+
+        #[test]
+        fn enddialsequence_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "EndDialSequence"),
+                "EndDialSequence(${1:DialSuccess})"
+            );
+        }
+
+        #[test]
+        fn modemhangup_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ModemHangup"),
+                "ModemHangup(${1:ComPort})"
+            );
+        }
+
+        #[test]
+        fn smsrecv_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SMSRecv"),
+                "SMSRecv(${1:PhoneNumber}, ${2:Message}, ${3:TimeStamp})"
+            );
+        }
+
+        #[test]
+        fn smssend_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SMSSend"),
+                "SMSSend(${1:ResultCode}, ${2:Swath}, ${3:PhoneNumber}, ${4:Message})"
             );
         }
 
