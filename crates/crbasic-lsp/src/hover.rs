@@ -164,6 +164,46 @@ impl HoverProvider {
             "windvector" => Some(
                 "**WindVector**\n\nProcesses raw wind speed/direction samples into mean wind speed, mean wind vector magnitude and direction, and standard deviation of wind direction.",
             ),
+            "battery" => {
+                Some("**Battery**\n\nMeasures the voltage of the battery powering the datalogger.")
+            }
+            "paneltemp" => Some(
+                "**PanelTemp**\n\nMeasures the temperature of the datalogger wiring panel in degrees Celsius.",
+            ),
+            "voltse" => Some("**VoltSe**\n\nMeasures single-ended voltage."),
+            "voltdiff" => Some("**VoltDiff**\n\nMeasures differential voltage."),
+            "brhalf" => Some(
+                "**BrHalf**\n\nApplies an excitation voltage to a half bridge and measures the single-ended voltage output.",
+            ),
+            "brfull" => Some(
+                "**BrFull**\n\nApplies an excitation voltage to a full bridge and measures the differential voltage output.",
+            ),
+            "therm107" => Some("**Therm107**\n\nMeasures temperature using a 107 thermistor."),
+            "therm108" => Some("**Therm108**\n\nMeasures temperature using a 108 thermistor."),
+            "therm109" => Some("**Therm109**\n\nMeasures temperature using a 109 thermistor."),
+            "periodavg" => Some(
+                "**PeriodAvg**\n\nMeasures the period or frequency of a signal on a single-ended channel.",
+            ),
+            "pulsecount" => Some("**PulseCount**\n\nMeasures pulse count from a sensor."),
+            "portset" => Some("**PortSet**\n\nSets a control port to a high or low state."),
+            "pulseport" => Some(
+                "**PulsePort**\n\nToggles a port, delays, toggles it back, and delays again to generate a clocking pulse.",
+            ),
+            "excitev" => Some(
+                "**ExciteV**\n\nSets an excitation channel output to a specified voltage for a specified duration.",
+            ),
+            "brhalf3w" => Some(
+                "**BrHalf3W**\n\nApplies an excitation voltage and measures a 3-wire half bridge to calculate the resistance ratio.",
+            ),
+            "brhalf4w" => Some(
+                "**BrHalf4W**\n\nApplies an excitation voltage and makes two differential voltage measurements to measure a 4-wire half bridge.",
+            ),
+            "brfull6w" => Some(
+                "**BrFull6W**\n\nApplies an excitation voltage and makes two differential voltage measurements to measure a 6-wire full bridge.",
+            ),
+            "tcse" => Some(
+                "**TCSE**\n\nMeasures a thermocouple on a single-ended channel and converts the reading to degrees Celsius.",
+            ),
             "tcdiff" => Some(
                 "**TCDiff**\n\nMeasures a thermocouple on a differential channel and converts the result to degrees Celsius.",
             ),
@@ -722,6 +762,43 @@ mod tests {
             #[test]
             fn all_scan_functions_have_hover_info() {
                 for name in ["Scan", "SubScan"] {
+                    let description = HoverProvider::get_builtin_function_description(name);
+                    assert!(
+                        description.is_some_and(|d| d.contains(&format!("**{}**", name))),
+                        "Expected hover info for builtin function: {}",
+                        name
+                    );
+                }
+            }
+        }
+
+        mod measurement_functions {
+            use super::*;
+
+            #[test]
+            fn all_measurement_functions_have_hover_info() {
+                for name in [
+                    "Battery",
+                    "PanelTemp",
+                    "VoltSe",
+                    "VoltDiff",
+                    "BrHalf",
+                    "BrFull",
+                    "Therm107",
+                    "Therm108",
+                    "Therm109",
+                    "TCDiff",
+                    "Resistance",
+                    "PeriodAvg",
+                    "PulseCount",
+                    "PortSet",
+                    "PulsePort",
+                    "ExciteV",
+                    "BrHalf3W",
+                    "BrHalf4W",
+                    "BrFull6W",
+                    "TCSE",
+                ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
                         description.is_some_and(|d| d.contains(&format!("**{}**", name))),
