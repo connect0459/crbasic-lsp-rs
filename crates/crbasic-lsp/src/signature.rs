@@ -214,6 +214,322 @@ impl SignatureProvider {
                 ],
             }),
 
+            "stddev" => Some(FunctionSignature {
+                name: "StdDev".to_string(),
+                documentation:
+                    "Calculates and stores the standard deviation of Source values over the output interval."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of Source variables to calculate a standard deviation for (Source must be an array if greater than 1).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "Variable or expression whose standard deviation is calculated.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "Output data type (IEEE4, FP2, etc.).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DisableVar".to_string(),
+                        documentation: "Variable to disable output (0 = enabled); stores NAN if disabled for the whole interval.".to_string(),
+                    },
+                ],
+            }),
+
+            "totalize" => Some(FunctionSignature {
+                name: "Totalize".to_string(),
+                documentation:
+                    "Calculates and stores the sum of Source values over the output interval."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of Source variables to total (Source must be an array if greater than 1).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "Variable or expression whose values are summed.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "Output data type (IEEE4, FP2, etc.).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DisableVar".to_string(),
+                        documentation: "Variable to disable output (0 = enabled); stores 0, not NAN, if disabled the whole interval.".to_string(),
+                    },
+                ],
+            }),
+
+            "histogram" => Some(FunctionSignature {
+                name: "Histogram".to_string(),
+                documentation:
+                    "Stores a frequency distribution of BinSelect values across a set of bins between LoLim and UpLim."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "BinSelect".to_string(),
+                        documentation: "Variable whose value determines which bin is incremented.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "Output data type for bin totals (IEEE4, FP2, etc.).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DisableVar".to_string(),
+                        documentation: "Variable to disable output (0 = enabled); ±12345 resets the histogram.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Bins".to_string(),
+                        documentation: "Number of bins spanning the range from LoLim to UpLim.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Form".to_string(),
+                        documentation: "Three-digit code (ABC) controlling reset, output form, and bin-limit inclusion.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "WtVal".to_string(),
+                        documentation: "Constant or variable weight added on each increment (1 = simple frequency count).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LoLim".to_string(),
+                        documentation: "Lower limit of the histogram's measurement range.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UpLim".to_string(),
+                        documentation: "Upper limit of the histogram's measurement range.".to_string(),
+                    },
+                ],
+            }),
+
+            "fieldnames" => Some(FunctionSignature {
+                name: "FieldNames".to_string(),
+                documentation:
+                    "Overrides the default field names, and optionally adds descriptions, for the immediately preceding output-processing instruction."
+                        .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "FieldNameDescriptionList".to_string(),
+                    documentation: "Quoted, comma-separated \"Fieldname:Description\" pairs, one per output field.".to_string(),
+                }],
+            }),
+
+            "cardout" => Some(FunctionSignature {
+                name: "CardOut".to_string(),
+                documentation: "Creates a data table that is stored on a memory card.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "StopRing".to_string(),
+                        documentation: "Table fill mode: 0 = ring (overwrite oldest), 1 = fill and stop.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Size".to_string(),
+                        documentation: "Number of records to allocate on the card (-1 = auto-allocate).".to_string(),
+                    },
+                ],
+            }),
+
+            "newfile" => Some(FunctionSignature {
+                name: "NewFile".to_string(),
+                documentation:
+                    "Determines whether a monitored file has been newly written since this instruction last ran."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "NewFileVar".to_string(),
+                        documentation: "Variable receiving the result; set to 0 when a new file is detected.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FileName".to_string(),
+                        documentation: "Device:FileName of the file to monitor; wildcards ? and * are supported.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NewFileName".to_string(),
+                        documentation: "Optional variable that receives the name of the newly detected file.".to_string(),
+                    },
+                ],
+            }),
+
+            "filemanage" => Some(FunctionSignature {
+                name: "FileManage".to_string(),
+                documentation:
+                    "Performs a management operation, such as delete, hide, run, or format, on a file or device."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "DeviceFileName".to_string(),
+                        documentation: "Device:FileName string identifying the file or device to manage.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Attribute".to_string(),
+                        documentation: "Bit-field code selecting the operation (e.g., delete, hide, run, run on power-up).".to_string(),
+                    },
+                ],
+            }),
+
+            "fileopen" => Some(FunctionSignature {
+                name: "FileOpen".to_string(),
+                documentation: "Opens a file for reading or writing and returns a file handle."
+                    .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "FileName".to_string(),
+                        documentation: "Device:FileName of the file to open.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mode".to_string(),
+                        documentation: "File access mode string (e.g., \"r\", \"w\", \"a\", with optional \"b\"/\"+\").".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SeekPoint".to_string(),
+                        documentation: "Byte offset at which to begin reading or writing (-1 = append at end of file).".to_string(),
+                    },
+                ],
+            }),
+
+            "fileclose" => Some(FunctionSignature {
+                name: "FileClose".to_string(),
+                documentation: "Closes a file previously opened with FileOpen.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "FileHandle".to_string(),
+                    documentation: "Handle of the open file to close, as returned by FileOpen."
+                        .to_string(),
+                }],
+            }),
+
+            "fileread" => Some(FunctionSignature {
+                name: "FileRead".to_string(),
+                documentation: "Reads data from an open file into a variable or array."
+                    .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "FileHandle".to_string(),
+                        documentation: "Handle of the open file to read from, as returned by FileOpen.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Destination".to_string(),
+                        documentation: "String variable (or array) that receives the data read from the file.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Length".to_string(),
+                        documentation: "Maximum number of characters to read into Destination.".to_string(),
+                    },
+                ],
+            }),
+
+            "filewrite" => Some(FunctionSignature {
+                name: "FileWrite".to_string(),
+                documentation: "Writes data from a variable or array to an open file."
+                    .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "FileHandle".to_string(),
+                        documentation: "Handle of the open file to write to, as returned by FileOpen.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "Constant, variable, or array whose data is written to the file.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Length".to_string(),
+                        documentation: "Maximum number of characters from Source to write (0 = write a string up to its null terminator).".to_string(),
+                    },
+                ],
+            }),
+
+            "filecopy" => Some(FunctionSignature {
+                name: "FileCopy".to_string(),
+                documentation: "Copies a file from one drive on the datalogger to another."
+                    .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "FromFileName".to_string(),
+                        documentation: "Device:FileName of the source file to copy.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ToFileName".to_string(),
+                        documentation: "Device:FileName of the destination for the copy."
+                            .to_string(),
+                    },
+                ],
+            }),
+
+            "filerename" => Some(FunctionSignature {
+                name: "FileRename".to_string(),
+                documentation: "Renames a file stored on the datalogger.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "OldFileName".to_string(),
+                        documentation: "Device:FileName of the file to rename.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NewFileName".to_string(),
+                        documentation: "Device:FileName specifying the new name (and optionally a different device).".to_string(),
+                    },
+                ],
+            }),
+
+            "filesize" => Some(FunctionSignature {
+                name: "FileSize".to_string(),
+                documentation: "Returns the size, in bytes, of a specified file.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "FileHandle".to_string(),
+                    documentation: "Handle of the file (from FileOpen) or a Device:FileName string identifying it.".to_string(),
+                }],
+            }),
+
+            "filetime" => Some(FunctionSignature {
+                name: "FileTime".to_string(),
+                documentation: "Returns the last-modified timestamp of a specified file."
+                    .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "FileHandle".to_string(),
+                    documentation: "Handle of the file (from FileOpen) or a Device:FileName string identifying it.".to_string(),
+                }],
+            }),
+
+            "filelist" => Some(FunctionSignature {
+                name: "FileList".to_string(),
+                documentation: "Writes the list of file names on a device into a destination array.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Device".to_string(),
+                        documentation: "Device to query for file names (CPU, CRD, USR, or USB).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "String array that receives the file names found on the device.".to_string(),
+                    },
+                ],
+            }),
+
+            "datainterval" => Some(FunctionSignature {
+                name: "DataInterval".to_string(),
+                documentation:
+                    "Sets the real-time-clock-based interval on which a data table's records are generated."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "TintoInt".to_string(),
+                        documentation: "Offset, in Units, into the interval at which output occurs.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Interval".to_string(),
+                        documentation: "Length of the output interval, in Units (0 = same as the scan interval).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Units".to_string(),
+                        documentation: "Time units for TintoInt and Interval: mSec, Sec, Min, Hr, Day, or Mon.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Lapses".to_string(),
+                        documentation: "Timestamp-overhead mode: positive uses an efficient header, 0 timestamps every record, negative disables lapse adjustment.".to_string(),
+                    },
+                ],
+            }),
+
             "pulsecount" => Some(FunctionSignature {
                 name: "PulseCount".to_string(),
                 documentation: "Measures pulse count from a sensor.".to_string(),
@@ -1488,6 +1804,35 @@ mod tests {
         fn has_subscan_and_iif() {
             assert!(SignatureProvider::get_function_signature("SubScan").is_some());
             assert!(SignatureProvider::get_function_signature("IIf").is_some());
+        }
+
+        #[test]
+        fn has_remaining_data_functions() {
+            for name in [
+                "StdDev",
+                "Totalize",
+                "Histogram",
+                "FieldNames",
+                "CardOut",
+                "NewFile",
+                "FileManage",
+                "FileOpen",
+                "FileClose",
+                "FileRead",
+                "FileWrite",
+                "FileCopy",
+                "FileRename",
+                "FileSize",
+                "FileTime",
+                "FileList",
+                "DataInterval",
+            ] {
+                assert!(
+                    SignatureProvider::get_function_signature(name).is_some(),
+                    "Expected a signature for data function: {}",
+                    name
+                );
+            }
         }
 
         #[test]
