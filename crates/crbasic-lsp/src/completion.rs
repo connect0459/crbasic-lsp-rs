@@ -271,6 +271,31 @@ impl CompletionProvider {
                 "Returns true when the datalogger's real-time clock falls within a specified time range.",
             ),
             Self::create_function_completion(
+                "DaylightSaving",
+                "DaylightSaving(${1:DSTSet}, ${2:DSTnStart}, ${3:DSTDayStart}, ${4:DSTMonthStart}, ${5:DSTnEnd}, ${6:DSTDayEnd}, ${7:DSTMonthEnd}, ${8:DSTHour})",
+                "Detects a custom-rule daylight saving transition and returns the clock adjustment.",
+            ),
+            Self::create_function_completion(
+                "DaylightSavingUS",
+                "DaylightSavingUS(${1:DSTSet})",
+                "Detects a US-rule daylight saving transition and returns the clock adjustment.",
+            ),
+            Self::create_function_completion(
+                "InstructionTimes",
+                "InstructionTimes(${1:Dest})",
+                "Populates an array with the processing time, in microseconds, of every program line; must precede BeginProg.",
+            ),
+            Self::create_function_completion(
+                "LineNum",
+                "LineNum",
+                "Returns the current program line number, for debugging.",
+            ),
+            Self::create_function_completion(
+                "Signature",
+                "Signature",
+                "Returns a pseudo-random signature of the program code between two Signature markers.",
+            ),
+            Self::create_function_completion(
                 "Battery",
                 "Battery(${1:Dest})",
                 "Measures the voltage of the battery powering the datalogger.",
@@ -1179,6 +1204,56 @@ impl CompletionProvider {
                 "DataInterval",
                 "DataInterval(${1:TintoInt}, ${2:Interval}, ${3:Units}, ${4:Lapses})",
                 "Sets the real-time-clock-based interval on which a data table's records are generated.",
+            ),
+            Self::create_function_completion(
+                "CardFlush",
+                "CardFlush",
+                "Immediately writes buffered data to an external storage device.",
+            ),
+            Self::create_function_completion(
+                "DataEvent",
+                "DataEvent(${1:RecBefore}, ${2:StartTrig}, ${3:EndTrig}, ${4:RecAfter})",
+                "Conditionally starts and stops data storage to a table based on trigger conditions.",
+            ),
+            Self::create_function_completion(
+                "Data",
+                "Data ${1:Value1}, ${2:Value2}",
+                "Defines a list of Float constants for later retrieval with Read.",
+            ),
+            Self::create_function_completion(
+                "DataLong",
+                "DataLong ${1:Value1}, ${2:Value2}",
+                "Defines a list of Long constants for later retrieval with Read.",
+            ),
+            Self::create_function_completion(
+                "DataTime",
+                "DataTime(${1:DataTimeOpt})",
+                "Selects whether a data table's records are timestamped at scan time or at storage time.",
+            ),
+            Self::create_function_completion(
+                "ResetTable",
+                "ResetTable(${1:TableName})",
+                "Erases all records from a specified data table during program execution.",
+            ),
+            Self::create_function_completion(
+                "TableFile",
+                "TableFile(${1:FileName}, ${2:Options}, ${3:MaxFiles}, ${4:NumRecsOrTimeIntoInterval}, ${5:Interval}, ${6:Units}, ${7:OutStat}, ${8:LastFileName})",
+                "Writes a data table's contents to external storage media; placed inside a DataTable/EndTable declaration.",
+            ),
+            Self::create_function_completion(
+                "FileMark",
+                "FileMark(${1:Tablename})",
+                "Inserts a filemark into a data table, signaling file-splitting software to start a new file.",
+            ),
+            Self::create_function_completion(
+                "FileReadLine",
+                "FileReadLine(${1:FileHandle}, ${2:Destination}, ${3:Length})",
+                "Reads one line from an open file into a destination variable.",
+            ),
+            Self::create_function_completion(
+                "Erase",
+                "Erase(${1:EraseVar})",
+                "Sets all bytes of a variable or array to zero.",
             ),
             Self::create_function_completion(
                 "FormatLong",
@@ -2947,6 +3022,105 @@ mod tests {
         }
 
         #[test]
+        fn cardflush_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "CardFlush"), "CardFlush");
+        }
+
+        #[test]
+        fn dataevent_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DataEvent"),
+                "DataEvent(${1:RecBefore}, ${2:StartTrig}, ${3:EndTrig}, ${4:RecAfter})"
+            );
+        }
+
+        #[test]
+        fn data_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Data"),
+                "Data ${1:Value1}, ${2:Value2}"
+            );
+        }
+
+        #[test]
+        fn datalong_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DataLong"),
+                "DataLong ${1:Value1}, ${2:Value2}"
+            );
+        }
+
+        #[test]
+        fn datatime_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DataTime"),
+                "DataTime(${1:DataTimeOpt})"
+            );
+        }
+
+        #[test]
+        fn resettable_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ResetTable"),
+                "ResetTable(${1:TableName})"
+            );
+        }
+
+        #[test]
+        fn tablefile_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TableFile"),
+                "TableFile(${1:FileName}, ${2:Options}, ${3:MaxFiles}, \
+                 ${4:NumRecsOrTimeIntoInterval}, ${5:Interval}, ${6:Units}, \
+                 ${7:OutStat}, ${8:LastFileName})"
+            );
+        }
+
+        #[test]
+        fn filemark_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FileMark"),
+                "FileMark(${1:Tablename})"
+            );
+        }
+
+        #[test]
+        fn filereadline_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FileReadLine"),
+                "FileReadLine(${1:FileHandle}, ${2:Destination}, ${3:Length})"
+            );
+        }
+
+        #[test]
+        fn erase_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Erase"),
+                "Erase(${1:EraseVar})"
+            );
+        }
+
+        #[test]
         fn formatlong_snippet_matches_official_signature() {
             let completions = CompletionProvider::get_builtin_function_completions();
 
@@ -3259,6 +3433,52 @@ mod tests {
                 insert_text_for(&completions, "TimeIsBetween"),
                 "TimeIsBetween(${1:BeginTime}, ${2:EndTime}, ${3:Interval}, ${4:Units})"
             );
+        }
+
+        #[test]
+        fn daylightsaving_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DaylightSaving"),
+                "DaylightSaving(${1:DSTSet}, ${2:DSTnStart}, ${3:DSTDayStart}, \
+                 ${4:DSTMonthStart}, ${5:DSTnEnd}, ${6:DSTDayEnd}, ${7:DSTMonthEnd}, \
+                 ${8:DSTHour})"
+            );
+        }
+
+        #[test]
+        fn daylightsavingus_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DaylightSavingUS"),
+                "DaylightSavingUS(${1:DSTSet})"
+            );
+        }
+
+        #[test]
+        fn instructiontimes_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "InstructionTimes"),
+                "InstructionTimes(${1:Dest})"
+            );
+        }
+
+        #[test]
+        fn linenum_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "LineNum"), "LineNum");
+        }
+
+        #[test]
+        fn signature_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Signature"), "Signature");
         }
 
         #[test]
