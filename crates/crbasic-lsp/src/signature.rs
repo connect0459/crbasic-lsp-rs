@@ -975,6 +975,102 @@ impl SignatureProvider {
                 ],
             }),
 
+            "realtime" => Some(FunctionSignature {
+                name: "RealTime".to_string(),
+                documentation:
+                    "Extracts the datalogger's current real-time clock values into a 9-element destination array."
+                        .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Dest".to_string(),
+                    documentation: "Array (dimensioned to 9) that receives year, month, day, hour, minute, second, microsecond, day of week, and day of year.".to_string(),
+                }],
+            }),
+
+            "setstatus" => Some(FunctionSignature {
+                name: "SetStatus".to_string(),
+                documentation: "Changes the value of a field in the datalogger's Status table."
+                    .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "FieldName".to_string(),
+                        documentation: "Name of the Status table field to change, enclosed in quotes.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Value".to_string(),
+                        documentation: "New value for the field; quoted for strings, unquoted for numeric values.".to_string(),
+                    },
+                ],
+            }),
+
+            "setsetting" => Some(FunctionSignature {
+                name: "SetSetting".to_string(),
+                documentation: "Changes the value of a field in the datalogger's Settings table."
+                    .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "FieldName".to_string(),
+                        documentation: "Name of the Settings table field to change, enclosed in quotes.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Value".to_string(),
+                        documentation: "New value for the field; quoted for strings, unquoted for numeric values.".to_string(),
+                    },
+                ],
+            }),
+
+            "movebytes" => Some(FunctionSignature {
+                name: "MoveBytes".to_string(),
+                documentation:
+                    "Moves binary bytes of data from one memory location to another, with optional byte-order swapping."
+                        .to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Destination".to_string(),
+                        documentation: "Variable in which the moved bytes are stored.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DestOffset".to_string(),
+                        documentation: "Zero-based byte offset into Destination where data is written.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "Variable holding the binary data to copy; left unchanged by the move.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SourceOffset".to_string(),
+                        documentation: "Zero-based byte offset into Source from which data is read.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumBytes".to_string(),
+                        documentation: "Number of bytes to copy into Destination.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Transfer".to_string(),
+                        documentation: "Optional byte-swap mode (0-4) for handling different device byte ordering.".to_string(),
+                    },
+                ],
+            }),
+
+            "arraylength" => Some(FunctionSignature {
+                name: "ArrayLength".to_string(),
+                documentation:
+                    "Returns the total number of elements across all dimensions of an array."
+                        .to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "ArrayLenVar".to_string(),
+                    documentation: "Array variable for which to return the total element count."
+                        .to_string(),
+                }],
+            }),
+
+            "nan" => Some(FunctionSignature {
+                name: "NaN".to_string(),
+                documentation:
+                    "Represents the IEEE-754 Not-a-Number value used to flag an invalid measurement or processing error. Takes no parentheses."
+                        .to_string(),
+                parameters: vec![],
+            }),
+
             "datatable" => Some(FunctionSignature {
                 name: "DataTable".to_string(),
                 documentation: "Defines a data table for storing measurements.".to_string(),
@@ -1450,6 +1546,32 @@ mod tests {
             let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
 
             assert_eq!(names, vec!["TintoInt", "Interval", "Units"]);
+        }
+
+        #[test]
+        fn all_remaining_time_functions_have_a_signature() {
+            for name in [
+                "RealTime",
+                "SetStatus",
+                "SetSetting",
+                "MoveBytes",
+                "ArrayLength",
+                "NaN",
+            ] {
+                assert!(
+                    SignatureProvider::get_function_signature(name).is_some(),
+                    "Expected a signature for time function: {}",
+                    name
+                );
+            }
+        }
+
+        #[test]
+        fn nan_takes_no_parameters() {
+            let sig = SignatureProvider::get_function_signature("NaN")
+                .expect("NaN should have a signature");
+
+            assert!(sig.parameters.is_empty());
         }
 
         #[test]
