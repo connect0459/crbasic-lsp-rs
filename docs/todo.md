@@ -4919,3 +4919,52 @@ Not flagged as gaps (out of scope for this pass):
   surfaces.
 - Rounds 34e through 34i (75 remaining candidates across 5 functional
   categories) remain deferred per Round 34's split.
+
+### Reference Implementation & Official Docs Comparison, Round 34e (2026-08-12)
+
+Picked up the sensor-specific measurement instructions (12 candidates)
+from Round 34's split. All 12 were directly fetched and confirmed
+against their own help.campbellsci.com syntax lines -- no softer-sourced
+entries this round.
+
+- [x] `ACPower`, `AM25T`, `AVW200`, `CS616`, `CS7500`, `CurrentSE`,
+  `HydraProbe`, `TDR100`, `TDR200`, `TGA`, `Quadrature`, `SW12` missing
+  from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 12 are real, documented CRBasic instructions for AC power
+    quality, thermocouple/vibrating-wire/soil-moisture/gas-analyzer
+    sensor measurement, shaft encoder reading, and switched-12V power
+    control
+  - `TDR100`'s and `TDR200`'s disjunctive `Mux/ProbeSelect` parameter
+    is spelled `MuxOrProbeSelect`, matching the existing
+    `NumRecsOrTimeIntoInterval` convention already established in this
+    codebase for the same slash-as-disjunction pattern (not a new
+    normalization decision)
+  - `AM25T`'s, `AVW200`'s, `CS616`'s, `CurrentSE`'s, `HydraProbe`'s,
+    `TDR100`'s, and `TDR200`'s bracketed `[Mult, Offset]`/
+    `[Multiplier, Offset]` parameter groups are each split into two
+    separate placeholders, matching the existing precedent already used
+    throughout this codebase (e.g. `BrFull`, `Therm107`) for the same
+    combined-bracket convention -- not a new decision either
+  - None of the 12 is a block construct, so this needed no parser/AST
+    changes -- purely `keywords.json`/completion/hover/signature-help
+    work
+  - Added all 12 to `keywords.json` under the `measurement` category,
+    regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 12, keeping the existing parity enforced by
+    all three completeness tests
+  - 12 new completion tests (one exact-`insert_text` test per function)
+    - 2 new signature tests
+    (`tdr200_has_sixteen_parameters_in_official_order`,
+    `sw12_has_three_parameters_in_official_order`) added across 3
+    commits (one per LSP layer); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (519 `crbasic-lsp` lib tests,
+    up from 505)
+
+Not flagged as gaps (out of scope for this pass):
+
+- Rounds 34f through 34i (63 remaining candidates across 4 functional
+  categories) remain deferred per Round 34's split.
