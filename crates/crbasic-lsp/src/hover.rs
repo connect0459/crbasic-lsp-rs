@@ -77,7 +77,7 @@ impl HoverProvider {
             // set so ordinary variable identifiers keep returning `None`.
             TokenKind::Identifier(name) => Self::get_data_type_description(name)
                 .or_else(|| Self::get_output_processing_data_type_description(name))
-                .or_else(|| Self::get_measurement_function_description(name)),
+                .or_else(|| Self::get_builtin_function_description(name)),
             _ => None,
         }?;
         let range = Self::token_to_lsp_range(token);
@@ -136,11 +136,29 @@ impl HoverProvider {
         }
     }
 
+    /// Returns the description for a built-in function name (any category),
+    /// or `None` if `name` isn't one of `BUILTIN_FUNCTIONS` (e.g. an
+    /// ordinary variable name).
+    fn get_builtin_function_description(name: &str) -> Option<&'static str> {
+        Self::get_scan_function_description(name)
+            .or_else(|| Self::get_measurement_function_description(name))
+    }
+
+    /// Returns the description for a built-in `Scan`/`SubScan` function
+    /// name, or `None` if `name` isn't one of them.
+    fn get_scan_function_description(name: &str) -> Option<&'static str> {
+        match name.to_lowercase().as_str() {
+            "scan" => Some("**Scan**\n\nInitiates a measurement scan at specified intervals."),
+            "subscan" => Some(
+                "**SubScan**\n\nBegins a nested sub-scan for faster measurement or multiplexer control.",
+            ),
+            _ => None,
+        }
+    }
+
     /// Returns the description for a built-in measurement/output-processing
     /// function name, or `None` if `name` isn't one of them (e.g. an
-    /// ordinary variable name). Scoped narrowly to the functions that also
-    /// have `signature.rs` coverage, the same pattern as
-    /// `get_data_type_description` -- not full `BUILTIN_FUNCTIONS` parity.
+    /// ordinary variable name).
     fn get_measurement_function_description(name: &str) -> Option<&'static str> {
         match name.to_lowercase().as_str() {
             "windvector" => Some(
@@ -690,6 +708,41 @@ mod tests {
             assert!(
                 missing.is_empty(),
                 "Missing hover info for language keywords: {:?}",
+                missing
+            );
+        }
+    }
+
+    mod builtin_function_hover {
+        use super::*;
+
+        mod scan_functions {
+            use super::*;
+
+            #[test]
+            fn all_scan_functions_have_hover_info() {
+                for name in ["Scan", "SubScan"] {
+                    let description = HoverProvider::get_builtin_function_description(name);
+                    assert!(
+                        description.is_some_and(|d| d.contains(&format!("**{}**", name))),
+                        "Expected hover info for builtin function: {}",
+                        name
+                    );
+                }
+            }
+        }
+
+        #[test]
+        fn every_canonical_builtin_function_has_hover_info() {
+            let missing: Vec<&str> = crbasic_parser::BUILTIN_FUNCTIONS
+                .iter()
+                .map(|(name, _)| *name)
+                .filter(|name| HoverProvider::get_builtin_function_description(name).is_none())
+                .collect();
+
+            assert!(
+                missing.is_empty(),
+                "Missing hover info for builtin functions: {:?}",
                 missing
             );
         }
