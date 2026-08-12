@@ -338,6 +338,30 @@ impl HoverProvider {
             "histogram" => Some(
                 "**Histogram**\n\nStores a frequency distribution of input data across a set of bins.",
             ),
+            "median" => Some(
+                "**Median**\n\nStores the median of a variable, over time, in an output table.",
+            ),
+            "moment" => Some(
+                "**Moment**\n\nOutputs a central moment (variance, skewness, kurtosis, etc.) of a value over the measurement interval.",
+            ),
+            "samplemaxmin" => Some(
+                "**SampleMaxMin**\n\nRecords the value of a companion variable at the moment a preceding Maximum or Minimum reaches its extremum.",
+            ),
+            "peakvalley" => Some(
+                "**PeakValley**\n\nDetects local maxima and minima in signal data with a hysteresis threshold.",
+            ),
+            "fft" => Some(
+                "**FFT**\n\nPerforms a Fast Fourier Transform on time-series measurement data.",
+            ),
+            "covariance" => Some(
+                "**Covariance**\n\nComputes time-series covariance among array elements, for eddy-flux systems.",
+            ),
+            "levelcrossing" => Some(
+                "**LevelCrossing**\n\nBuilds a 1D or 2D level-crossing histogram for fatigue counting.",
+            ),
+            "worstcase" => Some(
+                "**WorstCase**\n\nSaves ranked worst-case data events into separate clone tables.",
+            ),
             "fieldnames" => Some(
                 "**FieldNames**\n\nOverrides the default field names for the preceding output-processing instruction.",
             ),
@@ -931,6 +955,36 @@ impl HoverProvider {
             }
             "ctype" => Some(
                 "**CType**\n\nConverts an expression to a specified data type (Float, IEEE4, Long, String, or Double).",
+            ),
+            "avgrun" => Some(
+                "**AvgRun**\n\nComputes a running average over the last Number values of a measurement.",
+            ),
+            "maxrun" => Some(
+                "**MaxRun**\n\nComputes a running maximum over the last Number values of a measurement.",
+            ),
+            "minrun" => Some(
+                "**MinRun**\n\nComputes a running minimum over the last Number values of a measurement.",
+            ),
+            "totalrun" => Some(
+                "**TotalRun**\n\nComputes a running total over the last Number values of a measurement.",
+            ),
+            "avgspa" => Some(
+                "**AvgSpa**\n\nComputes the spatial average of a measurement across array elements.",
+            ),
+            "covspa" => Some(
+                "**CovSpa**\n\nComputes spatial covariance between a reference data set and one or more comparison data sets.",
+            ),
+            "maxspa" => {
+                Some("**MaxSpa**\n\nLocates the maximum value and its position within an array.")
+            }
+            "rmsspa" => Some(
+                "**RMSSpa**\n\nComputes the spatial root-mean-square value across array elements.",
+            ),
+            "stddevspa" => Some(
+                "**StdDevSpa**\n\nComputes the spatial standard deviation across array elements.",
+            ),
+            "fftspa" => Some(
+                "**FFTSpa**\n\nPerforms a Fast Fourier Transform on time-series data, for use mid-program rather than as a table entry.",
             ),
             "serialinchk" => Some(
                 "**SerialInChk**\n\nReturns the number of characters currently available in the serial input buffer.",
@@ -1722,6 +1776,14 @@ mod tests {
                     "Totalize",
                     "WindVector",
                     "Histogram",
+                    "Median",
+                    "Moment",
+                    "SampleMaxMin",
+                    "PeakValley",
+                    "FFT",
+                    "Covariance",
+                    "LevelCrossing",
+                    "WorstCase",
                     "FieldNames",
                     "CardOut",
                     "NewFile",
@@ -1829,6 +1891,16 @@ mod tests {
                     "MovePrecise",
                     "PWR",
                     "CType",
+                    "AvgRun",
+                    "MaxRun",
+                    "MinRun",
+                    "TotalRun",
+                    "AvgSpa",
+                    "CovSpa",
+                    "MaxSpa",
+                    "RMSSpa",
+                    "StdDevSpa",
+                    "FFTSpa",
                 ] {
                     let description = HoverProvider::get_builtin_function_description(name);
                     assert!(
