@@ -530,6 +530,159 @@ impl SignatureProvider {
                 ],
             }),
 
+            "cardflush" => Some(FunctionSignature {
+                name: "CardFlush".to_string(),
+                documentation: "Immediately writes buffered data to an external storage device.".to_string(),
+                parameters: vec![],
+            }),
+
+            "dataevent" => Some(FunctionSignature {
+                name: "DataEvent".to_string(),
+                documentation: "Conditionally starts and stops data storage to a table based on trigger conditions.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "RecBefore".to_string(),
+                        documentation: "The number of records to store before the triggering event occurs.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "StartTrig".to_string(),
+                        documentation: "An expression that begins data storage when it becomes true or non-zero.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EndTrig".to_string(),
+                        documentation: "An expression that stops data storage when it becomes true; 0 means storage never stops.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RecAfter".to_string(),
+                        documentation: "The number of records to store after the event stops.".to_string(),
+                    },
+                ],
+            }),
+
+            "data" => Some(FunctionSignature {
+                name: "Data".to_string(),
+                documentation: "Defines a list of Float constants for later retrieval with Read.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Value1".to_string(),
+                        documentation: "The first constant in the list.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Value2".to_string(),
+                        documentation: "Additional comma-separated constants in the list.".to_string(),
+                    },
+                ],
+            }),
+
+            "datalong" => Some(FunctionSignature {
+                name: "DataLong".to_string(),
+                documentation: "Defines a list of Long constants for later retrieval with Read.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Value1".to_string(),
+                        documentation: "The first constant in the list.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Value2".to_string(),
+                        documentation: "Additional comma-separated constants in the list.".to_string(),
+                    },
+                ],
+            }),
+
+            "datatime" => Some(FunctionSignature {
+                name: "DataTime".to_string(),
+                documentation: "Selects whether a data table's records are timestamped at scan time or at storage time.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "DataTimeOpt".to_string(),
+                    documentation: "0 timestamps at scan time (top of scan); 1 timestamps at storage time.".to_string(),
+                }],
+            }),
+
+            "resettable" => Some(FunctionSignature {
+                name: "ResetTable".to_string(),
+                documentation: "Erases all records from a specified data table during program execution.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "TableName".to_string(),
+                    documentation: "The name of the data table to erase.".to_string(),
+                }],
+            }),
+
+            "tablefile" => Some(FunctionSignature {
+                name: "TableFile".to_string(),
+                documentation: "Writes a data table's contents to external storage media; placed inside a DataTable/EndTable declaration.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "FileName".to_string(),
+                        documentation: "The output device and file name (e.g. CRD:, USR:, or USB:).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Options".to_string(),
+                        documentation: "The file format and metadata options (e.g. TOB1, TOA5, CSIXML, CSIJSON).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxFiles".to_string(),
+                        documentation: "The maximum number of files to retain; -1 is ring mode, -2 fills and stops.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumRecsOrTimeIntoInterval".to_string(),
+                        documentation: "The number of records per file, or the offset time for interval-based writes.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Interval".to_string(),
+                        documentation: "The write trigger: 0 for record-based, non-zero for time-based.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Units".to_string(),
+                        documentation: "Time units for Interval and NumRecsOrTimeIntoInterval.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "OutStat".to_string(),
+                        documentation: "An optional variable that receives the file-write status (-1 = written, 0 = not written).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LastFileName".to_string(),
+                        documentation: "An optional string variable that receives the most recently written file name.".to_string(),
+                    },
+                ],
+            }),
+
+            "filemark" => Some(FunctionSignature {
+                name: "FileMark".to_string(),
+                documentation: "Inserts a filemark into a data table, signaling file-splitting software to start a new file.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Tablename".to_string(),
+                    documentation: "The output table that receives the filemark.".to_string(),
+                }],
+            }),
+
+            "filereadline" => Some(FunctionSignature {
+                name: "FileReadLine".to_string(),
+                documentation: "Reads one line from an open file into a destination variable.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "FileHandle".to_string(),
+                        documentation: "The handle of an open file, created by FileOpen.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Destination".to_string(),
+                        documentation: "The string variable that receives the line read from the file.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Length".to_string(),
+                        documentation: "The maximum number of characters to read into Destination.".to_string(),
+                    },
+                ],
+            }),
+
+            "erase" => Some(FunctionSignature {
+                name: "Erase".to_string(),
+                documentation: "Sets all bytes of a variable or array to zero.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "EraseVar".to_string(),
+                    documentation: "The variable or array to clear.".to_string(),
+                }],
+            }),
+
             "pulsecount" => Some(FunctionSignature {
                 name: "PulseCount".to_string(),
                 documentation: "Measures pulse count from a sensor.".to_string(),
@@ -7140,6 +7293,75 @@ impl SignatureProvider {
                 ],
             }),
 
+            "daylightsaving" => Some(FunctionSignature {
+                name: "DaylightSaving".to_string(),
+                documentation: "Detects a custom-rule daylight saving transition and returns the clock adjustment.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "DSTSet".to_string(),
+                        documentation: "Enables (-1) or disables (0) automatic clock adjustment.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DSTnStart".to_string(),
+                        documentation: "Which occurrence (1st through Last) of DSTDayStart begins DST.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DSTDayStart".to_string(),
+                        documentation: "The weekday on which DST begins.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DSTMonthStart".to_string(),
+                        documentation: "The month in which DST begins.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DSTnEnd".to_string(),
+                        documentation: "Which occurrence (1st through Last) of DSTDayEnd ends DST.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DSTDayEnd".to_string(),
+                        documentation: "The weekday on which DST ends.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DSTMonthEnd".to_string(),
+                        documentation: "The month in which DST ends.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DSTHour".to_string(),
+                        documentation: "The hour (0 through 24) at which the transition occurs.".to_string(),
+                    },
+                ],
+            }),
+
+            "daylightsavingus" => Some(FunctionSignature {
+                name: "DaylightSavingUS".to_string(),
+                documentation: "Detects a US-rule daylight saving transition and returns the clock adjustment.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "DSTSet".to_string(),
+                    documentation: "Enables (-1) or disables (0) automatic clock adjustment.".to_string(),
+                }],
+            }),
+
+            "instructiontimes" => Some(FunctionSignature {
+                name: "InstructionTimes".to_string(),
+                documentation: "Populates an array with the processing time, in microseconds, of every program line; must precede BeginProg.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Dest".to_string(),
+                    documentation: "A Long-typed array, sized to the total program line count, that receives the per-line processing times.".to_string(),
+                }],
+            }),
+
+            "linenum" => Some(FunctionSignature {
+                name: "LineNum".to_string(),
+                documentation: "Returns the current program line number, for debugging.".to_string(),
+                parameters: vec![],
+            }),
+
+            "signature" => Some(FunctionSignature {
+                name: "Signature".to_string(),
+                documentation: "Returns a pseudo-random signature of the program code between two Signature markers.".to_string(),
+                parameters: vec![],
+            }),
+
             "displaymenu" => Some(FunctionSignature {
                 name: "DisplayMenu".to_string(),
                 documentation: "Marks the beginning of a custom on-screen menu definition."
@@ -8028,6 +8250,43 @@ mod tests {
                     "Sz",
                     "DataType",
                     "DisableVar",
+                ]
+            );
+        }
+
+        #[test]
+        fn cardflush_takes_no_parameters() {
+            let sig = SignatureProvider::get_function_signature("CardFlush")
+                .expect("CardFlush should have a signature");
+
+            assert!(sig.parameters.is_empty());
+        }
+
+        #[test]
+        fn signature_takes_no_parameters() {
+            let sig = SignatureProvider::get_function_signature("Signature")
+                .expect("Signature should have a signature");
+
+            assert!(sig.parameters.is_empty());
+        }
+
+        #[test]
+        fn tablefile_has_eight_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("TableFile")
+                .expect("TableFile should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "FileName",
+                    "Options",
+                    "MaxFiles",
+                    "NumRecsOrTimeIntoInterval",
+                    "Interval",
+                    "Units",
+                    "OutStat",
+                    "LastFileName",
                 ]
             );
         }
