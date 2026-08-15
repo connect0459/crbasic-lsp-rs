@@ -5231,3 +5231,120 @@ Not flagged as gaps (out of scope for this pass):
   other and dominated by that grammar's own typos) remain unexamined --
   a natural target for a future Round 35, following the same
   two-agent-verification methodology.
+
+### Reference Implementation & Official Docs Comparison, Round 35 (2026-08-15)
+
+Re-ran Round 34's grammar-diff methodology from scratch against both
+reference extensions' `tmLanguage.json` files (this time restricting
+extraction to only `function`/`keyword.control`-scoped patterns, and
+fixing a regex bug that had silently dropped every `#`-prefixed
+alternation group). This surfaced 24 candidate names present in
+**both** grammars but absent from `keywords.json` -- names Round 34's
+own scrape had missed entirely, not a new discovery of previously-
+examined-and-rejected names. Two parallel research agents independently
+verified all 24 against help.campbellsci.com (and PDF manuals/forum
+posts where no dedicated page existed).
+
+- [x] `ArrayIndex`, `Debug`, `EMailRecv`, `GetRecord`, `Gzip`, `Matrix`,
+  `MinSpa`, `ModbusServer`, `ModemCallBack`, `Move`,
+  `NetworkTimeProtocol`, `NewFieldNames`, `RainFlow`, `Restore`,
+  `RunProgram`, `SemaphoreGet`, `SemaphoreRelease`, `SerialInBlock`,
+  `StationName`, `TriggerSequence` missing from `BUILTIN_FUNCTIONS`
+  ✅ Resolved
+  - All 20 are real, documented CRBasic instructions, confirmed by both
+    research passes against their own help.campbellsci.com syntax
+    lines (or, for the two low-confidence exceptions noted below,
+    deliberately left unadded)
+  - `EMailRecv`, `Gzip`, `ModemCallBack`, and `RainFlow` are added under
+    Campbell Scientific's own official casing (`EmailRecv`/`GZip`/
+    `ModemCallback`/`Rainflow` were the grammar-derived candidate
+    spellings, but both research passes independently confirmed the
+    official syntax box spells them as shown here)
+  - `ModbusServer` is added under its current official name; the
+    original candidate token (`ModBusSlave`) is a deprecated legacy
+    name -- official docs state "`ModbusServer()` was formerly
+    `ModbusSlave()`" -- so the deprecated alias isn't added separately,
+    consistent with this project always documenting current official
+    syntax over legacy naming (cf. Round 34i's `PortsConfig` correction)
+  - `Restore` and `MinSpa` were already flagged as future-round
+    candidates by Round 34g's and Round 34's own notes (companion
+    instructions surfaced during earlier research but out of scope at
+    the time); this round closes both out
+  - None of the 20 is a block construct, so this needed no parser/AST
+    changes -- purely `keywords.json`/completion/hover/signature-help
+    work
+  - Added all 20 to `keywords.json` under their respective categories
+    (`scan`, `communication`, `data`, `math`, `time`), regenerating the
+    lexer keyword table and `client/syntaxes/crbasic.tmLanguage.json`
+    via `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 20, keeping the existing parity enforced by
+    all three completeness tests
+  - 20 new completion tests (one exact-`insert_text` test per function)
+    - 2 new signature tests (`restore_takes_no_parameters`,
+    `emailrecv_has_thirteen_parameters_in_official_order`) added across
+    4 commits (one per LSP layer, plus the parser commit); full
+    workspace `build`/`test`/`clippy`/`fmt` gate and client
+    `lint`/`format:check`/`test` gate pass (616 `crbasic-lsp` lib tests,
+    up from 592)
+- [x] `ExitSub` missing from `BUILTIN_FUNCTIONS`/`LANGUAGE_KEYWORDS`
+  ✅ Not a gap -- already implemented
+  - Both reference grammars list `ExitSub` as a single fused token, but
+    this project already parses `Exit Sub` correctly today via a
+    dedicated `parse_exit_sub` function (`crates/crbasic-parser/src/
+    parser.rs`): the `Exit` keyword dispatches to it, and it explicitly
+    requires and consumes a following `Sub` keyword, producing
+    `Statement::ProgramStructure { keyword: "ExitSub", .. }` internally
+  - Confirmed by the pre-existing `parses_exit_sub_inside_subroutine`
+    test, which already passed before this round -- no parser change
+    was needed, unlike this round's original plan (which assumed
+    `ExitSub` would need a new hardcoded-list entry alongside
+    `ExitFor`/`ExitDo`/`ExitFunction`/`ExitScan`)
+  - No user-facing completion/hover gap either: the existing bare
+    `Exit` keyword completion already documents "Used with Sub to exit
+    a Subroutine (Exit Sub)"
+- [x] `LoggerType` missing from completion/hover ✅ Resolved
+  - Both research passes confirmed `LoggerType` is a predefined
+    constant compared inside `#If`/`#ElseIf` conditions (e.g. `#If
+    LoggerType = CR1000X`), not a callable instruction -- it has no
+    syntax/parameter list of its own
+  - Deliberately **not** added to `LANGUAGE_KEYWORDS`: `LoggerType` is
+    lexed as a plain identifier today, and the existing
+    `parses_hash_if_without_then_keyword` test already relies on this
+    (`#If LoggerType = GRANITE6`); reclassifying it as a keyword would
+    break that parse, since the parser's primary-expression parsing has
+    no generic fallback for bare keyword tokens (only `True`/`False`
+    are special-cased)
+  - Implemented as a new `preprocessor_constant_completions()` category
+    in `completion.rs` and a scoped `get_preprocessor_constant_description`
+    in `hover.rs`, mirroring the existing `data_type_completions`/
+    `get_data_type_description` precedent for the same
+    lexer-compatibility reason
+  - 1 new completion test + 1 new hover test added Red-first
+
+Not flagged as gaps (out of scope for this pass):
+
+- `CWB100` -- the two research passes returned conflicting parameter
+  names from two different primary sources (a CR850 Operator's Manual
+  vs. the Wireless Sensor Network Instruction Manual: `ComPort/CWSDest/
+  CWSConfig` vs. `Port/Destination Array/Configuration`), and the
+  underlying product is retired with no current help.campbellsci.com
+  page. Left for a future round if a single authoritative source
+  surfaces.
+- `RainflowSample` -- one research pass could not locate a primary
+  syntax page and explicitly flagged its one available detail as
+  possibly hallucinated/garbled. Left for a future round pending a
+  clean primary source (e.g. the CDM-VW300 manual PDF itself).
+- The two lower-confidence tiers from Round 34's initial grammar scrape
+  (now recomputed against the current `keywords.json`: roughly 45
+  names unique to one reference grammar after typo-correction --
+  e.g. `AddPrecise`, `CalFile`, `ClockChange`/`ClockSet`,
+  `FileEncrypt`, `Read`, `ReadIO`, `WaitDigTrig` -- and roughly 60
+  names unique to the other, including a `VoiceSetup`/`VoiceSpeak`/
+  `VoiceBeg`/`EndVoice`/`VoiceKey`/`VoiceNumber`/`VoicePhrases`/
+  `VoiceHangup` voice-synthesis family and an `INSAT`/`OmniSat`
+  satellite-transmission family) remain unexamined -- a natural target
+  for a future Round 36, following the same two-agent-verification
+  methodology. `RouteNeighbors` (one grammar) vs. `RoutersNeighbors`
+  (the other) is a spelling conflict within this backlog that will need
+  resolving against a primary source rather than either grammar.
