@@ -1,4 +1,4 @@
-# CRBasic Language Support
+# crbasic-lsp-rs/client
 
 Language support for CRBasic, the programming language used in Campbell
 Scientific data loggers.
@@ -43,12 +43,6 @@ Scientific data loggers.
 No external dependencies. The language server is bundled with the
 extension.
 
-## Known Limitations
-
-This extension does not integrate with Campbell Scientific's official
-toolchain (CRBasic Editor, LoggerNet, Short Cut) -- diagnostics are based
-on this extension's own parser, not the official compiler.
-
 ## Feedback and Contributions
 
 This is an independent, unofficial extension and is not affiliated with or
@@ -58,4 +52,4 @@ contribution guidelines are on
 
 ## License
 
-[MIT](./LICENSE)
+[MIT](https://github.com/connect0459/crbasic-lsp-rs/blob/main/LICENSE)
