@@ -202,6 +202,19 @@ We will validate this decision by:
 - `docs/todo.md`: Phase 8 "Release preparation" items checked off; new
   technical-debt item added for the multi-platform packaging gap.
 
+### Marketplace publishing closes the packaging gap (2026-08-15)
+
+Decision C's "Cons" and the "Neutral" consequence above both state that
+`release.yml` does not build/attach a `.vsix` or run `vsce publish`. That is
+now stale: [ADR-004](./adr-004-multi-platform-packaging.md) closed the
+multi-platform packaging gap this ADR named as a blocker, and `release.yml`
+has since grown `build` (6-platform matrix), `package`, and `publish` jobs.
+The `publish` job runs `vsce publish --packagePath ../dist-vsix/*.vsix`,
+gated on a `VSCE_PAT` secret that is now registered — so the next `v*.*.*`
+tag push will publish to the Marketplace for real, not just create a
+notes-only GitHub Release. See `docs/todo.md`'s Phase 6 "Extension packaging
+and publishing" entry for the account-setup history.
+
 ## Related Decisions
 
 - [ADR-001](./adr-001-rust-wasm-lsp-architecture.md): Rust + WASM LSP

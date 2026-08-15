@@ -180,6 +180,10 @@ If WASM performance becomes a bottleneck (>100ms parsing time), we will re-evalu
 ## Related Decisions
 
 - [ADR-002](./adr-002-textmate-grammar-first.md): TextMate Grammar for initial syntax highlighting
+- [ADR-004](./adr-004-multi-platform-packaging.md): resolves the
+  multi-platform packaging gap that follows from this ADR's choice to
+  bundle a native `crbasic-lsp` binary rather than loading `crbasic-wasm`
+  directly in the extension host
 - [ADR-005](./adr-005-tower-lsp-server-migration.md): migrates the LSP
   framework crate from `tower-lsp` to `tower-lsp-server`, keeping this
   ADR's Rust + `tower`-based LSP server choice intact
