@@ -77,6 +77,7 @@ impl HoverProvider {
             // set so ordinary variable identifiers keep returning `None`.
             TokenKind::Identifier(name) => Self::get_data_type_description(name)
                 .or_else(|| Self::get_output_processing_data_type_description(name))
+                .or_else(|| Self::get_preprocessor_constant_description(name))
                 .or_else(|| Self::get_builtin_function_description(name)),
             _ => None,
         }?;
@@ -132,6 +133,24 @@ impl HoverProvider {
             "uint4" => Some("**UINT4**\n\n32-bit unsigned integer."),
             "bool8" => Some("**Bool8**\n\nArray of eight 1-bit Boolean values packed into 1 byte."),
             "nsec" => Some("**NSEC**\n\nNanosecond-resolution time stamp (8 bytes)."),
+            _ => None,
+        }
+    }
+
+    /// Returns the description for `LoggerType`, the predefined constant
+    /// compared inside `#If`/`#ElseIf` conditions, or `None` if `name` isn't
+    /// it (e.g. an ordinary variable name).
+    ///
+    /// Not part of `LANGUAGE_KEYWORDS` for the same reason as
+    /// `get_data_type_description`: `LoggerType` is lexed as a plain
+    /// identifier, and reclassifying it as a keyword would break `#If
+    /// LoggerType = ...` parsing (only `True`/`False` have a primary-
+    /// expression fallback for bare keyword tokens today).
+    fn get_preprocessor_constant_description(name: &str) -> Option<&'static str> {
+        match name.to_lowercase().as_str() {
+            "loggertype" => Some(
+                "**LoggerType**\n\nPredefined constant for `#If`/`#ElseIf` model comparisons (e.g. `#If LoggerType = CR1000X`), letting one program compile differently per datalogger model.",
+            ),
             _ => None,
         }
     }
@@ -238,6 +257,21 @@ impl HoverProvider {
             "signature" => Some(
                 "**Signature**\n\nReturns a pseudo-random signature of the program code between two Signature markers.",
             ),
+            "arrayindex" => Some(
+                "**ArrayIndex**\n\nReturns the numeric index of a named array element whose position isn't known in advance.",
+            ),
+            "debug" => Some(
+                "**Debug**\n\nConfigures breakpoint and trace-history behavior for the CRBasic debugger; used together with DebugBreak.",
+            ),
+            "move" => Some(
+                "**Move**\n\nCopies a run of values from a source array/variable into a destination range.",
+            ),
+            "semaphoreget" => Some(
+                "**SemaphoreGet**\n\nWaits for and claims a semaphore, blocking until it is free.",
+            ),
+            "semaphorerelease" => Some(
+                "**SemaphoreRelease**\n\nReleases a semaphore previously claimed with SemaphoreGet.",
+            ),
             _ => None,
         }
     }
@@ -277,6 +311,12 @@ impl HoverProvider {
             ),
             "ceiling" => Some("**Ceiling**\n\nRounds a number up to the nearest integer."),
             "floor" => Some("**Floor**\n\nRounds a number down to the nearest integer."),
+            "matrix" => Some(
+                "**Matrix**\n\nPerforms matrix math (add, subtract, multiply, transpose, invert) on 2-D arrays.",
+            ),
+            "minspa" => Some(
+                "**MinSpa**\n\nFinds the minimum value across a spatial array and its index, writing both into a 2-element Dest array.",
+            ),
             _ => None,
         }
     }
@@ -426,6 +466,27 @@ impl HoverProvider {
                 "**FileReadLine**\n\nReads one line from an open file into a destination variable.",
             ),
             "erase" => Some("**Erase**\n\nSets all bytes of a variable or array to zero."),
+            "getrecord" => Some(
+                "**GetRecord**\n\nRetrieves one complete record from a data table into an array.",
+            ),
+            "gzip" => Some(
+                "**Gzip**\n\nCompresses one or more files on datalogger storage into a .gz or .tar.gz archive.",
+            ),
+            "newfieldnames" => Some(
+                "**NewFieldNames**\n\nRenames the auto-generated field name(s) of a variable or array for table output.",
+            ),
+            "rainflow" => Some(
+                "**RainFlow**\n\nPerforms rainflow cycle-counting on a signal, building an amplitude/mean histogram for fatigue analysis.",
+            ),
+            "restore" => Some(
+                "**Restore**\n\nResets the read pointer to the start of a Data/DataLong constant list, so a following Read restarts from the beginning.",
+            ),
+            "runprogram" => Some(
+                "**RunProgram**\n\nRuns a specified datalogger program file, replacing the currently active program.",
+            ),
+            "stationname" => Some(
+                "**StationName**\n\nAssigns a name to the station, stored in the Status table; declared once near the top of the program.",
+            ),
             _ => None,
         }
     }
@@ -734,6 +795,21 @@ impl HoverProvider {
                 "**WebPageBegin**\n\nDeclares a datalogger-served HTML page, closed by WebPageEnd.",
             ),
             "xmlparse" => Some("**XMLParse**\n\nParses an XML file or string on the datalogger."),
+            "emailrecv" => Some(
+                "**EMailRecv**\n\nPolls a POP3 mail server for a message matching the given criteria and stores its body in a string variable.",
+            ),
+            "modbusserver" => Some(
+                "**ModbusServer**\n\nConfigures the datalogger as a Modbus server, exposing variables/coils to a Modbus client (formerly ModbusSlave).",
+            ),
+            "modemcallback" => Some(
+                "**ModemCallBack**\n\nDials out via a phone modem so the datalogger initiates a callback connection to a computer.",
+            ),
+            "networktimeprotocol" => Some(
+                "**NetworkTimeProtocol**\n\nSynchronizes the datalogger clock with an NTP server, returning the pre-adjustment clock error in milliseconds.",
+            ),
+            "serialinblock" => Some(
+                "**SerialInBlock**\n\nReads a block of raw serial bytes into Dest without waiting for a delimiter, returning the byte count received.",
+            ),
             _ => None,
         }
     }
@@ -745,6 +821,9 @@ impl HoverProvider {
             "scan" => Some("**Scan**\n\nInitiates a measurement scan at specified intervals."),
             "subscan" => Some(
                 "**SubScan**\n\nBegins a nested sub-scan for faster measurement or multiplexer control.",
+            ),
+            "triggersequence" => Some(
+                "**TriggerSequence**\n\nTriggers execution of a SlowSequence at its WaitTriggerSequence point, after an optional delay.",
             ),
             _ => None,
         }
@@ -2155,6 +2234,27 @@ mod tests {
             match hover.contents {
                 HoverContents::Markup(markup) => {
                     assert!(markup.value.contains("**FP2**"));
+                }
+                _ => panic!("Expected MarkupContent"),
+            }
+        }
+
+        #[test]
+        fn returns_hover_for_loggertype_in_preprocessor_condition() {
+            // "#If LoggerType = CR1000X": character 4 is the start of "LoggerType"
+            let tokens = tokenize("#If LoggerType = CR1000X");
+            let position = Position {
+                line: 0,
+                character: 4,
+            };
+
+            let hover = HoverProvider::get_hover_at_position(&tokens, position);
+
+            assert!(hover.is_some());
+            let hover = hover.expect("hover should be Some");
+            match hover.contents {
+                HoverContents::Markup(markup) => {
+                    assert!(markup.value.contains("**LoggerType**"));
                 }
                 _ => panic!("Expected MarkupContent"),
             }
