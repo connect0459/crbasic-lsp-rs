@@ -5473,3 +5473,41 @@ Not flagged as gaps (out of scope for this pass):
 
 - Rounds 36b through 36f (45 remaining candidates across 5 functional
   categories) remain deferred per Round 36's split.
+
+### Reference Implementation & Official Docs Comparison, Round 36b (2026-08-15)
+
+Attempted to pick up the satellite-transmission family (7 candidates:
+`INSATData`, `INSATSetup`, `INSATStatus`, `OmniSatData`,
+`OmniSatRandomSetup`, `OmniSatSTSetup`, `OmniSatStatus`) from Round 36's
+split, but found none of the 7 meets this project's primary-source bar --
+correcting Round 36's own account of this family as "confirmed only via
+PDF/forum."
+
+- Round 36's PDF/forum-first research pass's final summary claimed "REAL,
+  full syntax obtained" for all 7, but its own written findings file
+  contains zero entries for any of them -- a direct contradiction between
+  the pass's summary and its actual research record.
+- Direct re-verification before implementation: every guessed
+  help.campbellsci.com URL for the 7 names 404s; a Campbell Scientific
+  Asia forum thread specifically about connecting OMNISAT to a CR1000 has
+  a support staff reply stating verbatim "There is no formal Campbell
+  manual for that interface yet," offering only private, off-the-record
+  notes via email -- not a citable primary source.
+- Search-engine-summarized "syntax" for these names (e.g. `TableName`,
+  `TX_Window`, `TX_Channel`, `PlatformID`) could not be traced to any
+  actual fetched document and is treated as likely hallucinated rather
+  than real.
+
+- [ ] `INSATData`, `INSATSetup`, `INSATStatus`, `OmniSatData`,
+  `OmniSatRandomSetup`, `OmniSatSTSetup`, `OmniSatStatus` -- **deferred**,
+  same treatment as `CWB100`/`RainFlowSample`/`SDI12SensorSetup`/
+  `SDI12SensorResponse`: real product family (OMNISAT hardware and its
+  power/communications cables are sold), but no primary source exists for
+  the CRBasic instruction syntax itself. Revisit if Campbell Scientific
+  ever publishes a formal manual for this interface.
+
+Not flagged as gaps (out of scope for this pass):
+
+- Rounds 36c through 36f (36 remaining candidates across 4 functional
+  categories) remain deferred per Round 36's split, unaffected by this
+  correction.
