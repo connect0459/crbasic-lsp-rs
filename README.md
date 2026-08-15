@@ -146,7 +146,7 @@ Contributions are welcome! Please read our development guidelines:
 
 ## License
 
-[MIT License](./LICENSE) (TODO: Add license file)
+[MIT License](./LICENSE)
 
 ## Acknowledgments
 
