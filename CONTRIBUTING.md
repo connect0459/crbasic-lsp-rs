@@ -2,7 +2,8 @@
 
 ## Prerequisites
 
-- [Rust](https://www.rust-lang.org/tools/install)
+- [rustup](https://www.rust-lang.org/tools/install) — installs the exact Rust
+  toolchain pinned in `rust-toolchain.toml` automatically
 - [nvm](https://github.com/nvm-sh/nvm) — recommended for managing the Node.js version
 - [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
 - [just](https://just.systems/) — task runner
@@ -17,6 +18,11 @@ cd crbasic-lsp-rs
 nvm use   # installs/activates the Node.js version pinned in .nvmrc
 just setup
 ```
+
+Any `cargo`/`rustup` command run inside the repo picks up the Rust version,
+components, and `wasm32-unknown-unknown` target pinned in
+`rust-toolchain.toml` automatically (installing it on first use if missing) —
+no equivalent of `nvm use` is needed for Rust.
 
 `just setup` installs the pre-commit git hook (`pre-commit install`), then
 runs `cargo build` and `npm install` (in `client/`) to fetch dependencies for
