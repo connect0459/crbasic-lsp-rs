@@ -5935,3 +5935,55 @@ place.
   - Verified no other doc links to now-removed section anchors before
     the rewrite (`README.md`, `CONTRIBUTING.md`, and this file all only
     link to `docs/ARCHITECTURE.md` itself, no fragment anchors)
+
+### Internal Documentation Consistency Audit, Round 2 (2026-08-16)
+
+Follow-up spot check after the restructure above and the untracked
+`docs: simplify README.md`/`docs: format research document` commits that
+landed alongside it -- re-verified `CONTRIBUTING.md`, `docs/ARCHITECTURE.md`,
+`justfile`, and the CI workflows against each other and against
+`crates/crbasic-lsp/src/backend.rs`.
+
+- [x] `CONTRIBUTING.md`'s `just setup` description incomplete ✅ Resolved --
+  `justfile`'s `setup` recipe runs `pre-commit install` as its first step
+  (has since the justfile's initial commit), but `CONTRIBUTING.md` never
+  said so and separately instructed installing/running `pre-commit install`
+  again afterward under its own "pre-commit hooks" heading -- a step
+  already done, and one that would fail outright if followed as literally
+  ordered (the `pre-commit` CLI must exist before `just setup`'s first line
+  can run). Reordered the Setup section's own code block to install the CLI
+  first and folded the redundant subsection into one description
+- [x] `just verify` doesn't actually mirror CI ✅ Resolved -- CI's `client`
+  job runs `npm run type-check` (`tsc --noEmit`); `justfile`'s `verify`
+  recipe never has, despite `CONTRIBUTING.md`/`docs/ARCHITECTURE.md` both
+  describing it as CI-equivalent. Added the missing step to `justfile`
+  (verified locally: `npm run type-check` passes) and updated both docs'
+  descriptions
+- [x] `docs/ARCHITECTURE.md`'s Handlers list claimed a
+  `textDocument/diagnostic` pull-request handler ✅ Resolved -- `backend.rs`
+  has no `diagnostic` method and registers no `diagnosticProvider`
+  capability; diagnostics are push-only, published via
+  `analyze_and_publish_diagnostics` on document open/change. Moved the
+  clarification into the existing "Diagnostics" bullet rather than the
+  per-file Handlers list
+- [x] `docs/ARCHITECTURE.md`'s Roadmap section (written in the restructure
+  above, same day) was already stale against this file ✅ Resolved -- listed
+  auto-indent, snippet library, datalogger validation profiles, and
+  >1000-line performance budgets as open, but this file's own "Future
+  Enhancements" section already marks all four `[x]` resolved (the
+  performance budgets are additionally covered by passing
+  `crates/crbasic-parser/tests/performance.rs` assertions). Trimmed the
+  Roadmap section down to the three items actually still open: whole-
+  document `textDocument/formatting`, extract-subroutine refactoring, and
+  Campbell Scientific toolchain integration
+- [x] `docs/ARCHITECTURE.md`'s CI job descriptions were incomplete ✅
+  Resolved -- `rust` (fmt/clippy/test) omitted the `coverage` step,
+  `client` (lint/format/type-check/test) omitted the grammar-check step;
+  both are real steps in `.github/workflows/ci.yml`
+
+Not flagged as gaps: the `README.md` Installation section's unconditional
+"Install from the VSCode Marketplace" wording (no v0.1.0 tag exists yet,
+per Phase 6's still-open release item) -- raised with the user and kept
+as-is, a deliberate pre-write of the post-release steady state analogous to
+how the `CHANGELOG.md` `[Unreleased]` rename is deliberately deferred to
+the release PR rather than backfilled ahead of time.
