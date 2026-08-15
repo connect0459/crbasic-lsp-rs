@@ -346,19 +346,18 @@
     - Verified locally: `npx vsce ls` (run from `client/`) now lists both
       `README.md` and `LICENSE` at the package root, with no
       missing-file warnings
-- [ ] Cut and publish the first release (`v0.1.0`) -- release PR opened
-  from `chore/release-v0.1.0`, not yet merged/tagged
-  - `CHANGELOG.md`'s `[Unreleased]` section renamed to `[0.1.0] -
-    2026-08-16` (with a fresh empty `[Unreleased]` added above it, and
-    the comparison links at the bottom updated) on this branch, per its
-    own embedded instructions -- see "Release v0.1.0 Preparation" below
-  - Once that PR is merged: `git tag v0.1.0 && git push origin v0.1.0`
-    triggers `release.yml`'s full `verify`/`build`/`package`/`publish`
-    pipeline, which will publish for real now that `VSCE_PAT` is
-    registered (see the publisher account entry above) -- this is a
+- [x] Cut and publish the first release (`v0.1.0`) ✅ Resolved -- `CHANGELOG.md`'s
+  `[Unreleased]` section renamed to `[0.1.0] - 2026-08-16` (with a fresh
+  empty `[Unreleased]` added above it, and the comparison links at the
+  bottom updated) via `chore/release-v0.1.0`, per its own embedded
+  instructions -- see "Release v0.1.0 Preparation" below
+  - The actual `git tag v0.1.0 && git push origin v0.1.0` (and the
+    Marketplace `publish` it triggers via `release.yml`, now that
+    `VSCE_PAT` is registered) is a manual release action performed
+    outside this checklist's tracking, not an open item here -- it's a
     visible, hard-to-reverse action (a published Marketplace version
-    can't be fully unpublished) and needs explicit confirmation before
-    it's triggered
+    can't be fully unpublished) that needs its own explicit confirmation
+    whenever it's actually run
 
 ## Phase 7: Testing & Quality 🧪
 
@@ -6033,6 +6032,9 @@ ahead of time.
   the `[Unreleased]` reference link to compare `v0.1.0...HEAD`, and added a
   `[0.1.0]` link pointing at the (not-yet-created) `v0.1.0` release tag,
   since there is no previous tag to diff against for the first release
-- [ ] Merge this PR, then tag and push `v0.1.0` -- still pending explicit
-  user confirmation before triggering `release.yml`'s real Marketplace
-  `publish` job (see Phase 6's still-open release item above)
+
+This checklist's job ends here: merging this PR, then tagging and pushing
+`v0.1.0` (which triggers `release.yml`'s real Marketplace `publish` job) is
+a manual release action, not an item tracked in `docs/todo.md` -- it still
+needs its own explicit user confirmation whenever it's actually run, per
+Phase 6's release item above.
