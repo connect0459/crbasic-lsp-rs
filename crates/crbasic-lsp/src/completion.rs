@@ -1581,6 +1581,11 @@ impl CompletionProvider {
                 "Transfers a value into a variable as a high-precision (56-bit mantissa) number.",
             ),
             Self::create_function_completion(
+                "AddPrecise",
+                "AddPrecise(${1:PrecisionVariable}, ${2:X})",
+                "Performs high-precision addition, reducing floating-point rounding error in running totals.",
+            ),
+            Self::create_function_completion(
                 "PWR",
                 "PWR(${1:X}, ${2:Y})",
                 "Raises X to the power of Y and returns a floating-point result.",
@@ -1789,6 +1794,36 @@ impl CompletionProvider {
                 "MinSpa",
                 "MinSpa(${1:Dest}, ${2:Swath}, ${3:Source})",
                 "Finds the minimum value across a spatial array and its index, writing both into a 2-element Dest array.",
+            ),
+            Self::create_function_completion(
+                "SortSpa",
+                "SortSpa(${1:Dest}, ${2:Swath}, ${3:Source}, ${4:Dimension})",
+                "Sorts array elements in ascending order, with NaN and infinite values sorted to the beginning.",
+            ),
+            Self::create_function_completion(
+                "FindSpa",
+                "FindSpa(${1:SoughtLow}, ${2:SoughtHigh}, ${3:Step}, ${4:Source})",
+                "Searches an array for a value within a specified range, returning its position, or 0 if not found.",
+            ),
+            Self::create_function_completion(
+                "RectPolar",
+                "RectPolar(${1:Dest}, ${2:Source})",
+                "Converts rectangular coordinates (X, Y) into polar coordinates (vector length and angle in radians).",
+            ),
+            Self::create_function_completion(
+                "SatVP",
+                "SatVP(${1:Dest}, ${2:Temp})",
+                "Calculates saturation vapor pressure, in kilopascals, from a temperature measurement.",
+            ),
+            Self::create_function_completion(
+                "StrainCalc",
+                "StrainCalc(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:BrZero}, ${5:BrConfig}, ${6:GageFactor}, ${7:PoissonFactor})",
+                "Converts the mV/V output from a bridge measurement into microstrain (µε), using the specified bridge configuration.",
+            ),
+            Self::create_function_completion(
+                "VaporPressure",
+                "VaporPressure(${1:Dest}, ${2:Temp}, ${3:RH})",
+                "Calculates vapor pressure, in kilopascals, from temperature and relative humidity.",
             ),
             Self::create_function_completion(
                 "ArrayIndex",
@@ -5973,6 +6008,76 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "WaitDigTrig"),
                 "WaitDigTrig(${1:ControlPort}, ${2:Option})"
+            );
+        }
+
+        #[test]
+        fn addprecise_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "AddPrecise"),
+                "AddPrecise(${1:PrecisionVariable}, ${2:X})"
+            );
+        }
+
+        #[test]
+        fn sortspa_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SortSpa"),
+                "SortSpa(${1:Dest}, ${2:Swath}, ${3:Source}, ${4:Dimension})"
+            );
+        }
+
+        #[test]
+        fn findspa_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FindSpa"),
+                "FindSpa(${1:SoughtLow}, ${2:SoughtHigh}, ${3:Step}, ${4:Source})"
+            );
+        }
+
+        #[test]
+        fn rectpolar_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "RectPolar"),
+                "RectPolar(${1:Dest}, ${2:Source})"
+            );
+        }
+
+        #[test]
+        fn satvp_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SatVP"),
+                "SatVP(${1:Dest}, ${2:Temp})"
+            );
+        }
+
+        #[test]
+        fn straincalc_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "StrainCalc"),
+                "StrainCalc(${1:Dest}, ${2:Reps}, ${3:Source}, ${4:BrZero}, ${5:BrConfig}, ${6:GageFactor}, ${7:PoissonFactor})"
+            );
+        }
+
+        #[test]
+        fn vaporpressure_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "VaporPressure"),
+                "VaporPressure(${1:Dest}, ${2:Temp}, ${3:RH})"
             );
         }
 
