@@ -62,8 +62,10 @@ Before opening a pull request, run the full verification suite:
 just verify
 ```
 
-This mirrors the CI checks: Rust formatting and clippy across the workspace,
-`cargo test`, and ESLint/Prettier/Vitest for the client.
+This mirrors the CI checks: Rust formatting and clippy across the
+workspace, `cargo test`, coverage thresholds via `cargo llvm-cov`, a check
+that `crbasic.tmLanguage.json`/`keywords_generated.rs` are up to date with
+`keywords.json`, and ESLint/Prettier/Vitest for the client.
 
 ## Testing guidelines
 
