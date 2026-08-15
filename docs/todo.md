@@ -346,15 +346,12 @@
     - Verified locally: `npx vsce ls` (run from `client/`) now lists both
       `README.md` and `LICENSE` at the package root, with no
       missing-file warnings
-- [ ] Cut and publish the first release (`v0.1.0`) -- next action, not yet
-  done
-  - `CHANGELOG.md` currently has only an `[Unreleased]` section; per its
-    own embedded instructions, this must be renamed to `[0.1.0] -
-    <release date>` (with a fresh empty `[Unreleased]` added above it,
-    and the comparison links at the bottom updated) in the same PR that
-    precedes the tag push -- deliberately not done ahead of time in this
-    round, since doing so would bake in today's date even if the actual
-    tag push happens later
+- [ ] Cut and publish the first release (`v0.1.0`) -- release PR opened
+  from `chore/release-v0.1.0`, not yet merged/tagged
+  - `CHANGELOG.md`'s `[Unreleased]` section renamed to `[0.1.0] -
+    2026-08-16` (with a fresh empty `[Unreleased]` added above it, and
+    the comparison links at the bottom updated) on this branch, per its
+    own embedded instructions -- see "Release v0.1.0 Preparation" below
   - Once that PR is merged: `git tag v0.1.0 && git push origin v0.1.0`
     triggers `release.yml`'s full `verify`/`build`/`package`/`publish`
     pipeline, which will publish for real now that `VSCE_PAT` is
@@ -6023,3 +6020,19 @@ open for Rust.
   - Documented in `CONTRIBUTING.md`'s Prerequisites/Setup sections
     (`rustup` install link plus a note that no `nvm use`-equivalent step is
     needed for Rust)
+
+### Release v0.1.0 Preparation (2026-08-16)
+
+Cut the `chore/release-v0.1.0` branch to carry out the "Cut and publish the
+first release" item from Phase 6, per ADR-003's rule that the `CHANGELOG.md`
+`[Unreleased]` -> `[X.Y.Z]` rename happens in the release PR itself, not
+ahead of time.
+
+- [x] `CHANGELOG.md` renamed `[Unreleased]` to `[0.1.0] - 2026-08-16` ✅
+  Resolved -- added a fresh empty `[Unreleased]` section above it, changed
+  the `[Unreleased]` reference link to compare `v0.1.0...HEAD`, and added a
+  `[0.1.0]` link pointing at the (not-yet-created) `v0.1.0` release tag,
+  since there is no previous tag to diff against for the first release
+- [ ] Merge this PR, then tag and push `v0.1.0` -- still pending explicit
+  user confirmation before triggering `release.yml`'s real Marketplace
+  `publish` job (see Phase 6's still-open release item above)
