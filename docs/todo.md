@@ -259,7 +259,7 @@
     wires these pure functions to `vscode.commands.registerCommand` and
     the real language client
   - 4 unit tests (`client/src/commands.test.ts`, Red→Green)
-- [ ] Extension packaging and publishing (future)
+- [x] Extension packaging and publishing ✅ Resolved
   - [x] Extension icon (image asset + `icon` field in `client/package.json`) ✅ Resolved
     - Original artwork only: an external sensor wired into a chassis with a
       terminal block, a status LED, and a mini live-readout trace, on a flat
@@ -322,6 +322,46 @@
       no-op path is kept as-is since a future secret rotation gap should
       degrade the same way rather than fail the whole workflow
     - `actionlint` reports no issues on the updated workflow file
+  - [x] Marketplace listing content (README/LICENSE bundling) ✅ Resolved
+    - `vsce package` runs with `client/` as its working directory, so
+      neither the repo root's `README.md` nor its `LICENSE` was ever
+      bundled into the `.vsix` -- confirmed via
+      [run 31252687294](https://github.com/connect0459/crbasic-lsp-rs/actions/runs/31252687294)
+      (the same `workflow_dispatch` dry run referenced above)'s own
+      `package` job log, which warned `LICENSE, LICENSE.md, or
+      LICENSE.txt not found` on every one of the 6 targets, and via
+      `client/` having no `README.md` at all (would have left the
+      Marketplace listing with no description)
+    - Added `client/README.md`, written for the end user installing the
+      extension (features, supported file extensions, known
+      limitations) -- distinct from the repo root's contributor-facing
+      README
+    - Added `client/LICENSE` (a copy of the repo root's `LICENSE`, kept
+      as a plain duplicate file rather than a build-time copy step,
+      since MIT license text changes essentially never)
+    - Also fixed a stale "(TODO: Add license file)" note in the repo
+      root `README.md`'s own License section -- `LICENSE` had already
+      existed since the initial commit, the note just hadn't been
+      updated
+    - Verified locally: `npx vsce ls` (run from `client/`) now lists both
+      `README.md` and `LICENSE` at the package root, with no
+      missing-file warnings
+- [ ] Cut and publish the first release (`v0.1.0`) -- next action, not yet
+  done
+  - `CHANGELOG.md` currently has only an `[Unreleased]` section; per its
+    own embedded instructions, this must be renamed to `[0.1.0] -
+    <release date>` (with a fresh empty `[Unreleased]` added above it,
+    and the comparison links at the bottom updated) in the same PR that
+    precedes the tag push -- deliberately not done ahead of time in this
+    round, since doing so would bake in today's date even if the actual
+    tag push happens later
+  - Once that PR is merged: `git tag v0.1.0 && git push origin v0.1.0`
+    triggers `release.yml`'s full `verify`/`build`/`package`/`publish`
+    pipeline, which will publish for real now that `VSCE_PAT` is
+    registered (see the publisher account entry above) -- this is a
+    visible, hard-to-reverse action (a published Marketplace version
+    can't be fully unpublished) and needs explicit confirmation before
+    it's triggered
 
 ## Phase 7: Testing & Quality 🧪
 
