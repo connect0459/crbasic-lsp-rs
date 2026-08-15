@@ -11,13 +11,17 @@ The project implements syntax highlighting via TextMate Grammar and advanced lan
 ### Core Technologies
 
 - **Client Side**: TypeScript + Vite
-- **LSP Server**: Rust + WebAssembly (WASM)
+- **LSP Server**: Rust, distributed as a native per-platform binary (see
+  [ADR-004](./adrs/adr-004-multi-platform-packaging.md))
+- **Parser Core**: Rust, also exposed as a standalone WebAssembly package
+  (`crbasic-wasm`) for non-VSCode consumers; the shipped extension does not
+  use it (see [Architecture Layers](#3-wasm-layer-crbasic-wasm) below)
 - **Build System**: Cargo workspace (Rust) + npm/Vite (TypeScript)
 
 ### Testing & Quality
 
 - **Testing Framework**:
-  - Rust: built-in test framework + `cargo-tarpaulin` for coverage
+  - Rust: built-in test framework + `cargo-llvm-cov` for coverage
   - TypeScript: Vitest
 - **Linting & Formatting**:
   - Rust: clippy + rustfmt
@@ -29,57 +33,93 @@ The project implements syntax highlighting via TextMate Grammar and advanced lan
 ```text
 crbasic-lsp-rs/
 ├── crates/                      # Rust workspace
-│   ├── crbasic-parser/          # Core parser logic
+│   ├── crbasic-parser/          # Core parser logic (no LSP dependencies)
 │   │   ├── src/
 │   │   │   ├── lib.rs           # Public API exports
-│   │   │   ├── lexer/           # Lexical analysis
-│   │   │   │   ├── mod.rs       # Lexer public interface
-│   │   │   │   ├── scanner.rs   # Tokenization (35 tests)
+│   │   │   ├── lexer.rs         # Lexer module root
+│   │   │   ├── lexer/
+│   │   │   │   ├── scanner.rs   # Tokenization
 │   │   │   │   └── token.rs     # Token definitions
-│   │   │   ├── parser.rs        # Syntax analysis (146 tests)
+│   │   │   ├── parser.rs        # Syntax analysis
 │   │   │   ├── ast.rs           # Abstract Syntax Tree
-│   │   │   └── semantic.rs      # Semantic analysis (28 tests)
+│   │   │   ├── semantic.rs      # Semantic analysis
+│   │   │   ├── keywords.rs      # Keyword/instruction metadata API
+│   │   │   └── keywords_generated.rs  # Generated from ../keywords.json
+│   │   ├── keywords.json        # Single source of truth for CRBasic
+│   │   │                        # instructions (see ADR-002)
+│   │   ├── examples/
 │   │   └── tests/
-│   │       └── sample_files.rs  # Integration tests (26 tests)
+│   │       ├── sample_files.rs      # Integration tests over real sample programs
+│   │       ├── example_programs.rs  # Assertions on docs/examples/*
+│   │       └── performance.rs       # Lexer/parser performance budgets
 │   ├── crbasic-lsp/             # LSP server implementation
 │   │   ├── src/
-│   │   │   ├── lib.rs           # LSP public interface
-│   │   │   ├── main.rs          # Binary entry point
-│   │   │   ├── server.rs        # LSP server core
-│   │   │   ├── document.rs      # Document state management
-│   │   │   ├── completion.rs    # IntelliSense completion (105 tests)
-│   │   │   ├── hover.rs         # Hover information
-│   │   │   ├── signature.rs     # Signature help
-│   │   │   ├── definition.rs    # Go to definition
-│   │   │   ├── references.rs    # Find all references
-│   │   │   └── symbols.rs       # Document symbols
+│   │   │   ├── lib.rs                 # LSP public interface
+│   │   │   ├── main.rs                # Binary entry point
+│   │   │   ├── backend.rs             # tower-lsp-server `LanguageServer` impl
+│   │   │   ├── document.rs            # Document state management
+│   │   │   ├── completion.rs          # IntelliSense completion
+│   │   │   ├── hover.rs                # Hover information
+│   │   │   ├── signature.rs            # Signature help
+│   │   │   ├── definition.rs           # Go to definition
+│   │   │   ├── references.rs           # Find all references
+│   │   │   ├── symbols.rs              # Document symbols
+│   │   │   ├── workspace_symbol.rs     # Workspace symbol search
+│   │   │   ├── document_highlight.rs   # Document highlight
+│   │   │   ├── code_action.rs          # Quick fixes
+│   │   │   ├── code_lens.rs            # Code lens
+│   │   │   ├── folding.rs              # Folding ranges
+│   │   │   ├── selection_range.rs      # Selection ranges
+│   │   │   ├── linked_editing_range.rs # Linked editing ranges
+│   │   │   ├── inlay_hint.rs           # Inlay hints
+│   │   │   ├── semantic_tokens.rs      # Semantic highlighting
+│   │   │   ├── rename.rs               # Rename (with prepare support)
+│   │   │   ├── call_hierarchy.rs       # Call hierarchy
+│   │   │   └── call_sites.rs           # Shared call-site resolution helper
 │   │   └── tests/
-│   └── crbasic-wasm/            # WASM bindings
+│   │       └── lsp_integration.rs      # End-to-end protocol-level tests
+│   └── crbasic-wasm/            # WASM bindings for `crbasic-parser`
 │       ├── src/
-│       │   └── lib.rs           # WASM API (18 tests)
+│       │   └── lib.rs           # WASM API (tokenize/parse/analyze)
 │       └── pkg/                 # WASM build output
 ├── client/                      # VSCode extension client (TypeScript + Vite)
 │   ├── src/
-│   │   ├── extension.ts         # Extension entry point
-│   │   └── scripts/
-│   │       └── copy-server.js   # Server bundling script
+│   │   ├── extension.ts         # Extension entry point (spawns the native
+│   │   │                        # crbasic-lsp binary over stdio)
+│   │   └── commands.ts          # Command-handler logic (restart, show output)
+│   ├── scripts/
+│   │   ├── copy-server.js       # Bundles the native binary into client/server/
+│   │   ├── targets.js           # Per-platform Rust target definitions
+│   │   ├── package-vsix.js      # Builds one .vsix per platform target
+│   │   └── place-artifacts.js   # Stages built binaries for packaging
 │   ├── syntaxes/
-│   │   └── crbasic.tmLanguage.json  # TextMate Grammar
+│   │   └── crbasic.tmLanguage.json  # TextMate Grammar (generated; see
+│   │                                 # scripts/generate-grammar.js)
+│   ├── language-configuration.json  # Bracket/comment/indentation rules
+│   ├── images/                  # Extension icon assets
+│   ├── README.md                # Marketplace-facing README (bundled into .vsix)
+│   ├── LICENSE                  # Copy of the repo LICENSE (bundled into .vsix)
 │   ├── package.json             # Extension manifest
 │   ├── tsconfig.json
-│   ├── vite.config.mts          # Vite configuration (ESM)
-│   └── eslint.config.mjs        # ESLint 9 Flat Config
+│   ├── vite.config.ts           # Vite configuration
+│   ├── vitest.config.ts         # Vitest configuration
+│   └── eslint.config.js         # ESLint 9 Flat Config
+├── scripts/
+│   └── generate-grammar.js      # Regenerates keywords_generated.rs and
+│                                 # crbasic.tmLanguage.json from keywords.json
 ├── docs/
 │   ├── ARCHITECTURE.md          # This file
 │   ├── todo.md                  # Project progress tracker
 │   ├── adrs/                    # Architecture Decision Records
 │   ├── researches/              # Research documents
-│   └── sample-codes/            # Sample CRBasic programs (10 datalogger models)
+│   ├── examples/                # Curated feature-showcase example programs
+│   └── sample-codes/            # Sample CRBasic programs (11 datalogger models)
 ├── Cargo.toml                   # Rust workspace configuration
+├── justfile                     # Task runner (setup, test, coverage, verify, ...)
 ├── .pre-commit-config.yaml
 ├── .gitignore
-├── .claude/
-│   └── CLAUDE.md                # Project-specific Claude Code rules
+├── CLAUDE.md                    # Project-specific Claude Code rules
+├── AGENTS.md                    # Same rules, generic-agent-facing filename
 └── README.md
 ```
 
@@ -113,13 +153,16 @@ crbasic-lsp-rs/
 
 **Components**:
 
-- **Server**: LSP server lifecycle management
-- **Handlers**: LSP request/response handlers
-  - `textDocument/completion`: IntelliSense completions
-  - `textDocument/hover`: Hover information
-  - `textDocument/definition`: Go to definition
-  - `textDocument/references`: Find all references
-  - `textDocument/diagnostic`: Real-time diagnostics
+- **Backend**: `backend.rs` implements `tower-lsp-server`'s `LanguageServer`
+  trait; lifecycle, document sync, and capability negotiation live here
+- **Handlers**: one module per LSP request/response pair, each with its own
+  file (see [Project Structure](#project-structure) above) --
+  `textDocument/completion`, `hover`, `signatureHelp`, `definition`,
+  `references`, `documentHighlight`, `documentSymbol`, `workspaceSymbol`,
+  `codeAction`, `codeLens`, `foldingRange`, `selectionRange`,
+  `linkedEditingRange`, `inlayHint`, `semanticTokens`, `rename` (with
+  `prepareRename`), `callHierarchy` (prepare/incoming/outgoing), and
+  `textDocument/diagnostic`
 - **Diagnostics**: Model-dependent validation
   - Variable name length validation (CR200X: 12 chars, CR6/GRANITE: 35-39 chars)
   - Duplicate field name detection (12-char truncation collision for CR200X)
@@ -131,13 +174,19 @@ crbasic-lsp-rs/
 
 **Key Design Decisions**:
 
-- Uses `tower-lsp` for LSP protocol implementation
+- Uses `tower-lsp-server` for LSP protocol implementation (migrated from the
+  unmaintained `tower-lsp`; see
+  [ADR-005](./adrs/adr-005-tower-lsp-server-migration.md))
 - Stateful server maintaining symbol tables and document state
 - Model detection via file extension (`.cr1`, `.cr6`, etc.)
+- Depends only on `crbasic-parser`, not on `crbasic-wasm` (see
+  [ADR-001](./adrs/adr-001-rust-wasm-lsp-architecture.md))
 
 ### 3. WASM Layer (`crbasic-wasm`)
 
-**Responsibility**: WebAssembly bindings for browser/VSCode execution
+**Responsibility**: WebAssembly bindings for `crbasic-parser`'s tokenize/
+parse/analyze API, for consumers other than this project's own VSCode
+extension (e.g. browser-based tooling)
 
 **Components**:
 
@@ -147,9 +196,16 @@ crbasic-lsp-rs/
 
 **Key Design Decisions**:
 
-- Minimal API surface (only expose what client needs)
+- Minimal API surface (only exposes `crbasic-parser`'s tokenize/parse/
+  analyze functions)
 - Efficient serialization for AST/diagnostic data
 - Built with `wasm-pack` for npm compatibility
+- **Not used by the shipped VSCode extension**: `crbasic-lsp` depends on
+  `tokio`/`mio`, which are incompatible with the `wasm32` target, so the LSP
+  server itself cannot run as WASM. The client instead bundles and spawns
+  `crbasic-lsp`'s native binary directly (see the Client Layer below and
+  [ADR-004](./adrs/adr-004-multi-platform-packaging.md)); this crate exists
+  purely to let `crbasic-parser` be reused outside this project's own client.
 
 ### 4. Client Layer (`client/`)
 
@@ -158,12 +214,15 @@ crbasic-lsp-rs/
 **Components**:
 
 - **Extension**: VSCode extension activation and lifecycle
-- **LSP Client**: Communication with LSP server via WASM
+- **LSP Client**: Spawns and communicates with the native `crbasic-lsp`
+  binary over stdio, via `vscode-languageclient`
 - **TextMate Grammar**: Syntax highlighting definition
 
 **Key Design Decisions**:
 
-- Uses VSCode's `vscode-languageclient` library
+- Uses VSCode's `vscode-languageclient` library, with `TransportKind.stdio`
+  talking to a bundled, platform-specific `crbasic-lsp` executable (not
+  WASM -- see the WASM Layer above)
 - Vite for fast development and optimized builds
 - TextMate Grammar as first-level syntax highlighting (before LSP activation)
 
@@ -188,11 +247,9 @@ User Types in VSCode
   ↓
 VSCode Extension (extension.ts)
   ↓
-LSP Client (client.ts)
+LSP Client (vscode-languageclient, stdio transport)
   ↓
-WASM LSP Server (crbasic-wasm)
-  ↓
-LSP Server (crbasic-lsp)
+Native LSP Server Binary (crbasic-lsp, spawned as a child process)
   ↓
 Parser (crbasic-parser)
   ↓
@@ -202,6 +259,10 @@ AST + Diagnostics/Completions
   ↓
 VSCode UI (IntelliSense, Diagnostics, etc.)
 ```
+
+Note: this path does not go through `crbasic-wasm` -- the WASM crate is an
+independent, unused-by-this-client wrapper around `crbasic-parser` only (see
+[Architecture Layers → WASM Layer](#3-wasm-layer-crbasic-wasm) above).
 
 ## Testing Strategy
 
@@ -217,22 +278,34 @@ Based on project characteristics (new development, medium importance, medium ris
 
 ### Current Test Status
 
-**Total Tests**: 146 passing | 0 ignored | 0 failed
+**Total Tests**: 1,286 passing | 0 ignored | 0 failed (plus 3 rustdoc tests)
 
-**Test Breakdown**:
+**Test Breakdown** (counts drift as instruction coverage grows; re-run
+`cargo test --workspace` and `cd client && npm run test.run` for current
+figures rather than trusting this table long-term):
 
-- **Lexer Tests** (35 tests): Tokenization, keywords, comments, literals
-- **Parser Tests** (111 tests): Expressions, statements, control flow, program structure
-- **Semantic Analysis Tests** (28 tests): Model detection, variable validation, scope tracking
-- **LSP Handler Tests** (105 tests): Completion, hover, signature help, definitions, references
-- **WASM Binding Tests** (18 tests): Tokenize, parse, analyze APIs
-- **Integration Tests** (26 tests): End-to-end parsing of real CRBasic sample files
+- **`crbasic-parser` unit tests** (308 tests): Lexer, parser, AST, and
+  semantic-analysis coverage, colocated with the implementation
+- **`crbasic-parser` integration tests** (34 tests): `sample_files.rs` (27,
+  real-world CRBasic programs across all 11 supported datalogger models),
+  `example_programs.rs` (3, `docs/examples/*` assertions), `performance.rs`
+  (4, lexer/parser performance budgets)
+- **`crbasic-lsp` unit tests** (665 tests): One module per LSP feature
+  (completion, hover, signature help, definitions, references, symbols,
+  workspace symbols, document highlight, code actions, code lens, folding,
+  selection ranges, linked editing ranges, inlay hints, semantic tokens,
+  rename, call hierarchy, diagnostics)
+- **`crbasic-lsp` integration tests** (36 tests): `lsp_integration.rs`,
+  end-to-end protocol-level requests against the real backend
+- **`crbasic-wasm` unit tests** (19 tests): Tokenize, parse, analyze APIs
+- **Client tests** (224 tests, Vitest): command handlers, extension
+  activation, TextMate grammar, and language configuration
 
 ### Testing Approach
 
 - **TDD (Test-Driven Development)**: All features implemented with tests-first approach
 - **Unit Tests**: Component-level testing with comprehensive edge case coverage
-- **Integration Tests**: Full sample file parsing (10 datalogger models)
+- **Integration Tests**: Full sample file parsing (11 datalogger models)
 - **Regression Tests**: All parser limitations resolved and tested
 
 ### Test Organization
@@ -249,13 +322,17 @@ Based on project characteristics (new development, medium importance, medium ris
 - Test files: `*.test.ts` (same directory as source)
 - Test structure: `describe()` / `test()` hierarchies
 - Framework: Vitest
-- Note: Client tests pending (server-side tests prioritized)
+- 224 tests across 4 files (`commands.test.ts`, `extension.test.ts`,
+  `syntax-highlighting.test.ts`, `language-configuration.test.ts`)
 
 ## Build & Development Workflow
 
 ### Development Setup
 
 ```bash
+# Equivalent to the three steps below
+just setup
+
 # Install Rust dependencies
 cargo build
 
@@ -269,6 +346,10 @@ pre-commit install
 ### Development Commands
 
 ```bash
+# Run the same checks as CI: fmt, clippy, tests, coverage, grammar
+# generation, client lint/format/test
+just verify
+
 # Run Rust tests
 cargo test
 
@@ -339,9 +420,21 @@ All commits are validated by pre-commit hooks:
   - Hover information
   - Go to definition
   - Find all references
-  - Document symbols
-- ✅ WASM Integration: Full JavaScript API
-- ✅ VSCode Extension: Client integration with native LSP server
+  - Document symbols and workspace symbols
+  - Document highlight
+  - Code actions (quick fixes) and code lens
+  - Folding ranges and selection ranges
+  - Linked editing ranges
+  - Inlay hints
+  - Semantic tokens
+  - Rename (with prepare support)
+  - Call hierarchy (prepare, incoming, outgoing)
+- ✅ WASM Integration: Full JavaScript API for `crbasic-parser`, for
+  consumers other than the shipped VSCode extension (see
+  [WASM Layer](#3-wasm-layer-crbasic-wasm) above)
+- ✅ VSCode Extension: Client integration with a bundled, native
+  per-platform `crbasic-lsp` binary (see
+  [ADR-004](./adrs/adr-004-multi-platform-packaging.md))
 
 #### Phase 8: Documentation & Polish (In Progress)
 
@@ -379,7 +472,8 @@ All commits are validated by pre-commit hooks:
 Future enhancements may include:
 
 - [ ] Code formatting (auto-indent, structure alignment)
-- [ ] Refactoring support (rename variable, extract subroutine)
+- [ ] Further refactoring support (extract subroutine) -- rename is already
+  implemented, see [Completed Features](#completed-features-) above
 - [ ] Snippet library for common measurement patterns
 - [ ] Advanced datalogger-specific validation profiles
 - [ ] Integration with Campbell Scientific toolchain (program compilation, deployment)
