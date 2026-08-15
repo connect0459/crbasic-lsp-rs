@@ -178,7 +178,7 @@ We will validate this decision by:
 - `client/scripts/place-artifacts.js` (new): relocates downloaded CI
   artifacts into the cargo `target/<triple>/release/` layout.
 - `client/package.json`: `@vscode/vsce` devDependency, new `package`
-  script, `vscode:prepublish` no longer runs `copy-server` directly.
+  script, `vscode.prepublish` no longer runs `copy-server` directly.
 - `client/.vscodeignore` (new): excludes dev-only files from the package.
 - `.github/workflows/release.yml`: split into `verify`/`build`/`package`
   jobs; added the 6-target build matrix and `workflow_dispatch` dry run.

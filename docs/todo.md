@@ -459,7 +459,7 @@
   - Added `.github/workflows/ci.yml` with two jobs, mirroring `just verify`:
     `rust` (`cargo fmt --all --check`, `cargo clippy --all-targets
     --all-features -- -D warnings`, `cargo test --workspace`) and `client`
-    (`npm run lint`, `npm run format:check`, `npm run type-check`,
+    (`npm run lint`, `npm run format.check`, `npm run type-check`,
     `npm test -- --run`)
   - Triggers on push to `main`, on every pull request, and manually via
     `workflow_dispatch`; `dorny/paths-filter` skips each job's checks when
@@ -473,7 +473,7 @@
     tests; the 2 `crbasic-parser` doctests fail locally only because this
     machine's global `~/.cargo/config.toml` injects a `-lpython3.11`
     linker flag for an unrelated project -- not reproducible on a clean CI
-    runner), `client`'s lint/format:check/type-check/test (44 tests) all
+    runner), `client`'s lint/format.check/type-check/test (44 tests) all
     pass, and `actionlint` reports no issues on the workflow file itself
 - [x] Release preparation ✅ Resolved
   - [x] Versioning policy from `0.1.0` (SemVer pre-1.0 conventions, when to
@@ -589,7 +589,7 @@ parsing a minimal repro, not just by reading the reference grammars.
     `Do`/`Loop` already are, with matching Vitest cases added
   - 2 new parser tests (`parses_while_wend_loop_with_condition`,
     `while_loop_requires_wend_to_close`) added Red-first; full
-    `build`/`test`/`clippy`/`fmt` (Rust) and `lint`/`format:check`/`test`
+    `build`/`test`/`clippy`/`fmt` (Rust) and `lint`/`format.check`/`test`
     (client) gates pass
 
 Not flagged as gaps (verified during the same comparison):
@@ -871,7 +871,7 @@ from both reference grammars' coverage. Ordered by real-world frequency.
     (`pairs_const_table_with_the_matching_end_const_table`) + 88
     Vitest cases (existing suite extended) added Red-first; full
     workspace `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass
+    `lint`/`format.check`/`test` gate pass
 - [x] `Optional` parameter modifier in `Function`/`Sub` parameter
   lists not implemented ✅ Resolved
   - `parse_function_definition`/`parse_subroutine_definition` only
@@ -1989,7 +1989,7 @@ page and a real parse repro before fixing.
     list to show); `hover.rs` gained a keyword-style entry
   - 3 new parser tests (`calltable_statement` module) added Red-first;
     full workspace `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass
+    `lint`/`format.check`/`test` gate pass
 - [x] `Watch`/`Voltage` -- fabricated, not real CRBasic ✅ Resolved (removed)
   - First exhaustive bare-vs-parenthesized re-check of the full
     `builtinFunctions` list turned up two names with no official docs page
@@ -2363,7 +2363,7 @@ the research pass's own citation).
     `hover.rs`/`completion.rs` coverage
   - 1 new parser test (`parses_angledegrees_before_beginprog`) added
     Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass
+    `lint`/`format.check`/`test` gate pass
 
 Not flagged as gaps (verified during the same comparison):
 
@@ -2448,7 +2448,7 @@ fixing.
     (`builtin_functions_include_custom_menu_entries`,
     `builtin_functions_include_set_setting_entry`, `keywords.rs`) added
     Red-first; full workspace `build`/`test`/`clippy`/`fmt` gate and
-    client `lint`/`format:check`/`test` gate pass;
+    client `lint`/`format.check`/`test` gate pass;
     `node scripts/generate-grammar.js --check` confirms the regenerated
     `keywords_generated.rs`/`crbasic.tmLanguage.json` are committed
 
@@ -2501,7 +2501,7 @@ instead.
     Round 9 fix), so nested function calls inside a brace-list initializer
     already get inlay hints/call-hierarchy coverage
   - 3 new Vitest cases (`client/src/language-configuration.test.ts`) added
-    Red-first; client `lint`/`format:check`/`test` gate passes
+    Red-first; client `lint`/`format.check`/`test` gate passes
 
 Not flagged as gaps (verified during the same comparison):
 
@@ -2576,7 +2576,7 @@ cited when each operator/literal was originally implemented.
     Oniguruma-only inline `(?i)` prefix and applying it as the `i` flag
     instead (confirmed necessary: Node's `RegExp` throws `Invalid group` on
     a literal `(?i)` even on current Node). 20 new test cases added
-    Red-first; client `lint`/`format:check`/`test` gate passes
+    Red-first; client `lint`/`format.check`/`test` gate passes
 - [x] `&H`/`&B` hexadecimal/binary integer literal prefixes (added in Round
   11) had no matching `numbers` pattern at all (bug) ✅ Resolved
   - Confirmed via repro-equivalent regex testing: `&HFF` matched no pattern
@@ -2694,7 +2694,7 @@ external grammar or official docs page.
     new `symbols.rs` test
     (`extracts_structure_type_symbol_with_member_children`) added Red-first;
     full workspace `build`/`test`/`clippy`/`fmt`/`coverage` gate and client
-    `lint`/`format:check`/`test` gate pass
+    `lint`/`format.check`/`test` gate pass
 
 Not flagged as gaps (verified during the same audit):
 
@@ -2988,7 +2988,7 @@ fixing, not just by reading the docs.
     `parses_essvariables_with_public_modifier`,
     `essvariables_dim_modifier_no_longer_corrupts_the_surrounding_program`)
     - 3 new folding tests added Red-first; full workspace
-    `build`/`test`/`clippy`/`fmt` and client `lint`/`format:check`/`test`
+    `build`/`test`/`clippy`/`fmt` and client `lint`/`format.check`/`test`
     gates pass
 
 Not flagged as gaps (verified during the same round):
@@ -3053,7 +3053,7 @@ repro before fixing, not just by reading the docs.
   - 2 new parser tests (`parses_bare_essinitialize_with_no_arguments`,
     `parses_essinitialize_with_community_string_argument`) added Red-first;
     full workspace `build`/`test`/`clippy`/`fmt` and client
-    `lint`/`format:check`/`test` gates pass
+    `lint`/`format.check`/`test` gates pass
 
 Not flagged as gaps (verified during the same round):
 
@@ -3302,7 +3302,7 @@ an LSP-layer bug rather than a parser-grammar gap.
     `linked_editing_range.rs`) + 4 new integration tests
     (`tests/lsp_integration.rs`) added Red-first, across 2 commits (one
     per provider); full workspace `build`/`test`/`clippy`/`fmt` gate and
-    client `lint`/`format:check`/`test` gate pass (476 `crbasic-lsp` lib
+    client `lint`/`format.check`/`test` gate pass (476 `crbasic-lsp` lib
     tests, up from 465)
 - [ ] Integration with Campbell Scientific toolchain ⏸️ Deferred
   - Checked `docs/researches/research-001-crbasic-for-vscode.md`: it
@@ -3385,7 +3385,7 @@ an LSP-layer bug rather than a parser-grammar gap.
     `parses_hash_if_elseif_else_endif_chain`, `parses_hash_ifdef_else_endif`,
     `hash_if_requires_hash_endif_to_close`, `parses_hash_undef`) added
     Red-first; full Rust (`build`/`test`/`clippy`/`fmt`) and client
-    (`lint`/`format:check`/`test`) gates pass
+    (`lint`/`format.check`/`test`) gates pass
   - Manually verified end-to-end (lex -> parse -> semantic analyze) with a
     combined repro exercising `#If`/`#ElseIf`/`#Else`/`#EndIf`, `#IfDef`,
     `#UnDef`, `Mod`, `While`/`Wend`, and `ElseIf` together: zero semantic
@@ -3818,7 +3818,7 @@ apparently missed by earlier passes.
     per the Round 2 "Keyword/instruction list unification" note)
   - 1 new parser test (`parses_intdv_as_a_keyword_synonym_for_integer_division`)
     added Red-first; full workspace `build`/`test`/`clippy`/`fmt` and
-    client `lint`/`format:check`/`test` gates pass
+    client `lint`/`format.check`/`test` gates pass
 
 Not flagged as gaps (verified during the same round):
 
@@ -3903,7 +3903,7 @@ fetch of help.campbellsci.com's Operators page.
   - 2 new parser tests (`parses_eqv_operation`,
     `equivalence_shares_precedence_with_or_evaluated_left_to_right`)
     added Red-first; full workspace `build`/`test`/`clippy`/`fmt` and
-    client `lint`/`format:check`/`test` gates pass
+    client `lint`/`format.check`/`test` gates pass
 
 Not flagged as gaps (verified during the same round):
 
@@ -4169,7 +4169,7 @@ against `keywords.json`'s `builtinFunctions`.
     -- rather than the multi-commit-per-category split the earlier,
     separately-researched parity rounds used); full workspace
     `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (379 `crbasic-lsp` lib tests,
+    `lint`/`format.check`/`test` gate pass (379 `crbasic-lsp` lib tests,
     up from 368)
 
 Not flagged as gaps (out of scope for this pass):
@@ -4223,7 +4223,7 @@ parity round above.
     added across 3 commits (one per LSP layer, following the file-by-file
     commit convention used since the signature-help parity round); full
     workspace `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (386 `crbasic-lsp` lib tests, up
+    `lint`/`format.check`/`test` gate pass (386 `crbasic-lsp` lib tests, up
     from 379)
 
 ### Reference Implementation & Official Docs Comparison, Round 30 (2026-08-12)
@@ -4341,7 +4341,7 @@ picked as this round's category.
     function, following the Round 29/30 convention) added across 3
     commits (one per LSP layer, following the Round 29/30 commit
     convention); full workspace `build`/`test`/`clippy`/`fmt` gate and
-    client `lint`/`format:check`/`test` gate pass (408 `crbasic-lsp` lib
+    client `lint`/`format.check`/`test` gate pass (408 `crbasic-lsp` lib
     tests, up from 405)
 
 Not flagged as gaps (out of scope for this pass):
@@ -4401,7 +4401,7 @@ evidentiary bar as prior rounds.
     following the Round 29-31 convention) added across 3 commits (one per
     LSP layer, following the Round 29-31 commit convention); full
     workspace `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (419 `crbasic-lsp` lib tests, up
+    `lint`/`format.check`/`test` gate pass (419 `crbasic-lsp` lib tests, up
     from 408)
 
 Not flagged as gaps (out of scope for this pass):
@@ -4488,7 +4488,7 @@ added, following the same evidentiary bar as prior rounds.
     convention) added across 3 commits (one per LSP layer, following the
     Round 29-32 commit convention); full workspace
     `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (433 `crbasic-lsp` lib tests,
+    `lint`/`format.check`/`test` gate pass (433 `crbasic-lsp` lib tests,
     up from 419)
 
 Not flagged as gaps (out of scope for this pass):
@@ -4591,7 +4591,7 @@ direct-verification step before implementation could start.
     following the Round 29-33a convention) added across 3 commits (one
     per LSP layer, following the Round 29-33a commit convention); full
     workspace `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (461 `crbasic-lsp` lib tests,
+    `lint`/`format.check`/`test` gate pass (461 `crbasic-lsp` lib tests,
     up from 433)
 
 Not flagged as gaps (out of scope for this pass):
@@ -4647,7 +4647,7 @@ every syntax line with no conflicts, unlike Round 33b.
     following the Round 29-33b convention) added across 3 commits (one
     per LSP layer, following the Round 29-33b commit convention); full
     workspace `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (465 `crbasic-lsp` lib tests,
+    `lint`/`format.check`/`test` gate pass (465 `crbasic-lsp` lib tests,
     up from 461)
 
 This closes out the entire Round 28 builtin-function name-diff backlog
@@ -4737,7 +4737,7 @@ a future round.
     `fieldcalstrain_has_eleven_parameters_in_official_order`) added
     across 3 commits (one per LSP layer, following the Round 29-33c
     commit convention); full workspace `build`/`test`/`clippy`/`fmt`
-    gate and client `lint`/`format:check`/`test` gate pass (483
+    gate and client `lint`/`format.check`/`test` gate pass (483
     `crbasic-lsp` lib tests, up from 476)
 
 Not flagged as gaps (out of scope for this pass):
@@ -4805,7 +4805,7 @@ direct-fetch evidentiary bar.
     `mqttpublishtable_has_eight_parameters_in_official_order`) added
     across 3 commits (one per LSP layer); full workspace
     `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (490 `crbasic-lsp` lib tests,
+    `lint`/`format.check`/`test` gate pass (490 `crbasic-lsp` lib tests,
     up from 483)
 
 Not flagged as gaps (out of scope for this pass):
@@ -4858,7 +4858,7 @@ this round, unlike 34b.
     `smssend_has_four_parameters_in_official_order`) added across 3
     commits (one per LSP layer); full workspace
     `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (499 `crbasic-lsp` lib tests,
+    `lint`/`format.check`/`test` gate pass (499 `crbasic-lsp` lib tests,
     up from 490)
 
 Not flagged as gaps (out of scope for this pass):
@@ -4896,7 +4896,7 @@ their own help.campbellsci.com syntax lines.
     - 1 new signature test (`sdmsw8a_has_seven_parameters_in_official_order`)
     added across 3 commits (one per LSP layer); full workspace
     `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (505 `crbasic-lsp` lib tests,
+    `lint`/`format.check`/`test` gate pass (505 `crbasic-lsp` lib tests,
     up from 499)
 
 Not flagged as gaps (out of scope for this pass):
@@ -4961,7 +4961,7 @@ entries this round.
     `sw12_has_three_parameters_in_official_order`) added across 3
     commits (one per LSP layer); full workspace
     `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (519 `crbasic-lsp` lib tests,
+    `lint`/`format.check`/`test` gate pass (519 `crbasic-lsp` lib tests,
     up from 505)
 
 Not flagged as gaps (out of scope for this pass):
@@ -5023,7 +5023,7 @@ their own help.campbellsci.com syntax lines.
     `etsz_has_eleven_parameters_in_official_order`) added across 3
     commits (one per LSP layer); full workspace
     `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (533 `crbasic-lsp` lib tests,
+    `lint`/`format.check`/`test` gate pass (533 `crbasic-lsp` lib tests,
     up from 519)
 
 Not flagged as gaps (out of scope for this pass):
@@ -5097,7 +5097,7 @@ against their own help.campbellsci.com syntax lines.
     `tablefile_has_eight_parameters_in_official_order`) added across 3
     commits (one per LSP layer); full workspace
     `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (551 `crbasic-lsp` lib tests,
+    `lint`/`format.check`/`test` gate pass (551 `crbasic-lsp` lib tests,
     up from 533)
 
 Not flagged as gaps (out of scope for this pass):
@@ -5154,7 +5154,7 @@ help.campbellsci.com syntax lines.
     `avgrun_has_eight_parameters_in_official_order`) added across 3
     commits (one per LSP layer); full workspace
     `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (571 `crbasic-lsp` lib tests,
+    `lint`/`format.check`/`test` gate pass (571 `crbasic-lsp` lib tests,
     up from 551)
 
 Not flagged as gaps (out of scope for this pass):
@@ -5211,7 +5211,7 @@ lines.
     `xmlparse_has_eight_parameters_in_official_order`) added across 3
     commits (one per LSP layer); full workspace
     `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (592 `crbasic-lsp` lib tests,
+    `lint`/`format.check`/`test` gate pass (592 `crbasic-lsp` lib tests,
     up from 571)
 
 This closes out Round 34's entire 98-name grammar-diff backlog
@@ -5285,7 +5285,7 @@ posts where no dedicated page existed).
     `emailrecv_has_thirteen_parameters_in_official_order`) added across
     4 commits (one per LSP layer, plus the parser commit); full
     workspace `build`/`test`/`clippy`/`fmt` gate and client
-    `lint`/`format:check`/`test` gate pass (616 `crbasic-lsp` lib tests,
+    `lint`/`format.check`/`test` gate pass (616 `crbasic-lsp` lib tests,
     up from 592)
 - [x] `ExitSub` missing from `BUILTIN_FUNCTIONS`/`LANGUAGE_KEYWORDS`
   ✅ Not a gap -- already implemented

@@ -133,7 +133,7 @@ jobs:
       - name: Check formatting
         if: steps.filter.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
         shell: bash
-        run: npm run format:check
+        run: npm run format.check
 
       - name: Type-check
         if: steps.filter.outputs.code == 'true' || github.event_name == 'workflow_dispatch'

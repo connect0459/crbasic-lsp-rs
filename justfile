@@ -37,5 +37,5 @@ verify:
     just coverage
     node scripts/generate-grammar.js --check
     cd client && npm run lint
-    cd client && npm run format:check
+    cd client && npm run format.check
     just test-client

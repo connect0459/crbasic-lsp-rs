@@ -88,11 +88,11 @@ cargo test
 
 # Run TypeScript tests
 cd client
-npm test
+npm run test.run
 
 # Check code coverage
 cargo tarpaulin --out Html  # Rust coverage
-cd client && npm run test:coverage  # TypeScript coverage
+cd client && npm run test.coverage  # TypeScript coverage
 ```
 
 ### Pre-commit Hooks (Optional)
