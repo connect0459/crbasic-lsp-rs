@@ -4904,6 +4904,21 @@ impl SignatureProvider {
                 }],
             }),
 
+            "serialbrk" => Some(FunctionSignature {
+                name: "SerialBrk".to_string(),
+                documentation: "Sends a break signal of a specified duration to a serial communication port.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "COMPort".to_string(),
+                        documentation: "The serial communications port to send the break signal on.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Break".to_string(),
+                        documentation: "The duration of the break signal, in milliseconds.".to_string(),
+                    },
+                ],
+            }),
+
             "modbusmaster" => Some(FunctionSignature {
                 name: "ModbusMaster".to_string(),
                 documentation:
@@ -6031,6 +6046,15 @@ impl SignatureProvider {
                 }],
             }),
 
+            "routersneighbors" => Some(FunctionSignature {
+                name: "RoutersNeighbors".to_string(),
+                documentation: "Returns a list of all PakBus routers and their neighbors known to the datalogger.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "DestArray".to_string(),
+                    documentation: "An array dimensioned DestArray(MaxRouters, MaxNeighbors+1) that receives the PakBus routers and their neighbors.".to_string(),
+                }],
+            }),
+
             "senddata" => Some(FunctionSignature {
                 name: "SendData".to_string(),
                 documentation: "Sends the most recent record from a data table to a destination PakBus device.".to_string(),
@@ -7134,6 +7158,30 @@ impl SignatureProvider {
                 }],
             }),
 
+            "mqttconnect" => Some(FunctionSignature {
+                name: "MQTTConnect".to_string(),
+                documentation: "Overrides the default MQTT-publish retry schedule, forcing a connect or disconnect attempt over an available IP connection.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "DesiredState".to_string(),
+                    documentation: "True to attempt an MQTT connection, False to queue a disconnect.".to_string(),
+                }],
+            }),
+
+            "cwbdiagnostics" => Some(FunctionSignature {
+                name: "CWBDiagnostics".to_string(),
+                documentation: "Returns diagnostic information about a CWB100 wireless sensor base's network performance.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "CWBPort".to_string(),
+                        documentation: "The terminal pair on the datalogger connected to the wireless sensor base's Data/A terminal.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CWSDiag".to_string(),
+                        documentation: "An array of Long values that receives diagnostic results: sensor discovery count, sensors polled, retry attempts, total poll time (seconds), and a 0-100 network health score.".to_string(),
+                    },
+                ],
+            }),
+
             "checkport" => Some(FunctionSignature {
                 name: "CheckPort".to_string(),
                 documentation: "Retrieves the current status (high/low) of a specified digital port or terminal.".to_string(),
@@ -7253,6 +7301,15 @@ impl SignatureProvider {
                         documentation: "An optional flag determining whether routing fails if the interface is unavailable.".to_string(),
                     },
                 ],
+            }),
+
+            "iptrace" => Some(FunctionSignature {
+                name: "IPTrace".to_string(),
+                documentation: "Writes IP debug/troubleshooting messages to a string variable; can be used as a DataTable output trigger.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Dest".to_string(),
+                    documentation: "A string variable that receives the IP debug/troubleshooting messages.".to_string(),
+                }],
             }),
 
             "monitorcomms" => Some(FunctionSignature {
@@ -9831,6 +9888,24 @@ mod tests {
                     "CallOut",
                 ]
             );
+        }
+
+        #[test]
+        fn cwbdiagnostics_has_two_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("CWBDiagnostics")
+                .expect("CWBDiagnostics should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(names, vec!["CWBPort", "CWSDiag"]);
+        }
+
+        #[test]
+        fn routersneighbors_takes_one_parameter() {
+            let sig = SignatureProvider::get_function_signature("RoutersNeighbors")
+                .expect("RoutersNeighbors should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(names, vec!["DestArray"]);
         }
 
         #[test]
