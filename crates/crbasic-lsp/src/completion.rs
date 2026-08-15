@@ -1615,6 +1615,106 @@ impl CompletionProvider {
                 "IIf(${1:Expression}, ${2:TrueValue}, ${3:FalseValue})",
                 "Evaluates a Boolean expression and returns TrueValue if true, otherwise FalseValue.",
             ),
+            Self::create_function_completion(
+                "TriggerSequence",
+                "TriggerSequence(${1:SequenceNum}, ${2:TimeOut})",
+                "Triggers execution of a SlowSequence at its WaitTriggerSequence point, after an optional delay.",
+            ),
+            Self::create_function_completion(
+                "EMailRecv",
+                "EMailRecv(${1:ServerAddr}, ${2:ToAddr}, ${3:FromAddr}, ${4:Subject}, ${5:Message}, ${6:Authen}, ${7:UserName}, ${8:PassWord}, ${9:Result}, ${10:RecvFrom}, ${11:RecvSubj}, ${12:RecvDate}, ${13:TimeOut})",
+                "Polls a POP3 mail server for a message matching the given criteria and stores its body in a string variable.",
+            ),
+            Self::create_function_completion(
+                "ModbusServer",
+                "ModbusServer(${1:ComPort}, ${2:BaudRate}, ${3:ModbusAddr}, ${4:ModbusVariable}, ${5:BooleanVariable}, ${6:ModbusOption})",
+                "Configures the datalogger as a Modbus server, exposing variables/coils to a Modbus client (formerly ModbusSlave).",
+            ),
+            Self::create_function_completion(
+                "ModemCallBack",
+                "ModemCallBack(${1:Result}, ${2:COMPort}, ${3:BaudRate}, ${4:Security}, ${5:DialString}, ${6:ConnectString}, ${7:Timeout}, ${8:RetryInterval}, ${9:AbortExp})",
+                "Dials out via a phone modem so the datalogger initiates a callback connection to a computer.",
+            ),
+            Self::create_function_completion(
+                "NetworkTimeProtocol",
+                "NetworkTimeProtocol(${1:NTPServer}, ${2:NTPOffset}, ${3:NTPMaxMSec}, ${4:Timeout})",
+                "Synchronizes the datalogger clock with an NTP server, returning the pre-adjustment clock error in milliseconds.",
+            ),
+            Self::create_function_completion(
+                "SerialInBlock",
+                "SerialInBlock(${1:ComPort}, ${2:Dest}, ${3:MaxNumberBytes})",
+                "Reads a block of raw serial bytes into Dest without waiting for a delimiter, returning the byte count received.",
+            ),
+            Self::create_function_completion(
+                "GetRecord",
+                "GetRecord(${1:Dest}, ${2:TableName}, ${3:RecsBack}, ${4:DataFormat})",
+                "Retrieves one complete record from a data table into an array.",
+            ),
+            Self::create_function_completion(
+                "Gzip",
+                "Gzip(${1:Filename}, ${2:ZippedFilename})",
+                "Compresses one or more files on datalogger storage into a .gz or .tar.gz archive.",
+            ),
+            Self::create_function_completion(
+                "NewFieldNames",
+                "NewFieldNames(${1:GenericName}, ${2:NewNames})",
+                "Renames the auto-generated field name(s) of a variable or array for table output.",
+            ),
+            Self::create_function_completion(
+                "RainFlow",
+                "RainFlow(${1:Source}, ${2:DataType}, ${3:DisableVar}, ${4:MeanBins}, ${5:AmpBins}, ${6:LoLim}, ${7:UpLim}, ${8:MinAmp}, ${9:Form})",
+                "Performs rainflow cycle-counting on a signal, building an amplitude/mean histogram for fatigue analysis.",
+            ),
+            Self::create_function_completion(
+                "Restore",
+                "Restore",
+                "Resets the read pointer to the start of a Data/DataLong constant list, so a following Read restarts from the beginning.",
+            ),
+            Self::create_function_completion(
+                "RunProgram",
+                "RunProgram(${1:DeviceFileName}, ${2:Attrib})",
+                "Runs a specified datalogger program file, replacing the currently active program.",
+            ),
+            Self::create_function_completion(
+                "StationName",
+                "StationName(${1:StaName})",
+                "Assigns a name to the station, stored in the Status table; declared once near the top of the program.",
+            ),
+            Self::create_function_completion(
+                "Matrix",
+                "Matrix(${1:Option}, ${2:A}, ${3:B}, ${4:Result})",
+                "Performs matrix math (add, subtract, multiply, transpose, invert) on 2-D arrays.",
+            ),
+            Self::create_function_completion(
+                "MinSpa",
+                "MinSpa(${1:Dest}, ${2:Swath}, ${3:Source})",
+                "Finds the minimum value across a spatial array and its index, writing both into a 2-element Dest array.",
+            ),
+            Self::create_function_completion(
+                "ArrayIndex",
+                "ArrayIndex(${1:Name})",
+                "Returns the numeric index of a named array element whose position isn't known in advance.",
+            ),
+            Self::create_function_completion(
+                "Debug",
+                "Debug(${1:DebugSequence}, ${2:HistorySize}, ${3:Control}, ${4:LineBreak}, ${5:TraceHistory})",
+                "Configures breakpoint and trace-history behavior for the CRBasic debugger; used together with DebugBreak.",
+            ),
+            Self::create_function_completion(
+                "Move",
+                "Move(${1:Dest}, ${2:DestReps}, ${3:Source}, ${4:SourceReps})",
+                "Copies a run of values from a source array/variable into a destination range.",
+            ),
+            Self::create_function_completion(
+                "SemaphoreGet",
+                "SemaphoreGet(${1:SemNumber})",
+                "Waits for and claims a semaphore, blocking until it is free.",
+            ),
+            Self::create_function_completion(
+                "SemaphoreRelease",
+                "SemaphoreRelease(${1:SemNumber})",
+                "Releases a semaphore previously claimed with SemaphoreGet.",
+            ),
         ]
     }
 
@@ -1717,6 +1817,7 @@ impl CompletionProvider {
         items.extend(Self::get_pattern_snippet_completions());
         items.extend(Self::data_type_completions());
         items.extend(Self::output_processing_data_type_completions());
+        items.extend(Self::preprocessor_constant_completions());
 
         if let Some(ast) = ast {
             items.extend(Self::get_user_defined_completions(ast));
@@ -1784,6 +1885,23 @@ impl CompletionProvider {
             ),
             Self::create_keyword_completion("NSEC", "Nanosecond-resolution time stamp (8 bytes)"),
         ]
+    }
+
+    /// Returns the completion item for `LoggerType`, the predefined
+    /// constant compared inside `#If`/`#ElseIf` conditions (e.g. `#If
+    /// LoggerType = CR1000X`) to conditionally compile per-datalogger-model
+    /// branches.
+    ///
+    /// Not part of `LANGUAGE_KEYWORDS`: `LoggerType` is lexed as a plain
+    /// identifier today, and the parser's expression grammar (reused by
+    /// `#If`) has no generic fallback for bare keyword tokens as primary
+    /// expressions (only `True`/`False` are special-cased) -- reclassifying
+    /// it as a keyword would break `#If LoggerType = ...` parsing.
+    fn preprocessor_constant_completions() -> Vec<CompletionItem> {
+        vec![Self::create_keyword_completion(
+            "LoggerType",
+            "Predefined constant for #If/#ElseIf model comparisons (e.g. #If LoggerType = CR1000X)",
+        )]
     }
 
     fn control_flow_keywords() -> Vec<CompletionItem> {
@@ -5357,6 +5475,215 @@ mod tests {
                 "XMLParse(${1:XMLContent}, ${2:XMLValue}, ${3:AttrName}, ${4:AttrNameSpace}, \
                  ${5:ElemName}, ${6:ElemNameSpace}, ${7:MaxDepth}, ${8:MaxNameSpaces})"
             );
+        }
+
+        #[test]
+        fn triggersequence_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TriggerSequence"),
+                "TriggerSequence(${1:SequenceNum}, ${2:TimeOut})"
+            );
+        }
+
+        #[test]
+        fn emailrecv_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "EMailRecv"),
+                "EMailRecv(${1:ServerAddr}, ${2:ToAddr}, ${3:FromAddr}, ${4:Subject}, \
+                 ${5:Message}, ${6:Authen}, ${7:UserName}, ${8:PassWord}, ${9:Result}, \
+                 ${10:RecvFrom}, ${11:RecvSubj}, ${12:RecvDate}, ${13:TimeOut})"
+            );
+        }
+
+        #[test]
+        fn modbusserver_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ModbusServer"),
+                "ModbusServer(${1:ComPort}, ${2:BaudRate}, ${3:ModbusAddr}, \
+                 ${4:ModbusVariable}, ${5:BooleanVariable}, ${6:ModbusOption})"
+            );
+        }
+
+        #[test]
+        fn modemcallback_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ModemCallBack"),
+                "ModemCallBack(${1:Result}, ${2:COMPort}, ${3:BaudRate}, ${4:Security}, \
+                 ${5:DialString}, ${6:ConnectString}, ${7:Timeout}, ${8:RetryInterval}, ${9:AbortExp})"
+            );
+        }
+
+        #[test]
+        fn networktimeprotocol_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "NetworkTimeProtocol"),
+                "NetworkTimeProtocol(${1:NTPServer}, ${2:NTPOffset}, ${3:NTPMaxMSec}, ${4:Timeout})"
+            );
+        }
+
+        #[test]
+        fn serialinblock_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SerialInBlock"),
+                "SerialInBlock(${1:ComPort}, ${2:Dest}, ${3:MaxNumberBytes})"
+            );
+        }
+
+        #[test]
+        fn getrecord_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "GetRecord"),
+                "GetRecord(${1:Dest}, ${2:TableName}, ${3:RecsBack}, ${4:DataFormat})"
+            );
+        }
+
+        #[test]
+        fn gzip_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Gzip"),
+                "Gzip(${1:Filename}, ${2:ZippedFilename})"
+            );
+        }
+
+        #[test]
+        fn newfieldnames_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "NewFieldNames"),
+                "NewFieldNames(${1:GenericName}, ${2:NewNames})"
+            );
+        }
+
+        #[test]
+        fn rainflow_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "RainFlow"),
+                "RainFlow(${1:Source}, ${2:DataType}, ${3:DisableVar}, ${4:MeanBins}, \
+                 ${5:AmpBins}, ${6:LoLim}, ${7:UpLim}, ${8:MinAmp}, ${9:Form})"
+            );
+        }
+
+        #[test]
+        fn restore_snippet_takes_no_parameters() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Restore"), "Restore");
+        }
+
+        #[test]
+        fn runprogram_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "RunProgram"),
+                "RunProgram(${1:DeviceFileName}, ${2:Attrib})"
+            );
+        }
+
+        #[test]
+        fn stationname_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "StationName"),
+                "StationName(${1:StaName})"
+            );
+        }
+
+        #[test]
+        fn matrix_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Matrix"),
+                "Matrix(${1:Option}, ${2:A}, ${3:B}, ${4:Result})"
+            );
+        }
+
+        #[test]
+        fn minspa_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MinSpa"),
+                "MinSpa(${1:Dest}, ${2:Swath}, ${3:Source})"
+            );
+        }
+
+        #[test]
+        fn arrayindex_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ArrayIndex"),
+                "ArrayIndex(${1:Name})"
+            );
+        }
+
+        #[test]
+        fn debug_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Debug"),
+                "Debug(${1:DebugSequence}, ${2:HistorySize}, ${3:Control}, ${4:LineBreak}, ${5:TraceHistory})"
+            );
+        }
+
+        #[test]
+        fn move_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Move"),
+                "Move(${1:Dest}, ${2:DestReps}, ${3:Source}, ${4:SourceReps})"
+            );
+        }
+
+        #[test]
+        fn semaphoreget_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SemaphoreGet"),
+                "SemaphoreGet(${1:SemNumber})"
+            );
+        }
+
+        #[test]
+        fn semaphorerelease_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SemaphoreRelease"),
+                "SemaphoreRelease(${1:SemNumber})"
+            );
+        }
+
+        #[test]
+        fn loggertype_offers_a_completion_item_for_preprocessor_conditionals() {
+            let completions = CompletionProvider::get_all_completions(None);
+
+            assert!(completions.iter().any(|c| c.label == "LoggerType"));
         }
     }
 
