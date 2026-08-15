@@ -786,6 +786,41 @@ impl CompletionProvider {
                 "Declares code to run when a communications port hangs up, closed by EndModemHangup.",
             ),
             Self::create_function_completion(
+                "DialVoice",
+                "DialVoice(${1:DialString})",
+                "Dials out over a voice modem, or waits for an incoming call if no dial string is given.",
+            ),
+            Self::create_function_completion(
+                "VoiceHangup",
+                "VoiceHangup",
+                "Hangs up the voice modem after a DialVoice connection.",
+            ),
+            Self::create_function_completion(
+                "VoiceKey",
+                "VoiceKey(${1:VoiceTimeOut})",
+                "Waits for and returns a single DTMF key pressed by the caller over the voice modem.",
+            ),
+            Self::create_function_completion(
+                "VoiceNumber",
+                "VoiceNumber(${1:VoiceTimeOut})",
+                "Waits for and returns a multi-digit DTMF number entered by the caller over the voice modem.",
+            ),
+            Self::create_function_completion(
+                "VoicePhrases",
+                "VoicePhrases(${1:PhraseArray}, ${2:Phrases})",
+                "Speaks a comma-separated list of vocabulary words/phrases over the voice modem.",
+            ),
+            Self::create_function_completion(
+                "VoiceSetup",
+                "VoiceSetup(${1:HangUpKey}, ${2:ExitSubKey}, ${3:ContinueKey}, ${4:SecOnLine}, ${5:UseTimeout}, ${6:CallOut})",
+                "Configures the DTMF keys and timing behavior used by the voice-modem instructions.",
+            ),
+            Self::create_function_completion(
+                "VoiceSpeak",
+                "VoiceSpeak(${1:Expression}, ${2:Precision})",
+                "Speaks a string built by concatenating literal text and variable values over the voice modem.",
+            ),
+            Self::create_function_completion(
                 "SMSRecv",
                 "SMSRecv(${1:PhoneNumber}, ${2:Message}, ${3:TimeStamp})",
                 "Polls a CELL2XX cellular modem for a pending SMS message.",
@@ -5676,6 +5711,73 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "SemaphoreRelease"),
                 "SemaphoreRelease(${1:SemNumber})"
+            );
+        }
+
+        #[test]
+        fn dialvoice_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "DialVoice"),
+                "DialVoice(${1:DialString})"
+            );
+        }
+
+        #[test]
+        fn voicehangup_snippet_takes_no_parameters() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "VoiceHangup"), "VoiceHangup");
+        }
+
+        #[test]
+        fn voicekey_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "VoiceKey"),
+                "VoiceKey(${1:VoiceTimeOut})"
+            );
+        }
+
+        #[test]
+        fn voicenumber_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "VoiceNumber"),
+                "VoiceNumber(${1:VoiceTimeOut})"
+            );
+        }
+
+        #[test]
+        fn voicephrases_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "VoicePhrases"),
+                "VoicePhrases(${1:PhraseArray}, ${2:Phrases})"
+            );
+        }
+
+        #[test]
+        fn voicesetup_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "VoiceSetup"),
+                "VoiceSetup(${1:HangUpKey}, ${2:ExitSubKey}, ${3:ContinueKey}, ${4:SecOnLine}, ${5:UseTimeout}, ${6:CallOut})"
+            );
+        }
+
+        #[test]
+        fn voicespeak_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "VoiceSpeak"),
+                "VoiceSpeak(${1:Expression}, ${2:Precision})"
             );
         }
 
