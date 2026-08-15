@@ -266,6 +266,16 @@ impl CompletionProvider {
                 "Returns the current real-time clock values.",
             ),
             Self::create_function_completion(
+                "ClockChange",
+                "ClockChange",
+                "Returns the number of milliseconds the datalogger's clock has changed since the last time this instruction was executed.",
+            ),
+            Self::create_function_completion(
+                "ClockSet",
+                "ClockSet(${1:SourceArray})",
+                "Sets the datalogger clock from the values in a 7-element array.",
+            ),
+            Self::create_function_completion(
                 "Delay",
                 "Delay(${1:Option}, ${2:Duration}, ${3:Units})",
                 "Pauses execution for a specified time.",
@@ -349,6 +359,16 @@ impl CompletionProvider {
                 "PulsePort",
                 "PulsePort(${1:Port}, ${2:Delay})",
                 "Toggles a port, delays, toggles it back, and delays again to generate a clocking pulse.",
+            ),
+            Self::create_function_completion(
+                "ReadIO",
+                "ReadIO(${1:Dest}, ${2:Mask}, ${3:ChannelType})",
+                "Reads the status of one or more digital ports or terminals, storing the result in Dest.",
+            ),
+            Self::create_function_completion(
+                "WriteIO",
+                "WriteIO(${1:Mask}, ${2:Source}, ${3:ChannelType})",
+                "Sets the status of one or more digital control ports or universal terminals from Source.",
             ),
             Self::create_function_completion(
                 "TimerInput",
@@ -634,6 +654,16 @@ impl CompletionProvider {
                 "SampleFieldCal",
                 "SampleFieldCal",
                 "Stores the values in the FieldCal file to a data table; used inside a DataTable/EndTable declaration.",
+            ),
+            Self::create_function_completion(
+                "CalFile",
+                "CalFile(${1:Source/Dest}, ${2:NumVals}, ${3:\"Device:filename\"}, ${4:Option})",
+                "Writes an array to a calibration file, or reads a calibration file back into an array if its signature matches.",
+            ),
+            Self::create_function_completion(
+                "NewFieldCal",
+                "NewFieldCal",
+                "A Boolean DataTable trigger that is true for one scan cycle after a new field calibration has been performed.",
             ),
             Self::create_function_completion(
                 "ACPower",
@@ -1136,6 +1166,11 @@ impl CompletionProvider {
                 "Enables or disables specific relay ports of an SDM-CD16AC device via a bit-mask filter.",
             ),
             Self::create_function_completion(
+                "TimedControl",
+                "TimedControl(${1:TCSize}, ${2:TCSyncInterval}, ${3:TCIntervalUnits}, ${4:TCDefaultValue}, ${5:TCCurrentIndex}, ${6:TCSource}, ${7:TCClockOption})",
+                "Runs a timed sequence of binary output values through an SDMCD16 peripheral, synchronized to a specified interval.",
+            ),
+            Self::create_function_completion(
                 "SDMCVO4",
                 "SDMCVO4(${1:CVO4Source}, ${2:CVO4Reps}, ${3:SDMAddress}, ${4:CVO4Mode})",
                 "Controls the SDM-CVO4 four-channel current/voltage output device.",
@@ -1326,6 +1361,11 @@ impl CompletionProvider {
                 "Stores a frequency distribution of input data across a set of bins.",
             ),
             Self::create_function_completion(
+                "Histogram4D",
+                "Histogram4D(${1:BinSelect}, ${2:DataType}, ${3:DisableVar}, ${4:Bins1}, ${5:Bins2}, ${6:Bins3}, ${7:Bins4}, ${8:Form}, ${9:WtVal}, ${10:LoLim1}, ${11:UpLim1}, ${12:LoLim2}, ${13:UpLim2}, ${14:LoLim3}, ${15:UpLim3}, ${16:LoLim4}, ${17:UpLim4})",
+                "Processes input data as a standard or weighted-value histogram of up to four dimensions.",
+            ),
+            Self::create_function_completion(
                 "Median",
                 "Median(${1:Reps}, ${2:Source}, ${3:MaxN}, ${4:DataType}, ${5:DisableVar})",
                 "Stores the median of a variable, over time, in an output table.",
@@ -1404,6 +1444,11 @@ impl CompletionProvider {
                 "FileWrite",
                 "FileWrite(${1:FileHandle}, ${2:Source}, ${3:Length})",
                 "Writes data from a variable or array to an open file.",
+            ),
+            Self::create_function_completion(
+                "FileEncrypt",
+                "FileEncrypt(${1:\"Device:FileName\"})",
+                "Encrypts a file in place; the datalogger automatically decrypts it at compile time when referenced.",
             ),
             Self::create_function_completion(
                 "FileCopy",
@@ -1491,6 +1536,11 @@ impl CompletionProvider {
                 "Converts a Long value to a decimal, hexadecimal, or octal string.",
             ),
             Self::create_function_completion(
+                "FormatLongLong",
+                "FormatLongLong(${1:LongLongVar})",
+                "Converts a 64-bit value, stored across two adjacent Long variables, into its decimal string representation.",
+            ),
+            Self::create_function_completion(
                 "Chr",
                 "Chr(${1:Code})",
                 "Returns a character in the extended ASCII character set.",
@@ -1524,6 +1574,11 @@ impl CompletionProvider {
                 "Sprintf",
                 "Sprintf(${1:Dest}, ${2:Format}, ${3:Argument1})",
                 "Writes a formatted output string to a destination variable.",
+            ),
+            Self::create_function_completion(
+                "TypeOf",
+                "TypeOf(${1:TypeVar})",
+                "Returns an integer data-type code for a variable.",
             ),
             Self::create_function_completion(
                 "Sgn",
@@ -1769,6 +1824,11 @@ impl CompletionProvider {
                 "RainFlow",
                 "RainFlow(${1:Source}, ${2:DataType}, ${3:DisableVar}, ${4:MeanBins}, ${5:AmpBins}, ${6:LoLim}, ${7:UpLim}, ${8:MinAmp}, ${9:Form})",
                 "Performs rainflow cycle-counting on a signal, building an amplitude/mean histogram for fatigue analysis.",
+            ),
+            Self::create_function_completion(
+                "Read",
+                "Read ${1:VarExpr}",
+                "Reads the next value(s) sequentially from a Data/DataLong constant list into a variable, advancing the read pointer.",
             ),
             Self::create_function_completion(
                 "Restore",
@@ -6078,6 +6138,117 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "VaporPressure"),
                 "VaporPressure(${1:Dest}, ${2:Temp}, ${3:RH})"
+            );
+        }
+
+        #[test]
+        fn calfile_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CalFile"),
+                "CalFile(${1:Source/Dest}, ${2:NumVals}, ${3:\"Device:filename\"}, ${4:Option})"
+            );
+        }
+
+        #[test]
+        fn clockchange_snippet_takes_no_parameters() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "ClockChange"), "ClockChange");
+        }
+
+        #[test]
+        fn clockset_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ClockSet"),
+                "ClockSet(${1:SourceArray})"
+            );
+        }
+
+        #[test]
+        fn fileencrypt_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FileEncrypt"),
+                "FileEncrypt(${1:\"Device:FileName\"})"
+            );
+        }
+
+        #[test]
+        fn histogram4d_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Histogram4D"),
+                "Histogram4D(${1:BinSelect}, ${2:DataType}, ${3:DisableVar}, ${4:Bins1}, ${5:Bins2}, ${6:Bins3}, ${7:Bins4}, ${8:Form}, ${9:WtVal}, ${10:LoLim1}, ${11:UpLim1}, ${12:LoLim2}, ${13:UpLim2}, ${14:LoLim3}, ${15:UpLim3}, ${16:LoLim4}, ${17:UpLim4})"
+            );
+        }
+
+        #[test]
+        fn newfieldcal_snippet_takes_no_parameters() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "NewFieldCal"), "NewFieldCal");
+        }
+
+        #[test]
+        fn read_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(insert_text_for(&completions, "Read"), "Read ${1:VarExpr}");
+        }
+
+        #[test]
+        fn readio_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ReadIO"),
+                "ReadIO(${1:Dest}, ${2:Mask}, ${3:ChannelType})"
+            );
+        }
+
+        #[test]
+        fn writeio_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "WriteIO"),
+                "WriteIO(${1:Mask}, ${2:Source}, ${3:ChannelType})"
+            );
+        }
+
+        #[test]
+        fn typeof_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TypeOf"),
+                "TypeOf(${1:TypeVar})"
+            );
+        }
+
+        #[test]
+        fn formatlonglong_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "FormatLongLong"),
+                "FormatLongLong(${1:LongLongVar})"
+            );
+        }
+
+        #[test]
+        fn timedcontrol_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TimedControl"),
+                "TimedControl(${1:TCSize}, ${2:TCSyncInterval}, ${3:TCIntervalUnits}, ${4:TCDefaultValue}, ${5:TCCurrentIndex}, ${6:TCSource}, ${7:TCClockOption})"
             );
         }
 
