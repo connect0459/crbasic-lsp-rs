@@ -861,6 +861,9 @@ impl HoverProvider {
             "triggersequence" => Some(
                 "**TriggerSequence**\n\nTriggers execution of a SlowSequence at its WaitTriggerSequence point, after an optional delay.",
             ),
+            "waitdigtrig" => Some(
+                "**WaitDigTrig**\n\nTriggers a measurement scan using an external digital signal instead of the datalogger's internal clock.",
+            ),
             _ => None,
         }
     }
@@ -890,16 +893,31 @@ impl HoverProvider {
             "therm107" => Some("**Therm107**\n\nMeasures temperature using a 107 thermistor."),
             "therm108" => Some("**Therm108**\n\nMeasures temperature using a 108 thermistor."),
             "therm109" => Some("**Therm109**\n\nMeasures temperature using a 109 thermistor."),
+            "thermistor" => Some(
+                "**Thermistor**\n\nPerforms a bridge measurement of a thermistor, returning resistance in Ohms, or temperature in Celsius if Steinhart-Hart coefficients are given.",
+            ),
+            "tcpsyc" => Some(
+                "**TCPsyc**\n\nMeasures one or more Peltier-style thermocouple psychrometers, directly or via an AM16/32B multiplexer.",
+            ),
             "periodavg" => Some(
                 "**PeriodAvg**\n\nMeasures the period or frequency of a signal on a single-ended channel.",
             ),
             "pulsecount" => Some("**PulseCount**\n\nMeasures pulse count from a sensor."),
+            "timerinput" => Some(
+                "**TimerInput**\n\nMeasures time intervals between edges, or frequency, on digital ports; can span across scan intervals.",
+            ),
             "portset" => Some("**PortSet**\n\nSets a control port to a high or low state."),
             "pulseport" => Some(
                 "**PulsePort**\n\nToggles a port, delays, toggles it back, and delays again to generate a clocking pulse.",
             ),
             "excitev" => Some(
                 "**ExciteV**\n\nSets an excitation channel output to a specified voltage for a specified duration.",
+            ),
+            "excitei" => {
+                Some("**ExciteI**\n\nApplies a current excitation to an excitation channel.")
+            }
+            "swvx" => Some(
+                "**SWVX**\n\nSets a switched, regulated VX excitation channel high or low to power external peripherals or toggle control lines.",
             ),
             "brhalf3w" => Some(
                 "**BrHalf3W**\n\nApplies an excitation voltage and measures a 3-wire half bridge to calculate the resistance ratio.",
@@ -918,6 +936,9 @@ impl HoverProvider {
             ),
             "resistance" => Some(
                 "**Resistance**\n\nMeasures the resistance of a basic or full-bridge circuit using current excitation.",
+            ),
+            "resistance3w" => Some(
+                "**Resistance3W**\n\nPerforms a 3-wire resistance measurement, using differential and reverse excitation to cancel voltage offset errors.",
             ),
             "watchdogtimer" => Some(
                 "**WatchdogTimer**\n\nEnables a user-programmed watchdog timer that guards the program against lockup.",
@@ -1069,6 +1090,9 @@ impl HoverProvider {
             "avw200" => {
                 Some("**AVW200**\n\nReads vibrating-wire sensors via an AVW200 spectrum analyzer.")
             }
+            "vibratingwire" => Some(
+                "**VibratingWire**\n\nMeasures one or more vibrating-wire sensors by sweeping an excitation frequency and detecting the sensor's resonant frequency.",
+            ),
             "cs616" => {
                 Some("**CS616**\n\nEnables and measures a CS616/CS625 water content reflectometer.")
             }
