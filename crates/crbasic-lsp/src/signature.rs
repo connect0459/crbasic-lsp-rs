@@ -305,6 +305,81 @@ impl SignatureProvider {
                 ],
             }),
 
+            "histogram4d" => Some(FunctionSignature {
+                name: "Histogram4D".to_string(),
+                documentation: "Processes input data as a standard or weighted-value histogram of up to four dimensions.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "BinSelect".to_string(),
+                        documentation: "Variable whose value determines which bin is incremented.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "Output data type for bin totals (IEEE4, FP2, etc.).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DisableVar".to_string(),
+                        documentation: "Variable to disable output (0 = enabled); ±12345 resets the histogram.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Bins1".to_string(),
+                        documentation: "Number of bins spanning the range from LoLim1 to UpLim1 (dimension 1).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Bins2".to_string(),
+                        documentation: "Number of bins spanning the range from LoLim2 to UpLim2 (dimension 2).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Bins3".to_string(),
+                        documentation: "Number of bins spanning the range from LoLim3 to UpLim3 (dimension 3).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Bins4".to_string(),
+                        documentation: "Number of bins spanning the range from LoLim4 to UpLim4 (dimension 4).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Form".to_string(),
+                        documentation: "Three-digit code (ABC) controlling reset, output form, and bin-limit inclusion.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "WtVal".to_string(),
+                        documentation: "Constant or variable weight added on each increment (1 = simple frequency count).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LoLim1".to_string(),
+                        documentation: "Lower limit of the histogram's measurement range for dimension 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UpLim1".to_string(),
+                        documentation: "Upper limit of the histogram's measurement range for dimension 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LoLim2".to_string(),
+                        documentation: "Lower limit of the histogram's measurement range for dimension 2.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UpLim2".to_string(),
+                        documentation: "Upper limit of the histogram's measurement range for dimension 2.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LoLim3".to_string(),
+                        documentation: "Lower limit of the histogram's measurement range for dimension 3.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UpLim3".to_string(),
+                        documentation: "Upper limit of the histogram's measurement range for dimension 3.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LoLim4".to_string(),
+                        documentation: "Lower limit of the histogram's measurement range for dimension 4.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UpLim4".to_string(),
+                        documentation: "Upper limit of the histogram's measurement range for dimension 4.".to_string(),
+                    },
+                ],
+            }),
+
             "median" => Some(FunctionSignature {
                 name: "Median".to_string(),
                 documentation: "Stores the median of a variable, over time, in an output table.".to_string(),
@@ -669,6 +744,15 @@ impl SignatureProvider {
                         documentation: "Maximum number of characters from Source to write (0 = write a string up to its null terminator).".to_string(),
                     },
                 ],
+            }),
+
+            "fileencrypt" => Some(FunctionSignature {
+                name: "FileEncrypt".to_string(),
+                documentation: "Encrypts a file in place; the datalogger automatically decrypts it at compile time when referenced.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Device:FileName".to_string(),
+                    documentation: "The device and file name to encrypt, in quotes (valid devices: CPU:, CRD:, USR:, USB:).".to_string(),
+                }],
             }),
 
             "filecopy" => Some(FunctionSignature {
@@ -1720,6 +1804,44 @@ impl SignatureProvider {
                     ParameterInfo {
                         name: "Delay".to_string(),
                         documentation: "Delay, in microseconds, after each toggle.".to_string(),
+                    },
+                ],
+            }),
+
+            "readio" => Some(FunctionSignature {
+                name: "ReadIO".to_string(),
+                documentation: "Reads the status of one or more digital ports or terminals, storing the result in Dest.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable that receives the digital port status bits.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mask".to_string(),
+                        documentation: "A bitwise mask selecting which ports to read.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ChannelType".to_string(),
+                        documentation: "Optional: 0 for control ports (default), 1 for universal terminals.".to_string(),
+                    },
+                ],
+            }),
+
+            "writeio" => Some(FunctionSignature {
+                name: "WriteIO".to_string(),
+                documentation: "Sets the status of one or more digital control ports or universal terminals from Source.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Mask".to_string(),
+                        documentation: "A bitwise mask selecting which ports to modify.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The values to write to the selected ports.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ChannelType".to_string(),
+                        documentation: "Optional: 0 for control ports (default), 1 for universal terminals.".to_string(),
                     },
                 ],
             }),
@@ -3833,6 +3955,35 @@ impl SignatureProvider {
             "samplefieldcal" => Some(FunctionSignature {
                 name: "SampleFieldCal".to_string(),
                 documentation: "Stores the values in the FieldCal file to a data table; used inside a DataTable/EndTable declaration.".to_string(),
+                parameters: vec![],
+            }),
+
+            "calfile" => Some(FunctionSignature {
+                name: "CalFile".to_string(),
+                documentation: "Writes an array to a calibration file, or reads a calibration file back into an array if its signature matches.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Source/Dest".to_string(),
+                        documentation: "A variable array specifying where to read data from or write data to.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NumVals".to_string(),
+                        documentation: "The number of values to read from or write to the calibration file.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "\"Device:filename\"".to_string(),
+                        documentation: "The storage device and file name (e.g. CPU:, CRD:, USR:, USB:) for the calibration file, enclosed in quotes.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "0 writes the source array to the file; 1 reads data from the file, and if the signature matches, writes it into the array.".to_string(),
+                    },
+                ],
+            }),
+
+            "newfieldcal" => Some(FunctionSignature {
+                name: "NewFieldCal".to_string(),
+                documentation: "A Boolean DataTable trigger that is true for one scan cycle after a new field calibration has been performed.".to_string(),
                 parameters: vec![],
             }),
 
@@ -7071,6 +7222,41 @@ impl SignatureProvider {
                 ],
             }),
 
+            "timedcontrol" => Some(FunctionSignature {
+                name: "TimedControl".to_string(),
+                documentation: "Runs a timed sequence of binary output values through an SDMCD16 peripheral, synchronized to a specified interval.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "TCSize".to_string(),
+                        documentation: "The number of values in the control sequence.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TCSyncInterval".to_string(),
+                        documentation: "The interval on which to run the sequence; the program waits until an even multiple of this interval before starting (0 to start immediately).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TCIntervalUnits".to_string(),
+                        documentation: "The time unit for TCSyncInterval (microseconds, milliseconds, seconds, minutes, hours, or days).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TCDefaultValue".to_string(),
+                        documentation: "A binary value sent to the SDMCD16 before the sequence begins, or when the clock resets under TCClockOption 1.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TCCurrentIndex".to_string(),
+                        documentation: "A variable holding the index of the control sequence step currently executing; reset to 0 when TimedControl is reset or resyncing.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TCSource".to_string(),
+                        documentation: "A two-dimensional array of binary values sent to the SDMCD16, specifying the ports to set and how many scans to hold each value.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TCClockOption".to_string(),
+                        documentation: "Selects the behavior (1, 2, or 3) when the datalogger clock changes or the instruction is reset.".to_string(),
+                    },
+                ],
+            }),
+
             "sdmcvo4" => Some(FunctionSignature {
                 name: "SDMCVO4".to_string(),
                 documentation: "Controls the SDM-CVO4 four-channel current/voltage output device.".to_string(),
@@ -8222,6 +8408,15 @@ impl SignatureProvider {
                 ],
             }),
 
+            "formatlonglong" => Some(FunctionSignature {
+                name: "FormatLongLong".to_string(),
+                documentation: "Converts a 64-bit value, stored across two adjacent Long variables, into its decimal string representation.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "LongLongVar".to_string(),
+                    documentation: "A 2-element Long array whose first element holds the high-order 32 bits and second element the low-order 32 bits of a 64-bit value.".to_string(),
+                }],
+            }),
+
             "lowercase" => Some(FunctionSignature {
                 name: "LowerCase".to_string(),
                 documentation: "Converts a string to all lowercase characters.".to_string(),
@@ -8406,6 +8601,15 @@ impl SignatureProvider {
                 ],
             }),
 
+            "typeof" => Some(FunctionSignature {
+                name: "TypeOf".to_string(),
+                documentation: "Returns an integer data-type code for a variable.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "TypeVar".to_string(),
+                    documentation: "The variable to inspect; returns 0 if TypeVar is an expression or constant rather than a simple variable.".to_string(),
+                }],
+            }),
+
             "timer" => Some(FunctionSignature {
                 name: "Timer".to_string(),
                 documentation: "Returns elapsed time from a timer.".to_string(),
@@ -8490,6 +8694,21 @@ impl SignatureProvider {
                 parameters: vec![ParameterInfo {
                     name: "Dest".to_string(),
                     documentation: "Array (dimensioned to 9) that receives year, month, day, hour, minute, second, microsecond, day of week, and day of year.".to_string(),
+                }],
+            }),
+
+            "clockchange" => Some(FunctionSignature {
+                name: "ClockChange".to_string(),
+                documentation: "Returns the number of milliseconds the datalogger's clock has changed since the last time this instruction was executed.".to_string(),
+                parameters: vec![],
+            }),
+
+            "clockset" => Some(FunctionSignature {
+                name: "ClockSet".to_string(),
+                documentation: "Sets the datalogger clock from the values in a 7-element array.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "SourceArray".to_string(),
+                    documentation: "A 7-element array (year, month, day, hour, minute, second, microsecond) used to set the datalogger clock.".to_string(),
                 }],
             }),
 
@@ -9119,6 +9338,15 @@ impl SignatureProvider {
                         documentation: "The output histogram's array form.".to_string(),
                     },
                 ],
+            }),
+
+            "read" => Some(FunctionSignature {
+                name: "Read".to_string(),
+                documentation: "Reads the next value(s) sequentially from a Data/DataLong constant list into a variable, advancing the read pointer.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "VarExpr".to_string(),
+                    documentation: "The variable or array that receives the next value(s) from the Data/DataLong constant list.".to_string(),
+                }],
             }),
 
             "restore" => Some(FunctionSignature {
@@ -10419,6 +10647,44 @@ mod tests {
                     "BrConfig",
                     "GageFactor",
                     "PoissonFactor",
+                ]
+            );
+        }
+
+        #[test]
+        fn clockchange_takes_no_parameters() {
+            let sig = SignatureProvider::get_function_signature("ClockChange")
+                .expect("ClockChange should have a signature");
+
+            assert!(sig.parameters.is_empty());
+        }
+
+        #[test]
+        fn histogram4d_has_seventeen_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("Histogram4D")
+                .expect("Histogram4D should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "BinSelect",
+                    "DataType",
+                    "DisableVar",
+                    "Bins1",
+                    "Bins2",
+                    "Bins3",
+                    "Bins4",
+                    "Form",
+                    "WtVal",
+                    "LoLim1",
+                    "UpLim1",
+                    "LoLim2",
+                    "UpLim2",
+                    "LoLim3",
+                    "UpLim3",
+                    "LoLim4",
+                    "UpLim4",
                 ]
             );
         }
