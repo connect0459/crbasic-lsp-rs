@@ -166,7 +166,7 @@
         },
         {
           "name": "support.function.math.crbasic",
-          "match": "(?i)\\b(Abs|Sgn|Sqr|Exp|Ln|Log|Log10|Sin|Cos|Tan|Sinh|Cosh|Tanh|Asin|Acos|Atn|Atn2|Int|Fix|Frac|Round|Rnd|Randomize|Ceiling|Floor|MovePrecise|PWR|CType|AvgRun|MaxRun|MinRun|TotalRun|AvgSpa|CovSpa|MaxSpa|RMSSpa|StdDevSpa|FFTSpa|Matrix|MinSpa)\\b"
+          "match": "(?i)\\b(Abs|Sgn|Sqr|Exp|Ln|Log|Log10|Sin|Cos|Tan|Sinh|Cosh|Tanh|Asin|Acos|Atn|Atn2|Int|Fix|Frac|Round|Rnd|Randomize|Ceiling|Floor|MovePrecise|AddPrecise|PWR|CType|AvgRun|MaxRun|MinRun|TotalRun|AvgSpa|CovSpa|MaxSpa|RMSSpa|StdDevSpa|FFTSpa|Matrix|MinSpa|SortSpa|FindSpa|RectPolar|SatVP|StrainCalc|VaporPressure)\\b"
         },
         {
           "name": "support.function.time.crbasic",
