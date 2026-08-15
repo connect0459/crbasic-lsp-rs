@@ -38,4 +38,5 @@ verify:
     node scripts/generate-grammar.js --check
     cd client && npm run lint
     cd client && npm run format.check
+    cd client && npm run type-check
     just test-client
