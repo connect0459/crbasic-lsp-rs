@@ -75,7 +75,7 @@ parser depending on `tower-lsp`).
 - `cargo build` / `cargo test --workspace` — build and test the Rust workspace.
 - `wasm-pack build --target web` (run from `crates/crbasic-wasm/`) — build the
   WASM package consumed by the client.
-- `cd client && npm test` — run TypeScript tests (Vitest).
+- `cd client && npm run test.run` — run TypeScript tests (Vitest).
 - `just verify` — run the full CI-equivalent check (Rust fmt/clippy/test,
   TypeScript lint/format/test) before opening a PR.
 - **pre-commit hooks** — catch formatting and lint issues on every commit

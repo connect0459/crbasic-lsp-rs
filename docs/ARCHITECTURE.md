@@ -282,7 +282,7 @@ cargo fmt
 cd crates/crbasic-wasm && wasm-pack build
 
 # Run TypeScript tests
-cd client && npm test
+cd client && npm run test.run
 
 # Run TypeScript linter
 cd client && npm run lint

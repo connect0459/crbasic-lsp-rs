@@ -94,7 +94,7 @@ jobs:
       - name: Run client tests
         shell: bash
         working-directory: client
-        run: npm test -- --run
+        run: npm run test.run
 
   # Cross-compiles crbasic-lsp for every VS Code platform-specific extension
   # target (https://code.visualstudio.com/api/working-with-extensions/publishing-extension#platformspecific-extensions).

@@ -19,7 +19,7 @@ coverage:
 
 # Run TypeScript tests
 test-client:
-    cd client && npm test -- --run
+    cd client && npm run test.run
 
 # Build the WASM package
 build-wasm:

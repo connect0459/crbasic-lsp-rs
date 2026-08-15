@@ -460,7 +460,7 @@
     `rust` (`cargo fmt --all --check`, `cargo clippy --all-targets
     --all-features -- -D warnings`, `cargo test --workspace`) and `client`
     (`npm run lint`, `npm run format.check`, `npm run type-check`,
-    `npm test -- --run`)
+    `npm run test.run`)
   - Triggers on push to `main`, on every pull request, and manually via
     `workflow_dispatch`; `dorny/paths-filter` skips each job's checks when
     the push/PR touches neither that job's paths nor the workflow file

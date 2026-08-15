@@ -41,7 +41,7 @@ pre-commit run --all-files
 | :--- | :--- |
 | `cargo test --workspace` | Run all Rust tests |
 | `just test-crate <name>` | Run tests for a single crate (e.g. `crbasic-parser`) |
-| `cd client && npm test` | Run TypeScript tests (Vitest) |
+| `cd client && npm run test.run` | Run TypeScript tests (Vitest) |
 | `cargo fmt` | Format all Rust source files |
 | `cargo clippy --all-targets --all-features -- -D warnings` | Lint Rust code |
 | `cd client && npm run lint` | Lint TypeScript code (ESLint) |
@@ -81,7 +81,7 @@ live under each crate's `tests/` directory. TypeScript tests are colocated as
 
 ```sh
 cargo test --workspace
-cd client && npm test
+cd client && npm run test.run
 ```
 
 ## Commit format
