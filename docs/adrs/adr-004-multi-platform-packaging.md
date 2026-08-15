@@ -160,13 +160,15 @@ We will validate this decision by:
    `aarch64-apple-darwin` host, and `npm run package -- <target>` produces
    a `.vsix` whose `server/` entry is confirmed (via `file`) to be the
    correct architecture for each.
-2. **Not yet done**: a real GitHub Actions run of `release.yml`'s `build`
-   and `package` jobs across all 6 targets, particularly the
-   `linux-arm64` and `win32-arm64` cross-compilation legs. `release.yml`'s
-   `workflow_dispatch` trigger exists specifically so this can be run and
-   inspected (the resulting `.vsix` files are uploaded as a workflow
-   artifact) without cutting a real release. This must be exercised at
-   least once before the first real tagged release relies on it.
+2. **Done**: [run 31252687294](https://github.com/connect0459/crbasic-lsp-rs/actions/runs/31252687294),
+   triggered via `gh workflow run Release --ref main` on 2026-08-08. `verify`,
+   all 6 `build` matrix legs (including `linux-arm64` and `win32-arm64`), and
+   `package` all completed successfully; `publish` correctly reported
+   `skipped` since `workflow_dispatch` isn't `github.event_name == 'push'`.
+   Downloaded artifacts confirm real output: one `server-<target>` binary
+   artifact per target plus a `vsix-packages` artifact containing all 6
+   packaged `.vsix` files (~9.4 MB total). See also `docs/todo.md`'s
+   "Packaging Gap" entry.
 
 ## Affected Files
 
