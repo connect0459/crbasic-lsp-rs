@@ -281,28 +281,33 @@
   - [x] `vsce package` script/config to produce a `.vsix` locally ✅ Resolved
     - See Known Issues / Technical Debt → Packaging Gap for details
       ([ADR-004](./adrs/adr-004-multi-platform-packaging.md))
-  - [ ] VS Code Marketplace publisher account and Personal Access Token
+  - [x] VS Code Marketplace publisher account and Personal Access Token
+    ✅ Resolved
     - Confirmed 2026-08-15: `https://marketplace.visualstudio.com/publishers/connect0459`
-      404s -- the publisher (matching `client/package.json`'s `publisher`
-      field) does not exist yet. Everything else in the pipeline is ready
-      and waiting on this: `release.yml`'s `publish` job already reads
-      `secrets.VSCE_PAT` and self-skips gracefully while it's unset (see
-      the `Publish workflow` entry below), and the `workflow_dispatch` dry
-      run above already proved the full build/package pipeline end to end.
-    - Remaining steps are all account-side, on the user's own Microsoft/
-      Azure DevOps identity -- not something this session can perform:
-      1. Sign in (or create an account) at
-         [Azure DevOps](https://dev.azure.com) and create an organization
-         if one doesn't already exist.
-      2. Create publisher ID `connect0459` at
-         [marketplace.visualstudio.com/manage/createpublisher](https://marketplace.visualstudio.com/manage/createpublisher)
-         (must match `client/package.json`'s `publisher` field exactly).
-      3. Generate a PAT scoped to **Marketplace: Manage** from Azure
-         DevOps User Settings → Personal Access Tokens.
-      4. Add the PAT as a GitHub Actions repository secret named
-         `VSCE_PAT` (Settings → Secrets and variables → Actions). Once
-         set, the next tag push (`v*.*.*`) will publish automatically --
-         no workflow change needed.
+      404d at first check -- the publisher (matching `client/package.json`'s
+      `publisher` field) didn't exist yet at that point.
+    - Account-side steps completed this session:
+      1. Azure DevOps organization created at `dev.azure.com/vscode-marketplace`
+         (project name is just an unused container -- Boards/Repos aren't
+         used, only the organization itself matters for Marketplace auth).
+         Org creation hit a transient `500`/`401` pair on the first attempt
+         (`VssUnauthorizedException` from `HostAcquisition/Collections`,
+         `AzureUnauthorizedAccessException` from the `AzComm/AzureSubscription`
+         billing check) -- the request's `tenantId` didn't match the signed-in
+         token's `tid`, most likely a token-propagation lag between
+         `aex.dev.azure.com` and `azdevopscommerce.dev.azure.com` right after
+         a directory switch. Resolved by reloading and retrying with no
+         settings changed.
+      2. Publisher ID `connect0459` created at
+         [marketplace.visualstudio.com/manage/createpublisher](https://marketplace.visualstudio.com/manage/createpublisher),
+         matching `client/package.json`'s `publisher` field.
+      3. PAT generated (Azure DevOps User Settings → Personal Access Tokens),
+         scoped to **Marketplace: Manage**.
+      4. PAT registered as the GitHub Actions repository secret `VSCE_PAT`
+         (confirmed present via `gh secret list`, value not inspected).
+    - With this, the next tag push (`v*.*.*`) will run `release.yml`'s
+      `publish` job for real (previously self-skipped with a `::warning::`
+      since the secret was unset) -- no workflow change needed.
   - [x] Publish workflow (GitHub Actions `vsce publish` on release tag) ✅ Resolved
     - Added a `publish` job to `.github/workflows/release.yml`, running after
       `package` and gated on `github.event_name == 'push'` (skipped entirely
@@ -312,9 +317,10 @@
       package's target from its own manifest rather than repackaging
     - Reads the Marketplace token from a `VSCE_PAT` secret (`vsce publish -p`
       defaults to this env var); if the secret is unset, the step logs
-      `::warning::` and exits 0 instead of failing, since the publisher
-      account and PAT above don't exist yet -- flipping it on later needs no
-      workflow change
+      `::warning::` and exits 0 instead of failing -- this fallback is now
+      moot since `VSCE_PAT` is registered (see the entry above), but the
+      no-op path is kept as-is since a future secret rotation gap should
+      degrade the same way rather than fail the whole workflow
     - `actionlint` reports no issues on the updated workflow file
 
 ## Phase 7: Testing & Quality 🧪
