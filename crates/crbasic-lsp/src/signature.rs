@@ -4618,6 +4618,21 @@ impl SignatureProvider {
                 ],
             }),
 
+            "addprecise" => Some(FunctionSignature {
+                name: "AddPrecise".to_string(),
+                documentation: "Performs high-precision addition, reducing floating-point rounding error in running totals.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "PrecisionVariable".to_string(),
+                        documentation: "The high-precision accumulator variable to add to (internally extended from 24 to 56 bits of mantissa).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "X".to_string(),
+                        documentation: "The value to add to PrecisionVariable.".to_string(),
+                    },
+                ],
+            }),
+
             "pwr" => Some(FunctionSignature {
                 name: "PWR".to_string(),
                 documentation: "Raises X to the power of Y and returns a floating-point result.".to_string(),
@@ -9178,6 +9193,136 @@ impl SignatureProvider {
                 ],
             }),
 
+            "sortspa" => Some(FunctionSignature {
+                name: "SortSpa".to_string(),
+                documentation: "Sorts array elements in ascending order, with NaN and infinite values sorted to the beginning.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination array, dimensioned to match Swath, that receives the sorted values.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Swath".to_string(),
+                        documentation: "A constant specifying how many array elements to sort.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The first element of the array to sort.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dimension".to_string(),
+                        documentation: "Optional: which dimension to sort on in a multi-dimensional array (1, 2, or 3); defaults to 1.".to_string(),
+                    },
+                ],
+            }),
+
+            "findspa" => Some(FunctionSignature {
+                name: "FindSpa".to_string(),
+                documentation: "Searches an array for a value within a specified range, returning its position, or 0 if not found.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "SoughtLow".to_string(),
+                        documentation: "The lower limit of the value being sought, inclusive.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SoughtHigh".to_string(),
+                        documentation: "The upper limit of the value being sought, inclusive.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Step".to_string(),
+                        documentation: "The increment used when searching through the array; the returned position accounts for this step size.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The array (1, 2, or 3 dimensional) to search; must share the Sought values' data type.".to_string(),
+                    },
+                ],
+            }),
+
+            "rectpolar" => Some(FunctionSignature {
+                name: "RectPolar".to_string(),
+                documentation: "Converts rectangular coordinates (X, Y) into polar coordinates (vector length and angle in radians).".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination array: Dest(1) receives the vector length, Dest(2) the angle in radians.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "Source array: Source(1)=X, Source(2)=Y, the rectangular coordinates to convert.".to_string(),
+                    },
+                ],
+            }),
+
+            "satvp" => Some(FunctionSignature {
+                name: "SatVP".to_string(),
+                documentation: "Calculates saturation vapor pressure, in kilopascals, from a temperature measurement.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable for the calculated vapor pressure, in kilopascals.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Temp".to_string(),
+                        documentation: "Temperature measurement, in degrees Celsius; use dry bulb temperature for saturation vapor pressure, or dew point temperature for actual vapor pressure.".to_string(),
+                    },
+                ],
+            }),
+
+            "straincalc" => Some(FunctionSignature {
+                name: "StrainCalc".to_string(),
+                documentation: "Converts the mV/V output from a bridge measurement into microstrain (µε), using the specified bridge configuration.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the computed microstrain result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions; conversions are made on consecutive source values.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The bridge measurement, in mV/V, to convert.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BrZero".to_string(),
+                        documentation: "The zero-strain reference reading, in mV/V.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BrConfig".to_string(),
+                        documentation: "The bridge configuration code determining the strain formula used.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "GageFactor".to_string(),
+                        documentation: "The gage factor of the strain gage.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PoissonFactor".to_string(),
+                        documentation: "The Poisson's ratio used for bridge configurations that require it.".to_string(),
+                    },
+                ],
+            }),
+
+            "vaporpressure" => Some(FunctionSignature {
+                name: "VaporPressure".to_string(),
+                documentation: "Calculates vapor pressure, in kilopascals, from temperature and relative humidity.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable for the calculated vapor pressure, in kilopascals.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Temp".to_string(),
+                        documentation: "Dry bulb air temperature, in degrees Celsius.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RH".to_string(),
+                        documentation: "Relative humidity, in percent.".to_string(),
+                    },
+                ],
+            }),
+
             "arrayindex" => Some(FunctionSignature {
                 name: "ArrayIndex".to_string(),
                 documentation: "Returns the numeric index of a named array element whose position isn't known in advance.".to_string(),
@@ -10245,6 +10390,35 @@ mod tests {
                     "Therm_A",
                     "Therm_B",
                     "Therm_C",
+                ]
+            );
+        }
+
+        #[test]
+        fn findspa_has_four_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("FindSpa")
+                .expect("FindSpa should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(names, vec!["SoughtLow", "SoughtHigh", "Step", "Source"]);
+        }
+
+        #[test]
+        fn straincalc_has_seven_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("StrainCalc")
+                .expect("StrainCalc should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "Dest",
+                    "Reps",
+                    "Source",
+                    "BrZero",
+                    "BrConfig",
+                    "GageFactor",
+                    "PoissonFactor",
                 ]
             );
         }
