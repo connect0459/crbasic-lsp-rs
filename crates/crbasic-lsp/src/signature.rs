@@ -1150,6 +1150,53 @@ impl SignatureProvider {
                 ],
             }),
 
+            "resistance3w" => Some(FunctionSignature {
+                name: "Resistance3W".to_string(),
+                documentation: "Performs a 3-wire resistance measurement, using differential and reverse excitation to cancel voltage offset errors.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the measurement result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "Input voltage range for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UChan".to_string(),
+                        documentation: "Universal input channel used for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IXuA".to_string(),
+                        documentation: "Current excitation, in microamps, applied to the sensor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Reverse excitation polarity and take a second measurement to cancel offsets (True/False).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "Delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "Lowest frequency notched out by the sinc filter.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Mult".to_string(),
+                        documentation: "Multiplier applied to scale the raw measurement to engineering units.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Offset".to_string(),
+                        documentation: "Offset added after scaling by Mult.".to_string(),
+                    },
+                ],
+            }),
+
             "sdi12recorder" => Some(FunctionSignature {
                 name: "SDI12Recorder".to_string(),
                 documentation: "Retrieves measurement results from an SDI-12 sensor.".to_string(),
@@ -1498,6 +1545,104 @@ impl SignatureProvider {
                 ],
             }),
 
+            "thermistor" => Some(FunctionSignature {
+                name: "Thermistor".to_string(),
+                documentation: "Performs a bridge measurement of a thermistor, returning resistance in Ohms, or temperature in Celsius if Steinhart-Hart coefficients are given.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the measurement result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of repetitions; measurements are made on consecutive channels.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Range".to_string(),
+                        documentation: "Input voltage range for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UChan".to_string(),
+                        documentation: "Differential channel used for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExmV".to_string(),
+                        documentation: "Excitation voltage, in millivolts, applied to the sensor.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RevEx".to_string(),
+                        documentation: "Reverse excitation polarity and take a second measurement to cancel offsets (True/False).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SettlingTime".to_string(),
+                        documentation: "Delay, in microseconds, allowed for the signal to settle before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "fN1".to_string(),
+                        documentation: "Lowest frequency notched out by the sinc filter.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Therm_A".to_string(),
+                        documentation: "Optional Steinhart-Hart coefficient A; when given along with Therm_B/Therm_C, the result is temperature in Celsius instead of resistance in Ohms.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Therm_B".to_string(),
+                        documentation: "Optional Steinhart-Hart coefficient B.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Therm_C".to_string(),
+                        documentation: "Optional Steinhart-Hart coefficient C.".to_string(),
+                    },
+                ],
+            }),
+
+            "tcpsyc" => Some(FunctionSignature {
+                name: "TCPsyc".to_string(),
+                documentation: "Measures one or more Peltier-style thermocouple psychrometers, directly or via an AM16/32B multiplexer.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the measurement result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Reps".to_string(),
+                        documentation: "Number of psychrometers to measure.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffChan".to_string(),
+                        documentation: "First differential channel used for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TRef".to_string(),
+                        documentation: "Reference temperature variable used to compute the psychrometric result.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "OutputOption".to_string(),
+                        documentation: "Selects the form of the output result.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IxCool".to_string(),
+                        documentation: "Excitation current channel used to Peltier-cool the psychrometer junction.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "HeatTime".to_string(),
+                        documentation: "Duration, in seconds, the Peltier junction is heated.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CoolTime".to_string(),
+                        documentation: "Duration, in seconds, the Peltier junction is cooled to induce condensation before measuring.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SampleOpt".to_string(),
+                        documentation: "Selects the sampling option used during the measurement cycle.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeasureTime".to_string(),
+                        documentation: "Duration, in seconds, of the wet-bulb measurement.".to_string(),
+                    },
+                ],
+            }),
+
             "periodavg" => Some(FunctionSignature {
                 name: "PeriodAvg".to_string(),
                 documentation:
@@ -1579,6 +1724,37 @@ impl SignatureProvider {
                 ],
             }),
 
+            "timerinput" => Some(FunctionSignature {
+                name: "TimerInput".to_string(),
+                documentation: "Measures time intervals between edges, or frequency, on digital ports; can span across scan intervals.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Destination variable or array to store the measurement result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "StartChan".to_string(),
+                        documentation: "The first digital port/terminal used for the timer measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Edge".to_string(),
+                        documentation: "The edge (rising/falling) that starts and/or stops the timing interval.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Function".to_string(),
+                        documentation: "Selects what is measured or computed, e.g. period, frequency, or time between edges.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Timeout".to_string(),
+                        documentation: "Maximum time to wait for the expected edges before giving up.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Timeout_Units".to_string(),
+                        documentation: "The time units used for Timeout.".to_string(),
+                    },
+                ],
+            }),
+
             "excitev" => Some(FunctionSignature {
                 name: "ExciteV".to_string(),
                 documentation:
@@ -1598,6 +1774,52 @@ impl SignatureProvider {
                     ParameterInfo {
                         name: "Delay".to_string(),
                         documentation: "Delay, in microseconds, before excitation turns off and the next instruction runs (0 = leave excitation on).".to_string(),
+                    },
+                ],
+            }),
+
+            "excitei" => Some(FunctionSignature {
+                name: "ExciteI".to_string(),
+                documentation: "Applies a current excitation to an excitation channel.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "IxChan".to_string(),
+                        documentation: "The current excitation channel number (universal terminal U1-U12).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "IxuA".to_string(),
+                        documentation: "Current excitation, in microamps, to apply; the allowable range is ±2500 µA (±12500 µA with DiffEx=1).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Delay".to_string(),
+                        documentation: "Time, in microseconds, before moving to the next instruction; excitation turns off after this delay.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiffEx".to_string(),
+                        documentation: "An optional flag allowing a universal terminal to source up to 12.5 mA of excitation current.".to_string(),
+                    },
+                ],
+            }),
+
+            "swvx" => Some(FunctionSignature {
+                name: "SWVX".to_string(),
+                documentation: "Sets a switched, regulated VX excitation channel high or low to power external peripherals or toggle control lines.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ExChan".to_string(),
+                        documentation: "Excitation channel to switch (VX1 or VX2).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "State".to_string(),
+                        documentation: "0 sets the channel low; a non-zero value sets it high.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Voltage".to_string(),
+                        documentation: "0 for 3.3 V, 1 for 5 V (default).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SWOption".to_string(),
+                        documentation: "Optional run-mode selector determining whether the instruction runs in the measurement or processing task sequence.".to_string(),
                     },
                 ],
             }),
@@ -3791,6 +4013,61 @@ impl SignatureProvider {
                     ParameterInfo {
                         name: "AmpThreshold".to_string(),
                         documentation: "An optional minimum signal amplitude threshold, in millivolts.".to_string(),
+                    },
+                ],
+            }),
+
+            "vibratingwire" => Some(FunctionSignature {
+                name: "VibratingWire".to_string(),
+                documentation: "Measures one or more vibrating-wire sensors by sweeping an excitation frequency and detecting the sensor's resonant frequency.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "VWDest".to_string(),
+                        documentation: "Destination array to store the measurement result(s).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "VWReps".to_string(),
+                        documentation: "Number of vibrating-wire sensors to measure.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "VWUChan".to_string(),
+                        documentation: "First odd-numbered universal terminal channel used for the measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BeginFreq".to_string(),
+                        documentation: "Starting frequency, in Hz, of the excitation sweep (minimum 100).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "EndFreq".to_string(),
+                        documentation: "Ending frequency, in Hz, of the excitation sweep (maximum 6500).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "VWExOpt".to_string(),
+                        documentation: "Excitation voltage option (1, 2, or 3).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "VWAmpThreshold".to_string(),
+                        documentation: "Minimum signal amplitude, in millivolts, required to accept a measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DiagFName".to_string(),
+                        documentation: "A Public string variable or constant naming a diagnostic file to trigger on measurement failure.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Therm_fN1".to_string(),
+                        documentation: "Optional notch frequency for an accompanying thermistor measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Therm_A".to_string(),
+                        documentation: "Optional Steinhart-Hart coefficient A for the accompanying thermistor measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Therm_B".to_string(),
+                        documentation: "Optional Steinhart-Hart coefficient B for the accompanying thermistor measurement.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Therm_C".to_string(),
+                        documentation: "Optional Steinhart-Hart coefficient C for the accompanying thermistor measurement.".to_string(),
                     },
                 ],
             }),
@@ -8543,6 +8820,21 @@ impl SignatureProvider {
                 ],
             }),
 
+            "waitdigtrig" => Some(FunctionSignature {
+                name: "WaitDigTrig".to_string(),
+                documentation: "Triggers a measurement scan using an external digital signal instead of the datalogger's internal clock.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ControlPort".to_string(),
+                        documentation: "The digital control port monitored for the trigger signal.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "Selects the triggering condition (e.g. signal state or transition) that starts the scan.".to_string(),
+                    },
+                ],
+            }),
+
             "emailrecv" => Some(FunctionSignature {
                 name: "EMailRecv".to_string(),
                 documentation: "Polls a POP3 mail server for a message matching the given criteria and stores its body in a string variable.".to_string(),
@@ -9906,6 +10198,55 @@ mod tests {
 
             let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
             assert_eq!(names, vec!["DestArray"]);
+        }
+
+        #[test]
+        fn thermistor_has_eleven_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("Thermistor")
+                .expect("Thermistor should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "Dest",
+                    "Reps",
+                    "Range",
+                    "UChan",
+                    "ExmV",
+                    "RevEx",
+                    "SettlingTime",
+                    "fN1",
+                    "Therm_A",
+                    "Therm_B",
+                    "Therm_C",
+                ]
+            );
+        }
+
+        #[test]
+        fn vibratingwire_has_twelve_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("VibratingWire")
+                .expect("VibratingWire should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "VWDest",
+                    "VWReps",
+                    "VWUChan",
+                    "BeginFreq",
+                    "EndFreq",
+                    "VWExOpt",
+                    "VWAmpThreshold",
+                    "DiagFName",
+                    "Therm_fN1",
+                    "Therm_A",
+                    "Therm_B",
+                    "Therm_C",
+                ]
+            );
         }
 
         #[test]
