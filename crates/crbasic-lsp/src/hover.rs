@@ -507,6 +507,9 @@ impl HoverProvider {
             "serialflush" => {
                 Some("**SerialFlush**\n\nClears any characters in the serial input buffer.")
             }
+            "serialbrk" => Some(
+                "**SerialBrk**\n\nSends a break signal of a specified duration to a serial communication port.",
+            ),
             "modbusmaster" => Some(
                 "**ModbusMaster**\n\nSets up the datalogger as a Modbus client to send or retrieve data from a Modbus server.",
             ),
@@ -640,6 +643,9 @@ impl HoverProvider {
             "routes" => Some(
                 "**Routes**\n\nRetrieves the datalogger's list of known dynamic PakBus routes into an array.",
             ),
+            "routersneighbors" => Some(
+                "**RoutersNeighbors**\n\nReturns a list of all PakBus routers and their neighbors known to the datalogger.",
+            ),
             "senddata" => Some(
                 "**SendData**\n\nSends the most recent record from a data table to a destination PakBus device.",
             ),
@@ -763,6 +769,12 @@ impl HoverProvider {
             "mqttpublishconsttable" => Some(
                 "**MQTTPublishConstTable**\n\nEnables remote editing of ConstTable values via MQTT; placed inside a ConstTable/EndConstTable declaration.",
             ),
+            "mqttconnect" => Some(
+                "**MQTTConnect**\n\nOverrides the default MQTT-publish retry schedule, forcing a connect or disconnect attempt over an available IP connection.",
+            ),
+            "cwbdiagnostics" => Some(
+                "**CWBDiagnostics**\n\nReturns diagnostic information about a CWB100 wireless sensor base's network performance.",
+            ),
             "checkport" => Some(
                 "**CheckPort**\n\nRetrieves the current status (high/low) of a specified digital port or terminal.",
             ),
@@ -786,6 +798,9 @@ impl HoverProvider {
             }
             "iproute" => Some(
                 "**IPRoute**\n\nDirects outgoing IP traffic through a specified network interface when multiple interfaces are active.",
+            ),
+            "iptrace" => Some(
+                "**IPTrace**\n\nWrites IP debug/troubleshooting messages to a string variable; can be used as a DataTable output trigger.",
             ),
             "monitorcomms" => Some(
                 "**MonitorComms**\n\nCaptures communication traffic from a specified port into a string variable, for debugging.",
