@@ -5296,6 +5296,100 @@ impl SignatureProvider {
                 }],
             }),
 
+            "dialvoice" => Some(FunctionSignature {
+                name: "DialVoice".to_string(),
+                documentation: "Dials out over a voice modem, or waits for an incoming call if no dial string is given.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "DialString".to_string(),
+                    documentation: "An optional telephone number (and modem command string) to dial; if omitted, DialVoice waits for an incoming call instead.".to_string(),
+                }],
+            }),
+
+            "voicehangup" => Some(FunctionSignature {
+                name: "VoiceHangup".to_string(),
+                documentation: "Hangs up the voice modem after a DialVoice connection.".to_string(),
+                parameters: vec![],
+            }),
+
+            "voicekey" => Some(FunctionSignature {
+                name: "VoiceKey".to_string(),
+                documentation: "Waits for and returns a single DTMF key pressed by the caller over the voice modem.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "VoiceTimeOut".to_string(),
+                    documentation: "Maximum time to wait for a key press, in hundredths of a second.".to_string(),
+                }],
+            }),
+
+            "voicenumber" => Some(FunctionSignature {
+                name: "VoiceNumber".to_string(),
+                documentation: "Waits for and returns a multi-digit DTMF number entered by the caller over the voice modem.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "VoiceTimeOut".to_string(),
+                    documentation: "Maximum time to wait for the caller to finish entering digits, in hundredths of a second.".to_string(),
+                }],
+            }),
+
+            "voicephrases" => Some(FunctionSignature {
+                name: "VoicePhrases".to_string(),
+                documentation: "Speaks a comma-separated list of vocabulary words/phrases over the voice modem.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "PhraseArray".to_string(),
+                        documentation: "A String array sized to match the number of entries in Phrases.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Phrases".to_string(),
+                        documentation: "A comma-separated list of words to speak; each word must exist in the datalogger's Voice.txt vocabulary file.".to_string(),
+                    },
+                ],
+            }),
+
+            "voicesetup" => Some(FunctionSignature {
+                name: "VoiceSetup".to_string(),
+                documentation: "Configures the DTMF keys and timing behavior used by the voice-modem instructions.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "HangUpKey".to_string(),
+                        documentation: "The DTMF key that immediately hangs up the call when pressed.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ExitSubKey".to_string(),
+                        documentation: "The DTMF key that exits the current subroutine when pressed.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ContinueKey".to_string(),
+                        documentation: "The DTMF key that skips ahead past the remainder of a voice prompt.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SecOnLine".to_string(),
+                        documentation: "The maximum call duration, in seconds, before the datalogger hangs up automatically.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UseTimeout".to_string(),
+                        documentation: "Whether VoiceKey/VoiceNumber time out (non-zero) or wait indefinitely (zero) for caller input.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "CallOut".to_string(),
+                        documentation: "Set non-zero when the call was initiated by DialVoice (outgoing) rather than an incoming ring.".to_string(),
+                    },
+                ],
+            }),
+
+            "voicespeak" => Some(FunctionSignature {
+                name: "VoiceSpeak".to_string(),
+                documentation: "Speaks a string built by concatenating literal text and variable values over the voice modem.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Expression".to_string(),
+                        documentation: "A string expression built from concatenated literal text and variables (e.g. \"Value is \" + Temp_C + \" degrees\").".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Precision".to_string(),
+                        documentation: "The number of decimal places to speak for numeric values in Expression.".to_string(),
+                    },
+                ],
+            }),
+
             "smsrecv" => Some(FunctionSignature {
                 name: "SMSRecv".to_string(),
                 documentation: "Polls a CELL2XX cellular modem for a pending SMS message.".to_string(),
@@ -9708,6 +9802,33 @@ mod tests {
                     "RecvSubj",
                     "RecvDate",
                     "TimeOut",
+                ]
+            );
+        }
+
+        #[test]
+        fn voicehangup_takes_no_parameters() {
+            let sig = SignatureProvider::get_function_signature("VoiceHangup")
+                .expect("VoiceHangup should have a signature");
+
+            assert!(sig.parameters.is_empty());
+        }
+
+        #[test]
+        fn voicesetup_has_six_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("VoiceSetup")
+                .expect("VoiceSetup should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "HangUpKey",
+                    "ExitSubKey",
+                    "ContinueKey",
+                    "SecOnLine",
+                    "UseTimeout",
+                    "CallOut",
                 ]
             );
         }
