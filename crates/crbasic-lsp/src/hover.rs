@@ -317,6 +317,24 @@ impl HoverProvider {
             "minspa" => Some(
                 "**MinSpa**\n\nFinds the minimum value across a spatial array and its index, writing both into a 2-element Dest array.",
             ),
+            "sortspa" => Some(
+                "**SortSpa**\n\nSorts array elements in ascending order, with NaN and infinite values sorted to the beginning.",
+            ),
+            "findspa" => Some(
+                "**FindSpa**\n\nSearches an array for a value within a specified range, returning its position, or 0 if not found.",
+            ),
+            "rectpolar" => Some(
+                "**RectPolar**\n\nConverts rectangular coordinates (X, Y) into polar coordinates (vector length and angle in radians).",
+            ),
+            "satvp" => Some(
+                "**SatVP**\n\nCalculates saturation vapor pressure, in kilopascals, from a temperature measurement.",
+            ),
+            "straincalc" => Some(
+                "**StrainCalc**\n\nConverts the mV/V output from a bridge measurement into microstrain (µε), using the specified bridge configuration.",
+            ),
+            "vaporpressure" => Some(
+                "**VaporPressure**\n\nCalculates vapor pressure, in kilopascals, from temperature and relative humidity.",
+            ),
             _ => None,
         }
     }
@@ -1141,6 +1159,9 @@ impl HoverProvider {
             ),
             "moveprecise" => Some(
                 "**MovePrecise**\n\nTransfers a value into a variable as a high-precision (56-bit mantissa) number.",
+            ),
+            "addprecise" => Some(
+                "**AddPrecise**\n\nPerforms high-precision addition, reducing floating-point rounding error in running totals.",
             ),
             "pwr" => {
                 Some("**PWR**\n\nRaises X to the power of Y and returns a floating-point result.")
