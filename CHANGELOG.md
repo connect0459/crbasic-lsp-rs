@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-08-16
+
 ### Added
 
 - CRBasic lexer and parser (`crbasic-parser`): case-insensitive keywords,
@@ -66,4 +68,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: <https://github.com/connect0459/crbasic-lsp-rs/commits/main>
+[Unreleased]: <https://github.com/connect0459/crbasic-lsp-rs/compare/v0.1.0...HEAD>
+[0.1.0]: <https://github.com/connect0459/crbasic-lsp-rs/releases/tag/v0.1.0>
