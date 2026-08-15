@@ -99,9 +99,19 @@ impl CompletionProvider {
                 "Measures temperature using a 109 thermistor.",
             ),
             Self::create_function_completion(
+                "Thermistor",
+                "Thermistor(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:UChan}, ${5:ExmV}, ${6:RevEx}, ${7:SettlingTime}, ${8:fN1}, ${9:Therm_A}, ${10:Therm_B}, ${11:Therm_C})",
+                "Performs a bridge measurement of a thermistor, returning resistance in Ohms, or temperature in Celsius if Steinhart-Hart coefficients are given.",
+            ),
+            Self::create_function_completion(
                 "TCDiff",
                 "TCDiff(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:DiffChan}, ${5:TCType}, ${6:TRef}, ${7:RevDiff}, ${8:SettlingTime}, ${9:fN1}, ${10:Mult}, ${11:Offset})",
                 "Measures thermocouple temperature (differential).",
+            ),
+            Self::create_function_completion(
+                "TCPsyc",
+                "TCPsyc(${1:Dest}, ${2:Reps}, ${3:DiffChan}, ${4:TRef}, ${5:OutputOption}, ${6:IxCool}, ${7:HeatTime}, ${8:CoolTime}, ${9:SampleOpt}, ${10:MeasureTime})",
+                "Measures one or more Peltier-style thermocouple psychrometers, directly or via an AM16/32B multiplexer.",
             ),
             Self::create_function_completion(
                 "SerialOpen",
@@ -321,6 +331,11 @@ impl CompletionProvider {
                 "Applies a known excitation current and measures the resistance of a bridge or resistive circuit.",
             ),
             Self::create_function_completion(
+                "Resistance3W",
+                "Resistance3W(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:UChan}, ${5:IXuA}, ${6:RevEx}, ${7:SettlingTime}, ${8:fN1}, ${9:Mult}, ${10:Offset})",
+                "Performs a 3-wire resistance measurement, using differential and reverse excitation to cancel voltage offset errors.",
+            ),
+            Self::create_function_completion(
                 "PeriodAvg",
                 "PeriodAvg(${1:Dest}, ${2:Reps}, ${3:Chan}, ${4:Option}, ${5:Cycles}, ${6:Timeout}, ${7:Mult}, ${8:Offset})",
                 "Measures the period or frequency of a signal on a single-ended channel.",
@@ -336,9 +351,24 @@ impl CompletionProvider {
                 "Toggles a port, delays, toggles it back, and delays again to generate a clocking pulse.",
             ),
             Self::create_function_completion(
+                "TimerInput",
+                "TimerInput(${1:Dest}, ${2:StartChan}, ${3:Edge}, ${4:Function}, ${5:Timeout}, ${6:Timeout_Units})",
+                "Measures time intervals between edges, or frequency, on digital ports; can span across scan intervals.",
+            ),
+            Self::create_function_completion(
                 "ExciteV",
                 "ExciteV(${1:ExChan}, ${2:ExmV}, ${3:Delay})",
                 "Sets an excitation channel output to a specified voltage for a specified duration.",
+            ),
+            Self::create_function_completion(
+                "ExciteI",
+                "ExciteI(${1:IxChan}, ${2:IxuA}, ${3:Delay}, ${4:DiffEx})",
+                "Applies a current excitation to an excitation channel.",
+            ),
+            Self::create_function_completion(
+                "SWVX",
+                "SWVX(${1:ExChan}, ${2:State}, ${3:Voltage}, ${4:SWOption})",
+                "Sets a switched, regulated VX excitation channel high or low to power external peripherals or toggle control lines.",
             ),
             Self::create_function_completion(
                 "BrHalf3W",
@@ -619,6 +649,11 @@ impl CompletionProvider {
                 "AVW200",
                 "AVW200(${1:Result}, ${2:ComPort}, ${3:NeighborAddr}, ${4:PakBusAddr}, ${5:Dest}, ${6:AVWChan}, ${7:MuxChannel}, ${8:Reps}, ${9:BeginFreq}, ${10:EndFreq}, ${11:ExVolt}, ${12:Therm50_60Hz}, ${13:Multiplier}, ${14:Offset}, ${15:AmpThreshold})",
                 "Reads vibrating-wire sensors via an AVW200 spectrum analyzer.",
+            ),
+            Self::create_function_completion(
+                "VibratingWire",
+                "VibratingWire(${1:VWDest}, ${2:VWReps}, ${3:VWUChan}, ${4:BeginFreq}, ${5:EndFreq}, ${6:VWExOpt}, ${7:VWAmpThreshold}, ${8:DiagFName}, ${9:Therm_fN1}, ${10:Therm_A}, ${11:Therm_B}, ${12:Therm_C})",
+                "Measures one or more vibrating-wire sensors by sweeping an excitation frequency and detecting the sensor's resonant frequency.",
             ),
             Self::create_function_completion(
                 "CS616",
@@ -1679,6 +1714,11 @@ impl CompletionProvider {
                 "TriggerSequence",
                 "TriggerSequence(${1:SequenceNum}, ${2:TimeOut})",
                 "Triggers execution of a SlowSequence at its WaitTriggerSequence point, after an optional delay.",
+            ),
+            Self::create_function_completion(
+                "WaitDigTrig",
+                "WaitDigTrig(${1:ControlPort}, ${2:Option})",
+                "Triggers a measurement scan using an external digital signal instead of the datalogger's internal clock.",
             ),
             Self::create_function_completion(
                 "EMailRecv",
@@ -5853,6 +5893,86 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "RoutersNeighbors"),
                 "RoutersNeighbors(${1:DestArray})"
+            );
+        }
+
+        #[test]
+        fn excitei_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "ExciteI"),
+                "ExciteI(${1:IxChan}, ${2:IxuA}, ${3:Delay}, ${4:DiffEx})"
+            );
+        }
+
+        #[test]
+        fn resistance3w_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Resistance3W"),
+                "Resistance3W(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:UChan}, ${5:IXuA}, ${6:RevEx}, ${7:SettlingTime}, ${8:fN1}, ${9:Mult}, ${10:Offset})"
+            );
+        }
+
+        #[test]
+        fn tcpsyc_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TCPsyc"),
+                "TCPsyc(${1:Dest}, ${2:Reps}, ${3:DiffChan}, ${4:TRef}, ${5:OutputOption}, ${6:IxCool}, ${7:HeatTime}, ${8:CoolTime}, ${9:SampleOpt}, ${10:MeasureTime})"
+            );
+        }
+
+        #[test]
+        fn thermistor_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "Thermistor"),
+                "Thermistor(${1:Dest}, ${2:Reps}, ${3:Range}, ${4:UChan}, ${5:ExmV}, ${6:RevEx}, ${7:SettlingTime}, ${8:fN1}, ${9:Therm_A}, ${10:Therm_B}, ${11:Therm_C})"
+            );
+        }
+
+        #[test]
+        fn vibratingwire_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "VibratingWire"),
+                "VibratingWire(${1:VWDest}, ${2:VWReps}, ${3:VWUChan}, ${4:BeginFreq}, ${5:EndFreq}, ${6:VWExOpt}, ${7:VWAmpThreshold}, ${8:DiagFName}, ${9:Therm_fN1}, ${10:Therm_A}, ${11:Therm_B}, ${12:Therm_C})"
+            );
+        }
+
+        #[test]
+        fn swvx_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SWVX"),
+                "SWVX(${1:ExChan}, ${2:State}, ${3:Voltage}, ${4:SWOption})"
+            );
+        }
+
+        #[test]
+        fn timerinput_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "TimerInput"),
+                "TimerInput(${1:Dest}, ${2:StartChan}, ${3:Edge}, ${4:Function}, ${5:Timeout}, ${6:Timeout_Units})"
+            );
+        }
+
+        #[test]
+        fn waitdigtrig_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "WaitDigTrig"),
+                "WaitDigTrig(${1:ControlPort}, ${2:Option})"
             );
         }
 
