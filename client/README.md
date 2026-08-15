@@ -17,9 +17,13 @@ Scientific data loggers.
   - Structure validation (`BeginProg`/`EndProg`, `Function`/`EndFunction`,
     and other block constructs).
 - **Navigation**: Go to definition, find all references, document symbols,
-  rename, and linked editing ranges.
+  workspace symbols, call hierarchy, rename, and linked editing ranges.
 - **Hover Information**: Documentation for built-in instructions, including
   parameter descriptions.
+- **Editing Aids**: Signature help, code actions (quick fixes), code lens,
+  folding ranges, selection ranges, and inlay hints.
+- **Semantic Highlighting**: Semantic tokens layered on top of the TextMate
+  grammar.
 
 ## Supported File Extensions
 

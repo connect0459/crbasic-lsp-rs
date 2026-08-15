@@ -10,8 +10,13 @@ A Visual Studio Code extension providing comprehensive language support for CRBa
   - Variable name length validation (model-dependent)
   - Duplicate field name detection (CR200X 12-char truncation)
   - Structure validation (BeginProg/EndProg, Function/EndFunction)
-- **Navigation**: Go to definition, find all references
+- **Navigation**: Go to definition, find all references, document symbols,
+  workspace symbols, call hierarchy, and rename (with linked editing ranges)
 - **Hover Information**: Documentation for built-in instructions
+- **Editing Aids**: Signature help, code actions (quick fixes), code lens,
+  folding ranges, selection ranges, and inlay hints
+- **Semantic Highlighting**: Semantic tokens layered on top of the TextMate
+  grammar
 
 ## Supported File Extensions
 
@@ -91,8 +96,16 @@ cd client
 npm run test.run
 
 # Check code coverage
-cargo tarpaulin --out Html  # Rust coverage
+cargo llvm-cov --workspace --fail-under-lines 80 --fail-under-functions 90  # Rust coverage
 cd client && npm run test.coverage  # TypeScript coverage
+```
+
+### Full Verification
+
+```bash
+# Run the same checks as CI (fmt, clippy, tests, coverage, grammar
+# generation, client lint/format/test)
+just verify
 ```
 
 ### Pre-commit Hooks (Optional)
