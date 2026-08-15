@@ -512,7 +512,7 @@
     fixtures): `01-getting-started.CR6` (basic program shape),
     `02-scope-and-copyback.CR6` (Public-inside-Sub global scope,
     Function vs Sub parameter copy-back), and
-    `03-cr200x-length-pitfalls.CR1` (deliberately triggers the max-length,
+    `03-cr200x-length-pitfalls.CR2` (deliberately triggers the max-length,
     recommended-length, and 12-char truncation-collision diagnostics)
   - Added `docs/examples/README.md` explaining what each file demonstrates
     and which LSP feature to try (hover, go-to-definition, find
@@ -5804,3 +5804,96 @@ Not flagged as gaps (out of scope for this pass): with both of Round
 queued from this audit series. A future round would need a fresh
 grammar-diff pass against updated reference extensions, or pursuit of
 the 10 deferred candidates above if a primary source surfaces.
+
+### Internal Documentation Consistency Audit (2026-08-16)
+
+With Round 36's builtin-function backlog closed and only "cut and publish
+v0.1.0" left on Phase 6's list, switched focus to pre-release polish: do
+this project's own READMEs and design docs still describe what's actually
+implemented? Five parallel audits covered `README.md`, `docs/ARCHITECTURE.md`,
+`client/README.md` + `docs/examples/README.md`, `docs/adrs/adr-001` through
+`adr-005`, and `CONTRIBUTING.md`/`SECURITY.md`/`CODE_OF_CONDUCT.md`/
+`CHANGELOG.md`.
+
+- [x] Root `README.md` feature list and tooling commands stale ✅ Resolved
+  - Feature list only named 5 capabilities (syntax highlighting,
+    IntelliSense, diagnostics, navigation, hover); `backend.rs` has long
+    since registered signature help, document highlight, code actions,
+    folding/selection ranges, linked editing ranges, workspace symbols,
+    inlay hints, code lens, call hierarchy, rename, and semantic tokens
+  - `cargo tarpaulin --out Html` in "Running Tests" is wrong -- the project
+    uses `cargo llvm-cov` (per the `justfile`'s `coverage` recipe); no
+    `tarpaulin` reference exists anywhere else in the repo
+  - Added a `just verify` mention alongside the raw commands, for parity
+    with what `CLAUDE.md` already tells contributors to run
+- [x] `client/README.md` feature list stale ✅ Resolved -- same gap as
+  above (semantic tokens, code actions, folding/selection ranges, workspace
+  symbols, inlay hints, code lens, call hierarchy all missing); everything
+  else in this end-user-facing, Marketplace-bundled README (supported
+  extensions, `crbasic.server.path` docs, known limitations) checked out
+  against `client/package.json` and `backend.rs`
+- [x] `docs/ARCHITECTURE.md` had drifted furthest of any doc ✅ Resolved
+  - Its "LSP Feature Flow" diagram was fundamentally wrong: showed
+    `VSCode Extension -> LSP Client -> WASM LSP Server (crbasic-wasm) ->
+    LSP Server (crbasic-lsp)`. In reality `client/src/extension.ts` spawns
+    the native `crbasic-lsp` binary directly over stdio
+    (`vscode-languageclient/node`, `TransportKind.stdio`); `crbasic-wasm`
+    only wraps `crbasic-parser` and is not used by the shipped extension at
+    all (confirmed via `crbasic-wasm/Cargo.toml`'s own comment: `crbasic-lsp`
+    is excluded because it "depends on tokio/mio which are not compatible
+    with WASM target"). Matches ADR-004's native-binary design, which the
+    doc had never been updated to reflect
+  - Test counts were frozen at "146 tests"; actual `cargo test --workspace`
+    together with `cd client && npm run test.run` totals 1,286 tests today
+    (665 + 36 `crbasic-lsp`, 308 + 34 `crbasic-parser`, 19 `crbasic-wasm`,
+    224 client)
+  - `cargo-tarpaulin` -> `cargo-llvm-cov`; `tower-lsp` -> `tower-lsp-server`
+    (ADR-005's migration was never reflected here); "Client tests pending"
+    claim was false (224 client tests already exist)
+  - ~10 undocumented LSP capabilities (same list as the two READMEs above)
+    added to the "Handlers"/"Completed Features" sections
+  - Project Structure tree rewritten: added every `crbasic-lsp` feature
+    module, `keywords.json`/`keywords_generated.rs`, `client/scripts/*`
+    (packaging), `justfile`, `scripts/generate-grammar.js`; fixed wrong
+    filenames (`eslint.config.mjs` -> actual `.js`, `vite.config.mts` ->
+    actual `.ts`) and the wrong `.claude/CLAUDE.md` path (actual: root
+    `CLAUDE.md` + `AGENTS.md`)
+- [x] `CHANGELOG.md`'s `[Unreleased]` section stalled at the
+  tower-lsp-server-migration era ✅ Resolved -- missed roughly 30 subsequent
+  `feat` commits: the Round 26-36f builtin-instruction expansion (growing
+  `keywords.json` to 382 functions / 90 keywords), the ~10 LSP capabilities
+  above, multi-platform `.vsix` packaging, the Marketplace `publish` job,
+  and the bundled `client/README.md`/`client/LICENSE`/icon. Also fixed a
+  wrong claim that the VSCode extension consumes `crbasic-wasm`. Backfilled
+  ahead of the `[Unreleased]` -> `[0.1.0]` rename that precedes the release
+  PR, per [ADR-003](./adrs/adr-003-release-process.md)'s same-PR-as-the-change
+  rule
+- [x] `docs/adrs/adr-003-release-process.md` Decision C stale ✅ Resolved --
+  its "Cons" and "Neutral" consequence both said `release.yml` doesn't
+  build a `.vsix` or run `vsce publish`; true when written, but
+  [ADR-004](./adrs/adr-004-multi-platform-packaging.md) closed that gap and
+  a `publish` job (gated on the now-registered `VSCE_PAT` secret) exists.
+  Added a dated addendum under "Affected Files" rather than rewriting the
+  historical decision text, following the same pattern ADR-002 already used
+  for its own "Keyword/instruction list unification" update
+- [x] `docs/adrs/adr-001` missing a cross-link to ADR-004 ✅ Resolved --
+  minor, one-directional gap (ADR-004 already cites ADR-001); added the
+  reverse link
+- [x] `CONTRIBUTING.md`'s `just verify` description incomplete ✅ Resolved
+  -- named only 2 of the justfile recipe's 4 actual steps, omitting the
+  `cargo llvm-cov` coverage gate and `generate-grammar.js --check`
+- [x] Stale example filename in this file's own Phase 8 entry ✅ Resolved
+  -- line ~515 still said `03-cr200x-length-pitfalls.CR1`, a leftover from
+  before the file was renamed to `.CR2` (see the Round documented around
+  line 1789); fixed the reference here too
+- [x] `docs/examples/README.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`,
+  ADR-002/ADR-004/ADR-005 ✅ Not gaps -- all checked out against the current
+  implementation with no drift found
+
+Not flagged as gaps: `SECURITY.md`'s "Supported Versions" table reads as
+slightly premature (implies a release exists) but is generically phrased
+and becomes accurate the moment `v0.1.0` ships -- not worth editing ahead
+of that tag. Every doc fix above was committed separately by concern
+(READMEs together, ARCHITECTURE.md, CHANGELOG.md, the two ADR files
+together, CONTRIBUTING.md), keeping this progress-tracker update as its own
+final commit per this project's workflow convention.
