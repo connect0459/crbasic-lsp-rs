@@ -346,22 +346,18 @@
     - Verified locally: `npx vsce ls` (run from `client/`) now lists both
       `README.md` and `LICENSE` at the package root, with no
       missing-file warnings
-- [ ] Cut and publish the first release (`v0.1.0`) -- next action, not yet
-  done
-  - `CHANGELOG.md` currently has only an `[Unreleased]` section; per its
-    own embedded instructions, this must be renamed to `[0.1.0] -
-    <release date>` (with a fresh empty `[Unreleased]` added above it,
-    and the comparison links at the bottom updated) in the same PR that
-    precedes the tag push -- deliberately not done ahead of time in this
-    round, since doing so would bake in today's date even if the actual
-    tag push happens later
-  - Once that PR is merged: `git tag v0.1.0 && git push origin v0.1.0`
-    triggers `release.yml`'s full `verify`/`build`/`package`/`publish`
-    pipeline, which will publish for real now that `VSCE_PAT` is
-    registered (see the publisher account entry above) -- this is a
+- [x] Cut and publish the first release (`v0.1.0`) ✅ Resolved -- `CHANGELOG.md`'s
+  `[Unreleased]` section renamed to `[0.1.0] - 2026-08-16` (with a fresh
+  empty `[Unreleased]` added above it, and the comparison links at the
+  bottom updated) via `chore/release-v0.1.0`, per its own embedded
+  instructions -- see "Release v0.1.0 Preparation" below
+  - The actual `git tag v0.1.0 && git push origin v0.1.0` (and the
+    Marketplace `publish` it triggers via `release.yml`, now that
+    `VSCE_PAT` is registered) is a manual release action performed
+    outside this checklist's tracking, not an open item here -- it's a
     visible, hard-to-reverse action (a published Marketplace version
-    can't be fully unpublished) and needs explicit confirmation before
-    it's triggered
+    can't be fully unpublished) that needs its own explicit confirmation
+    whenever it's actually run
 
 ## Phase 7: Testing & Quality 🧪
 
@@ -6023,3 +6019,22 @@ open for Rust.
   - Documented in `CONTRIBUTING.md`'s Prerequisites/Setup sections
     (`rustup` install link plus a note that no `nvm use`-equivalent step is
     needed for Rust)
+
+### Release v0.1.0 Preparation (2026-08-16)
+
+Cut the `chore/release-v0.1.0` branch to carry out the "Cut and publish the
+first release" item from Phase 6, per ADR-003's rule that the `CHANGELOG.md`
+`[Unreleased]` -> `[X.Y.Z]` rename happens in the release PR itself, not
+ahead of time.
+
+- [x] `CHANGELOG.md` renamed `[Unreleased]` to `[0.1.0] - 2026-08-16` ✅
+  Resolved -- added a fresh empty `[Unreleased]` section above it, changed
+  the `[Unreleased]` reference link to compare `v0.1.0...HEAD`, and added a
+  `[0.1.0]` link pointing at the (not-yet-created) `v0.1.0` release tag,
+  since there is no previous tag to diff against for the first release
+
+This checklist's job ends here: merging this PR, then tagging and pushing
+`v0.1.0` (which triggers `release.yml`'s real Marketplace `publish` job) is
+a manual release action, not an item tracked in `docs/todo.md` -- it still
+needs its own explicit user confirmation whenever it's actually run, per
+Phase 6's release item above.
