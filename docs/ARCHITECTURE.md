@@ -193,9 +193,11 @@ independent, unused-by-this-client wrapper around `crbasic-parser` only (see
   `references`, `documentHighlight`, `documentSymbol`, `workspaceSymbol`,
   `codeAction`, `codeLens`, `foldingRange`, `selectionRange`,
   `linkedEditingRange`, `inlayHint`, `semanticTokens`, `rename` (with
-  `prepareRename`), `callHierarchy` (prepare/incoming/outgoing), and
-  `textDocument/diagnostic`
-- **Diagnostics**: Model-dependent validation (variable name length,
+  `prepareRename`), and `callHierarchy` (prepare/incoming/outgoing)
+- **Diagnostics**: push model only -- `backend.rs` analyzes the document on
+  open/change and calls `publish_diagnostics` directly; there is no
+  `textDocument/diagnostic` pull-request handler or `diagnosticProvider`
+  capability. Validation itself is model-dependent (variable name length,
   12-char truncation collisions for CR200X, structure validation for
   `BeginProg`/`EndProg`, `Function`/`EndFunction` pairing)
 - **Completion**: Context-aware code completion (built-in instruction
@@ -275,10 +277,10 @@ VS Code Marketplace publishing API (see Deployment & Infrastructure below).
 ## 6. Deployment & Infrastructure
 
 - **CI** (`.github/workflows/ci.yml`): two jobs mirroring `just verify` --
-  `rust` (fmt/clippy/test) and `client` (lint/format/type-check/test) --
-  triggered on push to `main`, on pull requests, and manually. Each job is
-  skipped when neither its own paths nor the workflow file changed
-  (`dorny/paths-filter`).
+  `rust` (fmt/clippy/test/coverage) and `client`
+  (lint/format/type-check/test/grammar-check) -- triggered on push to
+  `main`, on pull requests, and manually. Each job is skipped when neither
+  its own paths nor the workflow file changed (`dorny/paths-filter`).
 - **Release** (`.github/workflows/release.yml`, see
   [ADR-003](./adrs/adr-003-release-process.md)): triggered only by pushing a
   `v*.*.*` tag. Asserts the tag matches `Cargo.toml`/`client/package.json`,
@@ -327,13 +329,11 @@ VS Code Marketplace publishing API (see Deployment & Infrastructure below).
 
 ## 9. Future Considerations/Roadmap
 
-- [ ] Code formatting (auto-indent, structure alignment)
+- [ ] Whole-document code formatting (`textDocument/formatting`) -- type-time
+  auto-indent is already implemented via `client/language-configuration.json`
 - [ ] Further refactoring support (extract subroutine) -- rename is already
   implemented
-- [ ] Snippet library for common measurement patterns
-- [ ] Advanced datalogger-specific validation profiles
 - [ ] Integration with Campbell Scientific toolchain (program compilation, deployment)
-- [ ] Performance optimization for large files (>1000 lines)
 
 For granular, actively-tracked progress (what's done, in progress, or
 blocked), see [`docs/todo.md`](./todo.md) rather than this section --
