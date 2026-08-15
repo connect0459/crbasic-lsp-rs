@@ -548,6 +548,27 @@ impl HoverProvider {
             "modemhangup" => Some(
                 "**ModemHangup**\n\nDeclares code to run when a communications port hangs up, closed by EndModemHangup.",
             ),
+            "dialvoice" => Some(
+                "**DialVoice**\n\nDials out over a voice modem, or waits for an incoming call if no dial string is given. Returns -1 (success), 0 (failure), or -3 (no voice modem present).",
+            ),
+            "voicehangup" => Some(
+                "**VoiceHangup**\n\nHangs up the voice modem after a DialVoice connection; not needed inside a VoiceBeg/EndVoice block, which hangs up automatically via EndVoice.",
+            ),
+            "voicekey" => Some(
+                "**VoiceKey**\n\nWaits for and returns a single DTMF key (0-9, *, #) pressed by the caller, or a timeout/carrier-loss/no-modem/disconnect code.",
+            ),
+            "voicenumber" => Some(
+                "**VoiceNumber**\n\nWaits for and returns a multi-digit DTMF number entered by the caller (terminated by # or timeout), or a timeout/carrier-loss/no-modem/disconnect code.",
+            ),
+            "voicephrases" => Some(
+                "**VoicePhrases**\n\nSpeaks a comma-separated list of vocabulary words/phrases over the voice modem.",
+            ),
+            "voicesetup" => Some(
+                "**VoiceSetup**\n\nConfigures the DTMF keys and timing behavior used by the voice-modem instructions.",
+            ),
+            "voicespeak" => Some(
+                "**VoiceSpeak**\n\nSpeaks a string built by concatenating literal text and variable values over the voice modem.",
+            ),
             "smsrecv" => {
                 Some("**SMSRecv**\n\nPolls a CELL2XX cellular modem for a pending SMS message.")
             }
