@@ -94,6 +94,7 @@
   "builtinFunctions": [
     { "name": "Scan", "category": "scan" },
     { "name": "SubScan", "category": "scan" },
+    { "name": "TriggerSequence", "category": "scan" },
 
     { "name": "Battery", "category": "measurement" },
     { "name": "PanelTemp", "category": "measurement" },
@@ -295,6 +296,11 @@
     { "name": "UDPDataGram", "category": "communication" },
     { "name": "WebPageBegin", "category": "communication" },
     { "name": "XMLParse", "category": "communication" },
+    { "name": "EMailRecv", "category": "communication" },
+    { "name": "ModbusServer", "category": "communication" },
+    { "name": "ModemCallBack", "category": "communication" },
+    { "name": "NetworkTimeProtocol", "category": "communication" },
+    { "name": "SerialInBlock", "category": "communication" },
 
     { "name": "Sample", "category": "data" },
     { "name": "Average", "category": "data" },
@@ -336,6 +342,13 @@
     { "name": "FileMark", "category": "data" },
     { "name": "FileReadLine", "category": "data" },
     { "name": "Erase", "category": "data" },
+    { "name": "GetRecord", "category": "data" },
+    { "name": "Gzip", "category": "data" },
+    { "name": "NewFieldNames", "category": "data" },
+    { "name": "RainFlow", "category": "data" },
+    { "name": "Restore", "category": "data" },
+    { "name": "RunProgram", "category": "data" },
+    { "name": "StationName", "category": "data" },
 
     { "name": "SplitStr", "category": "string" },
     { "name": "FormatFloat", "category": "string" },
@@ -397,6 +410,8 @@
     { "name": "RMSSpa", "category": "math" },
     { "name": "StdDevSpa", "category": "math" },
     { "name": "FFTSpa", "category": "math" },
+    { "name": "Matrix", "category": "math" },
+    { "name": "MinSpa", "category": "math" },
 
     { "name": "RealTime", "category": "time" },
     { "name": "TimeIntoInterval", "category": "time" },
@@ -416,6 +431,11 @@
     { "name": "InstructionTimes", "category": "time" },
     { "name": "LineNum", "category": "time" },
     { "name": "Signature", "category": "time" },
+    { "name": "ArrayIndex", "category": "time" },
+    { "name": "Debug", "category": "time" },
+    { "name": "Move", "category": "time" },
+    { "name": "SemaphoreGet", "category": "time" },
+    { "name": "SemaphoreRelease", "category": "time" },
 
     { "name": "IIf", "category": "logical" },
 

@@ -138,7 +138,7 @@
         },
         {
           "name": "keyword.control.scan.crbasic",
-          "match": "(?i)\\b(Scan|SubScan|NextScan|ContinueScan|NextSubScan|SlowSequence|EndSequence|WaitTriggerSequence|ExitScan)\\b"
+          "match": "(?i)\\b(Scan|SubScan|TriggerSequence|NextScan|ContinueScan|NextSubScan|SlowSequence|EndSequence|WaitTriggerSequence|ExitScan)\\b"
         }
       ]
     },
@@ -148,11 +148,11 @@
     },
     "builtin-functions-communication": {
       "name": "support.function.communication.crbasic",
-      "match": "(?i)\\b(SerialOpen|SerialClose|SerialIn|SerialOut|SerialInRecord|SerialInChk|SerialOutBlock|SerialFlush|ModbusMaster|SDI12Recorder|TCPOpen|TCPClose|UDPOpen|UDPSocketOpen|UDPSocketSend|UDPSocketRecv|UDPSocketClose|EmailRelay|EmailSend|DialModem|DialSequence|EndDialSequence|ModemHangup|SMSRecv|SMSSend|PPPOpen|PPPClose|FTPClient|HTTPGet|HTTPPost|HTTPPut|GPS|EthernetPower|I2COpen|I2CRead|I2CWrite|SPIOpen|SPIRead|SPIWrite|AcceptDataRecords|Broadcast|ClockReport|DataGram|EncryptExempt|GetDataRecord|GetFile|GetVariables|PakBusClock|Route|Routes|SendData|SendFile|SendGetVariables|SendTableDef|SendVariables|StaticRoute|TimeUntilTransmit|DNP|DNPUpdate|DNPVariable|ArgosData|ArgosDataRepeat|ArgosError|ArgosSetup|ArgosTransmit|GOESData|GOESField|GOESGPS|GOESSetup|GOESStatus|GOESTable|SDMAO4|SDMAO4A|SDMBeginPort|SDMCAN|SDMCD16AC|SDMCD16Mask|SDMCVO4|SDMGeneric|SDMINT8|SDMIO16|SDMSIO4|SDMSpeed|SDMSW8A|SDMTrigger|SDMX50|CPIAddModule|CPIFileSend|CPISpeed|MQTTPublishTable|MQTTPublishConstTable|CheckPort|ComPortIsActive|DHCPRenew|Encryption|HTTPOut|IPInfo|IPNetPower|IPRoute|MonitorComms|PingIP|PortBridge|PortGet|PortPairConfig|PortsConfig|SNMPVariable|TCPActiveConnections|UDPDataGram|WebPageBegin|XMLParse)\\b"
+      "match": "(?i)\\b(SerialOpen|SerialClose|SerialIn|SerialOut|SerialInRecord|SerialInChk|SerialOutBlock|SerialFlush|ModbusMaster|SDI12Recorder|TCPOpen|TCPClose|UDPOpen|UDPSocketOpen|UDPSocketSend|UDPSocketRecv|UDPSocketClose|EmailRelay|EmailSend|DialModem|DialSequence|EndDialSequence|ModemHangup|SMSRecv|SMSSend|PPPOpen|PPPClose|FTPClient|HTTPGet|HTTPPost|HTTPPut|GPS|EthernetPower|I2COpen|I2CRead|I2CWrite|SPIOpen|SPIRead|SPIWrite|AcceptDataRecords|Broadcast|ClockReport|DataGram|EncryptExempt|GetDataRecord|GetFile|GetVariables|PakBusClock|Route|Routes|SendData|SendFile|SendGetVariables|SendTableDef|SendVariables|StaticRoute|TimeUntilTransmit|DNP|DNPUpdate|DNPVariable|ArgosData|ArgosDataRepeat|ArgosError|ArgosSetup|ArgosTransmit|GOESData|GOESField|GOESGPS|GOESSetup|GOESStatus|GOESTable|SDMAO4|SDMAO4A|SDMBeginPort|SDMCAN|SDMCD16AC|SDMCD16Mask|SDMCVO4|SDMGeneric|SDMINT8|SDMIO16|SDMSIO4|SDMSpeed|SDMSW8A|SDMTrigger|SDMX50|CPIAddModule|CPIFileSend|CPISpeed|MQTTPublishTable|MQTTPublishConstTable|CheckPort|ComPortIsActive|DHCPRenew|Encryption|HTTPOut|IPInfo|IPNetPower|IPRoute|MonitorComms|PingIP|PortBridge|PortGet|PortPairConfig|PortsConfig|SNMPVariable|TCPActiveConnections|UDPDataGram|WebPageBegin|XMLParse|EMailRecv|ModbusServer|ModemCallBack|NetworkTimeProtocol|SerialInBlock)\\b"
     },
     "builtin-functions-data": {
       "name": "support.function.data.crbasic",
-      "match": "(?i)\\b(Sample|Average|StdDev|Minimum|Maximum|Totalize|WindVector|Histogram|Median|Moment|SampleMaxMin|PeakValley|FFT|Covariance|LevelCrossing|WorstCase|FieldNames|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval|CardFlush|DataEvent|Data|DataLong|DataTime|ResetTable|TableFile|FileMark|FileReadLine|Erase)\\b"
+      "match": "(?i)\\b(Sample|Average|StdDev|Minimum|Maximum|Totalize|WindVector|Histogram|Median|Moment|SampleMaxMin|PeakValley|FFT|Covariance|LevelCrossing|WorstCase|FieldNames|CardOut|NewFile|FileManage|FileOpen|FileClose|FileRead|FileWrite|FileCopy|FileRename|FileSize|FileTime|FileList|DataInterval|CardFlush|DataEvent|Data|DataLong|DataTime|ResetTable|TableFile|FileMark|FileReadLine|Erase|GetRecord|Gzip|NewFieldNames|RainFlow|Restore|RunProgram|StationName)\\b"
     },
     "builtin-functions-menu": {
       "name": "support.function.menu.crbasic",
@@ -166,11 +166,11 @@
         },
         {
           "name": "support.function.math.crbasic",
-          "match": "(?i)\\b(Abs|Sgn|Sqr|Exp|Ln|Log|Log10|Sin|Cos|Tan|Sinh|Cosh|Tanh|Asin|Acos|Atn|Atn2|Int|Fix|Frac|Round|Rnd|Randomize|Ceiling|Floor|MovePrecise|PWR|CType|AvgRun|MaxRun|MinRun|TotalRun|AvgSpa|CovSpa|MaxSpa|RMSSpa|StdDevSpa|FFTSpa)\\b"
+          "match": "(?i)\\b(Abs|Sgn|Sqr|Exp|Ln|Log|Log10|Sin|Cos|Tan|Sinh|Cosh|Tanh|Asin|Acos|Atn|Atn2|Int|Fix|Frac|Round|Rnd|Randomize|Ceiling|Floor|MovePrecise|PWR|CType|AvgRun|MaxRun|MinRun|TotalRun|AvgSpa|CovSpa|MaxSpa|RMSSpa|StdDevSpa|FFTSpa|Matrix|MinSpa)\\b"
         },
         {
           "name": "support.function.time.crbasic",
-          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|SetStatus|SetSetting|SetSecurity|MoveBytes|ArrayLength|NaN|SecsSince1990|TimeIsBetween|DaylightSaving|DaylightSavingUS|InstructionTimes|LineNum|Signature)\\b"
+          "match": "(?i)\\b(RealTime|TimeIntoInterval|IfTime|Timer|Delay|SetStatus|SetSetting|SetSecurity|MoveBytes|ArrayLength|NaN|SecsSince1990|TimeIsBetween|DaylightSaving|DaylightSavingUS|InstructionTimes|LineNum|Signature|ArrayIndex|Debug|Move|SemaphoreGet|SemaphoreRelease)\\b"
         },
         {
           "name": "support.function.logical.crbasic",
