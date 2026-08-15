@@ -282,6 +282,27 @@
     - See Known Issues / Technical Debt → Packaging Gap for details
       ([ADR-004](./adrs/adr-004-multi-platform-packaging.md))
   - [ ] VS Code Marketplace publisher account and Personal Access Token
+    - Confirmed 2026-08-15: `https://marketplace.visualstudio.com/publishers/connect0459`
+      404s -- the publisher (matching `client/package.json`'s `publisher`
+      field) does not exist yet. Everything else in the pipeline is ready
+      and waiting on this: `release.yml`'s `publish` job already reads
+      `secrets.VSCE_PAT` and self-skips gracefully while it's unset (see
+      the `Publish workflow` entry below), and the `workflow_dispatch` dry
+      run above already proved the full build/package pipeline end to end.
+    - Remaining steps are all account-side, on the user's own Microsoft/
+      Azure DevOps identity -- not something this session can perform:
+      1. Sign in (or create an account) at
+         [Azure DevOps](https://dev.azure.com) and create an organization
+         if one doesn't already exist.
+      2. Create publisher ID `connect0459` at
+         [marketplace.visualstudio.com/manage/createpublisher](https://marketplace.visualstudio.com/manage/createpublisher)
+         (must match `client/package.json`'s `publisher` field exactly).
+      3. Generate a PAT scoped to **Marketplace: Manage** from Azure
+         DevOps User Settings → Personal Access Tokens.
+      4. Add the PAT as a GitHub Actions repository secret named
+         `VSCE_PAT` (Settings → Secrets and variables → Actions). Once
+         set, the next tag push (`v*.*.*`) will publish automatically --
+         no workflow change needed.
   - [x] Publish workflow (GitHub Actions `vsce publish` on release tag) ✅ Resolved
     - Added a `publish` job to `.github/workflows/release.yml`, running after
       `package` and gated on `github.event_name == 'push'` (skipped entirely
