@@ -5987,3 +5987,39 @@ per Phase 6's still-open release item) -- raised with the user and kept
 as-is, a deliberate pre-write of the post-release steady state analogous to
 how the `CHANGELOG.md` `[Unreleased]` rename is deliberately deferred to
 the release PR rather than backfilled ahead of time.
+
+### Toolchain Version Pinning (2026-08-16)
+
+Prompted by the user asking whether local/CI Rust tooling could be pinned
+via a TOML file, referencing `rust-toolchain.toml` from another of their
+projects (`rustgression`, pinned to `1.94.0`). Neither this repo nor CI had
+any such pin: `actions-rust-lang/setup-rust-toolchain` in `ci.yml`/
+`release.yml`/`copilot-setup-steps.yml` never set a `toolchain` input, and
+local `rustup` installs resolved whatever "stable" meant at install time --
+the same reproducibility gap `.nvmrc` already closes for Node, just left
+open for Rust.
+
+- [x] No pinned Rust toolchain for local dev or CI ✅ Resolved -- added
+  `rust-toolchain.toml` at the repo root: `channel = "1.97.1"` (the version
+  already in local use), `components = ["rustfmt", "clippy"]`, `targets =
+  ["wasm32-unknown-unknown"]` (needed by `just build-wasm` /
+  `crates/crbasic-wasm`, confirmed no CI job currently builds the WASM
+  package itself, so this only benefits local dev), `profile = "minimal"`
+  (components are already explicit, so the fuller `default` profile's
+  extra `rust-docs`/`rust-src` would be dead weight)
+  - Verified locally: `rustc --version`/`cargo fmt --version`/`cargo clippy
+    --version` all resolve to the pinned toolchain the moment the repo
+    directory is entered, `rustup` auto-installed it including the wasm32
+    target on first use, and the full `just verify` gate (fmt, clippy,
+    `cargo test --workspace`, coverage, grammar-check, client
+    lint/format/type-check/test) plus `wasm-pack build --target web` all
+    pass unchanged under the pinned toolchain
+  - `ci.yml`/`release.yml`/`copilot-setup-steps.yml` were not modified --
+    `actions-rust-lang/setup-rust-toolchain` auto-detects a
+    `rust-toolchain.toml` when its own `toolchain` input is unset (true in
+    all three workflows here), so CI now resolves the same pinned version
+    without a workflow change; unverified until the next CI run since this
+    behavior can't be exercised locally
+  - Documented in `CONTRIBUTING.md`'s Prerequisites/Setup sections
+    (`rustup` install link plus a note that no `nvm use`-equivalent step is
+    needed for Rust)
