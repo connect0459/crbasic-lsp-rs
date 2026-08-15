@@ -5348,3 +5348,128 @@ Not flagged as gaps (out of scope for this pass):
   methodology. `RouteNeighbors` (one grammar) vs. `RoutersNeighbors`
   (the other) is a spelling conflict within this backlog that will need
   resolving against a primary source rather than either grammar.
+
+### Reference Implementation & Official Docs Comparison, Round 36 (2026-08-15)
+
+Round 35 left two lower-confidence tiers unexamined: ~45 names unique to
+Grammar A (`cr-basic-ms-vscode`) and ~60 unique to Grammar B
+(`crbasic-vscode-support`), the latter known to be dominated by that
+grammar's own typos. Re-ran the extraction with a corrected script
+(restricting to `function`/`keyword.control`-scoped patterns in both files,
+properly stripping `\b(...)`/`\b` wrappers instead of requiring an exact
+regex match), which resolved the great majority of Grammar B's raw tokens
+(literal `Z`-glued merges like `IPTraceZMQTTConnect`,
+`ReadZReadIOZReamTIme`) down to typos of names already covered by Grammar A
+or already implemented. What survived diffing against the current
+433-name `keywords.json` was 57 Tier-1 candidates needing fresh
+verification, plus `SetSettings`/`SetSecurity`/`TypeOf` (Tier 2: already
+confirmed real in earlier rounds' research but deliberately deferred to
+the content-volume backlog, never actually added).
+
+Two parallel research agents independently verified all 60 (mirroring
+Round 34/35's HTML-search-first vs. PDF/forum-first methodology). Three
+disagreements between the two passes were resolved by direct primary-source
+fetches:
+
+- `CWB100Diagnostics` vs `CWBDiagnostics`: a live help.campbellsci.com
+  fetch of the page confirms the syntax box itself reads `CWBDiagnostics`
+  (no "100") despite the page's own title and a PDF manual both using
+  "CWB100Diagnostics" informally. Added under `CWBDiagnostics`.
+- `Csgn`: one pass confirmed it real (math, sign-change function); the
+  other found it only in the RTMC Pro manual
+  (`rtmc-pro-manual/rtmc/csgn.htm`) -- a different Campbell Scientific
+  product (a screen-builder tool, not the datalogger language), with the
+  equivalent CRBasic page 404ing. A direct re-fetch confirms the 404 and
+  the RTMC-only page. Not a CRBasic instruction; not added.
+- `SetSettings` (plural): an earlier round's note claimed it real
+  alongside `SetSecurity`. A direct fetch of the SetStatus/SetSetting help
+  page and a targeted search both show no independent "SetSettings" syntax
+  box exists -- only prose loosely referencing the singular `SetSetting`.
+  That earlier claim doesn't hold up; correcting course here. `SetSecurity`
+  remains confirmed real via its own dedicated page.
+
+Also resolved: the `RoutersNeighbors` (Grammar A) vs `RouteNeighbors`
+(Grammar B) spelling conflict flagged just above -- both research passes
+and a live page confirm `RoutersNeighbors` is official.
+
+Not flagged as gaps (out of scope for this pass):
+
+- Discarded (not real / extraction artifacts, no primary source found by
+  either pass): `Csgn`, `End`, `GOESCommand`, `Network`,
+  `NetworkPakBusClock`, `RoundSetVP`, `SetSettings`.
+- Deferred, unchanged from earlier rounds (no new primary source
+  surfaced): `CWB100`, `CWB100RSSI`, `CWB100Routes` (grouped with
+  `CWB100` -- same "no confirmed current help page" status),
+  `RainFlowSample`, `SDI12SensorSetup`, `SDI12SensorResponse`,
+  `ModbusSlave`.
+- Explicitly scoped out (real, but not a general-purpose LSP fit):
+  `MemoryTest` -- official docs state it "was developed to be used by
+  Campbell Scientific's production team only." Confirmed with the user;
+  not added.
+- Surfaced but out of scope for this round (future-round candidate):
+  `SortSpaIndexed` (distinct from `SortSpa`, spotted adjacent to it in
+  search results but not independently verified).
+
+That leaves 52 confirmed instructions to add: `DialVoice`, `VoiceHangup`,
+`VoiceKey`, `VoiceNumber`, `VoicePhrases`, `VoiceSetup`, `VoiceSpeak` (7,
+voice-synthesis modem family); `INSATData`, `INSATSetup`, `INSATStatus`,
+`OmniSatData`, `OmniSatRandomSetup`, `OmniSatSTSetup`, `OmniSatStatus` (7,
+satellite-transmission family, confirmed only via PDF/forum -- no current
+help.campbellsci.com page exists for either, the same "real but
+manual-only" status as several Round 34 finds); `CWBDiagnostics`,
+`IPTrace`, `MQTTConnect`, `RoutersNeighbors`, `SerialBrk` (5,
+wireless/network communication); `ExciteI`, `ExciteCAO`, `Resistance3W`,
+`TCPsyc`, `Thermistor`, `VibratingWire`, `SWVX`, `TimerInput`,
+`WaitDigTrig`, `BeginBurstTrigger`, `EndBurstTrigger` (11, sensor
+measurement); `AddPrecise`, `RectPolar`, `SatVP`, `SortSpa`, `StrainCalc`,
+`VaporPressure`, `FindSpa` (7, math/physical calculations); `CalFile`,
+`ClockChange`, `ClockSet`, `FileEncrypt`, `Histogram4D`, `NewFieldCal`,
+`Read`, `ReadIO`, `WriteIO`, `SetSecurity`, `TypeOf`, `FormatLongLong`,
+`TimedControl` (13, data/file/clock/system).
+
+Given the batch size, split into 6 sub-rounds by functional category,
+confirmed with the user before implementation began:
+
+- Round 36a (this round): Voice-synthesis modem family (7 candidates)
+- Round 36b (deferred): Satellite-transmission family (7 candidates)
+- Round 36c (deferred): Wireless/network communication (5 candidates)
+- Round 36d (deferred): Sensor measurement instructions (11 candidates)
+- Round 36e (deferred): Math/physical-model calculations (7 candidates)
+- Round 36f (deferred): Data/file/clock/system instructions (13
+  candidates)
+
+### Reference Implementation & Official Docs Comparison, Round 36a (2026-08-15)
+
+Picked up the voice-synthesis modem family (7 candidates) from Round 36's
+split.
+
+- [x] `DialVoice`, `VoiceHangup`, `VoiceKey`, `VoiceNumber`, `VoicePhrases`,
+  `VoiceSetup`, `VoiceSpeak` missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 7 are real, documented CRBasic instructions for the voice modem
+    peripheral (COM310/COM320 Voice Communications Modem manual family),
+    confirmed by both research passes
+  - `VoiceBeg`/`EndVoice`, the block-construct pair that wraps this whole
+    family's incoming-call handler, were already implemented in an
+    earlier round (`languageKeywords`, category `program`) -- confirmed
+    still correct, no change needed
+  - None of the 7 is itself a block construct, so this needed no
+    parser/AST changes -- purely `keywords.json`/completion/hover/
+    signature-help work
+  - Added all 7 to `keywords.json` under the `communication` category,
+    regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 7, keeping the existing parity enforced by all
+    three completeness tests
+  - 7 new completion tests (one exact-`insert_text` test per function)
+    - 2 new signature tests (`voicehangup_takes_no_parameters`,
+    `voicesetup_has_six_parameters_in_official_order`) added across 4
+    commits (one per LSP layer, plus the parser commit); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client `lint`/`format.check`/
+    `test.run` gate pass (625 `crbasic-lsp` lib tests, up from 616)
+
+Not flagged as gaps (out of scope for this pass):
+
+- Rounds 36b through 36f (45 remaining candidates across 5 functional
+  categories) remain deferred per Round 36's split.
