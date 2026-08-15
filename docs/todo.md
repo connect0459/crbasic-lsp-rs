@@ -5607,3 +5607,48 @@ Not flagged as gaps (out of scope for this pass):
   primary source surfaces.
 - Rounds 36e through 36f (20 remaining candidates across 2 functional
   categories) remain deferred per Round 36's split.
+
+### Reference Implementation & Official Docs Comparison, Round 36e (2026-08-15)
+
+Picked up the math/physical-model calculations family (7 candidates)
+from Round 36's split. All 7 were directly re-fetched from
+help.campbellsci.com and confirmed against their own syntax lines.
+
+- [x] `AddPrecise`, `RectPolar`, `SatVP`, `SortSpa`, `StrainCalc`,
+  `VaporPressure`, `FindSpa` missing from `BUILTIN_FUNCTIONS`
+  ✅ Resolved
+  - All 7 are real, documented CRBasic instructions confirmed by direct
+    fetch of their own help.campbellsci.com syntax lines
+  - `StrainCalc`'s last parameter is officially named `PoissonFactor`,
+    not `PoissonRatio` as an earlier round's research had guessed --
+    corrected via direct fetch
+  - `FindSpa`'s parameter order (`SoughtLow`, `SoughtHigh`, `Step`,
+    `Source`) doesn't follow the `Dest`/`Swath`/`Source` shape common to
+    its `*Spa` siblings (`AvgSpa`/`MaxSpa`/`MinSpa`/`SortSpa`): it
+    searches `Source` for any value within an inclusive
+    `[SoughtLow, SoughtHigh]` range, stepping by `Step`, and returns the
+    first matching position (step-adjusted) or 0 -- confirmed by
+    fetching the full page content, not just the syntax line, since the
+    parameter names alone were ambiguous
+  - None of the 7 is a block construct, so this needed no parser/AST
+    changes -- purely `keywords.json`/completion/hover/signature-help
+    work
+  - Added all 7 to `keywords.json` under the `math` category,
+    regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 7, keeping the existing parity enforced by
+    all three completeness tests
+  - 7 new completion tests (one exact-`insert_text` test per function)
+    - 2 new signature tests
+    (`findspa_has_four_parameters_in_official_order`,
+    `straincalc_has_seven_parameters_in_official_order`) added across 3
+    commits (one per LSP layer); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client `lint`/`format.check`/
+    `test.run` gate pass (651 `crbasic-lsp` lib tests, up from 642)
+
+Not flagged as gaps (out of scope for this pass):
+
+- Round 36f (13 remaining candidates) remains deferred per Round 36's
+  split -- the last sub-round.
