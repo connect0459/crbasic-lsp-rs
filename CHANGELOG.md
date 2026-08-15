@@ -36,14 +36,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   full expression/statement/control-flow grammar, and model-dependent
   semantic validation (variable name length limits and 12-character
   truncation collisions for CR200X, CR6, and GRANITE dataloggers).
-- Language Server (`crbasic-lsp`, via `tower-lsp-server`): diagnostics, completion,
-  signature help, hover, go to definition, find all references, document
-  symbols, and rename.
+- Built-in instruction database (`keywords.json`, the single source of
+  truth for completion/hover/signature-help): grown to 382 built-in
+  functions/instructions and 90 language keywords across measurement,
+  communication (SDM/SDI-12/CDM/CPI/MQTT/GOES/ARGOS/dial-modem/SMS/email/
+  wireless/voice/satellite), data/file/time management, math/physical-model,
+  and statistics/spatial-analysis families.
+- Language Server (`crbasic-lsp`, via `tower-lsp-server`): diagnostics,
+  completion, signature help, hover, go to definition, find all
+  references, document symbols, workspace symbols, document highlight,
+  code actions (quick fixes), code lens, folding ranges, selection
+  ranges, linked editing ranges, inlay hints, semantic tokens, rename
+  (with prepare support), and call hierarchy.
 - WASM bindings (`crbasic-wasm`): `tokenize`, `parse`, `analyze`, and
-  `version` APIs consumed by the VSCode extension.
+  `version` APIs wrapping `crbasic-parser`, for consumers other than this
+  project's own VSCode extension (the extension spawns the native
+  `crbasic-lsp` binary directly; see
+  [ADR-004](./docs/adrs/adr-004-multi-platform-packaging.md)).
 - VSCode extension (`client/`): syntax highlighting via TextMate Grammar,
   LSP client wiring, `crbasic.restartServer` and `crbasic.showServerOutput`
-  commands, and type-time auto-indent.
+  commands, type-time auto-indent, and an original extension icon.
+- Multi-platform packaging and Marketplace publishing: per-platform
+  `.vsix` builds (linux/darwin/win32 × x64/arm64), a `publish` job wired
+  to the VS Code Marketplace via `vsce publish`, and a Marketplace-facing
+  `client/README.md`/`client/LICENSE` bundled into each package.
 - Curated example programs (`docs/examples/`) and CI pipeline
   (`.github/workflows/ci.yml`) covering both the Rust workspace and the
   TypeScript client.
