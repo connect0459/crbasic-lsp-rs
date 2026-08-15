@@ -711,6 +711,11 @@ impl CompletionProvider {
                 "Clears any characters in the serial input buffer.",
             ),
             Self::create_function_completion(
+                "SerialBrk",
+                "SerialBrk(${1:COMPort}, ${2:Break})",
+                "Sends a break signal of a specified duration to a serial communication port.",
+            ),
+            Self::create_function_completion(
                 "ModbusMaster",
                 "ModbusMaster(${1:ResultCode}, ${2:ComPort}, ${3:BaudRate}, ${4:ModbusAddr}, ${5:Function}, ${6:Variable}, ${7:Start}, ${8:Length}, ${9:Tries}, ${10:TimeOut}, ${11:ModbusOption})",
                 "Sets up the datalogger as a Modbus client to send or retrieve data from a Modbus server.",
@@ -956,6 +961,11 @@ impl CompletionProvider {
                 "Retrieves the datalogger's list of known dynamic PakBus routes into an array.",
             ),
             Self::create_function_completion(
+                "RoutersNeighbors",
+                "RoutersNeighbors(${1:DestArray})",
+                "Returns a list of all PakBus routers and their neighbors known to the datalogger.",
+            ),
+            Self::create_function_completion(
                 "SendData",
                 "SendData(${1:ComPort}, ${2:NeighborAddr}, ${3:PakBusAddr}, ${4:DataTable}, ${5:TableOption})",
                 "Sends the most recent record from a data table to a destination PakBus device.",
@@ -1161,6 +1171,16 @@ impl CompletionProvider {
                 "Enables remote editing of ConstTable values via MQTT; placed inside a ConstTable/EndConstTable declaration.",
             ),
             Self::create_function_completion(
+                "MQTTConnect",
+                "MQTTConnect(${1:DesiredState})",
+                "Overrides the default MQTT-publish retry schedule, forcing a connect or disconnect attempt over an available IP connection.",
+            ),
+            Self::create_function_completion(
+                "CWBDiagnostics",
+                "CWBDiagnostics(${1:CWBPort}, ${2:CWSDiag})",
+                "Returns diagnostic information about a CWB100 wireless sensor base's network performance.",
+            ),
+            Self::create_function_completion(
                 "CheckPort",
                 "CheckPort(${1:Port})",
                 "Retrieves the current status (high/low) of a specified digital port or terminal.",
@@ -1199,6 +1219,11 @@ impl CompletionProvider {
                 "IPRoute",
                 "IPRoute(${1:IPAddr}, ${2:IPInterface}, ${3:ExclusiveOption})",
                 "Directs outgoing IP traffic through a specified network interface when multiple interfaces are active.",
+            ),
+            Self::create_function_completion(
+                "IPTrace",
+                "IPTrace(${1:Dest})",
+                "Writes IP debug/troubleshooting messages to a string variable; can be used as a DataTable output trigger.",
             ),
             Self::create_function_completion(
                 "MonitorComms",
@@ -5778,6 +5803,56 @@ mod tests {
             assert_eq!(
                 insert_text_for(&completions, "VoiceSpeak"),
                 "VoiceSpeak(${1:Expression}, ${2:Precision})"
+            );
+        }
+
+        #[test]
+        fn serialbrk_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "SerialBrk"),
+                "SerialBrk(${1:COMPort}, ${2:Break})"
+            );
+        }
+
+        #[test]
+        fn mqttconnect_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "MQTTConnect"),
+                "MQTTConnect(${1:DesiredState})"
+            );
+        }
+
+        #[test]
+        fn cwbdiagnostics_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "CWBDiagnostics"),
+                "CWBDiagnostics(${1:CWBPort}, ${2:CWSDiag})"
+            );
+        }
+
+        #[test]
+        fn iptrace_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "IPTrace"),
+                "IPTrace(${1:Dest})"
+            );
+        }
+
+        #[test]
+        fn routersneighbors_snippet_matches_official_signature() {
+            let completions = CompletionProvider::get_builtin_function_completions();
+
+            assert_eq!(
+                insert_text_for(&completions, "RoutersNeighbors"),
+                "RoutersNeighbors(${1:DestArray})"
             );
         }
 
