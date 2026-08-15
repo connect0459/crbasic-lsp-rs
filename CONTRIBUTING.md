@@ -11,29 +11,17 @@
 ## Setup
 
 ```sh
+pip install pre-commit   # or: brew install pre-commit
 git clone https://github.com/connect0459/crbasic-lsp-rs.git
 cd crbasic-lsp-rs
 nvm use   # installs/activates the Node.js version pinned in .nvmrc
 just setup
 ```
 
-`just setup` runs `cargo build` and `npm install` (in `client/`) to fetch
-dependencies for both workspaces.
-
-### pre-commit hooks
-
-Install [pre-commit](https://pre-commit.com/) and set up the hooks:
-
-```sh
-pip install pre-commit   # or: brew install pre-commit
-pre-commit install
-```
-
-To run all hooks manually:
-
-```sh
-pre-commit run --all-files
-```
+`just setup` installs the pre-commit git hook (`pre-commit install`), then
+runs `cargo build` and `npm install` (in `client/`) to fetch dependencies for
+both workspaces. It requires the `pre-commit` CLI to already be installed,
+hence the first line above.
 
 ## Development workflow
 
@@ -65,7 +53,7 @@ just verify
 This mirrors the CI checks: Rust formatting and clippy across the
 workspace, `cargo test`, coverage thresholds via `cargo llvm-cov`, a check
 that `crbasic.tmLanguage.json`/`keywords_generated.rs` are up to date with
-`keywords.json`, and ESLint/Prettier/Vitest for the client.
+`keywords.json`, and ESLint/Prettier/`tsc --noEmit`/Vitest for the client.
 
 ## Testing guidelines
 
