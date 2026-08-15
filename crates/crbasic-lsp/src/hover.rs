@@ -215,6 +215,12 @@ impl HoverProvider {
     fn get_time_function_description(name: &str) -> Option<&'static str> {
         match name.to_lowercase().as_str() {
             "realtime" => Some("**RealTime**\n\nReturns the current real-time clock values."),
+            "clockchange" => Some(
+                "**ClockChange**\n\nReturns the number of milliseconds the datalogger's clock has changed since the last time this instruction was executed.",
+            ),
+            "clockset" => Some(
+                "**ClockSet**\n\nSets the datalogger clock from the values in a 7-element array.",
+            ),
             "timeintointerval" => {
                 Some("**TimeIntoInterval**\n\nReturns true when the interval boundary is crossed.")
             }
@@ -348,6 +354,9 @@ impl HoverProvider {
             "formatlong" => Some(
                 "**FormatLong**\n\nConverts a Long value to a decimal, hexadecimal, or octal string.",
             ),
+            "formatlonglong" => Some(
+                "**FormatLongLong**\n\nConverts a 64-bit value, stored across two adjacent Long variables, into its decimal string representation.",
+            ),
             "mid" => Some("**Mid**\n\nExtracts a substring."),
             "left" => Some("**Left**\n\nReturns leftmost characters."),
             "right" => Some("**Right**\n\nReturns rightmost characters."),
@@ -376,6 +385,7 @@ impl HoverProvider {
             "sprintf" => {
                 Some("**Sprintf**\n\nWrites a formatted output string to a destination variable.")
             }
+            "typeof" => Some("**TypeOf**\n\nReturns an integer data-type code for a variable."),
             _ => None,
         }
     }
@@ -395,6 +405,9 @@ impl HoverProvider {
             }
             "histogram" => Some(
                 "**Histogram**\n\nStores a frequency distribution of input data across a set of bins.",
+            ),
+            "histogram4d" => Some(
+                "**Histogram4D**\n\nProcesses input data as a standard or weighted-value histogram of up to four dimensions.",
             ),
             "median" => Some(
                 "**Median**\n\nStores the median of a variable, over time, in an output table.",
@@ -442,6 +455,9 @@ impl HoverProvider {
             "filewrite" => {
                 Some("**FileWrite**\n\nWrites data from a variable or array to an open file.")
             }
+            "fileencrypt" => Some(
+                "**FileEncrypt**\n\nEncrypts a file in place; the datalogger automatically decrypts it at compile time when referenced.",
+            ),
             "filecopy" => {
                 Some("**FileCopy**\n\nCopies a file from one drive on the datalogger to another.")
             }
@@ -495,6 +511,9 @@ impl HoverProvider {
             ),
             "rainflow" => Some(
                 "**RainFlow**\n\nPerforms rainflow cycle-counting on a signal, building an amplitude/mean histogram for fatigue analysis.",
+            ),
+            "read" => Some(
+                "**Read**\n\nReads the next value(s) sequentially from a Data/DataLong constant list into a variable, advancing the read pointer.",
             ),
             "restore" => Some(
                 "**Restore**\n\nResets the read pointer to the start of a Data/DataLong constant list, so a following Read restarts from the beginning.",
@@ -745,6 +764,9 @@ impl HoverProvider {
             "sdmcd16mask" => Some(
                 "**SDMCD16Mask**\n\nEnables or disables specific relay ports of an SDM-CD16AC device via a bit-mask filter.",
             ),
+            "timedcontrol" => Some(
+                "**TimedControl**\n\nRuns a timed sequence of binary output values through an SDMCD16 peripheral, synchronized to a specified interval.",
+            ),
             "sdmcvo4" => Some(
                 "**SDMCVO4**\n\nControls the SDM-CVO4 four-channel current/voltage output device.",
             ),
@@ -928,6 +950,12 @@ impl HoverProvider {
             "pulseport" => Some(
                 "**PulsePort**\n\nToggles a port, delays, toggles it back, and delays again to generate a clocking pulse.",
             ),
+            "readio" => Some(
+                "**ReadIO**\n\nReads the status of one or more digital ports or terminals, storing the result in Dest.",
+            ),
+            "writeio" => Some(
+                "**WriteIO**\n\nSets the status of one or more digital control ports or universal terminals from Source.",
+            ),
             "excitev" => Some(
                 "**ExciteV**\n\nSets an excitation channel output to a specified voltage for a specified duration.",
             ),
@@ -1098,6 +1126,12 @@ impl HoverProvider {
             ),
             "samplefieldcal" => Some(
                 "**SampleFieldCal**\n\nStores the values in the FieldCal file to a data table; used inside a DataTable/EndTable declaration.",
+            ),
+            "calfile" => Some(
+                "**CalFile**\n\nWrites an array to a calibration file, or reads a calibration file back into an array if its signature matches.",
+            ),
+            "newfieldcal" => Some(
+                "**NewFieldCal**\n\nA Boolean DataTable trigger that is true for one scan cycle after a new field calibration has been performed.",
             ),
             "acpower" => Some(
                 "**ACPower**\n\nMeasures real AC power and power-quality parameters for single-phase, split-phase, or three-phase Y systems.",
