@@ -5511,3 +5511,43 @@ Not flagged as gaps (out of scope for this pass):
 - Rounds 36c through 36f (36 remaining candidates across 4 functional
   categories) remain deferred per Round 36's split, unaffected by this
   correction.
+
+### Reference Implementation & Official Docs Comparison, Round 36c (2026-08-15)
+
+Picked up the wireless/network communication family (5 candidates) from
+Round 36's split. All 5 were directly re-fetched from
+help.campbellsci.com and confirmed against their own syntax lines
+(re-verification was warranted here since Round 36's own aggregation had
+already caught one naming discrepancy in this same functional area --
+`CWBDiagnostics` vs. the grammar-derived `CWB100Diagnostics` candidate
+spelling).
+
+- [x] `CWBDiagnostics`, `IPTrace`, `MQTTConnect`, `RoutersNeighbors`,
+  `SerialBrk` missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 5 are real, documented CRBasic instructions confirmed by direct
+    fetch of their own help.campbellsci.com syntax lines
+  - `RoutersNeighbors` resolves the naming conflict flagged in Round 35
+    and reconfirmed in Round 36: `RoutersNeighbors(DestArray(MaxRouters,
+    MaxNeighbors+1))` is the official spelling; `RouteNeighbors` (Grammar
+    B) was the typo
+  - None of the 5 is a block construct, so this needed no parser/AST
+    changes -- purely `keywords.json`/completion/hover/signature-help
+    work
+  - Added all 5 to `keywords.json` under the `communication` category,
+    regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 5, keeping the existing parity enforced by all
+    three completeness tests
+  - 5 new completion tests (one exact-`insert_text` test per function)
+    - 2 new signature tests (`cwbdiagnostics_has_two_parameters_in_official_order`,
+    `routersneighbors_takes_one_parameter`) added across 4 commits (one
+    per LSP layer, plus the parser commit); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client `lint`/`format.check`/
+    `test.run` gate pass (632 `crbasic-lsp` lib tests, up from 625)
+
+Not flagged as gaps (out of scope for this pass):
+
+- Rounds 36d through 36f (31 remaining candidates across 3 functional
+  categories) remain deferred per Round 36's split.
