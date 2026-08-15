@@ -8377,6 +8377,441 @@ impl SignatureProvider {
                 ],
             }),
 
+            "triggersequence" => Some(FunctionSignature {
+                name: "TriggerSequence".to_string(),
+                documentation: "Triggers execution of a SlowSequence at its WaitTriggerSequence point, after an optional delay.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "SequenceNum".to_string(),
+                        documentation: "The SlowSequence number to trigger.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Delay in 0.01-second units before triggering; 0 triggers immediately, negative cancels a pending trigger.".to_string(),
+                    },
+                ],
+            }),
+
+            "emailrecv" => Some(FunctionSignature {
+                name: "EMailRecv".to_string(),
+                documentation: "Polls a POP3 mail server for a message matching the given criteria and stores its body in a string variable.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ServerAddr".to_string(),
+                        documentation: "The POP3 mail server address.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ToAddr".to_string(),
+                        documentation: "The recipient address to match.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "FromAddr".to_string(),
+                        documentation: "The sender address to match.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Subject".to_string(),
+                        documentation: "The subject text to match.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Message".to_string(),
+                        documentation: "String variable that receives the retrieved message body.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Authen".to_string(),
+                        documentation: "The authentication method to use.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UserName".to_string(),
+                        documentation: "The mail account user name.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "PassWord".to_string(),
+                        documentation: "The mail account password.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Result".to_string(),
+                        documentation: "Variable that receives the result code of the operation.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RecvFrom".to_string(),
+                        documentation: "Optional string variable that receives the message's From address.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RecvSubj".to_string(),
+                        documentation: "Optional string variable that receives the message's Subject.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RecvDate".to_string(),
+                        documentation: "Optional string variable that receives the message's Date.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TimeOut".to_string(),
+                        documentation: "Optional timeout duration, in seconds.".to_string(),
+                    },
+                ],
+            }),
+
+            "modbusserver" => Some(FunctionSignature {
+                name: "ModbusServer".to_string(),
+                documentation: "Configures the datalogger as a Modbus server, exposing variables/coils to a Modbus client (formerly ModbusSlave).".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communications port to use.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BaudRate".to_string(),
+                        documentation: "The baud rate for serial communication.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ModbusAddr".to_string(),
+                        documentation: "The Modbus device address.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ModbusVariable".to_string(),
+                        documentation: "The variable(s) exposed as Modbus holding registers.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BooleanVariable".to_string(),
+                        documentation: "The variable(s) exposed as Modbus coils.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ModbusOption".to_string(),
+                        documentation: "Optional bit-field controlling protocol/framing behavior.".to_string(),
+                    },
+                ],
+            }),
+
+            "modemcallback" => Some(FunctionSignature {
+                name: "ModemCallBack".to_string(),
+                documentation: "Dials out via a phone modem so the datalogger initiates a callback connection to a computer.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Result".to_string(),
+                        documentation: "Variable that receives the result code of the operation.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "COMPort".to_string(),
+                        documentation: "The communications port connected to the modem.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "BaudRate".to_string(),
+                        documentation: "The baud rate for modem communication.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Security".to_string(),
+                        documentation: "The security code required by the receiving device.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DialString".to_string(),
+                        documentation: "The phone number or dial string to call.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ConnectString".to_string(),
+                        documentation: "The expected modem connect string.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Timeout".to_string(),
+                        documentation: "The connection timeout duration.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RetryInterval".to_string(),
+                        documentation: "The delay before retrying a failed connection.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "AbortExp".to_string(),
+                        documentation: "An expression that aborts the call attempt when true.".to_string(),
+                    },
+                ],
+            }),
+
+            "networktimeprotocol" => Some(FunctionSignature {
+                name: "NetworkTimeProtocol".to_string(),
+                documentation: "Synchronizes the datalogger clock with an NTP server, returning the pre-adjustment clock error in milliseconds.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "NTPServer".to_string(),
+                        documentation: "The NTP server's address.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NTPOffset".to_string(),
+                        documentation: "A time-zone offset to apply, in seconds.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NTPMaxMSec".to_string(),
+                        documentation: "The maximum allowed clock error, in milliseconds, before applying a correction.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Timeout".to_string(),
+                        documentation: "Optional timeout duration; negative values enable gradual clock-servo correction.".to_string(),
+                    },
+                ],
+            }),
+
+            "serialinblock" => Some(FunctionSignature {
+                name: "SerialInBlock".to_string(),
+                documentation: "Reads a block of raw serial bytes into Dest without waiting for a delimiter, returning the byte count received.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "ComPort".to_string(),
+                        documentation: "The communications port to read from.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Variable or array that receives the raw bytes read.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MaxNumberBytes".to_string(),
+                        documentation: "The maximum number of bytes to read.".to_string(),
+                    },
+                ],
+            }),
+
+            "getrecord" => Some(FunctionSignature {
+                name: "GetRecord".to_string(),
+                documentation: "Retrieves one complete record from a data table into an array.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "Array that receives the retrieved record's field values.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TableName".to_string(),
+                        documentation: "The data table to retrieve the record from.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "RecsBack".to_string(),
+                        documentation: "Number of records back from the most recent (negative selects by timestamp instead).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataFormat".to_string(),
+                        documentation: "Optional format for the retrieved data.".to_string(),
+                    },
+                ],
+            }),
+
+            "gzip" => Some(FunctionSignature {
+                name: "Gzip".to_string(),
+                documentation: "Compresses one or more files on datalogger storage into a .gz or .tar.gz archive.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Filename".to_string(),
+                        documentation: "The file (or comma-separated list) to compress.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "ZippedFilename".to_string(),
+                        documentation: "The name of the resulting compressed archive.".to_string(),
+                    },
+                ],
+            }),
+
+            "newfieldnames" => Some(FunctionSignature {
+                name: "NewFieldNames".to_string(),
+                documentation: "Renames the auto-generated field name(s) of a variable or array for table output.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "GenericName".to_string(),
+                        documentation: "The variable or array whose field name(s) to rename.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "NewNames".to_string(),
+                        documentation: "The replacement field name(s).".to_string(),
+                    },
+                ],
+            }),
+
+            "rainflow" => Some(FunctionSignature {
+                name: "RainFlow".to_string(),
+                documentation: "Performs rainflow cycle-counting on a signal, building an amplitude/mean histogram for fatigue analysis.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The signal to analyze.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DataType".to_string(),
+                        documentation: "The output data type for the histogram.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DisableVar".to_string(),
+                        documentation: "A variable that disables processing when true.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MeanBins".to_string(),
+                        documentation: "The number of mean-value histogram bins.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "AmpBins".to_string(),
+                        documentation: "The number of amplitude histogram bins.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LoLim".to_string(),
+                        documentation: "The lower limit of the histogram range.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "UpLim".to_string(),
+                        documentation: "The upper limit of the histogram range.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "MinAmp".to_string(),
+                        documentation: "The minimum amplitude to count as a cycle.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Form".to_string(),
+                        documentation: "The output histogram's array form.".to_string(),
+                    },
+                ],
+            }),
+
+            "restore" => Some(FunctionSignature {
+                name: "Restore".to_string(),
+                documentation: "Resets the read pointer to the start of a Data/DataLong constant list, so a following Read restarts from the beginning.".to_string(),
+                parameters: vec![],
+            }),
+
+            "runprogram" => Some(FunctionSignature {
+                name: "RunProgram".to_string(),
+                documentation: "Runs a specified datalogger program file, replacing the currently active program.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "DeviceFileName".to_string(),
+                        documentation: "The \"Device:FileName\" of the program file to run.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Attrib".to_string(),
+                        documentation: "A bit-field controlling run behavior (e.g. run-on-power-up, run-now).".to_string(),
+                    },
+                ],
+            }),
+
+            "stationname" => Some(FunctionSignature {
+                name: "StationName".to_string(),
+                documentation: "Assigns a name to the station, stored in the Status table; declared once near the top of the program.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "StaName".to_string(),
+                    documentation: "The station name, max 64 characters.".to_string(),
+                }],
+            }),
+
+            "matrix" => Some(FunctionSignature {
+                name: "Matrix".to_string(),
+                documentation: "Performs matrix math (add, subtract, multiply, transpose, invert) on 2-D arrays.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Option".to_string(),
+                        documentation: "The matrix operation to perform (add, subtract, multiply, transpose, invert).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "A".to_string(),
+                        documentation: "The first input matrix.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "B".to_string(),
+                        documentation: "The second input matrix (unused for transpose/invert, but still positionally required).".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Result".to_string(),
+                        documentation: "The array that receives the resulting matrix.".to_string(),
+                    },
+                ],
+            }),
+
+            "minspa" => Some(FunctionSignature {
+                name: "MinSpa".to_string(),
+                documentation: "Finds the minimum value across a spatial array and its index, writing both into a 2-element Dest array.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "2-element array that receives the minimum value and its index.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Swath".to_string(),
+                        documentation: "The number of elements in Source to examine.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The array to search for the minimum value.".to_string(),
+                    },
+                ],
+            }),
+
+            "arrayindex" => Some(FunctionSignature {
+                name: "ArrayIndex".to_string(),
+                documentation: "Returns the numeric index of a named array element whose position isn't known in advance.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "Name".to_string(),
+                    documentation: "The array element's name.".to_string(),
+                }],
+            }),
+
+            "debug" => Some(FunctionSignature {
+                name: "Debug".to_string(),
+                documentation: "Configures breakpoint and trace-history behavior for the CRBasic debugger; used together with DebugBreak.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "DebugSequence".to_string(),
+                        documentation: "The sequence in which breakpoints are hit.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "HistorySize".to_string(),
+                        documentation: "The number of trace-history entries to retain.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Control".to_string(),
+                        documentation: "A variable controlling debugger behavior.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "LineBreak".to_string(),
+                        documentation: "The line number at which to break.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "TraceHistory".to_string(),
+                        documentation: "A variable that receives trace-history data.".to_string(),
+                    },
+                ],
+            }),
+
+            "move" => Some(FunctionSignature {
+                name: "Move".to_string(),
+                documentation: "Copies a run of values from a source array/variable into a destination range.".to_string(),
+                parameters: vec![
+                    ParameterInfo {
+                        name: "Dest".to_string(),
+                        documentation: "The destination variable or array element to begin writing at.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "DestReps".to_string(),
+                        documentation: "The number of destination elements to fill.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "Source".to_string(),
+                        documentation: "The source variable, array element, or constant to copy from.".to_string(),
+                    },
+                    ParameterInfo {
+                        name: "SourceReps".to_string(),
+                        documentation: "The number of source elements to copy.".to_string(),
+                    },
+                ],
+            }),
+
+            "semaphoreget" => Some(FunctionSignature {
+                name: "SemaphoreGet".to_string(),
+                documentation: "Waits for and claims a semaphore, blocking until it is free.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "SemNumber".to_string(),
+                    documentation: "The semaphore number to claim.".to_string(),
+                }],
+            }),
+
+            "semaphorerelease" => Some(FunctionSignature {
+                name: "SemaphoreRelease".to_string(),
+                documentation: "Releases a semaphore previously claimed with SemaphoreGet.".to_string(),
+                parameters: vec![ParameterInfo {
+                    name: "SemNumber".to_string(),
+                    documentation: "The semaphore number to release.".to_string(),
+                }],
+            }),
+
             _ => None,
         }
     }
@@ -9239,6 +9674,40 @@ mod tests {
                     "ElemNameSpace",
                     "MaxDepth",
                     "MaxNameSpaces",
+                ]
+            );
+        }
+
+        #[test]
+        fn restore_takes_no_parameters() {
+            let sig = SignatureProvider::get_function_signature("Restore")
+                .expect("Restore should have a signature");
+
+            assert!(sig.parameters.is_empty());
+        }
+
+        #[test]
+        fn emailrecv_has_thirteen_parameters_in_official_order() {
+            let sig = SignatureProvider::get_function_signature("EMailRecv")
+                .expect("EMailRecv should have a signature");
+
+            let names: Vec<&str> = sig.parameters.iter().map(|p| p.name.as_str()).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "ServerAddr",
+                    "ToAddr",
+                    "FromAddr",
+                    "Subject",
+                    "Message",
+                    "Authen",
+                    "UserName",
+                    "PassWord",
+                    "Result",
+                    "RecvFrom",
+                    "RecvSubj",
+                    "RecvDate",
+                    "TimeOut",
                 ]
             );
         }
