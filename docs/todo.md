@@ -5551,3 +5551,59 @@ Not flagged as gaps (out of scope for this pass):
 
 - Rounds 36d through 36f (31 remaining candidates across 3 functional
   categories) remain deferred per Round 36's split.
+
+### Reference Implementation & Official Docs Comparison, Round 36d (2026-08-15)
+
+Picked up the sensor measurement family (11 candidates) from Round 36's
+split. 8 of the 11 were directly re-fetched from help.campbellsci.com and
+confirmed against their own syntax lines; the remaining 3 do not clear
+this project's primary-source bar and are deferred.
+
+- [x] `ExciteI`, `Resistance3W`, `TCPsyc`, `Thermistor`, `VibratingWire`,
+  `SWVX`, `TimerInput`, `WaitDigTrig` missing from `BUILTIN_FUNCTIONS`
+  ✅ Resolved
+  - All 8 are real, documented CRBasic instructions confirmed by direct
+    fetch of their own help.campbellsci.com syntax lines
+  - `SWVX`'s live syntax box shows 4 parameters (`ExChan`, `State`,
+    `Voltage`, `SWOption`); a search-engine summary consulted during
+    Round 36's aggregation had reported only 3, omitting `SWOption` --
+    corrected here via direct fetch rather than trusting the summary
+  - `WaitDigTrig` is a callable instruction with parameters, not a bare
+    control-flow keyword -- added to `builtinFunctions` (category
+    `scan`, alongside `Scan`/`SubScan`/`TriggerSequence`), not
+    `languageKeywords`; caught by the `every_language_keyword_has_a_completion_item`
+    test firing on a first, mis-placed attempt
+  - None of the 8 is a block construct, so this needed no parser/AST
+    changes -- purely `keywords.json`/completion/hover/signature-help
+    work
+  - Added all 8 to `keywords.json` under the `measurement` category
+    (`WaitDigTrig` under `scan`), regenerating the lexer keyword table
+    and `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 8, keeping the existing parity enforced by
+    all three completeness tests
+  - 8 new completion tests (one exact-`insert_text` test per function)
+    - 2 new signature tests
+    (`thermistor_has_eleven_parameters_in_official_order`,
+    `vibratingwire_has_twelve_parameters_in_official_order`) added
+    across 3 commits (one per LSP layer); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client `lint`/`format.check`/
+    `test.run` gate pass (642 `crbasic-lsp` lib tests, up from 632)
+
+Not flagged as gaps (out of scope for this pass):
+
+- `ExciteCAO`, `BeginBurstTrigger`, `EndBurstTrigger` -- **deferred**:
+  no primary source found for any of the 3 despite direct fetch
+  attempts and targeted searches. One search hit for `BeginBurstTrigger`
+  (a CR9032-vs-CR9031 comparison app note PDF) looked promising in its
+  AI-generated summary, but a direct fetch of the actual PDF contains no
+  mention of the term at all -- a second confirmed instance this round
+  series of search-summarization inventing a citation that doesn't hold
+  up against the source document itself (the first being Round 36b's
+  INSAT/OmniSat family). `ExciteCAO` likely relates to Continuous Analog
+  Output (CAO) peripheral modules, a real hardware concept, but no
+  instruction syntax for it could be located anywhere. Revisit if a
+  primary source surfaces.
+- Rounds 36e through 36f (20 remaining candidates across 2 functional
+  categories) remain deferred per Round 36's split.
