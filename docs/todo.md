@@ -5897,3 +5897,41 @@ of that tag. Every doc fix above was committed separately by concern
 (READMEs together, ARCHITECTURE.md, CHANGELOG.md, the two ADR files
 together, CONTRIBUTING.md), keeping this progress-tracker update as its own
 final commit per this project's workflow convention.
+
+### ARCHITECTURE.md Restructure Around the architecture.md Template (2026-08-16)
+
+Follow-up to the audit above: the user pointed out that ARCHITECTURE.md's
+Testing Strategy (test-count breakdown) and Implementation Status /
+Parser Capabilities checklists clearly don't belong in a file meant to
+match [architecture.md](https://architecture.md/)'s template -- both
+duplicated this file's own Phase 1-8 tracking, and that duplication is
+exactly the mechanism that let the 146-tests figure go stale in the first
+place.
+
+- [x] Re-map ARCHITECTURE.md onto architecture.md's 11-section shape
+  ✅ Resolved
+  - Sections now run: Project Structure, High-Level System Diagram, Core
+    Components, Data Stores, External Integrations/APIs, Deployment &
+    Infrastructure, Security Considerations, Development & Testing
+    Environment, Future Considerations/Roadmap, Project Identification,
+    Glossary/Acronyms
+  - Dropped entirely: the Testing Strategy test-count/coverage-table
+    breakdown and the Implementation Status / Parser Capabilities
+    checklists (both status data that belongs only in this file, not
+    duplicated into ARCHITECTURE.md)
+  - Development & Testing Environment now points to `CONTRIBUTING.md` as
+    the single source for setup/commands/testing policy instead of
+    re-stating a second command list
+  - Former "Key Technical Constraints" section folded into Core
+    Components → Parser Layer as "Domain Constraints", since it's
+    parser-domain knowledge, not a standalone template section
+  - Added sections the prior structure had no room for: Data Stores (none
+    -- no persistent storage), External Integrations/APIs (deliberately
+    none -- no Campbell Scientific toolchain integration), Deployment &
+    Infrastructure (CI/release/packaging/publishing, pulling together
+    facts previously scattered across ADR-003/ADR-004), Security
+    Considerations (summarized from `SECURITY.md`'s scope), Project
+    Identification, and a Glossary of CRBasic/LSP-specific terms
+  - Verified no other doc links to now-removed section anchors before
+    the rewrite (`README.md`, `CONTRIBUTING.md`, and this file all only
+    link to `docs/ARCHITECTURE.md` itself, no fragment anchors)
