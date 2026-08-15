@@ -5652,3 +5652,88 @@ Not flagged as gaps (out of scope for this pass):
 
 - Round 36f (13 remaining candidates) remains deferred per Round 36's
   split -- the last sub-round.
+
+### Reference Implementation & Official Docs Comparison, Round 36f (2026-08-15)
+
+Picked up the data/file/clock/system family (13 candidates) from
+Round 36's split -- the final sub-round. 12 of the 13 were directly
+re-fetched from help.campbellsci.com and confirmed against their own
+syntax lines; the 13th turned out to already be implemented.
+
+- [x] `CalFile`, `ClockChange`, `ClockSet`, `FileEncrypt`, `Histogram4D`,
+  `NewFieldCal`, `Read`, `ReadIO`, `WriteIO`, `TypeOf`, `FormatLongLong`,
+  `TimedControl` missing from `BUILTIN_FUNCTIONS` ✅ Resolved
+  - All 12 are real, documented CRBasic instructions confirmed by
+    direct fetch of their own help.campbellsci.com syntax lines
+  - `ReadIO`/`WriteIO`'s real parameter shape (`Dest`/`Mask`/
+    `ChannelType` and `Mask`/`Source`/`ChannelType` respectively) differs
+    from Round 36's own aggregation, which had assumed a plain
+    two-parameter `Dest`/`Mask` pair for both -- corrected via direct
+    fetch before implementing, following this round's practice of
+    re-verifying every signature at implementation time rather than
+    trusting the earlier research-pass summaries at face value
+  - `CalFile`/`NewFieldCal` are categorized under `measurement`
+    (alongside `FieldCal`/`LoadFieldCal`/`SampleFieldCal`, their sibling
+    family), not `data` as originally sketched in Round 36's split
+  - `TimedControl` is categorized under `communication` (it drives an
+    SDMCD16 peripheral, the same family as `SDMCD16AC`/`SDMCD16Mask`),
+    not `data`/`time` as originally guessed
+  - `TypeOf` is categorized under `string`, per its own page's TocPath
+  - `NewFieldCal` is a bare Boolean `DataTable` trigger value (same
+    treatment as `SampleFieldCal`, Round 34a precedent), not a
+    parenthesized callable
+  - `Read`'s official syntax is `Read [VarExpr]` with no parentheses --
+    kept literal (`Read ${1:VarExpr}`) rather than normalizing to this
+    project's usual `Name(...)` snippet shape, since official docs
+    consistently omit parentheses for this one instruction
+  - None of the 12 is a block construct, so this needed no parser/AST
+    changes -- purely `keywords.json`/completion/hover/signature-help
+    work
+  - Added all 12 to `keywords.json` under their respective categories
+    (`measurement`, `time`, `data`, `string`, `communication`),
+    regenerating the lexer keyword table and
+    `client/syntaxes/crbasic.tmLanguage.json` via
+    `scripts/generate-grammar.js`
+  - Added matching completion snippets, hover text, and per-parameter
+    signature help for all 12, keeping the existing parity enforced by
+    all three completeness tests
+  - 12 new completion tests (one exact-`insert_text` test per function)
+    - 2 new signature tests (`clockchange_takes_no_parameters`,
+    `histogram4d_has_seventeen_parameters_in_official_order`) added
+    across 3 commits (one per LSP layer); full workspace
+    `build`/`test`/`clippy`/`fmt` gate and client `lint`/`format.check`/
+    `test.run` gate pass (665 `crbasic-lsp` lib tests, up from 651)
+- [x] `SetSecurity` missing from `BUILTIN_FUNCTIONS` ✅ Not a gap --
+  already implemented
+  - Round 36's own aggregation re-flagged `SetSecurity` as a new
+    candidate, but it was already added in an earlier round (Round 34f,
+    commit `e37ac2f`) under the `time` category, alongside
+    `SetStatus`/`SetSetting`
+  - Confirmed the existing entry's hover text and signature already
+    match a fresh direct fetch of the official syntax
+    (`SetSecurity(Security1, Security2, Security3)`) -- no update
+    needed, just a sanity check that caught the aggregation error before
+    it produced a duplicate `keywords.json` entry
+
+This closes out Round 36's entire 60-name backlog (Rounds 36a through
+36f) -- the two lower-confidence grammar-diff tiers left unexamined
+since Round 34. Of the 60, 39 were added across this round series
+(7 + 5 + 8 + 7 + 12, across Rounds 36a/36c/36d/36e/36f respectively;
+`SetSecurity` was recognized as already present rather than counted as
+new); 10 remain deferred pending a primary source
+(`INSATData`/`INSATSetup`/`INSATStatus`/`OmniSatData`/
+`OmniSatRandomSetup`/`OmniSatSTSetup`/`OmniSatStatus` from Round 36b,
+`ExciteCAO`/`BeginBurstTrigger`/`EndBurstTrigger` from Round 36d); 7
+were discarded as not real or as extraction artifacts (`Csgn`, `End`,
+`GOESCommand`, `Network`, `NetworkPakBusClock`, `RoundSetVP`,
+`SetSettings`); `CWB100RSSI`/`CWB100Routes` remain grouped with the
+already-deferred `CWB100` pending a clean primary source; `MemoryTest`
+was deliberately excluded as an internal-only instruction per user
+scope decision; and `SortSpaIndexed` surfaced as a genuine but
+unverified future-round candidate.
+
+Not flagged as gaps (out of scope for this pass): with both of Round
+34's lower-confidence tiers now fully examined, no further rounds are
+queued from this audit series. A future round would need a fresh
+grammar-diff pass against updated reference extensions, or pursuit of
+the 10 deferred candidates above if a primary source surfaces.
