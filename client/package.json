@@ -1,6 +1,6 @@
 {
   "name": "crbasic-lsp-rs-vsce",
-  "displayName": "CRBasic Language Support",
+  "displayName": "CRBasic LSP",
   "description": "Language support for CRBasic as a Visual Studio Code extension.",
   "version": "0.1.0",
   "publisher": "connect0459",
