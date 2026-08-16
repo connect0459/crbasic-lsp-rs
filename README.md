@@ -42,6 +42,10 @@ Install from the VSCode Marketplace:
 - [Architecture](./docs/ARCHITECTURE.md): System architecture and design
 - [ADRs](./docs/adrs/): Architecture decision records
 
+## Disclaimer
+
+This is an independent, unofficial extension and is not affiliated with or endorsed by Campbell Scientific.
+
 ## Contributing
 
 See [CONTRIBUTING.md](https://github.com/connect0459/crbasic-lsp-rs/blob/main/CONTRIBUTING.md).
