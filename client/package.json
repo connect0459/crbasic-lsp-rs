@@ -1,7 +1,7 @@
 {
   "name": "crbasic-lsp",
   "displayName": "CRBasic Language Support",
-  "description": "Language support for CRBasic (Campbell Scientific data logger programming language)",
+  "description": "Language support for CRBasic as a Visual Studio Code extension.",
   "version": "0.1.0",
   "publisher": "connect0459",
   "icon": "images/icon.png",
