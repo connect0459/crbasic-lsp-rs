@@ -177,27 +177,13 @@ We will validate this decision by:
 
 ### Keyword/instruction list unification (2026-08-09)
 
-Implemented the "Avoiding Duplication" section above, closing the gap this ADR originally left
-as future work. The single source of truth ended up as a plain JSON file next to the lexer
-(rather than the originally-sketched `crbasic-lsp/src/keywords.rs`), since both the Rust lexer
-and the Node-based grammar generator need to read it without either language depending on the
-other:
+Implemented the "Avoiding Duplication" section above, closing the gap this ADR originally left as future work. The single source of truth ended up as a plain JSON file next to the lexer (rather than the originally-sketched `crbasic-lsp/src/keywords.rs`), since both the Rust lexer and the Node-based grammar generator need to read it without either language depending on the other:
 
-- `crates/crbasic-parser/keywords.json`: single source of truth for every CRBasic language
-  keyword and built-in function name + category.
-- `scripts/generate-grammar.js`: reads `keywords.json`, generates
-  `crates/crbasic-parser/src/keywords_generated.rs` and the full
-  `client/syntaxes/crbasic.tmLanguage.json`; supports `--check` for CI.
-- `crates/crbasic-parser/src/keywords.rs`: `include!`s the generated Rust file and re-exports
-  `LANGUAGE_KEYWORDS`/`BUILTIN_FUNCTIONS` from the crate root.
-- `crates/crbasic-parser/src/lexer/scanner.rs`: the lexer's keyword table is now sourced from
-  `LANGUAGE_KEYWORDS` instead of a separately hand-maintained array.
-- Fixed real drift discovered while unifying: `client/syntaxes/crbasic.tmLanguage.json` had
-  phantom `Exit`/`Until` entries that don't exist in the parser, was missing
-  `Continue`/`Break`/`Is`/`GoTo`/`EndSelect`/`NextScan`, and listed `AND|OR|NOT|XOR|TRUE|FALSE`
-  in two different repository groups; `crates/crbasic-lsp/src/completion.rs` and
-  `crates/crbasic-lsp/src/hover.rs` had the same keyword gaps. See
-  `docs/todo.md` for the full list.
+- `crates/crbasic-parser/keywords.json`: single source of truth for every CRBasic language keyword and built-in function name + category.
+- `scripts/generate-grammar.js`: reads `keywords.json`, generates `crates/crbasic-parser/src/keywords_generated.rs` and the full `client/syntaxes/crbasic.tmLanguage.json`; supports `--check` for CI.
+- `crates/crbasic-parser/src/keywords.rs`: `include!`s the generated Rust file and re-exports `LANGUAGE_KEYWORDS`/`BUILTIN_FUNCTIONS` from the crate root.
+- `crates/crbasic-parser/src/lexer/scanner.rs`: the lexer's keyword table is now sourced from `LANGUAGE_KEYWORDS` instead of a separately hand-maintained array.
+- Fixed real drift discovered while unifying: `client/syntaxes/crbasic.tmLanguage.json` had phantom `Exit`/`Until` entries that don't exist in the parser, was missing `Continue`/`Break`/`Is`/`GoTo`/`EndSelect`/`NextScan`, and listed `AND|OR|NOT|XOR|TRUE|FALSE` in two different repository groups; `crates/crbasic-lsp/src/completion.rs` and `crates/crbasic-lsp/src/hover.rs` had the same keyword gaps. See `docs/todo.md` for the full list.
 
 ## Related Decisions
 

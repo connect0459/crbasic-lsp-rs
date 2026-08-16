@@ -1,29 +1,19 @@
 # crbasic-lsp-rs/client
 
-Language support for CRBasic, the programming language used in Campbell
-Scientific data loggers.
+Language support for CRBasic, the programming language used in Campbell Scientific data loggers.
 
 ## Features
 
-- **Syntax Highlighting**: TextMate grammar-based highlighting for CRBasic
-  keywords, built-in instructions, operators, and literals.
-- **IntelliSense**: Context-aware code completion for CRBasic instructions
-  and keywords, with parameter signature help.
-- **Diagnostics**: Real-time validation with datalogger-model-specific
-  rules.
+- **Syntax Highlighting**: TextMate grammar-based highlighting for CRBasic keywords, built-in instructions, operators, and literals.
+- **IntelliSense**: Context-aware code completion for CRBasic instructions and keywords, with parameter signature help.
+- **Diagnostics**: Real-time validation with datalogger-model-specific rules.
   - Variable name length validation (model-dependent).
-  - Duplicate field name detection (CR200X 12-character truncation
-    collisions).
-  - Structure validation (`BeginProg`/`EndProg`, `Function`/`EndFunction`,
-    and other block constructs).
-- **Navigation**: Go to definition, find all references, document symbols,
-  workspace symbols, call hierarchy, rename, and linked editing ranges.
-- **Hover Information**: Documentation for built-in instructions, including
-  parameter descriptions.
-- **Editing Aids**: Signature help, code actions (quick fixes), code lens,
-  folding ranges, selection ranges, and inlay hints.
-- **Semantic Highlighting**: Semantic tokens layered on top of the TextMate
-  grammar.
+  - Duplicate field name detection (CR200X 12-character truncation collisions).
+  - Structure validation (`BeginProg`/`EndProg`, `Function`/`EndFunction`, and other block constructs).
+- **Navigation**: Go to definition, find all references, document symbols, workspace symbols, call hierarchy, rename, and linked editing ranges.
+- **Hover Information**: Documentation for built-in instructions, including parameter descriptions.
+- **Editing Aids**: Signature help, code actions (quick fixes), code lens, folding ranges, selection ranges, and inlay hints.
+- **Semantic Highlighting**: Semantic tokens layered on top of the TextMate grammar.
 
 ## Supported File Extensions
 
@@ -40,15 +30,11 @@ Scientific data loggers.
 
 ## Requirements
 
-No external dependencies. The language server is bundled with the
-extension.
+No external dependencies. The language server is bundled with the extension.
 
 ## Feedback and Contributions
 
-This is an independent, unofficial extension and is not affiliated with or
-endorsed by Campbell Scientific. Source code, issue tracker, and
-contribution guidelines are on
-[GitHub](https://github.com/connect0459/crbasic-lsp-rs).
+This is an independent, unofficial extension and is not affiliated with or endorsed by Campbell Scientific. Source code, issue tracker, and contribution guidelines are on [GitHub](https://github.com/connect0459/crbasic-lsp-rs).
 
 ## License
 

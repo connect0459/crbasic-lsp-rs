@@ -1,13 +1,10 @@
 # Project Agents.md Guide
 
-This is a Rust + TypeScript project: a Language Server Protocol implementation
-for CRBasic (the programming language used in Campbell Scientific data
-loggers), shipped as a VSCode extension via WebAssembly.
+This is a Rust + TypeScript project: a Language Server Protocol implementation for CRBasic (the programming language used in Campbell Scientific data loggers), shipped as a VSCode extension via WebAssembly.
 
 ## Language Convention
 
-This project is intended for open-source distribution. All of the following
-must be written in **English**:
+This project is intended for open-source distribution. All of the following must be written in **English**:
 
 - Commit messages
 - Code comments
@@ -37,9 +34,7 @@ Client Layer (TypeScript, client/)
 - `docs/adrs/` — Architecture Decision Records for significant design choices.
 - `docs/researches/` — CRBasic language specification research.
 
-Respect these layer boundaries: never introduce a direct dependency that skips
-a layer (e.g., the client calling into `crbasic-parser` directly, or the
-parser depending on `tower-lsp`).
+Respect these layer boundaries: never introduce a direct dependency that skips a layer (e.g., the client calling into `crbasic-parser` directly, or the parser depending on `tower-lsp`).
 
 ## Coding convention
 
@@ -58,28 +53,19 @@ parser depending on `tower-lsp`).
 
 **CRBasic language handling** (domain-specific rules the parser must enforce):
 
-- Keywords are case-insensitive (`BeginProg` = `BEGINPROG` = `beginprog`);
-  normalize to canonical form (e.g., `BeginProg`) and match case-insensitively
-  in the lexer.
-- Detect the datalogger model from the file extension (e.g., `.cr2` → CR200X)
-  and apply model-specific variable name length validation:
-  - CR200X: error if >16 chars, warn if >12 chars; also detect 12-char
-    truncation collisions between field names.
-  - CR6 (also covers CR1000/CR1000X/CR300-series/GRANITE-series): error if
-    >39 chars, warn if >35 chars.
-- Treat `Public` variables as global regardless of declaration location;
-  distinguish `Public` (monitored) from `Dim` (scratch) variables.
+- Keywords are case-insensitive (`BeginProg` = `BEGINPROG` = `beginprog`); normalize to canonical form (e.g., `BeginProg`) and match case-insensitively in the lexer.
+- Detect the datalogger model from the file extension (e.g., `.cr2` → CR200X) and apply model-specific variable name length validation:
+  - CR200X: error if >16 chars, warn if >12 chars; also detect 12-char truncation collisions between field names.
+  - CR6 (also covers CR1000/CR1000X/CR300-series/GRANITE-series): error if >39 chars, warn if >35 chars.
+- Treat `Public` variables as global regardless of declaration location; distinguish `Public` (monitored) from `Dim` (scratch) variables.
 
 ## Tooling
 
 - `cargo build` / `cargo test --workspace` — build and test the Rust workspace.
-- `wasm-pack build --target web` (run from `crates/crbasic-wasm/`) — build the
-  WASM package consumed by the client.
+- `wasm-pack build --target web` (run from `crates/crbasic-wasm/`) — build the WASM package consumed by the client.
 - `cd client && npm run test.run` — run TypeScript tests (Vitest).
-- `just verify` — run the full CI-equivalent check (Rust fmt/clippy/test,
-  TypeScript lint/format/test) before opening a PR.
-- **pre-commit hooks** — catch formatting and lint issues on every commit
-  (`pre-commit run --all-files` to run manually).
+- `just verify` — run the full CI-equivalent check (Rust fmt/clippy/test, TypeScript lint/format/test) before opening a PR.
+- **pre-commit hooks** — catch formatting and lint issues on every commit (`pre-commit run --all-files` to run manually).
 
 Performance targets to keep in mind when touching the parser or LSP server:
 
@@ -93,8 +79,7 @@ Performance targets to keep in mind when touching the parser or LSP server:
 ### Red/Green TDD (Detroit school)
 
 - Red → Green → Refactor cycle strictly followed.
-- Use real objects; mocks are only permitted at external boundaries (file
-  system, WASM host bindings, network).
+- Use real objects; mocks are only permitted at external boundaries (file system, WASM host bindings, network).
 - Write tests BEFORE implementation; run tests AFTER implementation.
 - Coverage targets: 80% line, 75% branch, 90% function.
 
@@ -103,8 +88,7 @@ Performance targets to keep in mind when touching the parser or LSP server:
 - Rich domain objects: pair data and logic in the same type.
 - Prefer immutability; avoid mutable state unless necessary.
 - Distinguish entities (identity-based) from value objects (value-based).
-- Enforce layer boundaries through abstract types; no direct dependency on
-  concrete implementations across layers.
+- Enforce layer boundaries through abstract types; no direct dependency on concrete implementations across layers.
 
 ### Evergreen Tests
 
@@ -147,20 +131,11 @@ Performance targets to keep in mind when touching the parser or LSP server:
 
 ### Scopes
 
-Scope is optional; use the crate or area name when the change targets a
-specific part of the codebase (e.g., `parser`, `lexer`, `lsp`, `wasm`,
-`client`). Omit for project-wide changes.
+Scope is optional; use the crate or area name when the change targets a specific part of the codebase (e.g., `parser`, `lexer`, `lsp`, `wasm`, `client`). Omit for project-wide changes.
 
 ### Type vs. Scope Precedence
 
-The type vocabulary above mixes two axes: an **impact axis** (`feat`, `fix`,
-`perf`, `refactor` — the SemVer-relevant effect of a change) and a **domain
-axis** (`docs`, `style`, `test`, `chore`, `ci`, `tidy` — a layer with no
-runtime/SemVer effect). When a change is fully contained within a domain, use
-that domain as `type` (e.g. `docs: fix typo`); do not use it as `scope` on an
-impact-axis type (avoid `fix(docs): ...`). `scope` sub-divides whatever `type`
-already established (e.g. `feat(parser)`); it is not a substitute
-classification axis.
+The type vocabulary above mixes two axes: an **impact axis** (`feat`, `fix`, `perf`, `refactor` — the SemVer-relevant effect of a change) and a **domain axis** (`docs`, `style`, `test`, `chore`, `ci`, `tidy` — a layer with no runtime/SemVer effect). When a change is fully contained within a domain, use that domain as `type` (e.g. `docs: fix typo`); do not use it as `scope` on an impact-axis type (avoid `fix(docs): ...`). `scope` sub-divides whatever `type` already established (e.g. `feat(parser)`); it is not a substitute classification axis.
 
 ### Subject Line
 

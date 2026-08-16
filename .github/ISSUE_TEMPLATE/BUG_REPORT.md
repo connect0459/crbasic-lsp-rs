@@ -21,8 +21,7 @@ about: Report a bug
 
 ## [Required] Expected Behavior
 
-<!-- What should happen? Link to docs/researches/ if the expected behavior
-     comes from the CRBasic language spec. -->
+<!-- What should happen? Link to docs/researches/ if the expected behavior comes from the CRBasic language spec. -->
 
 ## [Required] Actual Behavior
 
@@ -35,8 +34,7 @@ about: Report a bug
 
 ## Relevant specs or references
 
-<!-- Link to the relevant section of docs/researches/ or an official
-     Campbell Scientific doc, if applicable -->
+<!-- Link to the relevant section of docs/researches/ or an official Campbell Scientific doc, if applicable -->
 
 ## Impact
 

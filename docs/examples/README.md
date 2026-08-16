@@ -1,14 +1,8 @@
 # Example Programs
 
-Curated CRBasic programs showcasing specific extension features. Open any
-file in VSCode with the extension installed and try the suggested actions.
+Curated CRBasic programs showcasing specific extension features. Open any file in VSCode with the extension installed and try the suggested actions.
 
-Unlike the fixtures in [`docs/sample-codes/`](../sample-codes/) (real-world
-programs used as parser regression tests, one per datalogger model), these
-files are small and heavily commented, each focused on one or two features.
-Their expected diagnostics are checked by
-[`crates/crbasic-parser/tests/example_programs.rs`](../../crates/crbasic-parser/tests/example_programs.rs),
-so they stay in sync with the analyzer.
+Unlike the fixtures in [`docs/sample-codes/`](../sample-codes/) (real-world programs used as parser regression tests, one per datalogger model), these files are small and heavily commented, each focused on one or two features. Their expected diagnostics are checked by [`crates/crbasic-parser/tests/example_programs.rs`](../../crates/crbasic-parser/tests/example_programs.rs), so they stay in sync with the analyzer.
 
 ## Files
 
@@ -20,7 +14,4 @@ so they stay in sync with the analyzer.
 
 ## Why `.CR2`/`.CR6`?
 
-The extension detects the datalogger model from the file extension and
-applies model-specific variable name length rules (see the main
-[README](../../README.md#supported-file-extensions)). Example 3 uses `.CR2`
-specifically to trigger the stricter CR200X rules.
+The extension detects the datalogger model from the file extension and applies model-specific variable name length rules (see the main [README](../../README.md#supported-file-extensions)). Example 3 uses `.CR2` specifically to trigger the stricter CR200X rules.
