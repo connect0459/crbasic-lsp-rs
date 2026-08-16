@@ -32,11 +32,7 @@ It is difficult to review without knowing the specifications and background.
 - [ ] No breaking changes
 - [ ] Breaking changes (describe below)
 
-<!--
-If this changes a public API (parser AST, LSP capabilities, WASM bindings),
-describe what breaks and why the breakage is justified, and update
-docs/ARCHITECTURE.md to match.
--->
+<!-- If this changes a public API (parser AST, LSP capabilities, WASM bindings), describe what breaks and why the breakage is justified, and update docs/ARCHITECTURE.md to match. -->
 
 ## Deferred Items and TODOs
 

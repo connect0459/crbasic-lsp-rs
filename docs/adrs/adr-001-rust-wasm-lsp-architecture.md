@@ -172,26 +172,15 @@ If WASM performance becomes a bottleneck (>100ms parsing time), we will re-evalu
 
 ### ADR Numbering Fix (2026-08-06)
 
-- `docs/adrs/adr-001-rust-wasm-lsp-architecture.md`: removed the stale
-  "ADR-003: Datalogger model detection strategy (future)" placeholder link
-  once ADR-003 was claimed by a different, unrelated decision (see
-  [ADR-003](./adr-003-release-process.md))
+- `docs/adrs/adr-001-rust-wasm-lsp-architecture.md`: removed the stale "ADR-003: Datalogger model detection strategy (future)" placeholder link once ADR-003 was claimed by a different, unrelated decision (see [ADR-003](./adr-003-release-process.md))
 
 ## Related Decisions
 
 - [ADR-002](./adr-002-textmate-grammar-first.md): TextMate Grammar for initial syntax highlighting
-- [ADR-004](./adr-004-multi-platform-packaging.md): resolves the
-  multi-platform packaging gap that follows from this ADR's choice to
-  bundle a native `crbasic-lsp` binary rather than loading `crbasic-wasm`
-  directly in the extension host
-- [ADR-005](./adr-005-tower-lsp-server-migration.md): migrates the LSP
-  framework crate from `tower-lsp` to `tower-lsp-server`, keeping this
-  ADR's Rust + `tower`-based LSP server choice intact
+- [ADR-004](./adr-004-multi-platform-packaging.md): resolves the multi-platform packaging gap that follows from this ADR's choice to bundle a native `crbasic-lsp` binary rather than loading `crbasic-wasm` directly in the extension host
+- [ADR-005](./adr-005-tower-lsp-server-migration.md): migrates the LSP framework crate from `tower-lsp` to `tower-lsp-server`, keeping this ADR's Rust + `tower`-based LSP server choice intact
 
-Datalogger model detection strategy was implemented directly as
-`ValidationProfile` (`crates/crbasic-parser/src/semantic.rs`) without a
-dedicated ADR; see `docs/todo.md`'s "Datalogger-specific validation
-profiles" entry for the rationale.
+Datalogger model detection strategy was implemented directly as `ValidationProfile` (`crates/crbasic-parser/src/semantic.rs`) without a dedicated ADR; see `docs/todo.md`'s "Datalogger-specific validation profiles" entry for the rationale.
 
 ## References
 
