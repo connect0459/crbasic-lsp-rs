@@ -22,9 +22,6 @@
     "datalogger",
     "lsp"
   ],
-  "activationEvents": [
-    "onLanguage:crbasic"
-  ],
   "main": "./dist/extension.js",
   "contributes": {
     "languages": [
