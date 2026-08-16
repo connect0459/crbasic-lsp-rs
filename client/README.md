@@ -1,6 +1,6 @@
-# crbasic-lsp-rs/client
+# CRBasic Language Support
 
-Language support for CRBasic, the programming language used in Campbell Scientific data loggers.
+CRBasic language support as a Visual Studio Code extension.
 
 ## Features
 
