@@ -31,12 +31,12 @@ jobs:
         with:
           filters: |
             code:
+              - '.github/workflows/ci.yml'
               - 'crates/**'
               - 'Cargo.toml'
               - 'Cargo.lock'
-              - 'rustfmt.toml'
               - 'clippy.toml'
-              - '.github/workflows/ci.yml'
+              - 'rustfmt.toml'
 
       - name: Cache Cargo registry
         if: steps.filter.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
@@ -106,11 +106,11 @@ jobs:
         with:
           filters: |
             code:
+              - '.github/workflows/ci.yml'
               - 'client/**'
-              - 'scripts/generate-grammar.js'
               - 'crates/crbasic-parser/keywords.json'
               - 'crates/crbasic-parser/src/keywords_generated.rs'
-              - '.github/workflows/ci.yml'
+              - 'scripts/generate-grammar.js'
 
       - name: Set up Node.js
         if: steps.filter.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
@@ -155,8 +155,7 @@ jobs:
         shell: bash
         run: echo "No changes detected in client files."
 
-  # Single point of truth for branch protection: set only this job as a
-  # required status check instead of every per-language job individually.
+  # Single point of truth for branch protection
   gate:
     runs-on: ubuntu-latest
     needs:
