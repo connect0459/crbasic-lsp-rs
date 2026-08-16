@@ -32,9 +32,13 @@ CRBasic language support as a Visual Studio Code extension.
 
 No external dependencies. The language server is bundled with the extension.
 
-## Feedback and Contributions
+## Disclaimer
 
-This is an independent, unofficial extension and is not affiliated with or endorsed by Campbell Scientific. Source code, issue tracker, and contribution guidelines are on [GitHub](https://github.com/connect0459/crbasic-lsp-rs).
+This is an independent, unofficial extension and is not affiliated with or endorsed by Campbell Scientific.
+
+## Contributing
+
+See [CONTRIBUTING.md](https://github.com/connect0459/crbasic-lsp-rs/blob/main/CONTRIBUTING.md).
 
 ## License
 

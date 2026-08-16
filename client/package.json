@@ -1,5 +1,5 @@
 {
-  "name": "crbasic-lsp",
+  "name": "crbasic-lsp-rs-vsce",
   "displayName": "CRBasic Language Support",
   "description": "Language support for CRBasic as a Visual Studio Code extension.",
   "version": "0.1.0",
@@ -21,9 +21,6 @@
     "campbell scientific",
     "datalogger",
     "lsp"
-  ],
-  "activationEvents": [
-    "onLanguage:crbasic"
   ],
   "main": "./dist/extension.js",
   "contributes": {
