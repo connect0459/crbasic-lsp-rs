@@ -1,4 +1,4 @@
-# CRBasic Language Support
+# CRBasic LSP
 
 CRBasic language support as a Visual Studio Code extension.
 
