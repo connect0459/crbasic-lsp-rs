@@ -1,5 +1,9 @@
 # crbasic-lsp-rs
 
+[![CI](https://github.com/connect0459/crbasic-lsp-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/connect0459/crbasic-lsp-rs/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/connect0459/crbasic-lsp-rs/blob/main/LICENSE)
+[![VS Code Marketplace](https://img.shields.io/badge/VS%20Code-Marketplace-blue.svg?logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=connect0459.crbasic-lsp-rs-vsce)
+
 A Visual Studio Code extension providing comprehensive language support for CRBasic, the programming language used in Campbell Scientific data loggers.
 
 ## Features
