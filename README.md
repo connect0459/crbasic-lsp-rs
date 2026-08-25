@@ -41,14 +41,14 @@ Install from the VSCode Marketplace:
 3. Search for "CRBasic LSP"
 4. Click "Install"
 
-## Documentation
-
-- [Architecture](./docs/ARCHITECTURE.md): System architecture and design
-- [ADRs](./docs/adrs/): Architecture decision records
-
 ## Disclaimer
 
 This is an independent, unofficial extension and is not affiliated with or endorsed by Campbell Scientific.
+
+## Documentation
+
+- [Architecture](https://github.com/connect0459/crbasic-lsp-rs/blob/main/docs/ARCHITECTURE.md): System architecture and design
+- [ADRs](https://github.com/connect0459/crbasic-lsp-rs/blob/main/docs/adrs/): Architecture decision records
 
 ## Contributing
 
