@@ -25,6 +25,15 @@ test-client:
 build-wasm:
     cd crates/crbasic-wasm && wasm-pack build --target web
 
+# Build the crbasic-lsp server binary and copy it into client/server/
+build-extension:
+    cargo build -p crbasic-lsp --bin crbasic-lsp --release
+    cd client && npm run copy-server
+
+# Package a .vsix for this machine's platform and install it into VS Code
+install-local:
+    cd client && npm run install-local
+
 # Regenerate keywords_generated.rs and crbasic.tmLanguage.json from keywords.json
 generate-grammar:
     node scripts/generate-grammar.js

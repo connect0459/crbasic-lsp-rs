@@ -91,7 +91,8 @@
     "type-check": "tsc --noEmit",
     "copy-server": "node scripts/copy-server.js",
     "build-server": "cd .. && cargo build -p crbasic-lsp --bin crbasic-lsp --release",
-    "package": "node scripts/package-vsix.js"
+    "package": "node scripts/package-vsix.js",
+    "install-local": "node scripts/install-local.js"
   },
   "dependencies": {
     "vscode-languageclient": "10.1.0"
