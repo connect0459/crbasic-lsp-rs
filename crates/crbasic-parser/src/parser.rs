@@ -930,7 +930,8 @@ impl<'a> Parser<'a> {
     }
 
     /// Parses a `Call` statement.
-    /// Syntax: `Call SubName(arguments)`
+    /// Syntax: `Call SubName(arguments)` or, for a zero-argument subroutine,
+    /// `Call SubName` with the parentheses omitted.
     ///
     /// `Call` is purely a documented, optional prefix for invoking a
     /// subroutine -- `Call ConvertCtoF(TC(I), TC_F(I))` behaves identically
@@ -948,6 +949,7 @@ impl<'a> Parser<'a> {
                 arguments,
                 span,
             } => (name, arguments, span.end),
+            Expression::Identifier { name, span } => (name, Vec::new(), span.end),
             other => {
                 return Err(ParseError {
                     message: "Expected a subroutine call after 'Call'".to_string(),
@@ -5894,6 +5896,33 @@ mod tests {
             {
                 assert_eq!(name, "ConvertCtoF");
                 assert_eq!(arguments.len(), 2);
+            } else {
+                panic!(
+                    "Expected function call statement, got {:?}",
+                    program.statements[0]
+                );
+            }
+        }
+
+        #[test]
+        fn parses_call_statement_without_parentheses_as_a_zero_argument_call() {
+            let mut scanner = Scanner::new("Call ProcessTemperatures");
+            let tokens = scanner.scan_tokens();
+            let mut parser = Parser::new(tokens);
+
+            let program = parser.parse().expect("Should parse successfully");
+            assert_eq!(
+                program.statements.len(),
+                1,
+                "'Call' must not leak a separate bogus statement"
+            );
+
+            if let Statement::FunctionCall {
+                name, arguments, ..
+            } = &program.statements[0]
+            {
+                assert_eq!(name, "ProcessTemperatures");
+                assert_eq!(arguments.len(), 0);
             } else {
                 panic!(
                     "Expected function call statement, got {:?}",
