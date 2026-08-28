@@ -13,9 +13,38 @@ import {
   ServerOptions,
   TransportKind,
 } from "vscode-languageclient/node";
-import { restartServer, showServerOutput } from "./commands";
+import {
+  restartServer,
+  showServerOutput,
+  parseShowReferencesArguments,
+  LspLocation,
+  LspPosition,
+} from "./commands";
 
 let client: LanguageClient | undefined;
+
+/**
+ * Converts an LSP-shaped position into a real `vscode.Position` instance
+ *
+ * @param position - The plain JSON position received over LSP
+ * @returns The equivalent `vscode.Position`
+ */
+function toVscodePosition(position: LspPosition): vscode.Position {
+  return new vscode.Position(position.line, position.character);
+}
+
+/**
+ * Converts an LSP-shaped location into a real `vscode.Location` instance
+ *
+ * @param location - The plain JSON location received over LSP
+ * @returns The equivalent `vscode.Location`
+ */
+function toVscodeLocation(location: LspLocation): vscode.Location {
+  return new vscode.Location(
+    vscode.Uri.parse(location.uri),
+    new vscode.Range(toVscodePosition(location.range.start), toVscodePosition(location.range.end))
+  );
+}
 
 /**
  * Gets the path to the language server executable
@@ -61,6 +90,32 @@ function createLanguageClient(context: vscode.ExtensionContext): LanguageClient 
       fileEvents: vscode.workspace.createFileSystemWatcher(
         "**/*.{cr1,cr1x,cr2,cr3,cr5,cr6,cr8,cr9,cr9x,c9x,cr300,crb,dld}"
       ),
+    },
+    middleware: {
+      // The server's "N references" code lens targets the built-in
+      // `editor.action.showReferences` command, whose arguments arrive over
+      // LSP as plain JSON. VS Code validates that command's arguments as
+      // real `vscode.Uri`/`Position`/`Location` instances, so they must be
+      // reconstructed here before the lens is clickable.
+      provideCodeLenses: async (document, token, next) => {
+        const lenses = await next(document, token);
+        if (!lenses) {
+          return lenses;
+        }
+
+        for (const lens of lenses) {
+          const args = parseShowReferencesArguments(lens.command);
+          if (args && lens.command) {
+            lens.command.arguments = [
+              vscode.Uri.parse(args.uri),
+              toVscodePosition(args.position),
+              args.locations.map(toVscodeLocation),
+            ];
+          }
+        }
+
+        return lenses;
+      },
     },
   };
 
