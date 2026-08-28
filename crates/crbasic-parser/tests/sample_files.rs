@@ -5,20 +5,46 @@
 
 use crbasic_parser::ast::Statement;
 use crbasic_parser::lexer::Scanner;
-use crbasic_parser::{Parser, TokenKind};
+use crbasic_parser::{DataloggerModel, Parser, TokenKind};
 use std::fs;
 use std::path::PathBuf;
 
-/// Returns the path to the sample-codes directory
-fn sample_codes_dir() -> PathBuf {
+/// Returns the path to the fixtures directory
+fn fixtures_dir() -> PathBuf {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    manifest_dir.join("../../docs/sample-codes")
+    manifest_dir.join("tests/fixtures")
 }
 
-/// Helper to read a sample file
+/// Helper to read a fixture file
 fn read_sample_file(filename: &str) -> String {
-    let path = sample_codes_dir().join(filename);
+    let path = fixtures_dir().join(filename);
     fs::read_to_string(&path).unwrap_or_else(|e| panic!("Failed to read {}: {}", filename, e))
+}
+
+/// Returns every fixture filename, sorted for deterministic iteration.
+///
+/// Iterating the directory (rather than a hardcoded list) is deliberate: a
+/// hardcoded list previously let `sample-complex-realworld.CR6` sit outside
+/// this suite's coverage, hiding the parenthesis-less `Call` bug fixed in #28.
+fn fixture_filenames() -> Vec<String> {
+    let mut names: Vec<String> = fs::read_dir(fixtures_dir())
+        .unwrap_or_else(|e| panic!("Failed to read fixtures directory: {}", e))
+        .map(|entry| entry.unwrap_or_else(|e| panic!("Failed to read directory entry: {}", e)))
+        .filter(|entry| entry.path().is_file())
+        .map(|entry| entry.file_name().to_string_lossy().into_owned())
+        .collect();
+    names.sort();
+    names
+}
+
+/// Derives the datalogger model a fixture file targets from its extension.
+fn model_for_fixture(filename: &str) -> DataloggerModel {
+    let extension = PathBuf::from(filename)
+        .extension()
+        .unwrap_or_else(|| panic!("{} has no file extension", filename))
+        .to_string_lossy()
+        .into_owned();
+    DataloggerModel::from_extension(&extension)
 }
 
 /// Helper to tokenize source code
@@ -38,83 +64,23 @@ mod tokenization {
     use super::*;
 
     #[test]
-    fn tokenizes_cr1000_sample() {
-        let source = read_sample_file("sample-cr1000.CR1");
-        let tokens = tokenize(&source);
-        assert!(!tokens.is_empty(), "Should produce tokens");
-        assert!(
-            matches!(
-                tokens.last(),
-                Some(crbasic_parser::Token {
-                    kind: TokenKind::Eof,
-                    ..
-                })
-            ),
-            "Last token should be EOF"
-        );
-    }
-
-    #[test]
-    fn tokenizes_cr1000x_sample() {
-        let source = read_sample_file("sample-cr1000x-series.CR1X");
-        let tokens = tokenize(&source);
-        assert!(!tokens.is_empty(), "Should produce tokens");
-    }
-
-    #[test]
-    fn tokenizes_cr200_sample() {
-        let source = read_sample_file("sample-cr200-series.CR2");
-        let tokens = tokenize(&source);
-        assert!(!tokens.is_empty(), "Should produce tokens");
-    }
-
-    #[test]
-    fn tokenizes_cr300_sample() {
-        let source = read_sample_file("sample-cr300-series.CR300");
-        let tokens = tokenize(&source);
-        assert!(!tokens.is_empty(), "Should produce tokens");
-    }
-
-    #[test]
-    fn tokenizes_cr3000_sample() {
-        let source = read_sample_file("sample-cr3000.CR3");
-        let tokens = tokenize(&source);
-        assert!(!tokens.is_empty(), "Should produce tokens");
-    }
-
-    #[test]
-    fn tokenizes_cr5000_sample() {
-        let source = read_sample_file("sample-cr5000.CR5");
-        let tokens = tokenize(&source);
-        assert!(!tokens.is_empty(), "Should produce tokens");
-    }
-
-    #[test]
-    fn tokenizes_cr6_sample() {
-        let source = read_sample_file("sample-cr6-series.CR6");
-        let tokens = tokenize(&source);
-        assert!(!tokens.is_empty(), "Should produce tokens");
-    }
-
-    #[test]
-    fn tokenizes_cr800_sample() {
-        let source = read_sample_file("sample-cr800-series.CR8");
-        let tokens = tokenize(&source);
-        assert!(!tokens.is_empty(), "Should produce tokens");
-    }
-
-    #[test]
-    fn tokenizes_cr9000_sample() {
-        let source = read_sample_file("sample-cr9000.CR9");
-        let tokens = tokenize(&source);
-        assert!(!tokens.is_empty(), "Should produce tokens");
-    }
-
-    #[test]
-    fn tokenizes_cr9000x_sample() {
-        let source = read_sample_file("sample-cr9000x.C9X");
-        let tokens = tokenize(&source);
-        assert!(!tokens.is_empty(), "Should produce tokens");
+    fn every_fixture_tokenizes_to_a_non_empty_stream_ending_in_eof() {
+        for filename in fixture_filenames() {
+            let source = read_sample_file(&filename);
+            let tokens = tokenize(&source);
+            assert!(!tokens.is_empty(), "{}: should produce tokens", filename);
+            assert!(
+                matches!(
+                    tokens.last(),
+                    Some(crbasic_parser::Token {
+                        kind: TokenKind::Eof,
+                        ..
+                    })
+                ),
+                "{}: last token should be EOF",
+                filename
+            );
+        }
     }
 }
 
@@ -122,73 +88,17 @@ mod parsing {
     use super::*;
 
     #[test]
-    fn parses_cr1000_sample_without_errors() {
-        let source = read_sample_file("sample-cr1000.CR1");
-        let result = parse(&source);
-        assert!(result.is_ok(), "Should parse without errors: {:?}", result);
-    }
-
-    #[test]
-    fn parses_cr1000x_sample_without_errors() {
-        let source = read_sample_file("sample-cr1000x-series.CR1X");
-        let result = parse(&source);
-        assert!(result.is_ok(), "Should parse without errors: {:?}", result);
-    }
-
-    #[test]
-    fn parses_cr200_sample_without_errors() {
-        let source = read_sample_file("sample-cr200-series.CR2");
-        let result = parse(&source);
-        assert!(result.is_ok(), "Should parse without errors: {:?}", result);
-    }
-
-    #[test]
-    fn parses_cr300_sample_without_errors() {
-        let source = read_sample_file("sample-cr300-series.CR300");
-        let result = parse(&source);
-        assert!(result.is_ok(), "Should parse without errors: {:?}", result);
-    }
-
-    #[test]
-    fn parses_cr3000_sample_without_errors() {
-        let source = read_sample_file("sample-cr3000.CR3");
-        let result = parse(&source);
-        assert!(result.is_ok(), "Should parse without errors: {:?}", result);
-    }
-
-    #[test]
-    fn parses_cr5000_sample_without_errors() {
-        let source = read_sample_file("sample-cr5000.CR5");
-        let result = parse(&source);
-        assert!(result.is_ok(), "Should parse without errors: {:?}", result);
-    }
-
-    #[test]
-    fn parses_cr6_sample_without_errors() {
-        let source = read_sample_file("sample-cr6-series.CR6");
-        let result = parse(&source);
-        assert!(result.is_ok(), "Should parse without errors: {:?}", result);
-    }
-
-    #[test]
-    fn parses_cr800_sample_without_errors() {
-        let source = read_sample_file("sample-cr800-series.CR8");
-        let result = parse(&source);
-        assert!(result.is_ok(), "Should parse without errors: {:?}", result);
-    }
-
-    #[test]
-    fn parses_cr9000_sample_without_errors() {
-        let source = read_sample_file("sample-cr9000.CR9");
-        let result = parse(&source);
-        assert!(result.is_ok(), "Should parse without errors: {:?}", result);
-    }
-
-    #[test]
-    fn parses_cr9000x_sample_without_errors() {
-        let source = read_sample_file("sample-cr9000x.C9X");
-        let result = parse(&source);
-        assert!(result.is_ok(), "Should parse without errors: {:?}", result);
+    fn every_fixture_parses_without_errors() {
+        for filename in fixture_filenames() {
+            let source = read_sample_file(&filename);
+            let result = parse(&source);
+            assert!(
+                result.is_ok(),
+                "{}: should parse without errors: {:?}",
+                filename,
+                result
+            );
+        }
     }
 }
 
@@ -236,22 +146,9 @@ mod ast_structure {
     }
 
     #[test]
-    fn all_samples_have_begin_prog_and_end_prog() {
-        let sample_files = [
-            "sample-cr1000.CR1",
-            "sample-cr1000x-series.CR1X",
-            "sample-cr200-series.CR2",
-            "sample-cr300-series.CR300",
-            "sample-cr3000.CR3",
-            "sample-cr5000.CR5",
-            "sample-cr6-series.CR6",
-            "sample-cr800-series.CR8",
-            "sample-cr9000.CR9",
-            "sample-cr9000x.C9X",
-        ];
-
-        for filename in sample_files {
-            let source = read_sample_file(filename);
+    fn every_fixture_has_begin_prog_and_end_prog() {
+        for filename in fixture_filenames() {
+            let source = read_sample_file(&filename);
             let program = parse(&source).unwrap_or_else(|e| {
                 panic!("Failed to parse {}: {:?}", filename, e);
             });
@@ -270,22 +167,9 @@ mod ast_structure {
     }
 
     #[test]
-    fn all_samples_have_data_table_structure() {
-        let sample_files = [
-            "sample-cr1000.CR1",
-            "sample-cr1000x-series.CR1X",
-            "sample-cr200-series.CR2",
-            "sample-cr300-series.CR300",
-            "sample-cr3000.CR3",
-            "sample-cr5000.CR5",
-            "sample-cr6-series.CR6",
-            "sample-cr800-series.CR8",
-            "sample-cr9000.CR9",
-            "sample-cr9000x.C9X",
-        ];
-
-        for filename in sample_files {
-            let source = read_sample_file(filename);
+    fn every_fixture_has_data_table_structure() {
+        for filename in fixture_filenames() {
+            let source = read_sample_file(&filename);
             let program = parse(&source).unwrap_or_else(|e| {
                 panic!("Failed to parse {}: {:?}", filename, e);
             });
@@ -306,8 +190,8 @@ mod ast_structure {
 
 mod semantic_analysis {
     use super::*;
+    use crbasic_parser::SemanticAnalyzer;
     use crbasic_parser::semantic::{ErrorSeverity, SemanticError};
-    use crbasic_parser::{DataloggerModel, SemanticAnalyzer};
 
     /// Helper to run semantic analysis on a sample file
     fn analyze_sample(filename: &str, model: DataloggerModel) -> Vec<SemanticError> {
@@ -383,39 +267,13 @@ mod semantic_analysis {
 mod real_world_validation {
     use super::*;
 
-    /// Verify that all sample files can be tokenized, parsed, and analyzed without errors
+    /// Verify that every fixture can be tokenized, parsed, and analyzed without errors,
+    /// with the target model derived from the fixture's own file extension.
     #[test]
-    fn all_sample_files_pass_complete_validation() {
-        let sample_files = [
-            ("sample-cr1000.CR1", crbasic_parser::DataloggerModel::CR6),
-            (
-                "sample-cr1000x-series.CR1X",
-                crbasic_parser::DataloggerModel::CR6,
-            ),
-            (
-                "sample-cr200-series.CR2",
-                crbasic_parser::DataloggerModel::CR200X,
-            ),
-            (
-                "sample-cr300-series.CR300",
-                crbasic_parser::DataloggerModel::CR6,
-            ),
-            ("sample-cr3000.CR3", crbasic_parser::DataloggerModel::CR6),
-            ("sample-cr5000.CR5", crbasic_parser::DataloggerModel::CR6),
-            (
-                "sample-cr6-series.CR6",
-                crbasic_parser::DataloggerModel::CR6,
-            ),
-            (
-                "sample-cr800-series.CR8",
-                crbasic_parser::DataloggerModel::CR6,
-            ),
-            ("sample-cr9000.CR9", crbasic_parser::DataloggerModel::CR6),
-            ("sample-cr9000x.C9X", crbasic_parser::DataloggerModel::CR6),
-        ];
-
-        for (filename, model) in sample_files {
-            let source = read_sample_file(filename);
+    fn every_fixture_passes_complete_validation() {
+        for filename in fixture_filenames() {
+            let model = model_for_fixture(&filename);
+            let source = read_sample_file(&filename);
 
             let tokens = tokenize(&source);
             assert!(!tokens.is_empty(), "{}: Should produce tokens", filename);

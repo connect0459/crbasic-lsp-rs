@@ -29,7 +29,8 @@ crbasic-lsp-rs/
 │   │   │                        # instructions (see ADR-002)
 │   │   ├── examples/
 │   │   └── tests/
-│   │       ├── sample_files.rs      # Integration tests over real sample programs
+│   │       ├── fixtures/            # Real-world regression fixtures
+│   │       ├── sample_files.rs      # Integration tests over tests/fixtures/*
 │   │       ├── example_programs.rs  # Assertions on docs/examples/*
 │   │       └── performance.rs       # Lexer/parser performance budgets
 │   ├── crbasic-lsp/              # LSP server implementation
@@ -92,8 +93,7 @@ crbasic-lsp-rs/
 │   ├── todo.md                    # Project progress tracker
 │   ├── adrs/                      # Architecture Decision Records
 │   ├── researches/                # Research documents
-│   ├── examples/                  # Curated feature-showcase example programs
-│   └── sample-codes/              # Sample CRBasic programs (11 datalogger models)
+│   └── examples/                  # Curated feature-showcase example programs
 ├── Cargo.toml                     # Rust workspace configuration
 ├── justfile                       # Task runner (setup, test, coverage, verify, ...)
 ├── .pre-commit-config.yaml
