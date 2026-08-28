@@ -18,19 +18,28 @@ const OUT_DIR = path.join(REPO_ROOT, "dist-vsix-local");
 
 const PLATFORM_NAMES = { darwin: "darwin", linux: "linux", win32: "win32" };
 
-function localVscodeTarget() {
+function localTarget() {
   const platform = PLATFORM_NAMES[process.platform];
   const arch = process.arch;
   if (!platform || (arch !== "x64" && arch !== "arm64")) {
     throw new Error(`Unsupported local platform/arch: ${process.platform}/${process.arch}`);
   }
-  const vscodeTarget = `${platform}-${arch}`;
-  resolveTarget(vscodeTarget); // throws if this platform/arch isn't a packaged target
-  return vscodeTarget;
+  return resolveTarget(`${platform}-${arch}`); // throws if this platform/arch isn't a packaged target
 }
 
-const vscodeTarget = localVscodeTarget();
-const { rustTriple } = resolveTarget(vscodeTarget);
+function ensureCodeCliAvailable() {
+  try {
+    execFileSync("code", ["--version"], { stdio: "ignore" });
+  } catch {
+    throw new Error(
+      "The 'code' CLI was not found on PATH. In VS Code, run " +
+        "\"Shell Command: Install 'code' command in PATH\" from the Command Palette, then retry."
+    );
+  }
+}
+
+ensureCodeCliAvailable();
+const { vscodeTarget, rustTriple } = localTarget();
 
 console.log(`Building crbasic-lsp for ${rustTriple}...`);
 execFileSync(
