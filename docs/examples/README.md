@@ -2,7 +2,7 @@
 
 Curated CRBasic programs showcasing specific extension features. Open any file in VSCode with the extension installed and try the suggested actions.
 
-Unlike the fixtures in [`docs/sample-codes/`](../sample-codes/) (real-world programs used as parser regression tests, one per datalogger model), these files are small and heavily commented, each focused on one or two features. Their expected diagnostics are checked by [`crates/crbasic-parser/tests/example_programs.rs`](../../crates/crbasic-parser/tests/example_programs.rs), so they stay in sync with the analyzer.
+Unlike the fixtures in [`crates/crbasic-parser/tests/fixtures/`](../../crates/crbasic-parser/tests/fixtures/) (real-world programs used as parser regression tests, one per datalogger model), these files are small and heavily commented, each focused on one or two features. Their expected diagnostics are checked by [`crates/crbasic-parser/tests/example_programs.rs`](../../crates/crbasic-parser/tests/example_programs.rs), so they stay in sync with the analyzer.
 
 ## Files
 
