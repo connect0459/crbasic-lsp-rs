@@ -34,6 +34,8 @@ Any `cargo`/`rustup` command run inside the repo picks up the Rust version, comp
 | `cd client && npm run lint` | Lint TypeScript code (ESLint) |
 | `cd client && npm run format` | Format TypeScript code (Prettier) |
 | `just build-wasm` | Build the `crbasic-wasm` package |
+| `just build-extension` | Build the `crbasic-lsp` server binary and copy it into `client/server/` |
+| `just install-local` | Package a `.vsix` for this machine and install it into VS Code |
 | `just verify` | Run the full CI-equivalent check locally |
 
 The pre-commit hooks enforce formatting and lint checks on every commit. To run them manually across all files:
@@ -49,6 +51,27 @@ just verify
 ```
 
 This mirrors the CI checks: Rust formatting and clippy across the workspace, `cargo test`, coverage thresholds via `cargo llvm-cov`, a check that `crbasic.tmLanguage.json`/`keywords_generated.rs` are up to date with `keywords.json`, and ESLint/Prettier/`tsc --noEmit`/Vitest for the client.
+
+## Running the extension locally
+
+There are two ways to try a change in a real VS Code instance instead of relying on unit tests alone.
+
+**Extension Development Host** — fastest for iterating:
+
+```sh
+just build-extension   # builds crbasic-lsp and copies it into client/server/
+cd client && npm run build
+```
+
+Then open this repository in VS Code and press `F5`. This launches an Extension Development Host with the extension loaded from `client/`, using the checked-in `.vscode/launch.json` and `.vscode/tasks.json`. Its `preLaunchTask` already runs `just build-extension` plus the client build for you, so the two commands above are only needed if you want to run them manually (e.g. outside VS Code).
+
+**Installing a real `.vsix`** — for verifying the packaged artifact itself:
+
+```sh
+just install-local
+```
+
+This builds `crbasic-lsp` for your machine, packages a `.vsix` (see `client/scripts/package-vsix.js`), and installs it via `code --install-extension`. If the Marketplace version of the extension is already installed, disable or uninstall it first so only one version is active.
 
 ## Testing guidelines
 

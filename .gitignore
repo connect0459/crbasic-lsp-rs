@@ -2,7 +2,12 @@
 .claude/
 
 # VSCode
-.vscode/
+# launch.json/tasks.json are the shared "run the extension locally" recipe
+# and are tracked; everything else under .vscode/ (personal settings, etc.)
+# stays ignored.
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
 *.vsix
 .vscode-test/
 

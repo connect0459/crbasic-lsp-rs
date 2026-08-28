@@ -1,0 +1,34 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "build",
+      "path": "client/",
+      "group": "build",
+      "label": "npm: build - client",
+      "detail": "vite build"
+    },
+    {
+      "type": "npm",
+      "script": "dev",
+      "path": "client/",
+      "isBackground": true,
+      "label": "npm: watch - client",
+      "detail": "vite build --watch"
+    },
+    {
+      "type": "shell",
+      "command": "just build-extension",
+      "label": "just: build-extension",
+      "detail": "Build the crbasic-lsp server binary and copy it into client/server/",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build Extension (server + client)",
+      "dependsOn": ["just: build-extension", "npm: build - client"],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    }
+  ]
+}
