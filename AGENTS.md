@@ -63,7 +63,7 @@ Respect these layer boundaries: never introduce a direct dependency that skips a
 
 - `cargo build` / `cargo test --workspace` — build and test the Rust workspace.
 - `wasm-pack build --target web` (run from `crates/crbasic-wasm/`) — build the WASM package consumed by the client.
-- `cd client && npm run test.run` — run TypeScript tests (Vitest).
+- `cd client && npm run test:run` — run TypeScript tests (Vitest).
 - `just verify` — run the full CI-equivalent check (Rust fmt/clippy/test, TypeScript lint/format/test) before opening a PR.
 - **pre-commit hooks** — catch formatting and lint issues on every commit (`pre-commit run --all-files` to run manually).
 
