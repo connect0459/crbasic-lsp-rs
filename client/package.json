@@ -95,7 +95,7 @@
     "install-local": "node scripts/install-local.js"
   },
   "dependencies": {
-    "vscode-languageclient": "10.1.0"
+    "vscode-languageclient": "10.1.1"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
