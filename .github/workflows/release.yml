@@ -51,7 +51,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
 
       - name: Check Rust formatting
         shell: bash
@@ -149,7 +149,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-${{ matrix.rust_triple }}-
 
-      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
+      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
 
       - name: Add Rust target
         shell: bash
@@ -296,8 +296,7 @@ jobs:
           name: vsix-packages
           path: dist-vsix
 
-      - name: Extract changelog section for this version
-        id: changelog
+      - id: changelog
         uses: connect0459/extract-changelog-entry@ff85c8909583ffaa58df10a9f07f70752f860419 # v1.1.0
         with:
           ref-name: ${{ github.ref_name }}
