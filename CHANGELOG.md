@@ -23,6 +23,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-20
+
+### Fixed
+
+- `client`: reconstruct real `vscode.Uri`/`Position`/`Location` instances from the server's JSON arguments before invoking `editor.action.showReferences`, fixing the "N references" code lens throwing an argument-validation error instead of opening Peek References (#25)
+- `crbasic-parser`: accept a parenthesis-less `Call SubName` on a zero-argument subroutine, previously rejected with `Expected a subroutine call after 'Call'` even though CRBasic allows omitting the parentheses in that case (#30)
+
+### Miscellaneous
+
+- **chore**: pin all `client` npm dependencies to exact versions, with `save-exact=true` in `.npmrc` (#12)
+- **chore**: add a `min-release-age=3` guard to `client/.npmrc` (#13)
+- **docs**: unwrap hard-wrapped paragraphs in `docs/todo.md` (#14)
+- **docs**: drop the commit body wrap-at-72 convention (#15)
+- **docs**: fix stray spaces left by the `docs/todo.md` hard-wrap join (#16)
+- **docs**: add CI, license, and Marketplace badges to the README (#17)
+- **ci**: point at the renamed `connect0459/extract-changelog-entry` action (#18)
+- **docs**: use full GitHub URLs for README links (#21)
+- **chore**: flatten the PR template into a single file (#22)
+- **ci**: create the GitHub Release only after the Marketplace publish succeeds (#23)
+- **chore**: add tooling for running the extension locally (#27)
+- **chore**: relocate sample fixtures out of `docs/` into `tests/fixtures/` (#31)
+- **chore**: use colon-separated npm script names (#37)
+- **ci**: split changed-files detection out of `crates`/`client` for job-level skip (#38)
+- **ci**: pin workflow actions to latest release hashes (#39)
+
 ## [0.1.0] - 2026-08-16
 
 ### Added
@@ -37,5 +62,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
-[Unreleased]: <https://github.com/connect0459/crbasic-lsp-rs/compare/v0.1.0...HEAD>
+[Unreleased]: <https://github.com/connect0459/crbasic-lsp-rs/compare/v0.1.1...HEAD>
+[0.1.1]: <https://github.com/connect0459/crbasic-lsp-rs/compare/v0.1.0...v0.1.1>
 [0.1.0]: <https://github.com/connect0459/crbasic-lsp-rs/releases/tag/v0.1.0>
