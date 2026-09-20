@@ -2,7 +2,7 @@
   "name": "crbasic-lsp-rs-vsce",
   "displayName": "CRBasic LSP",
   "description": "Language support for CRBasic as a Visual Studio Code extension.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "connect0459",
   "icon": "images/icon.png",
   "license": "MIT",
