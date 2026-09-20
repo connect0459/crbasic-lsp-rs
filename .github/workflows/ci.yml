@@ -136,6 +136,10 @@ jobs:
         shell: bash
         run: node ../scripts/generate-grammar.js --check
 
+      - name: Verify Marketplace packaging preconditions
+        shell: bash
+        run: npx --no-install vsce package --target linux-x64 -o "$RUNNER_TEMP/dry-run.vsix"
+
   # Single point of truth for branch protection
   gate:
     runs-on: ubuntu-latest
