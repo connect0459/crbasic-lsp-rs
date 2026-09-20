@@ -35,6 +35,16 @@ updates:
     labels:
       - "dependencies"
       - "javascript"
+    ignore:
+      # @types/vscode's minor version tracks a VS Code release, not this
+      # project's own semver -- an automated bump silently raises the
+      # de facto minimum VS Code version unless engines.vscode is bumped
+      # to match, which is a deliberate compatibility decision this
+      # config shouldn't make on its own. Bump both together by hand.
+      - dependency-name: "@types/vscode"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-major"
     groups:
       dev-deps:
         dependency-type: "development"

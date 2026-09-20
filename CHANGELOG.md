@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `client`: reconstruct real `vscode.Uri`/`Position`/`Location` instances from the server's JSON arguments before invoking `editor.action.showReferences`, fixing the "N references" code lens throwing an argument-validation error instead of opening Peek References (#25)
 - `crbasic-parser`: accept a parenthesis-less `Call SubName` on a zero-argument subroutine, previously rejected with `Expected a subroutine call after 'Call'` even though CRBasic allows omitting the parentheses in that case (#30)
+- `client`: pin the `@types/vscode` devDependency back down to `1.85.0`, matching `engines.vscode` (drifted to `1.137.0` via unrelated Dependabot updates), unblocking `vsce package`, which errors when `@types/vscode` exceeds the declared minimum VS Code version (#44)
 
 ### Miscellaneous
 
@@ -47,6 +48,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **chore**: use colon-separated npm script names (#37)
 - **ci**: split changed-files detection out of `crates`/`client` for job-level skip (#38)
 - **ci**: pin workflow actions to latest release hashes (#39)
+- **ci**: add a Marketplace packaging preflight check (`vsce package`) to the `client` job, so an `engines.vscode`/`@types/vscode` mismatch is caught before merge instead of only at tag-push time (#44)
+- **chore**: block Dependabot from auto-bumping `@types/vscode`'s minor/major version, since it tracks a VS Code release rather than this project's own semver and shouldn't silently raise the de facto minimum supported VS Code version (#44)
 
 ## [0.1.0] - 2026-08-16
 
