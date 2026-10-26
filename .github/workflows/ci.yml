@@ -45,6 +45,7 @@ jobs:
               - 'crates/crbasic-parser/keywords.json'
               - 'crates/crbasic-parser/src/keywords_generated.rs'
               - 'scripts/generate-grammar.js'
+              - '.nvmrc'
 
   crates:
     needs: changes
