@@ -118,6 +118,8 @@ tidy(client): remove unused wasm-loader import
 5. If the change is an architectural decision, add an ADR under `docs/adrs/` following `docs/adrs/adr-000-template.md`.
 6. Open a pull request — CI runs `cargo test`, `cargo clippy`, `cargo fmt --check`, and the client's lint/test/format checks.
 
+Do not edit `CHANGELOG.md` in regular pull requests. Changelog entries are written all at once in the Release PR.
+
 ## Code style
 
 - No code comments unless the **why** is genuinely non-obvious.
