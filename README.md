@@ -4,11 +4,11 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/connect0459/crbasic-lsp-rs/blob/main/LICENSE)
 [![VS Code Marketplace](https://img.shields.io/badge/VS%20Code-Marketplace-blue.svg?logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=connect0459.crbasic-lsp-rs-vsce)
 
-A Visual Studio Code extension providing comprehensive language support for CRBasic, the programming language used in Campbell Scientific data loggers.
+A Visual Studio Code extension that adds language support for CRBasic, the programming language of Campbell Scientific data loggers.
 
 ## Features
 
-- **Syntax Highlighting**: Instant syntax highlighting via TextMate Grammar
+- **Syntax Highlighting**: Instant syntax highlighting via a TextMate grammar
 - **IntelliSense**: Context-aware code completion for CRBasic instructions and keywords
 - **Diagnostics**: Real-time validation with model-specific rules
   - Variable name length validation (model-dependent)
@@ -47,7 +47,7 @@ This is an independent, unofficial extension and is not affiliated with or endor
 
 ## Documentation
 
-- [Architecture](https://github.com/connect0459/crbasic-lsp-rs/blob/main/docs/ARCHITECTURE.md): System architecture and design
+- [Architecture](https://github.com/connect0459/crbasic-lsp-rs/blob/main/docs/ARCHITECTURE.md): System design
 - [ADRs](https://github.com/connect0459/crbasic-lsp-rs/blob/main/docs/adrs/): Architecture decision records
 
 ## Contributing

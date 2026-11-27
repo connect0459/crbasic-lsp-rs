@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- [rustup](https://www.rust-lang.org/tools/install) — installs the exact Rust toolchain pinned in `rust-toolchain.toml` automatically
+- [rustup](https://www.rust-lang.org/tools/install) — installs the exact Rust toolchain pinned in `rust-toolchain.toml`
 - [nvm](https://github.com/nvm-sh/nvm) — recommended for managing the Node.js version
 - [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
 - [just](https://just.systems/) — task runner
@@ -18,9 +18,9 @@ nvm use   # installs/activates the Node.js version pinned in .nvmrc
 just setup
 ```
 
-Any `cargo`/`rustup` command run inside the repo picks up the Rust version, components, and `wasm32-unknown-unknown` target pinned in `rust-toolchain.toml` automatically (installing it on first use if missing) — no equivalent of `nvm use` is needed for Rust.
+Any `cargo` or `rustup` command run inside the repo automatically uses the Rust version, components, and `wasm32-unknown-unknown` target pinned in `rust-toolchain.toml`, installing them on first use if missing. Rust needs no equivalent of `nvm use`.
 
-`just setup` installs the pre-commit git hook (`pre-commit install`), then runs `cargo build` and `npm install` (in `client/`) to fetch dependencies for both workspaces. It requires the `pre-commit` CLI to already be installed, hence the first line above.
+`just setup` installs the pre-commit git hook (`pre-commit install`), then runs `cargo build` and `npm install` (in `client/`) to fetch dependencies for both workspaces. It requires the `pre-commit` CLI, hence the first line above.
 
 ## Development workflow
 
@@ -56,14 +56,14 @@ This mirrors the CI checks: Rust formatting and clippy across the workspace, `ca
 
 There are two ways to try a change in a real VS Code instance instead of relying on unit tests alone.
 
-**Extension Development Host** — fastest for iterating:
+**Extension Development Host** — fastest for iteration:
 
 ```sh
 just build-extension   # builds crbasic-lsp and copies it into client/server/
 cd client && npm run build
 ```
 
-Then open this repository in VS Code and press `F5`. This launches an Extension Development Host with the extension loaded from `client/`, using the checked-in `.vscode/launch.json` and `.vscode/tasks.json`. Its `preLaunchTask` already runs `just build-extension` plus the client build for you, so the two commands above are only needed if you want to run them manually (e.g. outside VS Code).
+Then open this repository in VS Code and press `F5`. This launches an Extension Development Host with the extension loaded from `client/`, using the checked-in `.vscode/launch.json` and `.vscode/tasks.json`. Its `preLaunchTask` already runs `just build-extension` and the client build, so the two commands above are only needed if you want to run them manually (for example, outside VS Code).
 
 **Installing a real `.vsix`** — for verifying the packaged artifact itself:
 
@@ -71,7 +71,7 @@ Then open this repository in VS Code and press `F5`. This launches an Extension 
 just install-local
 ```
 
-This builds `crbasic-lsp` for your machine, packages a `.vsix` (see `client/scripts/package-vsix.js`), and installs it via `code --install-extension`. If the Marketplace version of the extension is already installed, disable or uninstall it first so only one version is active.
+This builds `crbasic-lsp` for your machine, packages a `.vsix` (see `client/scripts/package-vsix.js`), and installs it via `code --install-extension`. If the Marketplace version of the extension is already installed, disable or uninstall it first so that only one version is active.
 
 ## Testing guidelines
 
@@ -79,7 +79,7 @@ This project follows **Red → Green → Refactor** (Detroit-school TDD):
 
 - Write a failing test first, then implement.
 - Use real objects; mocks are only permitted at external boundaries (file system, network, WASM host bindings).
-- Test names describe **what business rule** is verified, not how.
+- Test names describe **which business rule** is verified, not how.
 - Coverage targets: 80% line, 75% branch, 90% function.
 
 Rust unit tests live in-file under `#[cfg(test)] mod tests`; integration tests live under each crate's `tests/` directory. TypeScript tests are colocated as `*.test.ts` files next to their source.
@@ -114,11 +114,11 @@ tidy(client): remove unused wasm-loader import
 1. Fork the repository and create a branch: `feat/xxx`, `fix/xxx`, `docs/xxx`.
 2. Follow the Red → Green → Refactor cycle.
 3. Run `just verify` and commit any resulting diffs.
-4. If the change touches a public API (parser AST, LSP capabilities, WASM bindings), update the relevant rustdoc/JSDoc comments and `docs/ARCHITECTURE.md` so documentation stays in sync with the implementation.
+4. If the change touches a public API (parser AST, LSP capabilities, WASM bindings), update the relevant rustdoc/JSDoc comments and `docs/ARCHITECTURE.md` so the documentation stays in sync with the implementation.
 5. If the change is an architectural decision, add an ADR under `docs/adrs/` following `docs/adrs/adr-000-template.md`.
-6. Open a pull request — CI runs `cargo test`, `cargo clippy`, `cargo fmt --check`, and the client's lint/test/format checks.
+6. Open a pull request. CI runs `cargo test`, `cargo clippy`, `cargo fmt --check`, and the client's lint/test/format checks.
 
-Do not edit `CHANGELOG.md` in regular pull requests. Changelog entries are written all at once in the Release PR.
+Do not edit `CHANGELOG.md` in regular pull requests. Changelog entries are written together in the Release PR.
 
 ## Code style
 
